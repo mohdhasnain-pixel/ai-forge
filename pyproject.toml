@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "soup-plugins"
+version = "0.1.0"
+description = "Standalone plugin and hook system for extensible trainer workflows"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+    { name = "Derived from Soup project", email = "team@trysoup.dev" },
+]
+keywords = ["plugin", "hooks", "extensibility", "trainer", "llm"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+# No external dependencies - uses only standard library
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/MakazhanAlpamys/Soup"
+"Original Source" = "https://github.com/MakazhanAlpamys/Soup/tree/main/src/soup_cli/plugins"
+Documentation = "README.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["plugins.py"]
