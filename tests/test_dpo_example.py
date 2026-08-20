@@ -11,10 +11,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from soup_cli.config.loader import load_config
-from soup_cli.config.schema import SoupConfig
-from soup_cli.data.formats import detect_format, format_to_messages
-from soup_cli.data.validator import validate_and_stats
+from ai_forge_cli.config.loader import load_config
+from ai_forge_cli.config.schema import SoupConfig
+from ai_forge_cli.data.formats import detect_format, format_to_messages
+from ai_forge_cli.data.validator import validate_and_stats
 
 EXAMPLES_DIR = Path(__file__).resolve().parent.parent / "examples"
 DPO_CONFIG_PATH = EXAMPLES_DIR / "configs" / "dpo_example.yaml"

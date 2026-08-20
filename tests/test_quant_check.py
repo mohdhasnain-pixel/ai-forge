@@ -7,7 +7,7 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -30,7 +30,7 @@ class TestVerdict:
         (0.05, "OK"),  # Improvements are OK
     ])
     def test_classify(self, delta, expected):
-        from soup_cli.eval.quant_check import classify_delta
+        from ai_forge_cli.eval.quant_check import classify_delta
 
         assert classify_delta(delta) == expected
 
@@ -52,7 +52,7 @@ class TestRunQuantCheck:
 
     def test_run_happy_path(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.quant_check import run_quant_check
+        from ai_forge_cli.eval.quant_check import run_quant_check
 
         tasks_file = self._tasks_file(tmp_path)
 
@@ -77,7 +77,7 @@ class TestRunQuantCheck:
 
     def test_run_no_regression(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.quant_check import run_quant_check
+        from ai_forge_cli.eval.quant_check import run_quant_check
 
         tasks_file = self._tasks_file(tmp_path)
 
@@ -184,15 +184,15 @@ class TestQuantCheckCLI:
 class TestResolveModelRef:
     def test_missing_entry_returns_none(self, tmp_path, monkeypatch):
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
-        from soup_cli.eval.quant_check import resolve_model_ref
+        from ai_forge_cli.eval.quant_check import resolve_model_ref
 
         assert resolve_model_ref("registry://nonexistent_entry") is None
 
     def test_kind_filter_skips_wrong_kind(self, tmp_path, monkeypatch):
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.quant_check import resolve_model_ref
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.eval.quant_check import resolve_model_ref
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore()
         eid = store.push(name="m1", tag="v1", base_model="b", task="sft",
@@ -213,7 +213,7 @@ class TestResolveModelRef:
 
 class TestRenderFormats:
     def test_render_markdown(self):
-        from soup_cli.eval.quant_check import (
+        from ai_forge_cli.eval.quant_check import (
             QuantCheckResult,
             QuantCheckRow,
             render_markdown,
@@ -230,7 +230,7 @@ class TestRenderFormats:
     def test_render_table_returns_rich_table(self):
         from rich.table import Table
 
-        from soup_cli.eval.quant_check import (
+        from ai_forge_cli.eval.quant_check import (
             QuantCheckResult,
             QuantCheckRow,
             render_table,
@@ -249,14 +249,14 @@ class TestClassifyBoundaries:
         (-0.05, "MAJOR"),
     ])
     def test_exact_boundaries(self, delta, expected):
-        from soup_cli.eval.quant_check import classify_delta
+        from ai_forge_cli.eval.quant_check import classify_delta
 
         assert classify_delta(delta) == expected
 
 
 class TestJSONOutput:
     def test_result_serialises_to_json(self, tmp_path):
-        from soup_cli.eval.quant_check import QuantCheckResult, QuantCheckRow
+        from ai_forge_cli.eval.quant_check import QuantCheckResult, QuantCheckRow
 
         result = QuantCheckResult(rows=[
             QuantCheckRow(task="math", before=0.72, after=0.69,

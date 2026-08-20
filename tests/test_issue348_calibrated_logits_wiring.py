@@ -10,7 +10,7 @@ by a real run. These tests assert the wiring, not the arithmetic (already pinned
 the #327 suite): the parameter must actually be reachable from the pre-flight.
 """
 
-from soup_cli.trainer.stream_setup import StreamingSetupMixin
+from ai_forge_cli.trainer.stream_setup import StreamingSetupMixin
 
 
 class _Index:
@@ -82,7 +82,7 @@ def _peak_gb(line: str) -> str:
 
 class TestCalibrationIsForwardedToTheBudget:
     def test_a_high_calibration_raises_the_predicted_peak(self, monkeypatch):
-        from soup_cli.utils import layer_stream
+        from ai_forge_cli.utils import layer_stream
 
         monkeypatch.setattr(layer_stream, "calibrated_logits_bytes_per_element", lambda: 14.0)
         baseline = _budget_lines()[0]
@@ -95,7 +95,7 @@ class TestCalibrationIsForwardedToTheBudget:
     def test_a_high_calibration_also_raises_the_displayed_logits_figure(self, monkeypatch):
         """The panel's logits figure is a separate claim from the peak above,
         and moving together is not itself proof either one is wired correctly."""
-        from soup_cli.utils import layer_stream
+        from ai_forge_cli.utils import layer_stream
 
         monkeypatch.setattr(layer_stream, "calibrated_logits_bytes_per_element", lambda: 14.0)
         baseline = _budget_lines()[0]
@@ -108,7 +108,7 @@ class TestCalibrationIsForwardedToTheBudget:
     def test_a_below_constant_calibration_does_not_lower_the_peak(self, monkeypatch):
         """calibrated_logits_bytes_per_element() itself floors at the shipped
         constant, so this also guards a future caller that bypasses the floor."""
-        from soup_cli.utils import layer_stream
+        from ai_forge_cli.utils import layer_stream
 
         monkeypatch.setattr(layer_stream, "calibrated_logits_bytes_per_element", lambda: 14.0)
         at_constant = _budget_lines()
@@ -122,8 +122,8 @@ class TestCalibrationIsForwardedToTheBudget:
         """No CUDA: measure_logits_loss_bytes_per_element() returns None and
         calibrated_logits_bytes_per_element() falls back to LOGITS_BYTES_PER_ELEMENT,
         so a machine without a GPU sees exactly today's number."""
-        from soup_cli.utils import layer_stream
-        from soup_cli.utils.layer_stream import estimate_stream_peak_vram
+        from ai_forge_cli.utils import layer_stream
+        from ai_forge_cli.utils.layer_stream import estimate_stream_peak_vram
 
         monkeypatch.setattr(
             layer_stream, "measure_logits_loss_bytes_per_element", lambda **kw: None
@@ -147,13 +147,13 @@ class TestCalibrationIsForwardedToTheBudget:
 
 class TestThePanelReportsWhenCalibrationDiverges:
     def test_no_extra_line_at_the_shipped_constant(self, monkeypatch):
-        from soup_cli.utils import layer_stream
+        from ai_forge_cli.utils import layer_stream
 
         monkeypatch.setattr(layer_stream, "calibrated_logits_bytes_per_element", lambda: 14.0)
         assert len(_budget_lines()) == 1
 
     def test_an_extra_line_names_both_numbers_above_the_constant(self, monkeypatch):
-        from soup_cli.utils import layer_stream
+        from ai_forge_cli.utils import layer_stream
 
         monkeypatch.setattr(layer_stream, "calibrated_logits_bytes_per_element", lambda: 18.0)
         lines = _budget_lines()

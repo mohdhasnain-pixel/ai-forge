@@ -12,7 +12,7 @@ runner = CliRunner()
 
 
 def test_module_imports():
-    from soup_cli.utils import drift_alarm
+    from ai_forge_cli.utils import drift_alarm
 
     assert hasattr(drift_alarm, "DriftReport")
     assert hasattr(drift_alarm, "compute_token_distribution")
@@ -29,7 +29,7 @@ def test_module_imports():
 
 @pytest.mark.parametrize("value", [0.01, 0.05, 0.5, 1.0, 10.0])
 def test_validate_threshold_happy(value):
-    from soup_cli.utils.drift_alarm import validate_threshold
+    from ai_forge_cli.utils.drift_alarm import validate_threshold
 
     assert validate_threshold(value) == float(value)
 
@@ -38,7 +38,7 @@ def test_validate_threshold_happy(value):
     "bad", [True, False, None, "0.1", -0.1, 0.0, float("nan"), float("inf"), 100.1],
 )
 def test_validate_threshold_rejects(bad):
-    from soup_cli.utils.drift_alarm import validate_threshold
+    from ai_forge_cli.utils.drift_alarm import validate_threshold
 
     with pytest.raises((TypeError, ValueError)):
         validate_threshold(bad)
@@ -50,13 +50,13 @@ def test_validate_threshold_rejects(bad):
 
 
 def test_validate_webhook_url_https_ok():
-    from soup_cli.utils.drift_alarm import validate_webhook_url
+    from ai_forge_cli.utils.drift_alarm import validate_webhook_url
 
     assert validate_webhook_url("https://hooks.slack.com/services/xxx") is not None
 
 
 def test_validate_webhook_url_loopback_http_ok():
-    from soup_cli.utils.drift_alarm import validate_webhook_url
+    from ai_forge_cli.utils.drift_alarm import validate_webhook_url
 
     assert validate_webhook_url("http://127.0.0.1:9000/hook") is not None
     assert validate_webhook_url("http://localhost:8080/hook") is not None
@@ -80,7 +80,7 @@ def test_validate_webhook_url_loopback_http_ok():
     ],
 )
 def test_validate_webhook_url_rejects(bad):
-    from soup_cli.utils.drift_alarm import validate_webhook_url
+    from ai_forge_cli.utils.drift_alarm import validate_webhook_url
 
     with pytest.raises((TypeError, ValueError)):
         validate_webhook_url(bad)
@@ -92,7 +92,7 @@ def test_validate_webhook_url_rejects(bad):
 
 
 def test_compute_token_distribution_basic():
-    from soup_cli.utils.drift_alarm import compute_token_distribution
+    from ai_forge_cli.utils.drift_alarm import compute_token_distribution
 
     rows = ["hello world", "hello there", "world peace"]
     dist = compute_token_distribution(rows)
@@ -103,21 +103,21 @@ def test_compute_token_distribution_basic():
 
 
 def test_compute_token_distribution_empty():
-    from soup_cli.utils.drift_alarm import compute_token_distribution
+    from ai_forge_cli.utils.drift_alarm import compute_token_distribution
 
     dist = compute_token_distribution([])
     assert dist == {}
 
 
 def test_compute_token_distribution_skips_non_string():
-    from soup_cli.utils.drift_alarm import compute_token_distribution
+    from ai_forge_cli.utils.drift_alarm import compute_token_distribution
 
     dist = compute_token_distribution(["hello", 42, None, "world"])
     assert "hello" in dist and "world" in dist
 
 
 def test_compute_token_distribution_rejects_non_iterable():
-    from soup_cli.utils.drift_alarm import compute_token_distribution
+    from ai_forge_cli.utils.drift_alarm import compute_token_distribution
 
     with pytest.raises(TypeError):
         compute_token_distribution(123)  # type: ignore[arg-type]
@@ -129,7 +129,7 @@ def test_compute_token_distribution_rejects_non_iterable():
 
 
 def test_rolling_kl_identical_distributions():
-    from soup_cli.utils.drift_alarm import rolling_kl
+    from ai_forge_cli.utils.drift_alarm import rolling_kl
 
     p = {"a": 0.5, "b": 0.5}
     q = {"a": 0.5, "b": 0.5}
@@ -137,7 +137,7 @@ def test_rolling_kl_identical_distributions():
 
 
 def test_rolling_kl_different_distributions():
-    from soup_cli.utils.drift_alarm import rolling_kl
+    from ai_forge_cli.utils.drift_alarm import rolling_kl
 
     p = {"a": 0.9, "b": 0.1}
     q = {"a": 0.1, "b": 0.9}
@@ -147,7 +147,7 @@ def test_rolling_kl_different_distributions():
 
 def test_rolling_kl_handles_missing_keys():
     """Smoothing: token in p but not q should not crash."""
-    from soup_cli.utils.drift_alarm import rolling_kl
+    from ai_forge_cli.utils.drift_alarm import rolling_kl
 
     p = {"a": 0.5, "b": 0.5}
     q = {"a": 1.0}
@@ -156,21 +156,21 @@ def test_rolling_kl_handles_missing_keys():
 
 
 def test_rolling_kl_rejects_negative_prob():
-    from soup_cli.utils.drift_alarm import rolling_kl
+    from ai_forge_cli.utils.drift_alarm import rolling_kl
 
     with pytest.raises(ValueError):
         rolling_kl({"a": -0.1, "b": 1.1}, {"a": 0.5, "b": 0.5})
 
 
 def test_rolling_kl_rejects_non_finite():
-    from soup_cli.utils.drift_alarm import rolling_kl
+    from ai_forge_cli.utils.drift_alarm import rolling_kl
 
     with pytest.raises(ValueError):
         rolling_kl({"a": float("nan")}, {"a": 1.0})
 
 
 def test_rolling_kl_rejects_non_mapping():
-    from soup_cli.utils.drift_alarm import rolling_kl
+    from ai_forge_cli.utils.drift_alarm import rolling_kl
 
     with pytest.raises(TypeError):
         rolling_kl([0.5, 0.5], {"a": 1.0})  # type: ignore[arg-type]
@@ -182,7 +182,7 @@ def test_rolling_kl_rejects_non_mapping():
 
 
 def test_drift_report_frozen():
-    from soup_cli.utils.drift_alarm import DriftReport
+    from ai_forge_cli.utils.drift_alarm import DriftReport
 
     r = DriftReport(
         kl_divergence=0.5,
@@ -197,7 +197,7 @@ def test_drift_report_frozen():
 
 
 def test_drift_report_validates():
-    from soup_cli.utils.drift_alarm import DriftReport
+    from ai_forge_cli.utils.drift_alarm import DriftReport
 
     # KL must be >= 0
     with pytest.raises(ValueError):
@@ -227,7 +227,7 @@ def test_drift_report_validates():
 
 
 def test_run_drift_check_happy(tmp_path, monkeypatch):
-    from soup_cli.utils.drift_alarm import run_drift_check
+    from ai_forge_cli.utils.drift_alarm import run_drift_check
 
     monkeypatch.chdir(tmp_path)
     ref = tmp_path / "ref.jsonl"
@@ -255,7 +255,7 @@ def test_run_drift_check_happy(tmp_path, monkeypatch):
 
 
 def test_run_drift_check_below_threshold(tmp_path, monkeypatch):
-    from soup_cli.utils.drift_alarm import run_drift_check
+    from ai_forge_cli.utils.drift_alarm import run_drift_check
 
     monkeypatch.chdir(tmp_path)
     ref = tmp_path / "ref.jsonl"
@@ -276,7 +276,7 @@ def test_run_drift_check_below_threshold(tmp_path, monkeypatch):
 
 
 def test_run_drift_check_rejects_outside_cwd(tmp_path, monkeypatch):
-    from soup_cli.utils.drift_alarm import run_drift_check
+    from ai_forge_cli.utils.drift_alarm import run_drift_check
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "stray.jsonl"
@@ -296,7 +296,7 @@ def test_run_drift_check_rejects_outside_cwd(tmp_path, monkeypatch):
 
 
 def test_run_drift_check_missing_files(tmp_path, monkeypatch):
-    from soup_cli.utils.drift_alarm import run_drift_check
+    from ai_forge_cli.utils.drift_alarm import run_drift_check
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(FileNotFoundError):
@@ -308,7 +308,7 @@ def test_run_drift_check_missing_files(tmp_path, monkeypatch):
 
 
 def test_run_drift_check_rejects_null_byte():
-    from soup_cli.utils.drift_alarm import run_drift_check
+    from ai_forge_cli.utils.drift_alarm import run_drift_check
 
     with pytest.raises(ValueError):
         run_drift_check(
@@ -324,7 +324,7 @@ def test_run_drift_check_rejects_null_byte():
 
 
 def test_cli_drift_alarm_help():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["drift-alarm", "--help"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -332,7 +332,7 @@ def test_cli_drift_alarm_help():
 
 
 def test_cli_drift_alarm_happy(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     ref = tmp_path / "ref.jsonl"
@@ -362,7 +362,7 @@ def test_cli_drift_alarm_happy(tmp_path, monkeypatch):
 
 
 def test_cli_drift_alarm_outside_cwd_rejected(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "stray.jsonl"
@@ -390,7 +390,7 @@ def test_cli_drift_alarm_outside_cwd_rejected(tmp_path, monkeypatch):
 
 
 def test_cli_drift_alarm_invalid_threshold(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     ref = tmp_path / "ref.jsonl"
@@ -414,7 +414,7 @@ def test_cli_drift_alarm_invalid_threshold(tmp_path, monkeypatch):
 
 
 def test_cli_drift_alarm_webhook_validated(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     ref = tmp_path / "ref.jsonl"

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from soup_cli.config.schema import SoupConfig, TrainingConfig
+from ai_forge_cli.config.schema import SoupConfig, TrainingConfig
 
 # ---------------------------------------------------------------------------
 # Config validation
@@ -123,7 +123,7 @@ class TestFreezeModelLayers:
 
     def test_freeze_by_layer_count(self):
         """freeze_model_layers freezes first N layers."""
-        from soup_cli.utils.freeze import freeze_model_layers
+        from ai_forge_cli.utils.freeze import freeze_model_layers
 
         model, params = self._make_mock_model(32)
         frozen_count = freeze_model_layers(model, freeze_layers=24)
@@ -141,7 +141,7 @@ class TestFreezeModelLayers:
 
     def test_freeze_by_ratio(self):
         """freeze_model_layers freezes by ratio."""
-        from soup_cli.utils.freeze import freeze_model_layers
+        from ai_forge_cli.utils.freeze import freeze_model_layers
 
         model, params = self._make_mock_model(32)
         frozen_count = freeze_model_layers(model, freeze_ratio=0.75)
@@ -157,7 +157,7 @@ class TestFreezeModelLayers:
 
     def test_freeze_layers_priority_over_ratio(self):
         """freeze_layers takes priority when both specified."""
-        from soup_cli.utils.freeze import freeze_model_layers
+        from ai_forge_cli.utils.freeze import freeze_model_layers
 
         model, params = self._make_mock_model(32)
         freeze_model_layers(model, freeze_layers=10, freeze_ratio=0.75)
@@ -173,7 +173,7 @@ class TestFreezeModelLayers:
 
     def test_freeze_does_not_freeze_embeddings(self):
         """Embeddings are not frozen (they're not layer params)."""
-        from soup_cli.utils.freeze import freeze_model_layers
+        from ai_forge_cli.utils.freeze import freeze_model_layers
 
         model, params = self._make_mock_model(32)
         freeze_model_layers(model, freeze_layers=24)
@@ -185,7 +185,7 @@ class TestFreezeModelLayers:
 
     def test_freeze_more_than_total_layers(self):
         """Freezing more layers than model has freezes all layers."""
-        from soup_cli.utils.freeze import freeze_model_layers
+        from ai_forge_cli.utils.freeze import freeze_model_layers
 
         model, params = self._make_mock_model(8)
         freeze_model_layers(model, freeze_layers=100)
@@ -197,7 +197,7 @@ class TestFreezeModelLayers:
 
     def test_freeze_returns_count(self):
         """freeze_model_layers returns number of frozen parameters."""
-        from soup_cli.utils.freeze import freeze_model_layers
+        from ai_forge_cli.utils.freeze import freeze_model_layers
 
         model, params = self._make_mock_model(32)
         frozen = freeze_model_layers(model, freeze_layers=16)
@@ -206,7 +206,7 @@ class TestFreezeModelLayers:
 
     def test_no_freeze_when_none(self):
         """No freezing when both are None."""
-        from soup_cli.utils.freeze import freeze_model_layers
+        from ai_forge_cli.utils.freeze import freeze_model_layers
 
         model, params = self._make_mock_model(8)
         frozen = freeze_model_layers(model, freeze_layers=None, freeze_ratio=None)
@@ -214,7 +214,7 @@ class TestFreezeModelLayers:
 
     def test_detect_num_layers(self):
         """_detect_num_layers extracts layer count from model params."""
-        from soup_cli.utils.freeze import _detect_num_layers
+        from ai_forge_cli.utils.freeze import _detect_num_layers
 
         model = MagicMock()
         params = [
@@ -226,7 +226,7 @@ class TestFreezeModelLayers:
 
     def test_detect_num_layers_no_layers(self):
         """_detect_num_layers returns 0 for models without numbered layers."""
-        from soup_cli.utils.freeze import _detect_num_layers
+        from ai_forge_cli.utils.freeze import _detect_num_layers
 
         model = MagicMock()
         model.named_parameters.return_value = [
@@ -236,7 +236,7 @@ class TestFreezeModelLayers:
 
     def test_detect_num_layers_gpt2_style(self):
         """_detect_num_layers handles GPT-2 style 'transformer.h.N.' naming."""
-        from soup_cli.utils.freeze import _detect_num_layers
+        from ai_forge_cli.utils.freeze import _detect_num_layers
 
         model = MagicMock()
         params = [
@@ -257,7 +257,7 @@ class TestFreezeSweep:
 
     def test_freeze_layers_in_sweep(self):
         """freeze_layers is a valid sweep param."""
-        from soup_cli.commands.sweep import _parse_sweep_params
+        from ai_forge_cli.commands.sweep import _parse_sweep_params
 
         params = _parse_sweep_params(["training.freeze_layers=8,16,24"])
         assert "training.freeze_layers" in params
@@ -265,7 +265,7 @@ class TestFreezeSweep:
 
     def test_freeze_ratio_in_sweep(self):
         """freeze_ratio is a valid sweep param."""
-        from soup_cli.commands.sweep import _parse_sweep_params
+        from ai_forge_cli.commands.sweep import _parse_sweep_params
 
         params = _parse_sweep_params(["training.freeze_ratio=0.25,0.5,0.75"])
         assert "training.freeze_ratio" in params

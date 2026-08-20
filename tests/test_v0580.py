@@ -21,33 +21,33 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.utils.canary_router import (
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils.canary_router import (
     BucketStats,
     CanaryPolicy,
     rollback,
     route,
 )
-from soup_cli.utils.loop_budget import (
+from ai_forge_cli.utils.loop_budget import (
     check_budget,
     parse_budget_string,
     reset_daily_counter_if_new_day,
 )
-from soup_cli.utils.loop_daemon import (
+from ai_forge_cli.utils.loop_daemon import (
     WatchConfig,
     evaluate_canary_verdict,
     maybe_rollback,
     run_once,
     watch,
 )
-from soup_cli.utils.loop_iteration import (
+from ai_forge_cli.utils.loop_iteration import (
     IterationRecord,
     list_iterations,
     new_iteration_id,
     read_iteration,
     write_iteration,
 )
-from soup_cli.utils.loop_state import (
+from ai_forge_cli.utils.loop_state import (
     LOOP_STATUSES,
     LoopState,
     default_state_path,
@@ -1162,14 +1162,14 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 
 class TestSourceWiring:
     def test_cli_registers_loop_typer(self):
-        cli_src = (_REPO_ROOT / "src" / "soup_cli" / "cli.py").read_text(encoding="utf-8")
-        assert "from soup_cli.commands import loop as _loop_cmd" in cli_src
+        cli_src = (_REPO_ROOT / "src" / "ai_forge_cli" / "cli.py").read_text(encoding="utf-8")
+        assert "from ai_forge_cli.commands import loop as _loop_cmd" in cli_src
         assert 'name="loop"' in cli_src
 
     def test_version_bumped_to_0_58_0(self):
         # Widened from exact-match to floor-check to match the v0.51.0 / v0.54.0
         # / v0.56.0 idiom — v0.58.0 was the floor when these tests landed.
-        init = (_REPO_ROOT / "src" / "soup_cli" / "__init__.py").read_text(encoding="utf-8")
+        init = (_REPO_ROOT / "src" / "ai_forge_cli" / "__init__.py").read_text(encoding="utf-8")
         match = re.search(r'__version__ = "(\d+)\.(\d+)\.(\d+)"', init)
         assert match is not None, init
         major, minor, patch = (int(g) for g in match.groups())
@@ -1183,14 +1183,14 @@ class TestSourceWiring:
             "canary_router.py",
             "loop_daemon.py",
         ]:
-            src = (_REPO_ROOT / "src" / "soup_cli" / "utils" / name).read_text(encoding="utf-8")
+            src = (_REPO_ROOT / "src" / "ai_forge_cli" / "utils" / name).read_text(encoding="utf-8")
             # Check module-level imports only (skip indented imports inside funcs)
             for line in src.splitlines():
                 if line.startswith(("import torch", "from torch")):
                     raise AssertionError(f"{name} imports torch at module level")
 
     def test_command_module_uses_typer_app(self):
-        src = (_REPO_ROOT / "src" / "soup_cli" / "commands" / "loop.py").read_text(encoding="utf-8")
+        src = (_REPO_ROOT / "src" / "ai_forge_cli" / "commands" / "loop.py").read_text(encoding="utf-8")
         assert "app = typer.Typer(" in src
         assert 'name="loop"' in src
 
@@ -1201,7 +1201,7 @@ class TestSourceWiring:
 
 
 def test_version_string():
-    from soup_cli import __version__
+    from ai_forge_cli import __version__
 
     # Widened from exact-match to floor-check (v0.58.0 was the floor here).
     match = re.match(r"^(\d+)\.(\d+)\.(\d+)$", __version__)
@@ -1312,7 +1312,7 @@ class TestReviewFixWave2:
         # permission flap mid-iteration that would otherwise kill the daemon.
         d = tmp_path / ".soup-loops"
         d.mkdir()
-        import soup_cli.utils.loop_iteration as li
+        import ai_forge_cli.utils.loop_iteration as li
 
         def _raise(_p):
             raise PermissionError("simulated permission flap")

@@ -12,7 +12,7 @@ from io import StringIO
 import pytest
 from rich.console import Console
 
-from soup_cli.utils.shrink import (
+from ai_forge_cli.utils.shrink import (
     DECISION_DONT_SHIP,
     DECISION_SHIP,
     LayerImportance,
@@ -112,7 +112,7 @@ class TestDecideShrink:
 
 class TestNoTopLevelTorch:
     def test_shrink_module_has_no_top_level_heavy_import(self):
-        import soup_cli.utils.shrink as _mod
+        import ai_forge_cli.utils.shrink as _mod
 
         src = inspect.getsource(_mod)  # cwd-independent (CI runs from a temp cwd)
         tree = ast.parse(src)
@@ -147,12 +147,12 @@ def _tiny_llama(layers: int = 6, vocab_size: int = 128):
 
 class TestPrune:
     def test_arch_detected(self):
-        from soup_cli.utils.shrink import shrink_arch_of
+        from ai_forge_cli.utils.shrink import shrink_arch_of
 
         assert shrink_arch_of(_tiny_llama()) == "llama"
 
     def test_arch_rejects_unsupported(self):
-        from soup_cli.utils.shrink import shrink_arch_of
+        from ai_forge_cli.utils.shrink import shrink_arch_of
 
         class _Cfg:
             model_type = "gpt_neox"
@@ -165,7 +165,7 @@ class TestPrune:
             shrink_arch_of(_M())
 
     def test_prune_removes_block_and_patches_config(self):
-        from soup_cli.utils.shrink import prune_model_layers
+        from ai_forge_cli.utils.shrink import prune_model_layers
 
         m = _tiny_llama(6)
         prune_model_layers(m, start=2, block_size=2)  # drop layers 2,3
@@ -173,28 +173,28 @@ class TestPrune:
         assert m.config.num_hidden_layers == 4
 
     def test_prune_rejects_touching_last_layer(self):
-        from soup_cli.utils.shrink import prune_model_layers
+        from ai_forge_cli.utils.shrink import prune_model_layers
 
         m = _tiny_llama(6)
         with pytest.raises(ValueError, match="protected"):
             prune_model_layers(m, start=4, block_size=2)  # would include last (idx 5)
 
     def test_prune_rejects_touching_first_layer(self):
-        from soup_cli.utils.shrink import prune_model_layers
+        from ai_forge_cli.utils.shrink import prune_model_layers
 
         m = _tiny_llama(6)
         with pytest.raises(ValueError, match="protected"):
             prune_model_layers(m, start=0, block_size=2)
 
     def test_prune_rejects_block_too_large(self):
-        from soup_cli.utils.shrink import prune_model_layers
+        from ai_forge_cli.utils.shrink import prune_model_layers
 
         m = _tiny_llama(6)
         with pytest.raises(ValueError, match="block_size"):
             prune_model_layers(m, start=1, block_size=6)
 
     def test_layer_list_arch_guarded(self):
-        from soup_cli.utils.shrink import layer_list
+        from ai_forge_cli.utils.shrink import layer_list
 
         m = _tiny_llama(4)
         assert len(layer_list(m)) == 4
@@ -215,7 +215,7 @@ class TestImportance:
 
         import torch
 
-        from soup_cli.utils import shrink
+        from ai_forge_cli.utils import shrink
 
         num_layers = 5  # -> valid starts for block_size=2: L in [1, 2]
 
@@ -270,7 +270,7 @@ class TestImportance:
 
         import torch
 
-        from soup_cli.utils import shrink
+        from ai_forge_cli.utils import shrink
 
         num_layers = 3  # valid starts for block_size=1: L in [1, 1]
 
@@ -324,7 +324,7 @@ class TestImportance:
     def test_hidden_states_length_mismatch_raises(self):
         import torch
 
-        from soup_cli.utils import shrink
+        from ai_forge_cli.utils import shrink
 
         class _Cfg:
             model_type = "llama"
@@ -356,7 +356,7 @@ class TestImportance:
             )
 
     def test_select_drop_block_min(self):
-        from soup_cli.utils.shrink import LayerImportance, select_drop_block
+        from ai_forge_cli.utils.shrink import LayerImportance, select_drop_block
 
         imps = [
             LayerImportance(1, 2, 0.9),
@@ -367,19 +367,19 @@ class TestImportance:
         assert chosen.start == 3 and chosen.angular_distance == 0.1
 
     def test_select_drop_block_empty_raises(self):
-        from soup_cli.utils.shrink import select_drop_block
+        from ai_forge_cli.utils.shrink import select_drop_block
 
         with pytest.raises(ValueError):
             select_drop_block([])
 
     def test_resolve_drop_count_ratio(self):
-        from soup_cli.utils.shrink import resolve_drop_count
+        from ai_forge_cli.utils.shrink import resolve_drop_count
 
         assert resolve_drop_count(30, drop_ratio=0.25, drop_layers=None) == 8  # round(7.5)
         assert resolve_drop_count(30, drop_ratio=None, drop_layers=6) == 6
 
     def test_resolve_drop_count_rejects_both_or_neither(self):
-        from soup_cli.utils.shrink import resolve_drop_count
+        from ai_forge_cli.utils.shrink import resolve_drop_count
 
         with pytest.raises(ValueError, match="exactly one"):
             resolve_drop_count(30, drop_ratio=0.25, drop_layers=6)
@@ -387,13 +387,13 @@ class TestImportance:
             resolve_drop_count(30, drop_ratio=None, drop_layers=None)
 
     def test_resolve_drop_count_position_bound(self):
-        from soup_cli.utils.shrink import resolve_drop_count
+        from ai_forge_cli.utils.shrink import resolve_drop_count
 
         with pytest.raises(ValueError, match="range"):
             resolve_drop_count(4, drop_ratio=None, drop_layers=3)  # > num_layers-2
 
     def test_resolve_drop_count_ratio_bounds(self):
-        from soup_cli.utils.shrink import resolve_drop_count
+        from ai_forge_cli.utils.shrink import resolve_drop_count
 
         with pytest.raises(ValueError):
             resolve_drop_count(30, drop_ratio=1.5, drop_layers=None)
@@ -403,7 +403,7 @@ class TestImportance:
     def test_compute_importance_no_valid_starts_raises(self):
         import torch
 
-        from soup_cli.utils import shrink
+        from ai_forge_cli.utils import shrink
 
         class _Cfg:
             model_type = "llama"
@@ -453,7 +453,7 @@ class TestShrinkCli:
     def test_registered_and_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         r = CliRunner().invoke(app, ["shrink", "--help"])
         assert r.exit_code == 0, (r.output, repr(r.exception))
@@ -464,7 +464,7 @@ class TestShrinkCli:
     def test_rejects_both_drop_flags(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         calib = tmp_path / "c.jsonl"
@@ -480,7 +480,7 @@ class TestShrinkCli:
     def test_rejects_calib_outside_cwd(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         work = tmp_path / "work"
         work.mkdir()
@@ -497,7 +497,7 @@ class TestShrinkCli:
     def test_rejects_bad_tolerance(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         calib = tmp_path / "c.jsonl"
@@ -517,7 +517,7 @@ class TestShrinkCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         model_dir = _write_tiny_model(tmp_path / "src_model", layers=6)
@@ -545,7 +545,7 @@ class TestShrinkCli:
     def test_plan_only_writes_nothing(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         model_dir = _write_tiny_model(tmp_path / "src_model2", layers=6)
@@ -566,7 +566,7 @@ class TestShrinkCli:
         from transformers import AutoTokenizer, GPTNeoXConfig, GPTNeoXForCausalLM
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         tok = AutoTokenizer.from_pretrained("HuggingFaceTB/SmolLM2-135M-Instruct")
@@ -593,8 +593,8 @@ class TestShrinkCli:
 # ---------------------------------------------------------------------------
 class TestHeal:
     def test_build_heal_config_parses(self):
-        from soup_cli.commands.shrink import _build_heal_config_yaml
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.commands.shrink import _build_heal_config_yaml
+        from ai_forge_cli.config.loader import load_config_from_string
 
         y = _build_heal_config_yaml(
             pruned_dir="./out/model",
@@ -612,8 +612,8 @@ class TestHeal:
         assert cfg.training.epochs >= 1
 
     def test_build_heal_config_epochs_scale_with_steps(self):
-        from soup_cli.commands.shrink import _build_heal_config_yaml
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.commands.shrink import _build_heal_config_yaml
+        from ai_forge_cli.config.loader import load_config_from_string
 
         few = load_config_from_string(
             _build_heal_config_yaml(
@@ -636,8 +636,8 @@ class TestHeal:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import shrink as shrink_cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import shrink as shrink_cmd
 
         # Stub the heavy heal step: no subprocess, no fuse (pruned model stays).
         monkeypatch.setattr(shrink_cmd, "_run_heal", lambda *a, **k: None)
@@ -666,7 +666,7 @@ class TestHeal:
     def test_heal_outside_cwd_rejected(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         work = tmp_path / "work"
         work.mkdir()
@@ -695,8 +695,8 @@ class TestRegistryAttach:
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
         monkeypatch.chdir(tmp_path)
 
-        from soup_cli.commands.shrink import _attach_to_registry
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.commands.shrink import _attach_to_registry
+        from ai_forge_cli.registry.store import RegistryStore
 
         with RegistryStore() as store:
             entry_id = store.push(
@@ -721,7 +721,7 @@ class TestRegistryAttach:
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg2.db"))
         monkeypatch.chdir(tmp_path)
 
-        from soup_cli.commands.shrink import _attach_to_registry
+        from ai_forge_cli.commands.shrink import _attach_to_registry
 
         report = tmp_path / "shrink_report.json"
         report.write_text('{"decision":"SHIP"}', encoding="utf-8")
@@ -737,7 +737,7 @@ class TestReviewFixes:
         """--output-dir must be cwd-contained (arbitrary-write guard)."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         work = tmp_path / "work"
         work.mkdir()
@@ -758,7 +758,7 @@ class TestReviewFixes:
         """Huge --heal-steps over a tiny heal set is refused, not silently run."""
         import typer
 
-        from soup_cli.commands.shrink import _build_heal_config_yaml
+        from ai_forge_cli.commands.shrink import _build_heal_config_yaml
 
         with pytest.raises(typer.BadParameter):
             _build_heal_config_yaml(
@@ -768,7 +768,7 @@ class TestReviewFixes:
 
     def test_perplexity_no_top_level_math_import_uses_isnan(self):
         """The NaN filter uses math.isnan, not the x == x self-compare idiom."""
-        import soup_cli.commands.shrink as _mod
+        import ai_forge_cli.commands.shrink as _mod
 
         src = inspect.getsource(_mod)
         assert "loss == loss" not in src
@@ -780,7 +780,7 @@ class TestReviewFixes:
         from peft import LoraConfig, TaskType, get_peft_model
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
-        from soup_cli.commands.shrink import _fuse_adapter
+        from ai_forge_cli.commands.shrink import _fuse_adapter
 
         monkeypatch.chdir(tmp_path)  # base_dir must stay under cwd (containment)
         base_dir = tmp_path / "base"
@@ -813,7 +813,7 @@ class TestReviewFixes:
             pytest.skip("no os.symlink")
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         model_dir = _write_tiny_model(tmp_path / "src_sym", layers=6)
@@ -838,7 +838,7 @@ class TestReviewFixes:
         assert "symlink" in r.output.lower()
 
     def test_for_terminal_strips_control_bytes(self):
-        from soup_cli.commands.shrink import _for_terminal
+        from ai_forge_cli.commands.shrink import _for_terminal
 
         assert _for_terminal("a\x1b]0;evilbc") == "a]0;evilbc"
         # tab / LF / CR preserved.
@@ -848,8 +848,8 @@ class TestReviewFixes:
         """A genuine perplexity regression past tolerance exits 2 (DON'T SHIP)."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import shrink as shrink_cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import shrink as shrink_cmd
 
         # Force a regression: original 10.0 -> pruned 20.0 (ratio 2.0 >> tol).
         seq = iter([10.0, 20.0])
@@ -881,7 +881,7 @@ class _StubProc:
 
 class TestRunHeal:
     def test_success_calls_fuse_with_right_dirs(self, tmp_path, monkeypatch):
-        import soup_cli.commands.shrink as sc
+        import ai_forge_cli.commands.shrink as sc
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "model").mkdir()
@@ -896,7 +896,7 @@ class TestRunHeal:
         assert (tmp_path / "heal_config.yaml").exists()
 
     def test_nonzero_returncode_raises_with_tail(self, tmp_path, monkeypatch):
-        import soup_cli.commands.shrink as sc
+        import ai_forge_cli.commands.shrink as sc
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "model").mkdir()
@@ -909,7 +909,7 @@ class TestRunHeal:
                          steps=5, out_dir="./adapter", heal_rows=10)
 
     def test_nonzero_tail_control_bytes_stripped(self, tmp_path, monkeypatch):
-        import soup_cli.commands.shrink as sc
+        import ai_forge_cli.commands.shrink as sc
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "model").mkdir()
@@ -923,7 +923,7 @@ class TestRunHeal:
     def test_timeout_raises(self, tmp_path, monkeypatch):
         import subprocess as _sp
 
-        import soup_cli.commands.shrink as sc
+        import ai_forge_cli.commands.shrink as sc
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "model").mkdir()
@@ -939,7 +939,7 @@ class TestRunHeal:
     def test_device_cpu_hides_gpu_in_subprocess_env(self, tmp_path, monkeypatch):
         """device='cpu' must run the heal with CUDA_VISIBLE_DEVICES=-1 so the
         distill honours CPU (and dodges the GPU hardware-fit gate)."""
-        import soup_cli.commands.shrink as sc
+        import ai_forge_cli.commands.shrink as sc
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "model").mkdir()
@@ -956,8 +956,8 @@ class TestRunHeal:
         assert seen["env"]["CUDA_VISIBLE_DEVICES"] == "-1"
 
     def test_config_has_gradient_checkpointing_and_batch1(self):
-        from soup_cli.commands.shrink import _build_heal_config_yaml
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.commands.shrink import _build_heal_config_yaml
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             _build_heal_config_yaml(pruned_dir="./m", teacher="t",
@@ -970,30 +970,30 @@ class TestRunHeal:
 
 class TestDropCountEdges:
     def test_ratio_rounds_to_zero_rejected(self):
-        from soup_cli.utils.shrink import resolve_drop_count
+        from ai_forge_cli.utils.shrink import resolve_drop_count
 
         with pytest.raises(ValueError, match="range"):
             resolve_drop_count(10, drop_ratio=0.01, drop_layers=None)  # round(0.1)=0
 
     def test_accepted_max_boundary(self):
-        from soup_cli.utils.shrink import resolve_drop_count
+        from ai_forge_cli.utils.shrink import resolve_drop_count
 
         assert resolve_drop_count(6, drop_ratio=None, drop_layers=4) == 4  # n-2
 
     def test_rejects_bool_drop_layers(self):
-        from soup_cli.utils.shrink import resolve_drop_count
+        from ai_forge_cli.utils.shrink import resolve_drop_count
 
         with pytest.raises(ValueError):
             resolve_drop_count(10, drop_ratio=None, drop_layers=True)
 
     def test_rejects_bool_drop_ratio(self):
-        from soup_cli.utils.shrink import resolve_drop_count
+        from ai_forge_cli.utils.shrink import resolve_drop_count
 
         with pytest.raises(ValueError):
             resolve_drop_count(10, drop_ratio=True, drop_layers=None)
 
     def test_max_count_agrees_across_three_functions(self):
-        from soup_cli.utils.shrink import prune_model_layers, resolve_drop_count
+        from ai_forge_cli.utils.shrink import prune_model_layers, resolve_drop_count
 
         assert resolve_drop_count(6, drop_ratio=None, drop_layers=4) == 4
         m = _tiny_llama(6)
@@ -1007,7 +1007,7 @@ class TestDropCountEdges:
 
 class TestPruneBool:
     def test_rejects_bool_start_and_block(self):
-        from soup_cli.utils.shrink import prune_model_layers
+        from ai_forge_cli.utils.shrink import prune_model_layers
 
         m = _tiny_llama(6)
         with pytest.raises(ValueError):
@@ -1017,7 +1017,7 @@ class TestPruneBool:
             prune_model_layers(m2, start=1, block_size=True)
 
     def test_layer_list_missing_modulelist(self):
-        from soup_cli.utils.shrink import layer_list
+        from ai_forge_cli.utils.shrink import layer_list
 
         class _Cfg:
             model_type = "llama"
@@ -1034,7 +1034,7 @@ class TestReloadFixesLayerIdx:
     def test_prune_leaves_stale_idx_reload_fixes(self, tmp_path):
         from transformers import AutoModelForCausalLM
 
-        from soup_cli.utils.shrink import prune_model_layers
+        from ai_forge_cli.utils.shrink import prune_model_layers
 
         m = _tiny_llama(6)
         attn = m.model.layers[4].self_attn
@@ -1052,7 +1052,7 @@ class TestReloadFixesLayerIdx:
 
 class TestArchQwen:
     def test_qwen_detected(self):
-        from soup_cli.utils.shrink import arch_family_of_config
+        from ai_forge_cli.utils.shrink import arch_family_of_config
 
         class _Cfg:
             model_type = "qwen2"
@@ -1063,32 +1063,32 @@ class TestArchQwen:
 
 class TestExtractText:
     def test_plain_string(self):
-        from soup_cli.commands.shrink import _extract_text
+        from ai_forge_cli.commands.shrink import _extract_text
 
         assert _extract_text("hello") == "hello"
 
     def test_prompt_and_content_and_instruction_keys(self):
-        from soup_cli.commands.shrink import _extract_text
+        from ai_forge_cli.commands.shrink import _extract_text
 
         assert _extract_text({"prompt": "p"}) == "p"
         assert _extract_text({"content": "c"}) == "c"
         assert _extract_text({"instruction": "i"}) == "i"
 
     def test_messages_join(self):
-        from soup_cli.commands.shrink import _extract_text
+        from ai_forge_cli.commands.shrink import _extract_text
 
         row = {"messages": [{"role": "user", "content": "a"},
                             {"role": "assistant", "content": "b"}]}
         assert _extract_text(row) == "a\nb"
 
     def test_text_precedence_over_messages(self):
-        from soup_cli.commands.shrink import _extract_text
+        from ai_forge_cli.commands.shrink import _extract_text
 
         row = {"text": "T", "messages": [{"role": "user", "content": "M"}]}
         assert _extract_text(row) == "T"
 
     def test_no_usable_field_returns_empty(self):
-        from soup_cli.commands.shrink import _extract_text
+        from ai_forge_cli.commands.shrink import _extract_text
 
         assert _extract_text({"other": 1}) == ""
 
@@ -1098,7 +1098,7 @@ class TestLoadCalibEdges:
         monkeypatch.chdir(tmp_path)
         p = tmp_path / "c.jsonl"
         p.write_text(content, encoding="utf-8")
-        from soup_cli.commands.shrink import _load_calib
+        from ai_forge_cli.commands.shrink import _load_calib
 
         return _load_calib("c.jsonl")
 
@@ -1125,7 +1125,7 @@ class TestLoadCalibEdges:
         assert prompts == ["the quick brown fox jumps"]
 
     def test_row_cap_truncates(self, tmp_path, monkeypatch):
-        from soup_cli.commands import shrink as sc
+        from ai_forge_cli.commands import shrink as sc
 
         monkeypatch.setattr(sc, "_MAX_CALIB_ROWS", 3)
         prompts = self._run(
@@ -1137,7 +1137,7 @@ class TestLoadCalibEdges:
     def test_size_cap_rejected(self, tmp_path, monkeypatch):
         import typer
 
-        from soup_cli.commands import shrink as sc
+        from ai_forge_cli.commands import shrink as sc
 
         monkeypatch.setattr(sc, "_MAX_INPUT_BYTES", 10)
         with pytest.raises(typer.BadParameter, match="exceeds"):
@@ -1148,7 +1148,7 @@ class TestPerplexityInf:
     def test_returns_inf_when_all_single_token(self):
         import torch
 
-        from soup_cli.commands.shrink import _perplexity
+        from ai_forge_cli.commands.shrink import _perplexity
 
         class _Tok:
             def __call__(self, text, **kw):
@@ -1193,14 +1193,14 @@ class TestImportanceCaps:
         return _Model(), _Tok(), counter
 
     def test_mask_none_branch(self):
-        from soup_cli.utils.shrink import compute_layer_importance
+        from ai_forge_cli.utils.shrink import compute_layer_importance
 
         model, tok, _ = self._model_tok()
         imps = compute_layer_importance(model, tok, ["hi"], block_size=1, device="cpu")
         assert imps  # no attention_mask key -> mask None branch, still scores
 
     def test_max_prompts_truncates_forward_calls(self):
-        from soup_cli.utils.shrink import compute_layer_importance
+        from ai_forge_cli.utils.shrink import compute_layer_importance
 
         model, tok, counter = self._model_tok()
         compute_layer_importance(
@@ -1211,14 +1211,14 @@ class TestImportanceCaps:
 
 class TestDecideShrinkBoundaries:
     def test_just_past_tolerance_dont_ship(self):
-        from soup_cli.utils.shrink import DECISION_DONT_SHIP, decide_shrink
+        from ai_forge_cli.utils.shrink import DECISION_DONT_SHIP, decide_shrink
 
         v = decide_shrink(10.0, 10.0 * (1.10 + 5e-9), tolerance=0.10,
                           layers_before=30, layers_after=24)
         assert v.decision == DECISION_DONT_SHIP
 
     def test_match_keywords_on_validation(self):
-        from soup_cli.utils.shrink import decide_shrink
+        from ai_forge_cli.utils.shrink import decide_shrink
 
         with pytest.raises(ValueError, match="ppl_original must be"):
             decide_shrink(0.0, 5.0, layers_before=30, layers_after=24)
@@ -1232,7 +1232,7 @@ class TestDecideShrinkBoundaries:
 
 class TestCommandsNoTopLevelTorch:
     def test_commands_shrink_has_no_top_level_heavy_import(self):
-        import soup_cli.commands.shrink as _mod
+        import ai_forge_cli.commands.shrink as _mod
 
         src = inspect.getsource(_mod)  # cwd-independent (CI runs from a temp cwd)
         tree = ast.parse(src)
@@ -1261,7 +1261,7 @@ class TestFuseAdapterSymlinkGuard:
             _os.symlink(str(target), str(link), target_is_directory=True)
         except (OSError, NotImplementedError):
             pytest.skip("symlink creation not permitted")
-        from soup_cli.commands.shrink import _fuse_adapter
+        from ai_forge_cli.commands.shrink import _fuse_adapter
 
         with pytest.raises(ValueError, match="symlink"):
             _fuse_adapter(base_dir="base", adapter_dir="adapter")

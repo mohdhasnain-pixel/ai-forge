@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import SoupConfig
+from ai_forge_cli.config.schema import SoupConfig
 
 # ─── Schema bounds ──────────────────────────────────────────────────────────
 
@@ -121,19 +121,19 @@ class TestPreferenceLossWeightsConfig:
 
 class TestMultiObjectiveHelpers:
     def test_is_multi_objective_true(self):
-        from soup_cli.trainer.preference import is_multi_objective_preference
+        from ai_forge_cli.trainer.preference import is_multi_objective_preference
 
         cfg = _base(preference_loss_weights={"dpo": 0.7, "bco": 0.3})
         assert is_multi_objective_preference(cfg) is True
 
     def test_is_multi_objective_false_scalar(self):
-        from soup_cli.trainer.preference import is_multi_objective_preference
+        from ai_forge_cli.trainer.preference import is_multi_objective_preference
 
         cfg = _base(preference_loss="dpo")
         assert is_multi_objective_preference(cfg) is False
 
     def test_is_multi_objective_false_legacy(self):
-        from soup_cli.trainer.preference import is_multi_objective_preference
+        from ai_forge_cli.trainer.preference import is_multi_objective_preference
 
         cfg = SoupConfig(
             base="some-model",
@@ -144,7 +144,7 @@ class TestMultiObjectiveHelpers:
 
     def test_get_loss_weights_returns_copy(self):
         """Defensive copy so caller mutation cannot affect cfg."""
-        from soup_cli.trainer.preference import get_loss_weights
+        from ai_forge_cli.trainer.preference import get_loss_weights
 
         cfg = _base(preference_loss_weights={"dpo": 0.7, "bco": 0.3})
         weights = get_loss_weights(cfg)
@@ -154,7 +154,7 @@ class TestMultiObjectiveHelpers:
         assert get_loss_weights(cfg) == {"dpo": 0.7, "bco": 0.3}
 
     def test_get_loss_weights_none_when_not_set(self):
-        from soup_cli.trainer.preference import get_loss_weights
+        from ai_forge_cli.trainer.preference import get_loss_weights
 
         cfg = _base(preference_loss="dpo")
         assert get_loss_weights(cfg) is None
@@ -169,7 +169,7 @@ class TestMultiObjectiveDeferred:
         losses (DPO/SimPO/ORPO/IPO) is data-format-incompatible and must
         be rejected at setup() with a ValueError naming 'bco'.
         """
-        from soup_cli.trainer.preference import PreferenceTrainerWrapper
+        from ai_forge_cli.trainer.preference import PreferenceTrainerWrapper
 
         cfg = _base(preference_loss_weights={"dpo": 0.7, "bco": 0.3})
         wrapper = PreferenceTrainerWrapper(cfg, device="cpu")

@@ -245,28 +245,28 @@ _CORPUS = [
 
 class TestLocateDecoderLayersGpt2:
     def test_locates_transformer_h(self):
-        from soup_cli.utils.edit_kernels import _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _locate_decoder_layers
 
         model = _FakeGPT2LM(layers=4)
         layers = _locate_decoder_layers(model)
         assert len(layers) == 4
 
     def test_peft_wrapped_gpt2(self):
-        from soup_cli.utils.edit_kernels import _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _locate_decoder_layers
 
         model = _peft_wrap(_FakeGPT2LM(layers=3))
         layers = _locate_decoder_layers(model)
         assert len(layers) == 3
 
     def test_peft_wrapped_llama_still_works(self):
-        from soup_cli.utils.edit_kernels import _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _locate_decoder_layers
 
         model = _peft_wrap(_FakeLlamaLM(layers=2))
         layers = _locate_decoder_layers(model)
         assert len(layers) == 2
 
     def test_unknown_arch_raises(self):
-        from soup_cli.utils.edit_kernels import _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _locate_decoder_layers
 
         with pytest.raises(ValueError, match="decoder layers"):
             _locate_decoder_layers(nn.Linear(2, 2))
@@ -274,7 +274,7 @@ class TestLocateDecoderLayersGpt2:
     def test_get_base_model_raises_swallowed(self):
         """A PEFT wrapper whose get_base_model() blows up must fall through to
         the clear ValueError (DEBUG-logged, not masked) — review L2."""
-        from soup_cli.utils.edit_kernels import _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _locate_decoder_layers
 
         class _BadPeft:
             def get_base_model(self):
@@ -286,7 +286,7 @@ class TestLocateDecoderLayersGpt2:
 
 class TestDownProjGpt2:
     def test_returns_c_proj(self):
-        from soup_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers
 
         model = _FakeGPT2LM()
         down = _down_proj(_locate_decoder_layers(model), 1)
@@ -296,7 +296,7 @@ class TestDownProjGpt2:
         assert down.nf == 8
 
     def test_llama_down_proj_unchanged(self):
-        from soup_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers
 
         model = _FakeLlamaLM()
         down = _down_proj(_locate_decoder_layers(model), 0)
@@ -304,7 +304,7 @@ class TestDownProjGpt2:
         assert tuple(down.weight.shape) == (8, 16)
 
     def test_out_of_range(self):
-        from soup_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers
 
         layers = _locate_decoder_layers(_FakeGPT2LM())
         with pytest.raises(ValueError, match="out of range"):
@@ -313,30 +313,30 @@ class TestDownProjGpt2:
 
 class TestProjHelpers:
     def test_is_transposed_proj_conv1d(self):
-        from soup_cli.utils.edit_kernels import _is_transposed_proj
+        from ai_forge_cli.utils.edit_kernels import _is_transposed_proj
 
         assert _is_transposed_proj(_Conv1D(16, 8)) is True
 
     def test_is_transposed_proj_linear(self):
-        from soup_cli.utils.edit_kernels import _is_transposed_proj
+        from ai_forge_cli.utils.edit_kernels import _is_transposed_proj
 
         assert _is_transposed_proj(nn.Linear(16, 8, bias=False)) is False
 
     def test_proj_out_dim_conv1d_uses_nf(self):
-        from soup_cli.utils.edit_kernels import _proj_out_dim
+        from ai_forge_cli.utils.edit_kernels import _proj_out_dim
 
         # Conv1D nf = output (hidden) dim, NOT weight.shape[0] (= in dim).
         assert _proj_out_dim(_Conv1D(16, 8)) == 8
 
     def test_proj_out_dim_linear_uses_shape0(self):
-        from soup_cli.utils.edit_kernels import _proj_out_dim
+        from ai_forge_cli.utils.edit_kernels import _proj_out_dim
 
         assert _proj_out_dim(nn.Linear(16, 8, bias=False)) == 8
 
     def test_is_transposed_proj_rejects_bool_nf(self):
         """``nf=True`` (bool, a subclass of int) must NOT be treated as Conv1D
         — review L3."""
-        from soup_cli.utils.edit_kernels import _is_transposed_proj
+        from ai_forge_cli.utils.edit_kernels import _is_transposed_proj
 
         assert _is_transposed_proj(SimpleNamespace(nf=True)) is False
 
@@ -344,7 +344,7 @@ class TestProjHelpers:
 class TestRank1UpdateTransposed:
     def test_conv1d_post_condition(self):
         """Conv1D: ``key @ W`` must gain exactly ``delta`` after the update."""
-        from soup_cli.utils.edit_kernels import _rank1_update
+        from ai_forge_cli.utils.edit_kernels import _rank1_update
 
         conv = _Conv1D(16, 8)
         key = torch.ones(16)
@@ -356,7 +356,7 @@ class TestRank1UpdateTransposed:
         assert torch.allclose(after - before, delta, atol=1e-4)
 
     def test_linear_post_condition_regression(self):
-        from soup_cli.utils.edit_kernels import _rank1_update
+        from ai_forge_cli.utils.edit_kernels import _rank1_update
 
         lin = nn.Linear(16, 8, bias=False)
         key = torch.ones(16)
@@ -368,7 +368,7 @@ class TestRank1UpdateTransposed:
         assert torch.allclose(after - before, delta, atol=1e-4)
 
     def test_conv1d_zero_key_rejected(self):
-        from soup_cli.utils.edit_kernels import _rank1_update
+        from ai_forge_cli.utils.edit_kernels import _rank1_update
 
         with pytest.raises(ValueError, match="zero norm"):
             _rank1_update(_Conv1D(16, 8), torch.zeros(16), torch.ones(8))
@@ -376,7 +376,7 @@ class TestRank1UpdateTransposed:
 
 class TestAlphaEditProjectTransposed:
     def test_conv1d_shape_and_determinism(self):
-        from soup_cli.utils.edit_kernels import _alphaedit_project
+        from ai_forge_cli.utils.edit_kernels import _alphaedit_project
 
         conv = _Conv1D(16, 8)
         # Logical [out, in] update.
@@ -387,7 +387,7 @@ class TestAlphaEditProjectTransposed:
         assert torch.allclose(p1, p2)
 
     def test_conv1d_projection_idempotent(self):
-        from soup_cli.utils.edit_kernels import _alphaedit_project
+        from ai_forge_cli.utils.edit_kernels import _alphaedit_project
 
         conv = _Conv1D(16, 8)
         upd = torch.randn(8, 16)
@@ -399,7 +399,7 @@ class TestAlphaEditProjectTransposed:
 
 class TestApplyKernelsGpt2EndToEnd:
     def _run(self, method, model):
-        from soup_cli.utils.edit_kernels import measure_target_prob, run_edit_kernel
+        from ai_forge_cli.utils.edit_kernels import measure_target_prob, run_edit_kernel
 
         tok = _FakeTok()
         before = measure_target_prob(
@@ -448,7 +448,7 @@ class TestApplyKernelsGpt2EndToEnd:
     def test_memit_gpt2_edits_full_band(self):
         """The #251 ``_proj_out_dim`` Conv1D fix makes the MEMIT band dim-check
         MATCH across uniform-width GPT-2 layers, so the whole band is edited."""
-        from soup_cli.utils.edit_kernels import apply_memit_edit
+        from ai_forge_cli.utils.edit_kernels import apply_memit_edit
 
         torch.manual_seed(1)
         result = apply_memit_edit(
@@ -465,7 +465,7 @@ class TestApplyKernelsGpt2EndToEnd:
         sizing (first call) then a mismatching dim for every band check, so the
         sole band layer is skipped and the empty-edit guard fires.
         """
-        import soup_cli.utils.edit_kernels as ek
+        import ai_forge_cli.utils.edit_kernels as ek
 
         real = ek._proj_out_dim
         state = {"n": 0}
@@ -485,7 +485,7 @@ class TestApplyKernelsGpt2EndToEnd:
         """AlphaEdit's ``.t()`` apply keeps the Conv1D weight in [in, out]
         layout — an un-transposed [out, in] apply would shape-error in add_
         (review H3)."""
-        from soup_cli.utils.edit_kernels import (
+        from ai_forge_cli.utils.edit_kernels import (
             _down_proj,
             _locate_decoder_layers,
             apply_alphaedit_edit,
@@ -507,7 +507,7 @@ class TestApplyKernelsGpt2EndToEnd:
     def test_rome_peft_wrapped_gpt2(self):
         """A PEFT-wrapped GPT-2 base is editable end-to-end through the kernel
         (review L1 — PEFT fallback at the kernel level, not just locate)."""
-        from soup_cli.utils.edit_kernels import run_edit_kernel
+        from ai_forge_cli.utils.edit_kernels import run_edit_kernel
 
         torch.manual_seed(0)
         model = _PeftCallable(_FakeGPT2LM(layers=3))
@@ -526,13 +526,13 @@ class TestApplyKernelsGpt2EndToEnd:
 
 class TestGovernorAtomicIncrement:
     def test_baseline_set_on_fresh(self):
-        from soup_cli.utils.edit_governor import EditGovernor
+        from ai_forge_cli.utils.edit_governor import EditGovernor
 
         gov = EditGovernor(base_model="m")
         assert gov._persisted_edit_count == 0
 
     def test_baseline_set_on_loaded(self, tmp_path, monkeypatch):
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             EditGovernor,
             EditGovernorStore,
             load_governor,
@@ -558,7 +558,7 @@ class TestGovernorAtomicIncrement:
         With the pre-#252 absolute-write behaviour the second save would
         clobber the first to 1. The baseline-delta merge keeps both → 2.
         """
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             EditGovernorStore,
             load_governor,
             save_governor,
@@ -580,7 +580,7 @@ class TestGovernorAtomicIncrement:
         """Two governors record MULTIPLE edits each → merged is the sum of the
         deltas (3 + 2 = 5), proving the baseline-delta merge (not a naive +1
         per save) — review M4."""
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             EditGovernorStore,
             load_governor,
             save_governor,
@@ -600,7 +600,7 @@ class TestGovernorAtomicIncrement:
             assert load_governor(store, "m").edit_count == 5
 
     def test_merge_onto_existing_row(self, tmp_path, monkeypatch):
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             EditGovernorStore,
             load_governor,
             save_governor,
@@ -624,7 +624,7 @@ class TestGovernorAtomicIncrement:
     def test_save_updates_in_memory_count(self, tmp_path, monkeypatch):
         """After an atomic merge, ``governor.edit_count`` reflects the merged
         value so the CLI summary shows the real count."""
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             EditGovernorStore,
             load_governor,
             save_governor,
@@ -649,7 +649,7 @@ class TestGovernorAtomicIncrement:
         """Regression: the get+insert in save_state runs under the lock."""
         import inspect
 
-        from soup_cli.utils.edit_governor import EditGovernorStore
+        from ai_forge_cli.utils.edit_governor import EditGovernorStore
 
         src = inspect.getsource(EditGovernorStore.save_state)
         assert "_cross_process_lock" in src
@@ -663,7 +663,7 @@ class TestGovernorAtomicIncrement:
 
 class TestEstimateKeyCovariance:
     def test_shape_and_spd(self):
-        from soup_cli.utils.edit_kernels import (
+        from ai_forge_cli.utils.edit_kernels import (
             _down_proj,
             _locate_decoder_layers,
             estimate_key_covariance,
@@ -683,7 +683,7 @@ class TestEstimateKeyCovariance:
         assert float(eigvals.min()) > 0.0
 
     def test_empty_corpus_rejected(self):
-        from soup_cli.utils.edit_kernels import (
+        from ai_forge_cli.utils.edit_kernels import (
             _down_proj,
             _locate_decoder_layers,
             estimate_key_covariance,
@@ -695,7 +695,7 @@ class TestEstimateKeyCovariance:
             estimate_key_covariance(model, _FakeTok(), down, [], device="cpu")
 
     def test_bad_caps_rejected(self):
-        from soup_cli.utils.edit_kernels import (
+        from ai_forge_cli.utils.edit_kernels import (
             _down_proj,
             _locate_decoder_layers,
             estimate_key_covariance,
@@ -719,7 +719,7 @@ class TestEstimateKeyCovariance:
     def test_all_blank_corpus_rejected(self):
         """A corpus where every entry is blank / non-str captures no keys →
         the runtime ``count == 0`` branch raises (review H4)."""
-        from soup_cli.utils.edit_kernels import (
+        from ai_forge_cli.utils.edit_kernels import (
             _down_proj,
             _locate_decoder_layers,
             estimate_key_covariance,
@@ -737,7 +737,7 @@ class TestRank1UpdatePreconditioned:
     def test_post_condition_preserved_linear(self):
         """With C != I the ROME post-condition ``down(key*) += delta`` still
         holds exactly — the covariance only redistributes the update mass."""
-        from soup_cli.utils.edit_kernels import _rank1_update
+        from ai_forge_cli.utils.edit_kernels import _rank1_update
 
         lin = nn.Linear(16, 8, bias=False)
         key = torch.randn(16)
@@ -752,7 +752,7 @@ class TestRank1UpdatePreconditioned:
         assert torch.allclose(after - before, delta, atol=1e-3)
 
     def test_post_condition_preserved_conv1d(self):
-        from soup_cli.utils.edit_kernels import _rank1_update
+        from ai_forge_cli.utils.edit_kernels import _rank1_update
 
         conv = _Conv1D(16, 8)
         key = torch.randn(16)
@@ -770,7 +770,7 @@ class TestRank1UpdatePreconditioned:
 
         Review-fix: ``denom = NaN`` would slip past the bare ``<= 0`` guard.
         """
-        from soup_cli.utils.edit_kernels import _rank1_update
+        from ai_forge_cli.utils.edit_kernels import _rank1_update
 
         lin = nn.Linear(16, 8, bias=False)
         bad_cov = torch.full((16, 16), float("nan"))
@@ -780,7 +780,7 @@ class TestRank1UpdatePreconditioned:
     def test_singular_cov_rejected(self):
         """A singular (rank-deficient) covariance makes the solve fail /
         produce a non-finite denom → clean ValueError (review M3)."""
-        from soup_cli.utils.edit_kernels import _rank1_update
+        from ai_forge_cli.utils.edit_kernels import _rank1_update
 
         lin = nn.Linear(16, 8, bias=False)
         with pytest.raises(ValueError, match="covariance solve failed|degenerate"):
@@ -790,7 +790,7 @@ class TestRank1UpdatePreconditioned:
 
     def test_cov_changes_update_direction(self):
         """A non-identity covariance produces a different update than C=I."""
-        from soup_cli.utils.edit_kernels import _rank1_update
+        from ai_forge_cli.utils.edit_kernels import _rank1_update
 
         key = torch.randn(16)
         delta = torch.randn(8)
@@ -813,8 +813,8 @@ class TestRank1UpdatePreconditioned:
 
 class TestApplyRomeWithCovCorpus:
     def test_apply_edit_rome_cov(self, monkeypatch):
-        import soup_cli.utils.live_eval as live_eval
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        import ai_forge_cli.utils.live_eval as live_eval
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         torch.manual_seed(0)
         model = _FakeGPT2LM(layers=3)
@@ -832,8 +832,8 @@ class TestApplyRomeWithCovCorpus:
         assert result.target_prob_after > result.target_prob_before
 
     def test_cov_corpus_rejected_for_memit(self, monkeypatch):
-        import soup_cli.utils.live_eval as live_eval
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        import ai_forge_cli.utils.live_eval as live_eval
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         # load_model_and_tokenizer must NOT be reached — the reject is before it.
         monkeypatch.setattr(
@@ -847,8 +847,8 @@ class TestApplyRomeWithCovCorpus:
             apply_edit(plan, cov_corpus=_CORPUS)
 
     def test_cov_corpus_rejected_for_alphaedit(self, monkeypatch):
-        import soup_cli.utils.live_eval as live_eval
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        import ai_forge_cli.utils.live_eval as live_eval
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         monkeypatch.setattr(
             live_eval, "load_model_and_tokenizer",
@@ -863,7 +863,7 @@ class TestApplyRomeWithCovCorpus:
     def test_cov_corpus_rejected_for_grace(self):
         """grace takes a different code path (codebook sidecar) but the cov
         reject still fires first — before any import / model load (review H1)."""
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         plan = build_edit_plan(base="b", method="grace", subject="s", target="t")
         with pytest.raises(ValueError, match="cov-corpus"):
@@ -873,9 +873,9 @@ class TestApplyRomeWithCovCorpus:
         """Order matters: a non-ROME method + cov_corpus + a governor that
         WOULD refuse must report the cov error, not the governance refusal
         (the cov check precedes governor.check_can_edit) — review M5."""
-        import soup_cli.utils.live_eval as live_eval
-        from soup_cli.utils.edit_governor import EditGovernor
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        import ai_forge_cli.utils.live_eval as live_eval
+        from ai_forge_cli.utils.edit_governor import EditGovernor
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         monkeypatch.setattr(
             live_eval, "load_model_and_tokenizer",
@@ -890,7 +890,7 @@ class TestApplyRomeWithCovCorpus:
 
 class TestLoadCovCorpus:
     def test_parses_jsonl_text_field(self, tmp_path, monkeypatch):
-        from soup_cli.commands.edit import _load_cov_corpus
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         monkeypatch.chdir(tmp_path)
         f = tmp_path / "corpus.jsonl"
@@ -904,7 +904,7 @@ class TestLoadCovCorpus:
         assert rows == ["row one", "row two", "row three"]
 
     def test_parses_raw_text_lines(self, tmp_path, monkeypatch):
-        from soup_cli.commands.edit import _load_cov_corpus
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         monkeypatch.chdir(tmp_path)
         f = tmp_path / "corpus.txt"
@@ -913,27 +913,27 @@ class TestLoadCovCorpus:
         assert rows == ["plain line one", "plain line two"]
 
     def test_outside_cwd_rejected(self):
-        from soup_cli.commands.edit import _load_cov_corpus
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         with pytest.raises(ValueError, match="cwd"):
             _load_cov_corpus("/etc/passwd")
 
     def test_null_byte_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.edit import _load_cov_corpus
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="null"):
             _load_cov_corpus("a\x00b.jsonl")
 
     def test_missing_file(self, tmp_path, monkeypatch):
-        from soup_cli.commands.edit import _load_cov_corpus
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
             _load_cov_corpus("nope.jsonl")
 
     def test_directory_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.edit import _load_cov_corpus
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "adir").mkdir()
@@ -943,7 +943,7 @@ class TestLoadCovCorpus:
             _load_cov_corpus("adir")
 
     def test_empty_corpus_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.edit import _load_cov_corpus
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         monkeypatch.chdir(tmp_path)
         f = tmp_path / "empty.jsonl"
@@ -954,7 +954,7 @@ class TestLoadCovCorpus:
     def test_jsonl_dict_without_usable_field_skipped(self, tmp_path, monkeypatch):
         """A JSONL object with no text/prompt/content field is silently dropped
         (NOT appended as raw JSON) — review L5."""
-        from soup_cli.commands.edit import _load_cov_corpus
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         monkeypatch.chdir(tmp_path)
         f = tmp_path / "c.jsonl"
@@ -966,8 +966,8 @@ class TestLoadCovCorpus:
 
     def test_oversize_rejected(self, tmp_path, monkeypatch):
         """File larger than the byte cap is rejected before any read — L4."""
-        import soup_cli.commands.edit as edit_mod
-        from soup_cli.commands.edit import _load_cov_corpus
+        import ai_forge_cli.commands.edit as edit_mod
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(edit_mod, "_MAX_COV_CORPUS_BYTES", 8)
@@ -978,8 +978,8 @@ class TestLoadCovCorpus:
 
     def test_line_cap_truncates(self, tmp_path, monkeypatch):
         """Reading stops at the line cap rather than consuming the whole file — L4."""
-        import soup_cli.commands.edit as edit_mod
-        from soup_cli.commands.edit import _load_cov_corpus
+        import ai_forge_cli.commands.edit as edit_mod
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(edit_mod, "_MAX_COV_CORPUS_LINES", 2)
@@ -989,7 +989,7 @@ class TestLoadCovCorpus:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink")
     def test_symlink_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.edit import _load_cov_corpus
+        from ai_forge_cli.commands.edit import _load_cov_corpus
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "real.jsonl"
@@ -1006,30 +1006,30 @@ class TestLoadCovCorpus:
 
 class TestIsMixtralModel:
     def test_basic(self):
-        from soup_cli.utils.longlora import is_mixtral_model
+        from ai_forge_cli.utils.longlora import is_mixtral_model
 
         assert is_mixtral_model("mistralai/Mixtral-8x7B-v0.1") is True
         assert is_mixtral_model("mistralai/Mixtral-8x22B-Instruct-v0.1") is True
 
     def test_bare_token(self):
         """The start-of-string anchor matches a lone ``mixtral-...`` id (M1)."""
-        from soup_cli.utils.longlora import is_mixtral_model
+        from ai_forge_cli.utils.longlora import is_mixtral_model
 
         assert is_mixtral_model("Mixtral-8x7B-v0.1") is True
 
     def test_not_plain_mistral(self):
-        from soup_cli.utils.longlora import is_mixtral_model
+        from ai_forge_cli.utils.longlora import is_mixtral_model
 
         assert is_mixtral_model("mistralai/Mistral-7B-v0.1") is False
 
     def test_word_boundary(self):
-        from soup_cli.utils.longlora import is_mixtral_model
+        from ai_forge_cli.utils.longlora import is_mixtral_model
 
         assert is_mixtral_model("my-mixtralish-finetune") is False
         assert is_mixtral_model("unmixtral-7b") is False
 
     def test_input_guards(self):
-        from soup_cli.utils.longlora import is_mixtral_model
+        from ai_forge_cli.utils.longlora import is_mixtral_model
 
         assert is_mixtral_model("") is False
         with pytest.raises(TypeError):
@@ -1041,7 +1041,7 @@ class TestIsMixtralModel:
 
 class TestMixtralStillNotMistral:
     def test_is_mistral_model_excludes_mixtral(self):
-        from soup_cli.utils.longlora import is_mistral_model
+        from ai_forge_cli.utils.longlora import is_mistral_model
 
         # Regression — is_mistral_model stays narrow; Mixtral is detected by
         # the dedicated is_mixtral_model helper.
@@ -1050,7 +1050,7 @@ class TestMixtralStillNotMistral:
 
 class TestMixtralInAllowlist:
     def test_supported(self):
-        from soup_cli.utils.longlora import is_supported_longlora_arch
+        from ai_forge_cli.utils.longlora import is_supported_longlora_arch
 
         assert is_supported_longlora_arch("mistralai/Mixtral-8x7B-v0.1") is True
         assert (
@@ -1059,20 +1059,20 @@ class TestMixtralInAllowlist:
         )
 
     def test_unsupported_unchanged(self):
-        from soup_cli.utils.longlora import is_supported_longlora_arch
+        from ai_forge_cli.utils.longlora import is_supported_longlora_arch
 
         assert is_supported_longlora_arch("google/gemma-2-9b") is False
         assert is_supported_longlora_arch("databricks/dbrx-base") is False
 
     def test_separate_qkv_families_includes_mixtral(self):
-        from soup_cli.utils.longlora import _SEPARATE_QKV_FAMILIES
+        from ai_forge_cli.utils.longlora import _SEPARATE_QKV_FAMILIES
 
         assert "Mixtral" in _SEPARATE_QKV_FAMILIES
 
     def test_defensive_surface(self):
         """The rewired ``or``-chain must still swallow non-str / null-byte input
         (returns False, never raises) — review M2."""
-        from soup_cli.utils.longlora import is_supported_longlora_arch
+        from ai_forge_cli.utils.longlora import is_supported_longlora_arch
 
         assert is_supported_longlora_arch(None) is False
         assert is_supported_longlora_arch(123) is False
@@ -1081,10 +1081,10 @@ class TestMixtralInAllowlist:
 
 class TestValidateLongloraCompatMixtral:
     def test_accepts_mixtral(self, monkeypatch):
-        from soup_cli.utils import longlora
+        from ai_forge_cli.utils import longlora
 
         monkeypatch.setattr(
-            "soup_cli.utils.flash_attn.is_flash_attn_v3_available", lambda: False
+            "ai_forge_cli.utils.flash_attn.is_flash_attn_v3_available", lambda: False
         )
         # Should not raise.
         longlora.validate_longlora_compat(
@@ -1095,10 +1095,10 @@ class TestValidateLongloraCompatMixtral:
         )
 
     def test_error_message_lists_mixtral(self, monkeypatch):
-        from soup_cli.utils import longlora
+        from ai_forge_cli.utils import longlora
 
         monkeypatch.setattr(
-            "soup_cli.utils.flash_attn.is_flash_attn_v3_available", lambda: False
+            "ai_forge_cli.utils.flash_attn.is_flash_attn_v3_available", lambda: False
         )
         with pytest.raises(ValueError) as exc:
             longlora.validate_longlora_compat(
@@ -1112,10 +1112,10 @@ class TestValidateLongloraCompatMixtral:
     def test_mixtral_ring_attention_rejected(self, monkeypatch):
         """Now that Mixtral passes the arch gate, the downstream ring-attention
         exclusivity becomes reachable for it — confirm it still fires (M6)."""
-        from soup_cli.utils import longlora
+        from ai_forge_cli.utils import longlora
 
         monkeypatch.setattr(
-            "soup_cli.utils.flash_attn.is_flash_attn_v3_available", lambda: False
+            "ai_forge_cli.utils.flash_attn.is_flash_attn_v3_available", lambda: False
         )
         with pytest.raises(ValueError, match="ring"):
             longlora.validate_longlora_compat(
@@ -1145,7 +1145,7 @@ class TestMixtralForwardOverride:
         return model
 
     def test_patches_mixtral_attention(self):
-        from soup_cli.utils.longlora import LongLoRAForwardOverride
+        from ai_forge_cli.utils.longlora import LongLoRAForwardOverride
 
         model = self._fake_attn_model("MixtralAttention")
         with LongLoRAForwardOverride(model, group_size=4):
@@ -1161,7 +1161,7 @@ class TestMixtralForwardOverride:
         )
 
     def test_llama_attention_still_patched(self):
-        from soup_cli.utils.longlora import LongLoRAForwardOverride
+        from ai_forge_cli.utils.longlora import LongLoRAForwardOverride
 
         model = self._fake_attn_model("LlamaAttention")
         with LongLoRAForwardOverride(model, group_size=4):
@@ -1172,10 +1172,10 @@ class TestMixtralForwardOverride:
 
 class TestMixtralSchemaGate:
     def test_schema_accepts_mixtral(self, monkeypatch):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         monkeypatch.setattr(
-            "soup_cli.utils.flash_attn.is_flash_attn_v3_available", lambda: False
+            "ai_forge_cli.utils.flash_attn.is_flash_attn_v3_available", lambda: False
         )
         cfg = load_config_from_string(
             "base: mistralai/Mixtral-8x7B-v0.1\n"
@@ -1199,7 +1199,7 @@ class TestCliCovCorpus:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(app, ["edit", "set", "--help"])
         assert result.exit_code == 0, result.output
@@ -1214,18 +1214,18 @@ class TestCliCovCorpus:
 
 class TestPatchInvariants:
     def test_version_bumped(self):
-        import soup_cli
+        import ai_forge_cli
 
-        parts = soup_cli.__version__.split(".")
+        parts = ai_forge_cli.__version__.split(".")
         assert (int(parts[0]), int(parts[1]), int(parts[2])) >= (0, 71, 16)
 
     @pytest.mark.parametrize(
         "module",
         [
-            "soup_cli.utils.edit_kernels",
-            "soup_cli.utils.edit_governor",
-            "soup_cli.utils.longlora",
-            "soup_cli.commands.edit",
+            "ai_forge_cli.utils.edit_kernels",
+            "ai_forge_cli.utils.edit_governor",
+            "ai_forge_cli.utils.longlora",
+            "ai_forge_cli.commands.edit",
         ],
     )
     def test_no_top_level_torch(self, module):
@@ -1241,7 +1241,7 @@ class TestPatchInvariants:
     def test_edit_kernels_no_top_level_safetensors(self):
         import importlib
 
-        mod = importlib.import_module("soup_cli.utils.edit_kernels")
+        mod = importlib.import_module("ai_forge_cli.utils.edit_kernels")
         with open(mod.__file__, encoding="utf-8") as fh:
             src = fh.read()
         assert "estimate_key_covariance" in src

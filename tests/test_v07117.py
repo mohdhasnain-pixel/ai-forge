@@ -21,7 +21,7 @@ import sys
 
 import pytest
 
-from soup_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.loader import load_config_from_string
 
 # ---------------------------------------------------------------------------
 # Shared fixtures
@@ -80,7 +80,7 @@ class _WordTok:
 
 class TestRaftEpochSalt:
     def test_epoch_zero_is_backward_compatible(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         a = build_raft_prompt(_raft_row(5), shuffle_seed=7, row_index=3)
         b = build_raft_prompt(_raft_row(5), shuffle_seed=7, row_index=3, epoch=0)
@@ -90,7 +90,7 @@ class TestRaftEpochSalt:
         assert a.prompt == b.prompt
 
     def test_different_epochs_repermute(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         # With enough distractors the golden doc lands in a different slot for
         # at least one of several epochs (deterministic per epoch).
@@ -103,27 +103,27 @@ class TestRaftEpochSalt:
         assert len(golden_slots) > 1
 
     def test_same_epoch_deterministic(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         a = build_raft_prompt(_raft_row(5), shuffle_seed=3, row_index=1, epoch=4)
         b = build_raft_prompt(_raft_row(5), shuffle_seed=3, row_index=1, epoch=4)
         assert a.golden_doc_id == b.golden_doc_id
 
     def test_epoch_bool_rejected(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         # Mirrors the row_index policy: bool-as-int → ValueError naming the field.
         with pytest.raises(ValueError, match="epoch"):
             build_raft_prompt(_raft_row(), epoch=True)
 
     def test_epoch_negative_rejected(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         with pytest.raises(ValueError, match="epoch"):
             build_raft_prompt(_raft_row(), epoch=-1)
 
     def test_epoch_non_int_rejected(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         with pytest.raises((TypeError, ValueError)):
             build_raft_prompt(_raft_row(), epoch="2")
@@ -159,7 +159,7 @@ class TestRaftEpochSchema:
 
 class TestRaftEpochCollator:
     def test_state_holds_epoch(self):
-        from soup_cli.trainer.raft import RaftEpochState
+        from ai_forge_cli.trainer.raft import RaftEpochState
 
         st = RaftEpochState()
         assert st.epoch == 0
@@ -169,7 +169,7 @@ class TestRaftEpochCollator:
     def test_collator_repermutes_per_epoch(self):
         import torch
 
-        from soup_cli.trainer.raft import RaftEpochShuffleCollator, RaftEpochState
+        from ai_forge_cli.trainer.raft import RaftEpochShuffleCollator, RaftEpochState
 
         tok = _WordTok()
         state = RaftEpochState()
@@ -191,7 +191,7 @@ class TestRaftEpochCollator:
         assert not same
 
     def test_collator_pads_four_columns(self):
-        from soup_cli.trainer.raft import RaftEpochShuffleCollator, RaftEpochState
+        from ai_forge_cli.trainer.raft import RaftEpochShuffleCollator, RaftEpochState
 
         tok = _WordTok()
         collator = RaftEpochShuffleCollator(
@@ -206,7 +206,7 @@ class TestRaftEpochCollator:
             assert batch[key].shape[0] == 2
 
     def test_collator_bad_max_length(self):
-        from soup_cli.trainer.raft import RaftEpochShuffleCollator, RaftEpochState
+        from ai_forge_cli.trainer.raft import RaftEpochShuffleCollator, RaftEpochState
 
         with pytest.raises(ValueError):
             RaftEpochShuffleCollator(_WordTok(), max_length=4, epoch_state=RaftEpochState())
@@ -214,7 +214,7 @@ class TestRaftEpochCollator:
 
 class TestRaftEpochCallback:
     def test_callback_advances_epoch(self):
-        from soup_cli.trainer.raft import RaftEpochState, make_raft_epoch_callback
+        from ai_forge_cli.trainer.raft import RaftEpochState, make_raft_epoch_callback
 
         state = RaftEpochState()
         cb = make_raft_epoch_callback(state)
@@ -226,7 +226,7 @@ class TestRaftEpochCallback:
         assert state.epoch == 2
 
     def test_callback_none_state_noop(self):
-        from soup_cli.trainer.raft import RaftEpochState, make_raft_epoch_callback
+        from ai_forge_cli.trainer.raft import RaftEpochState, make_raft_epoch_callback
 
         state = RaftEpochState()
         cb = make_raft_epoch_callback(state)
@@ -236,7 +236,7 @@ class TestRaftEpochCallback:
 
 class TestRaftSetupWiring:
     def test_sft_branches_on_epoch_shuffle(self):
-        from soup_cli.trainer import sft
+        from ai_forge_cli.trainer import sft
 
         src = inspect.getsource(sft)
         assert "raft_epoch_shuffle" in src
@@ -251,27 +251,27 @@ class TestRaftSetupWiring:
 
 class TestDiagnoseCitationStyle:
     def test_run_live_diagnose_threads_style(self):
-        from soup_cli.utils.diagnose import live as live_mod
+        from ai_forge_cli.utils.diagnose import live as live_mod
 
         sig = inspect.signature(live_mod.run_live_diagnose)
         assert "citation_style" in sig.parameters
         assert "shuffle_seed" in sig.parameters
 
     def test_score_citation_called_with_style(self, monkeypatch):
-        from soup_cli.utils.diagnose import live as live_mod
+        from ai_forge_cli.utils.diagnose import live as live_mod
 
         captured = {}
 
         def _fake_score_citation(rows, generator, **kwargs):
             captured.update(kwargs)
-            from soup_cli.utils.diagnose.report import FailureScore
+            from ai_forge_cli.utils.diagnose.report import FailureScore
 
             return FailureScore(
                 mode="citation", score=1.0, verdict="OK", evidence="fake"
             )
 
         # Patch the module-level imports used by run_live_diagnose.
-        import soup_cli.utils.diagnose.citation as cit_mod
+        import ai_forge_cli.utils.diagnose.citation as cit_mod
 
         monkeypatch.setattr(cit_mod, "score_citation", _fake_score_citation)
 
@@ -309,7 +309,7 @@ class TestDiagnoseCitationStyle:
     def test_cli_has_citation_style_flag(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(app, ["diagnose", "--help"])
         assert result.exit_code == 0
@@ -318,7 +318,7 @@ class TestDiagnoseCitationStyle:
     def test_cli_rejects_bad_style(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(
             app,
@@ -334,7 +334,7 @@ class TestDiagnoseCitationStyle:
 
 
 def _make_bank(dim: int = 8):
-    from soup_cli.utils.vector_bank import BankEntry, VectorBank
+    from ai_forge_cli.utils.vector_bank import BankEntry, VectorBank
 
     return VectorBank(
         name="demo",
@@ -350,14 +350,14 @@ def _make_bank(dim: int = 8):
 
 class TestBankActiveUserContextVar:
     def test_uses_contextvar(self):
-        from soup_cli.utils import vector_bank
+        from ai_forge_cli.utils import vector_bank
 
         src = inspect.getsource(vector_bank)
         assert "ContextVar" in src
         assert "import contextvars" in src or "from contextvars" in src
 
     def test_set_active_user_contract_preserved(self):
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         loaded = apply_bank_to_serve(_make_bank())
         assert loaded.set_active_user("alice") is True
@@ -365,7 +365,7 @@ class TestBankActiveUserContextVar:
         assert loaded._active_user is None
 
     def test_active_user_reads_back(self):
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         loaded = apply_bank_to_serve(_make_bank())
         loaded.set_active_user("alice")
@@ -374,7 +374,7 @@ class TestBankActiveUserContextVar:
     def test_active_user_is_thread_isolated(self):
         import threading
 
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         loaded = apply_bank_to_serve(_make_bank())
         results: dict[str, object] = {}
@@ -400,7 +400,7 @@ class TestBankActiveUserContextVar:
         # contextvars.Context than the sync endpoint, so it must re-set the
         # active user itself. Verify _stream_response calls set_active_user
         # before generating, and the call site threads loaded_bank + x_user_id.
-        from soup_cli.commands import serve
+        from ai_forge_cli.commands import serve
 
         src = inspect.getsource(serve._stream_response)
         assert "loaded_bank=None" in src and "x_user_id=None" in src
@@ -413,7 +413,7 @@ class TestBankActiveUserContextVar:
         import torch
         from torch import nn
 
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         class _Layer(nn.Module):
             def forward(self, x):
@@ -443,7 +443,7 @@ class TestBankActiveUserContextVar:
 
 class TestMoleServeManifest:
     def _manifest(self):
-        from soup_cli.utils.mole_routing import MoleServeManifest
+        from ai_forge_cli.utils.mole_routing import MoleServeManifest
 
         return MoleServeManifest(
             base="HuggingFaceTB/SmolLM2-135M",
@@ -467,7 +467,7 @@ class TestMoleServeManifest:
             m.top_k = 1
 
     def test_count_must_match_adapters(self):
-        from soup_cli.utils.mole_routing import MoleServeManifest
+        from ai_forge_cli.utils.mole_routing import MoleServeManifest
 
         with pytest.raises(ValueError):
             MoleServeManifest(
@@ -480,7 +480,7 @@ class TestMoleServeManifest:
             )
 
     def test_topk_above_adapters_rejected(self):
-        from soup_cli.utils.mole_routing import MoleServeManifest
+        from ai_forge_cli.utils.mole_routing import MoleServeManifest
 
         with pytest.raises(ValueError, match="top_k"):
             MoleServeManifest(
@@ -493,7 +493,7 @@ class TestMoleServeManifest:
             )
 
     def test_bad_base_rejected(self):
-        from soup_cli.utils.mole_routing import MoleServeManifest
+        from ai_forge_cli.utils.mole_routing import MoleServeManifest
 
         with pytest.raises((TypeError, ValueError), match="base"):
             MoleServeManifest(
@@ -506,7 +506,7 @@ class TestMoleServeManifest:
             )
 
     def test_adapters_must_be_tuple(self):
-        from soup_cli.utils.mole_routing import MoleServeManifest
+        from ai_forge_cli.utils.mole_routing import MoleServeManifest
 
         with pytest.raises(TypeError, match="tuple"):
             MoleServeManifest(
@@ -519,7 +519,7 @@ class TestMoleServeManifest:
             )
 
     def test_bad_temperature_rejected(self):
-        from soup_cli.utils.mole_routing import MoleServeManifest
+        from ai_forge_cli.utils.mole_routing import MoleServeManifest
 
         for bad in (float("nan"), float("inf"), 0.0, -1.0):
             with pytest.raises(ValueError, match="temperature"):
@@ -533,7 +533,7 @@ class TestMoleServeManifest:
                 )
 
     def test_base_too_long_rejected(self):
-        from soup_cli.utils.mole_routing import MoleServeManifest
+        from ai_forge_cli.utils.mole_routing import MoleServeManifest
 
         with pytest.raises(ValueError, match="base too long"):
             MoleServeManifest(
@@ -546,7 +546,7 @@ class TestMoleServeManifest:
             )
 
     def test_write_load_roundtrip(self, tmp_path, monkeypatch):
-        from soup_cli.utils.mole_routing import (
+        from ai_forge_cli.utils.mole_routing import (
             load_mole_manifest,
             write_mole_manifest,
         )
@@ -560,14 +560,14 @@ class TestMoleServeManifest:
         assert loaded == m
 
     def test_load_missing_dir(self, tmp_path, monkeypatch):
-        from soup_cli.utils.mole_routing import load_mole_manifest
+        from ai_forge_cli.utils.mole_routing import load_mole_manifest
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises((FileNotFoundError, OSError, ValueError)):
             load_mole_manifest(str(tmp_path / "nope"))
 
     def test_load_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.mole_routing import load_mole_manifest
+        from ai_forge_cli.utils.mole_routing import load_mole_manifest
 
         work = tmp_path / "work"
         work.mkdir()
@@ -581,7 +581,7 @@ class TestMoleServeManifest:
         # A manifest whose num_task_adapters != len(adapters) fails loud.
         import json as _json
 
-        from soup_cli.utils.mole_routing import load_mole_manifest
+        from ai_forge_cli.utils.mole_routing import load_mole_manifest
 
         monkeypatch.chdir(tmp_path)
         d = tmp_path / "mole_out"
@@ -605,7 +605,7 @@ class TestMoleServeManifest:
     def test_load_missing_key_rejected(self, tmp_path, monkeypatch):
         import json as _json
 
-        from soup_cli.utils.mole_routing import load_mole_manifest
+        from ai_forge_cli.utils.mole_routing import load_mole_manifest
 
         monkeypatch.chdir(tmp_path)
         d = tmp_path / "mole_out"
@@ -628,7 +628,7 @@ class TestMoleServeManifest:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink only")
     def test_load_symlink_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.mole_routing import (
+        from ai_forge_cli.utils.mole_routing import (
             load_mole_manifest,
             write_mole_manifest,
         )
@@ -695,7 +695,7 @@ def _make_fake_mole_model(hidden=4, vocab=6):
 
 class TestLoadedMole:
     def _loaded(self, n_adapters=2):
-        from soup_cli.utils.mole_routing import (
+        from ai_forge_cli.utils.mole_routing import (
             LoadedMole,
             MoleGatingConfig,
             build_gating_kernel,
@@ -764,7 +764,7 @@ class TestLoadedMole:
         assert out.shape[1] == 3 + 3
 
     def test_requires_two_adapters(self):
-        from soup_cli.utils.mole_routing import (
+        from ai_forge_cli.utils.mole_routing import (
             LoadedMole,
             MoleGatingConfig,
             build_gating_kernel,
@@ -799,7 +799,7 @@ class TestLoadedMole:
         # top_k=1 over 3 adapters: only the top-weight adapter is forwarded.
         import torch
 
-        from soup_cli.utils.mole_routing import (
+        from ai_forge_cli.utils.mole_routing import (
             LoadedMole,
             MoleGatingConfig,
             build_gating_kernel,
@@ -837,7 +837,7 @@ class TestLoadedMole:
             def decode(self, ids, skip_special_tokens=True):
                 return "out"
 
-        from soup_cli.utils.mole_routing import (
+        from ai_forge_cli.utils.mole_routing import (
             LoadedMole,
             MoleGatingConfig,
             build_gating_kernel,
@@ -859,7 +859,7 @@ class TestLoadedMole:
 
 class TestMoleTrainWritesManifest:
     def test_train_writes_manifest_source(self):
-        from soup_cli.trainer import mole_routing as trainer_mole
+        from ai_forge_cli.trainer import mole_routing as trainer_mole
 
         src = inspect.getsource(trainer_mole)
         assert "write_mole_manifest" in src
@@ -870,7 +870,7 @@ class TestServeMoleWiring:
     def test_serve_has_mole_flag(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(app, ["serve", "--help"])
         assert result.exit_code == 0
@@ -879,7 +879,7 @@ class TestServeMoleWiring:
     def test_mole_outside_cwd_rejected(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         result = CliRunner().invoke(
@@ -891,7 +891,7 @@ class TestServeMoleWiring:
     def test_mole_requires_transformers_backend(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         d = tmp_path / "mole_out"
@@ -905,7 +905,7 @@ class TestServeMoleWiring:
     def test_mole_rejects_bank_combo(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "mole_out").mkdir()
@@ -919,13 +919,13 @@ class TestServeMoleWiring:
         assert "--bank" in _clean(result.output)
 
     def test_create_app_accepts_mole_runtime(self):
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         sig = inspect.signature(_create_app)
         assert "mole_runtime" in sig.parameters
 
     def test_generate_response_branch_present(self):
-        from soup_cli.commands import serve
+        from ai_forge_cli.commands import serve
 
         src = inspect.getsource(serve)
         assert "_mole_runtime" in src
@@ -935,7 +935,7 @@ class TestServeMoleWiring:
         # Live-smoke regression: --model is the gate/manifest dir, so the base
         # must come from --base (base_model) / the manifest — NOT from
         # str(model_path) (which is the adapter dir with no base config.json).
-        from soup_cli.commands import serve
+        from ai_forge_cli.commands import serve
 
         src = inspect.getsource(serve)
         assert "load_mole_for_serve(" in src
@@ -946,7 +946,7 @@ class TestServeMoleWiring:
         # Live-smoke regression: the MoLE train() result must carry the keys the
         # generic commands/train.py handler reads (initial_loss / final_loss /
         # total_steps / duration_secs / duration) so the run completes cleanly.
-        from soup_cli.trainer import mole_routing as trainer_mole
+        from ai_forge_cli.trainer import mole_routing as trainer_mole
 
         src = inspect.getsource(trainer_mole)
         for key in (
@@ -966,20 +966,20 @@ class TestServeMoleWiring:
 
 class TestPatchInvariants:
     def test_version_bumped(self):
-        import soup_cli
+        import ai_forge_cli
 
-        parts = tuple(int(x) for x in soup_cli.__version__.split(".")[:3])
-        assert parts >= (0, 71, 17), soup_cli.__version__
+        parts = tuple(int(x) for x in ai_forge_cli.__version__.split(".")[:3])
+        assert parts >= (0, 71, 17), ai_forge_cli.__version__
 
     @pytest.mark.parametrize(
         "module",
-        ["soup_cli.utils.raft", "soup_cli.utils.mole_routing"],
+        ["ai_forge_cli.utils.raft", "ai_forge_cli.utils.mole_routing"],
     )
     def test_no_top_level_torch_import(self, module):
         src_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
             "src",
-            "soup_cli",
+            "ai_forge_cli",
             "utils",
             module.rsplit(".", 1)[-1] + ".py",
         )

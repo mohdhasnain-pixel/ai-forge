@@ -9,7 +9,7 @@ runner = CliRunner()
 
 
 def test_module_imports():
-    from soup_cli.utils import completions
+    from ai_forge_cli.utils import completions
 
     assert hasattr(completions, "SUPPORTED_SHELLS")
     assert hasattr(completions, "validate_shell")
@@ -27,7 +27,7 @@ def test_module_imports():
 
 
 def test_supported_shells():
-    from soup_cli.utils.completions import SUPPORTED_SHELLS
+    from ai_forge_cli.utils.completions import SUPPORTED_SHELLS
 
     assert "bash" in SUPPORTED_SHELLS
     assert "zsh" in SUPPORTED_SHELLS
@@ -35,7 +35,7 @@ def test_supported_shells():
 
 
 def test_supported_shells_is_frozenset():
-    from soup_cli.utils.completions import SUPPORTED_SHELLS
+    from ai_forge_cli.utils.completions import SUPPORTED_SHELLS
 
     assert isinstance(SUPPORTED_SHELLS, frozenset)
 
@@ -47,13 +47,13 @@ def test_supported_shells_is_frozenset():
 
 @pytest.mark.parametrize("v", ["bash", "zsh", "fish"])
 def test_validate_shell_happy(v):
-    from soup_cli.utils.completions import validate_shell
+    from ai_forge_cli.utils.completions import validate_shell
 
     assert validate_shell(v) == v
 
 
 def test_validate_shell_case_insensitive():
-    from soup_cli.utils.completions import validate_shell
+    from ai_forge_cli.utils.completions import validate_shell
 
     assert validate_shell("BASH") == "bash"
     assert validate_shell("Fish") == "fish"
@@ -64,14 +64,14 @@ def test_validate_shell_case_insensitive():
     [True, False, None, "", "tcsh", "powershell", "ksh", "csh", "x" * 33],
 )
 def test_validate_shell_rejects(bad):
-    from soup_cli.utils.completions import validate_shell
+    from ai_forge_cli.utils.completions import validate_shell
 
     with pytest.raises((TypeError, ValueError)):
         validate_shell(bad)
 
 
 def test_validate_shell_rejects_null_byte():
-    from soup_cli.utils.completions import validate_shell
+    from ai_forge_cli.utils.completions import validate_shell
 
     with pytest.raises(ValueError, match="null"):
         validate_shell("ba\x00sh")
@@ -83,7 +83,7 @@ def test_validate_shell_rejects_null_byte():
 
 
 def test_render_bash_script_basic():
-    from soup_cli.utils.completions import render_bash_script
+    from ai_forge_cli.utils.completions import render_bash_script
 
     text = render_bash_script()
     assert "_soup_complete" in text or "complete -F" in text
@@ -91,21 +91,21 @@ def test_render_bash_script_basic():
 
 
 def test_render_zsh_script_basic():
-    from soup_cli.utils.completions import render_zsh_script
+    from ai_forge_cli.utils.completions import render_zsh_script
 
     text = render_zsh_script()
     assert "#compdef soup" in text or "_soup" in text
 
 
 def test_render_fish_script_basic():
-    from soup_cli.utils.completions import render_fish_script
+    from ai_forge_cli.utils.completions import render_fish_script
 
     text = render_fish_script()
     assert "complete -c soup" in text or "complete --command soup" in text
 
 
 def test_render_completion_script_dispatch():
-    from soup_cli.utils.completions import render_completion_script
+    from ai_forge_cli.utils.completions import render_completion_script
 
     bash = render_completion_script("bash")
     assert "soup" in bash
@@ -116,7 +116,7 @@ def test_render_completion_script_dispatch():
 
 
 def test_render_completion_script_rejects_unknown():
-    from soup_cli.utils.completions import render_completion_script
+    from ai_forge_cli.utils.completions import render_completion_script
 
     with pytest.raises(ValueError):
         render_completion_script("tcsh")
@@ -128,7 +128,7 @@ def test_render_completion_script_rejects_unknown():
 
 
 def test_complete_recipe_name_returns_list():
-    from soup_cli.utils.completions import complete_recipe_name
+    from ai_forge_cli.utils.completions import complete_recipe_name
 
     suggestions = complete_recipe_name("")
     assert isinstance(suggestions, list)
@@ -136,7 +136,7 @@ def test_complete_recipe_name_returns_list():
 
 
 def test_complete_recipe_name_filters_prefix():
-    from soup_cli.utils.completions import complete_recipe_name
+    from ai_forge_cli.utils.completions import complete_recipe_name
 
     suggestions = complete_recipe_name("llama")
     # Every result must start with the prefix (case-insensitive)
@@ -145,21 +145,21 @@ def test_complete_recipe_name_filters_prefix():
 
 
 def test_complete_recipe_name_empty_for_nonsense():
-    from soup_cli.utils.completions import complete_recipe_name
+    from ai_forge_cli.utils.completions import complete_recipe_name
 
     suggestions = complete_recipe_name("definitely-not-a-recipe-zzzzzz")
     assert suggestions == []
 
 
 def test_complete_recipe_name_rejects_bool():
-    from soup_cli.utils.completions import complete_recipe_name
+    from ai_forge_cli.utils.completions import complete_recipe_name
 
     with pytest.raises(TypeError):
         complete_recipe_name(True)  # type: ignore[arg-type]
 
 
 def test_complete_recipe_name_null_byte_returns_empty():
-    from soup_cli.utils.completions import complete_recipe_name
+    from ai_forge_cli.utils.completions import complete_recipe_name
 
     # Defensive: null byte returns empty rather than raising.
     assert complete_recipe_name("foo\x00bar") == []
@@ -171,7 +171,7 @@ def test_complete_recipe_name_null_byte_returns_empty():
 
 
 def test_complete_target_modules_default():
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     # With no base, returns canonical Llama-shape modules
     suggestions = complete_target_modules("", base=None)
@@ -180,7 +180,7 @@ def test_complete_target_modules_default():
 
 
 def test_complete_target_modules_filters_prefix():
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     suggestions = complete_target_modules("q_", base=None)
     for s in suggestions:
@@ -188,7 +188,7 @@ def test_complete_target_modules_filters_prefix():
 
 
 def test_complete_target_modules_rejects_bool():
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     with pytest.raises(TypeError):
         complete_target_modules(True, base=None)  # type: ignore[arg-type]
@@ -196,7 +196,7 @@ def test_complete_target_modules_rejects_bool():
 
 def test_complete_target_modules_handles_unknown_base():
     """When base is set but we can't probe it, fall back to default modules."""
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     suggestions = complete_target_modules("", base="some/nonexistent-model")
     # Should still return non-empty default
@@ -211,7 +211,7 @@ def test_complete_target_modules_introspects_gpt2_config():
     import types
     from unittest.mock import patch
 
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     fake_cfg = types.SimpleNamespace(model_type="gpt2", architectures=["GPT2LMHeadModel"])
     with patch("transformers.AutoConfig.from_pretrained", return_value=fake_cfg) as m:
@@ -228,7 +228,7 @@ def test_complete_target_modules_introspects_llama_config():
     import types
     from unittest.mock import patch
 
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     fake_cfg = types.SimpleNamespace(model_type="llama")
     with patch("transformers.AutoConfig.from_pretrained", return_value=fake_cfg):
@@ -241,7 +241,7 @@ def test_complete_target_modules_unknown_arch_falls_back():
     import types
     from unittest.mock import patch
 
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     fake_cfg = types.SimpleNamespace(model_type="totally_unknown_arch_xyz")
     with patch("transformers.AutoConfig.from_pretrained", return_value=fake_cfg):
@@ -254,7 +254,7 @@ def test_complete_target_modules_no_model_type_falls_back():
     import types
     from unittest.mock import patch
 
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     # A config object with no ``model_type`` attribute at all → default shape.
     fake_cfg = types.SimpleNamespace()
@@ -267,7 +267,7 @@ def test_complete_target_modules_non_string_model_type_falls_back():
     import types
     from unittest.mock import patch
 
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     # A non-string ``model_type`` (e.g. an int) is rejected → default shape.
     fake_cfg = types.SimpleNamespace(model_type=123)
@@ -279,7 +279,7 @@ def test_complete_target_modules_non_string_model_type_falls_back():
 def test_complete_target_modules_introspection_error_falls_back():
     from unittest.mock import patch
 
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     with patch(
         "transformers.AutoConfig.from_pretrained", side_effect=OSError("not cached")
@@ -292,7 +292,7 @@ def test_complete_target_modules_introspection_respects_prefix():
     import types
     from unittest.mock import patch
 
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     fake_cfg = types.SimpleNamespace(model_type="gpt2")
     with patch("transformers.AutoConfig.from_pretrained", return_value=fake_cfg):
@@ -304,7 +304,7 @@ def test_complete_target_modules_transformers_missing_falls_back(monkeypatch):
     """When transformers is not installed, the completer never raises."""
     import builtins
 
-    from soup_cli.utils.completions import complete_target_modules
+    from ai_forge_cli.utils.completions import complete_target_modules
 
     real_import = builtins.__import__
 
@@ -324,14 +324,14 @@ def test_complete_target_modules_transformers_missing_falls_back(monkeypatch):
 
 
 def test_cli_completions_help():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["completions", "--help"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
 
 
 def test_cli_completions_bash():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["completions", "bash"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -339,21 +339,21 @@ def test_cli_completions_bash():
 
 
 def test_cli_completions_zsh():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["completions", "zsh"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
 
 
 def test_cli_completions_fish():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["completions", "fish"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
 
 
 def test_cli_completions_unknown_shell():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["completions", "tcsh"])
     assert result.exit_code != 0
@@ -367,7 +367,7 @@ def test_cli_completions_unknown_shell():
 def test_no_heavy_top_level_imports():
     from pathlib import Path
 
-    src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "utils" / "completions.py"
+    src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "utils" / "completions.py"
     text = src.read_text(encoding="utf-8")
     import re
     for bad in ["^import torch", "^from torch", "^import transformers", "^from transformers"]:

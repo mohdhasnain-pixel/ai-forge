@@ -50,7 +50,7 @@ class TestToolCallSuiteShowsATooolSchema:
         model to guess an internal function name from a bare user question. A
         correct model answers in prose and scores 0 — which is what was measured.
         """
-        from soup_cli.eval.gate_suites import load_suite_items
+        from ai_forge_cli.eval.gate_suites import load_suite_items
 
         items = load_suite_items("mini_tool_call")
         assert items, "fixture empty"
@@ -68,7 +68,7 @@ class TestToolCallSuiteShowsATooolSchema:
         told only "you have tools" may answer ``{"tool": "get_weather"}``, which
         is a correct tool call and a scorer miss. The prompt must name the shape.
         """
-        from soup_cli.eval.gate_suites import load_suite_items
+        from ai_forge_cli.eval.gate_suites import load_suite_items
 
         for item in load_suite_items("mini_tool_call"):
             prompt = item["prompt"]
@@ -82,7 +82,7 @@ class TestToolCallSuiteShowsATooolSchema:
         transcription, not tool selection, and would sit at a ceiling no
         regression could move. Every prompt must offer several candidates.
         """
-        from soup_cli.eval.gate_suites import load_suite_items
+        from ai_forge_cli.eval.gate_suites import load_suite_items
 
         for item in load_suite_items("mini_tool_call"):
             names = set(json.loads(_catalogue_json(item["prompt"])))
@@ -99,7 +99,7 @@ class TestToolCallSuiteShowsATooolSchema:
         score near the floor. If the schema leaked the answer (one tool per
         prompt) this would be impossible to distinguish from a good model.
         """
-        from soup_cli.eval.gate_suites import load_suite_items, score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import load_suite_items, score_bundled_suite
 
         items = load_suite_items("mini_tool_call")
         fixed = _expected_name(items[0])
@@ -118,7 +118,7 @@ class TestToolCallSuiteShowsATooolSchema:
         items sharing a prompt would silently collapse and the suite would score
         a different number of items than it reports.
         """
-        from soup_cli.eval.gate_suites import load_suite_items
+        from ai_forge_cli.eval.gate_suites import load_suite_items
 
         prompts = [it["prompt"] for it in load_suite_items("mini_tool_call")]
         assert len(prompts) == len(set(prompts))
@@ -131,7 +131,7 @@ class TestToolCallSuiteShowsATooolSchema:
         catalogue would cut off the user question at the end of the prompt and
         silently restore the 0.000 score with a *different* root cause.
         """
-        from soup_cli.eval.gate_suites import load_suite_items
+        from ai_forge_cli.eval.gate_suites import load_suite_items
 
         for item in load_suite_items("mini_tool_call"):
             # ~4 chars/token; 1024 tokens is the cap. Stay under a quarter of it.
@@ -139,7 +139,7 @@ class TestToolCallSuiteShowsATooolSchema:
 
     def test_expected_calls_still_parse_as_the_scorer_needs(self):
         """Fixture integrity: rewriting prompts must not disturb the answers."""
-        from soup_cli.eval.gate_suites import load_suite_items
+        from ai_forge_cli.eval.gate_suites import load_suite_items
 
         items = load_suite_items("mini_tool_call")
         assert len(items) == 40
@@ -156,7 +156,7 @@ class TestToolCallSuiteShowsATooolSchema:
         schema were injected at scoring time instead of living in the fixture,
         every such lookup would miss and score 0.
         """
-        from soup_cli.eval.gate_suites import load_suite_items, score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import load_suite_items, score_bundled_suite
 
         items = load_suite_items("mini_tool_call")
         by_prompt = {it["prompt"]: it["expected"] for it in items}
@@ -167,7 +167,7 @@ class TestToolCallSuiteShowsATooolSchema:
 
 def _catalogue_json(prompt: str) -> str:
     """Pull the tool-name list out of a rendered prompt, for assertions."""
-    from soup_cli.eval.gate_suites import tool_names_in_prompt
+    from ai_forge_cli.eval.gate_suites import tool_names_in_prompt
 
     return json.dumps(tool_names_in_prompt(prompt))
 
@@ -180,7 +180,7 @@ def _catalogue_json(prompt: str) -> str:
 class TestJsonContainerExtraction:
     def test_fenced_object_is_scored_on_validity_not_packaging(self):
         """The measured case: 38/40 answers arrived inside a ```json fence."""
-        from soup_cli.eval.gate_suites import _is_json_container
+        from ai_forge_cli.eval.gate_suites import _is_json_container
 
         assert _is_json_container('```json\n{"name": "Ada", "age": 36}\n```')
         assert _is_json_container("```\n[1, 2, 3]\n```")
@@ -191,18 +191,18 @@ class TestJsonContainerExtraction:
         The JSON itself is complete; only the closing ``` is missing. Scoring
         that as invalid measures the generation budget, not the model.
         """
-        from soup_cli.eval.gate_suites import _is_json_container
+        from ai_forge_cli.eval.gate_suites import _is_json_container
 
         assert _is_json_container('```json\n{"title": "Dune", "author": "Herbert"}')
 
     def test_preamble_before_the_object_is_tolerated(self):
-        from soup_cli.eval.gate_suites import _is_json_container
+        from ai_forge_cli.eval.gate_suites import _is_json_container
 
         assert _is_json_container('Sure! Here is the JSON:\n{"ok": true}')
 
     def test_bare_container_still_passes(self):
         """CONTROL (required): the pre-existing bare-JSON path must not regress."""
-        from soup_cli.eval.gate_suites import _is_json_container
+        from ai_forge_cli.eval.gate_suites import _is_json_container
 
         assert _is_json_container('{"ok": true}')
         assert _is_json_container("[1, 2, 3]")
@@ -215,7 +215,7 @@ class TestJsonContainerExtraction:
         one. If any of these passed, ``mini_format_json`` would score ~1.0 for
         every model and detect nothing — the same blindness as scoring 0.0.
         """
-        from soup_cli.eval.gate_suites import _is_json_container
+        from ai_forge_cli.eval.gate_suites import _is_json_container
 
         for bad in (
             "not json at all",
@@ -232,14 +232,14 @@ class TestJsonContainerExtraction:
 
     def test_bare_scalar_still_rejected(self):
         """A scalar is valid JSON but not the structured object asked for."""
-        from soup_cli.eval.gate_suites import _is_json_container
+        from ai_forge_cli.eval.gate_suites import _is_json_container
 
         assert not _is_json_container("42")
         assert not _is_json_container("true")
         assert not _is_json_container('"just a string"')
 
     def test_null_byte_and_oversize_still_rejected(self):
-        from soup_cli.eval.gate_suites import _MAX_OUTPUT_LEN, _is_json_container
+        from ai_forge_cli.eval.gate_suites import _MAX_OUTPUT_LEN, _is_json_container
 
         assert not _is_json_container('{"a": 1}\x00')
         assert not _is_json_container("x" * (_MAX_OUTPUT_LEN + 1))
@@ -252,20 +252,20 @@ class TestJsonContainerExtraction:
         "respond with JSON". An unbounded scan would credit it, and would also
         credit incidental braces in ordinary prose.
         """
-        from soup_cli.eval.gate_suites import _is_json_container
+        from ai_forge_cli.eval.gate_suites import _is_json_container
 
         assert not _is_json_container("word " * 2000 + '{"buried": true}')
 
     def test_pathological_nesting_is_rejected_quickly(self):
         """The bounded scan must not turn a RecursionError probe into a hang."""
-        from soup_cli.eval.gate_suites import _is_json_container
+        from ai_forge_cli.eval.gate_suites import _is_json_container
 
         start = time.monotonic()
         assert not _is_json_container("[" * 20000)
         assert time.monotonic() - start < 5.0
 
     def test_suite_score_reflects_the_repair(self):
-        from soup_cli.eval.gate_suites import score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import score_bundled_suite
 
         fenced = score_bundled_suite(
             "mini_format_json", lambda p: '```json\n{"k": "v"}\n```'
@@ -279,7 +279,7 @@ class TestToolCallScoringToleratesTheSameEnvelope:
     """The tool-call scorer parses the whole output too — same packaging bug."""
 
     def test_fenced_tool_call_scores(self):
-        from soup_cli.eval.gate_suites import load_suite_items, score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import load_suite_items, score_bundled_suite
 
         by_prompt = {
             it["prompt"]: f"```json\n{it['expected']}\n```"
@@ -291,7 +291,7 @@ class TestToolCallScoringToleratesTheSameEnvelope:
 
     def test_fenced_call_with_the_wrong_name_still_fails(self):
         """CONTROL: unwrapping must not become unconditional crediting."""
-        from soup_cli.eval.gate_suites import score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import score_bundled_suite
 
         wrong = '```json\n{"function": {"name": "definitely_not_a_tool", "arguments": {}}}\n```'
         assert score_bundled_suite("mini_tool_call", lambda p: wrong) == 0.0
@@ -309,7 +309,7 @@ class TestBehaviouralGenerationBudget:
         The behavioural suites need a budget of their own: the MCQ suites answer
         in one letter, so the shared 64-token default was never sized for them.
         """
-        from soup_cli.eval.gate_suites import BEHAVIOURAL_MAX_NEW_TOKENS
+        from ai_forge_cli.eval.gate_suites import BEHAVIOURAL_MAX_NEW_TOKENS
 
         assert isinstance(BEHAVIOURAL_MAX_NEW_TOKENS, int)
         assert not isinstance(BEHAVIOURAL_MAX_NEW_TOKENS, bool)
@@ -321,7 +321,7 @@ class TestBehaviouralGenerationBudget:
     def test_budget_clears_the_longest_expected_answer_with_margin(self):
         """Pinned against the fixture, so a future longer item cannot silently
         outgrow the budget."""
-        from soup_cli.eval.gate_suites import (
+        from ai_forge_cli.eval.gate_suites import (
             BEHAVIOURAL_MAX_NEW_TOKENS,
             load_suite_items,
         )
@@ -338,7 +338,7 @@ class TestBehaviouralGenerationBudget:
 
 class TestSuitesStayOfflineAndDeterministic:
     def test_scoring_is_deterministic_across_runs(self):
-        from soup_cli.eval.gate_suites import load_suite_items, score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import load_suite_items, score_bundled_suite
 
         by_prompt = {
             it["prompt"]: it["expected"] for it in load_suite_items("mini_tool_call")
@@ -353,7 +353,7 @@ class TestSuitesStayOfflineAndDeterministic:
         import sys
 
         code = (
-            "import sys; import soup_cli.eval.gate_suites as g;"
+            "import sys; import ai_forge_cli.eval.gate_suites as g;"
             "assert 'torch' not in sys.modules;"
             "assert 'requests' not in sys.modules;"
             "assert 'urllib.request' not in sys.modules;"
@@ -382,7 +382,7 @@ class TestTheBudgetReachesTheGenerator:
     """
 
     def _capture(self, monkeypatch):
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         calls = []
 
@@ -394,8 +394,8 @@ class TestTheBudgetReachesTheGenerator:
         return calls
 
     def test_every_generator_gets_the_behavioural_budget(self, monkeypatch):
-        from soup_cli.commands.ship import _resolve_generators
-        from soup_cli.eval.gate_suites import BEHAVIOURAL_MAX_NEW_TOKENS
+        from ai_forge_cli.commands.ship import _resolve_generators
+        from ai_forge_cli.eval.gate_suites import BEHAVIOURAL_MAX_NEW_TOKENS
 
         calls = self._capture(monkeypatch)
         _resolve_generators(base="b", adapter="a", tuned=None, device="cpu")
@@ -405,6 +405,6 @@ class TestTheBudgetReachesTheGenerator:
     def test_the_budget_fits_a_real_tool_call(self):
         """CONTROL on the constant itself: 64 was the measured failure and any
         value near it reintroduces the truncation this fix exists to remove."""
-        from soup_cli.eval.gate_suites import BEHAVIOURAL_MAX_NEW_TOKENS
+        from ai_forge_cli.eval.gate_suites import BEHAVIOURAL_MAX_NEW_TOKENS
 
         assert BEHAVIOURAL_MAX_NEW_TOKENS >= 128, BEHAVIOURAL_MAX_NEW_TOKENS

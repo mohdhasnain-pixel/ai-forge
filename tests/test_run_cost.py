@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from soup_cli.utils.run_cost import (
+from ai_forge_cli.utils.run_cost import (
     MAX_DURATION_SECS,
     estimate_run_cost_usd,
     format_cost_usd,
@@ -112,7 +112,7 @@ class TestFormat:
 class TestTrackerIntegration:
     def test_finish_run_records_cost(self, tmp_path, monkeypatch):
         monkeypatch.setenv("SOUP_DB_PATH", str(tmp_path / "x.db"))
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         tracker = ExperimentTracker()
         run_id = tracker.start_run(
@@ -138,7 +138,7 @@ class TestTrackerIntegration:
 
     def test_finish_run_unknown_gpu_no_cost(self, tmp_path, monkeypatch):
         monkeypatch.setenv("SOUP_DB_PATH", str(tmp_path / "y.db"))
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         tracker = ExperimentTracker()
         run_id = tracker.start_run(

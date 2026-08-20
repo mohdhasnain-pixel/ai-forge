@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-import soup_cli
+import ai_forge_cli
 
 # --------------------------------------------------------------------------
 # Shared helpers
@@ -42,7 +42,7 @@ class _FakeControl:
 
 class TestRLSignalBuffer:
     def test_record_and_snapshot(self):
-        from soup_cli.utils.rl_signal_buffer import RLSignalBuffer
+        from ai_forge_cli.utils.rl_signal_buffer import RLSignalBuffer
 
         buf = RLSignalBuffer()
         buf.record(
@@ -54,7 +54,7 @@ class TestRLSignalBuffer:
         assert "reward" in snap["per_func"]
 
     def test_aggregate_sums_across_funcs(self):
-        from soup_cli.utils.rl_signal_buffer import RLSignalBuffer
+        from ai_forge_cli.utils.rl_signal_buffer import RLSignalBuffer
 
         buf = RLSignalBuffer()
         buf.record(func_name="a", completions=["x", "y"], rewards=[1, 2])
@@ -64,7 +64,7 @@ class TestRLSignalBuffer:
         assert set(snap["per_func"]) == {"a", "b"}
 
     def test_non_finite_reward_dropped(self):
-        from soup_cli.utils.rl_signal_buffer import RLSignalBuffer
+        from ai_forge_cli.utils.rl_signal_buffer import RLSignalBuffer
 
         buf = RLSignalBuffer()
         buf.record(func_name="r", completions=["a"], rewards=[float("nan")])
@@ -73,7 +73,7 @@ class TestRLSignalBuffer:
         assert snap["per_func"]["r"] == [None]
 
     def test_conversational_completion_extracted(self):
-        from soup_cli.utils.rl_signal_buffer import RLSignalBuffer
+        from ai_forge_cli.utils.rl_signal_buffer import RLSignalBuffer
 
         buf = RLSignalBuffer()
         buf.record(
@@ -85,7 +85,7 @@ class TestRLSignalBuffer:
         assert snap["completions"] == ["hello world"]
 
     def test_wrap_preserves_name_and_captures(self):
-        from soup_cli.utils.rl_signal_buffer import RLSignalBuffer, wrap_reward_funcs
+        from ai_forge_cli.utils.rl_signal_buffer import RLSignalBuffer, wrap_reward_funcs
 
         buf = RLSignalBuffer()
 
@@ -101,7 +101,7 @@ class TestRLSignalBuffer:
         assert snap["rewards"] == [2.0, 3.0]
 
     def test_wrap_list_shape_preserved(self):
-        from soup_cli.utils.rl_signal_buffer import RLSignalBuffer, wrap_reward_funcs
+        from ai_forge_cli.utils.rl_signal_buffer import RLSignalBuffer, wrap_reward_funcs
 
         buf = RLSignalBuffer()
         fns = [lambda completions=None, **k: [1.0]]
@@ -110,7 +110,7 @@ class TestRLSignalBuffer:
         assert len(wrapped) == 1
 
     def test_capture_never_breaks_reward(self):
-        from soup_cli.utils.rl_signal_buffer import RLSignalBuffer, wrap_reward_funcs
+        from ai_forge_cli.utils.rl_signal_buffer import RLSignalBuffer, wrap_reward_funcs
 
         buf = RLSignalBuffer()
 
@@ -130,7 +130,7 @@ class TestRLSignalBuffer:
 
 class TestRewardHackCallback:
     def test_build_returns_callback_not_notimplemented(self):
-        from soup_cli.utils.reward_hacking import (
+        from ai_forge_cli.utils.reward_hacking import (
             RewardHackCallback,
             build_reward_hack_callback,
         )
@@ -139,19 +139,19 @@ class TestRewardHackCallback:
         assert isinstance(cb, RewardHackCallback)
 
     def test_build_rejects_unknown_detector(self):
-        from soup_cli.utils.reward_hacking import build_reward_hack_callback
+        from ai_forge_cli.utils.reward_hacking import build_reward_hack_callback
 
         with pytest.raises(ValueError, match="not supported"):
             build_reward_hack_callback(detector="evil")
 
     def test_build_rejects_non_bool_halt(self):
-        from soup_cli.utils.reward_hacking import build_reward_hack_callback
+        from ai_forge_cli.utils.reward_hacking import build_reward_hack_callback
 
         with pytest.raises(TypeError, match="halt_on_hack"):
             build_reward_hack_callback(detector="info_rm", halt_on_hack="yes")
 
     def test_info_rm_compute_signal(self):
-        from soup_cli.utils.reward_hacking import build_reward_hack_callback
+        from ai_forge_cli.utils.reward_hacking import build_reward_hack_callback
 
         cb = build_reward_hack_callback(detector="info_rm")
         snap = {"rewards": [0.0, 0.0, 5.0, 5.0], "per_func": {}}
@@ -159,13 +159,13 @@ class TestRewardHackCallback:
         assert sig is not None and sig > 0.0
 
     def test_info_rm_insufficient_data_returns_none(self):
-        from soup_cli.utils.reward_hacking import build_reward_hack_callback
+        from ai_forge_cli.utils.reward_hacking import build_reward_hack_callback
 
         cb = build_reward_hack_callback(detector="info_rm")
         assert cb.compute_signal({"rewards": [1.0, 2.0], "per_func": {}}) is None
 
     def test_observe_baseline_then_drop_to_hack(self):
-        from soup_cli.utils.reward_hacking import build_reward_hack_callback
+        from ai_forge_cli.utils.reward_hacking import build_reward_hack_callback
 
         cb = build_reward_hack_callback(detector="info_rm")
         r0 = cb.observe_signal(10.0, step=1)  # baseline separation 10
@@ -175,8 +175,8 @@ class TestRewardHackCallback:
         assert r1.signal == 2.0
 
     def test_on_step_end_halts_on_hack(self):
-        from soup_cli.utils.reward_hacking import build_reward_hack_callback
-        from soup_cli.utils.rl_signal_buffer import RLSignalBuffer
+        from ai_forge_cli.utils.reward_hacking import build_reward_hack_callback
+        from ai_forge_cli.utils.rl_signal_buffer import RLSignalBuffer
 
         buf = RLSignalBuffer()
         cb = build_reward_hack_callback(
@@ -194,7 +194,7 @@ class TestRewardHackCallback:
         assert any("reward_hack_verdict" in e for e in state.log_history)
 
     def test_rm_ensemble_needs_two_funcs(self):
-        from soup_cli.utils.reward_hacking import build_reward_hack_callback
+        from ai_forge_cli.utils.reward_hacking import build_reward_hack_callback
 
         cb = build_reward_hack_callback(detector="rm_ensemble")
         # One func → None.
@@ -206,7 +206,7 @@ class TestRewardHackCallback:
         assert sig is not None and sig >= 0.0
 
     def test_on_log_fallback_without_buffer(self):
-        from soup_cli.utils.reward_hacking import build_reward_hack_callback
+        from ai_forge_cli.utils.reward_hacking import build_reward_hack_callback
 
         cb = build_reward_hack_callback(detector="info_rm", buffer=None)
         state, control = _FakeState(1), _FakeControl()
@@ -214,14 +214,14 @@ class TestRewardHackCallback:
         assert cb.last_report() is not None
 
     def test_compute_separation_from_stats(self):
-        from soup_cli.utils.reward_hacking import compute_separation_from_stats
+        from ai_forge_cli.utils.reward_hacking import compute_separation_from_stats
 
         high = compute_separation_from_stats(5.0, 0.1)
         low = compute_separation_from_stats(5.0, 10.0)
         assert high > low
 
     def test_separation_stats_rejects_bool(self):
-        from soup_cli.utils.reward_hacking import compute_separation_from_stats
+        from ai_forge_cli.utils.reward_hacking import compute_separation_from_stats
 
         with pytest.raises(ValueError, match="bool"):
             compute_separation_from_stats(True, 1.0)
@@ -240,31 +240,31 @@ class _FakeTokenizer:
 
 class TestEchoTrapCallback:
     def test_build_returns_callback_not_notimplemented(self):
-        from soup_cli.utils.echo_trap import EchoTrapCallback, build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import EchoTrapCallback, build_echo_trap_callback
 
         cb = build_echo_trap_callback(threshold=0.5)
         assert isinstance(cb, EchoTrapCallback)
 
     def test_build_rejects_bad_threshold(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         with pytest.raises(ValueError):
             build_echo_trap_callback(threshold=2.0)
 
     def test_build_rejects_bool_threshold(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         with pytest.raises(ValueError):
             build_echo_trap_callback(threshold=True)
 
     def test_build_rejects_non_bool_halt(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         with pytest.raises(TypeError):
             build_echo_trap_callback(threshold=0.5, halt_on_trap="yes")
 
     def test_compute_signal_repetitive_high(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         cb = build_echo_trap_callback(threshold=0.5)
         # "a a a a a" — every 2-gram repeats.
@@ -273,13 +273,13 @@ class TestEchoTrapCallback:
         assert sig is not None and sig > 0.5
 
     def test_compute_signal_no_completions(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         cb = build_echo_trap_callback(threshold=0.5)
         assert cb.compute_signal({"completions": []}) is None
 
     def test_tokenizer_aware_path(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         cb = build_echo_trap_callback(
             threshold=0.5, tokenizer_aware=True, tokenizer=_FakeTokenizer()
@@ -288,8 +288,8 @@ class TestEchoTrapCallback:
         assert sig is not None and sig >= 0.0
 
     def test_on_step_end_halts_on_trap(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
-        from soup_cli.utils.rl_signal_buffer import RLSignalBuffer
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.rl_signal_buffer import RLSignalBuffer
 
         buf = RLSignalBuffer()
         cb = build_echo_trap_callback(threshold=0.3, halt_on_trap=True, buffer=buf)
@@ -304,7 +304,7 @@ class TestEchoTrapCallback:
         assert any("echo_trap_verdict" in e for e in state.log_history)
 
     def test_observe_classifies_ok(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         cb = build_echo_trap_callback(threshold=0.5)
         report = cb.observe_signal(0.0, step=1, n_trajectories=3)
@@ -332,7 +332,7 @@ class _FakeSavableModel:
 
 class TestRLCheckpointCallback:
     def test_build_requires_output_dir(self):
-        from soup_cli.utils.rl_checkpoint import (
+        from ai_forge_cli.utils.rl_checkpoint import (
             RLCheckpointConfig,
             build_rl_checkpoint_callback,
         )
@@ -342,7 +342,7 @@ class TestRLCheckpointCallback:
             build_rl_checkpoint_callback(cfg)
 
     def test_build_rejects_non_config(self):
-        from soup_cli.utils.rl_checkpoint import build_rl_checkpoint_callback
+        from ai_forge_cli.utils.rl_checkpoint import build_rl_checkpoint_callback
 
         with pytest.raises(TypeError):
             build_rl_checkpoint_callback({"save_every_steps": 1}, output_dir="x")
@@ -350,7 +350,7 @@ class TestRLCheckpointCallback:
     def test_save_checkpoint_writes_manifest(self, tmp_path, monkeypatch):
         import torch
 
-        from soup_cli.utils.rl_checkpoint import (
+        from ai_forge_cli.utils.rl_checkpoint import (
             RLCheckpointConfig,
             build_rl_checkpoint_callback,
         )
@@ -369,7 +369,7 @@ class TestRLCheckpointCallback:
         assert (Path(ckpt) / "optimizer.pt").is_file()
 
     def test_prune_keeps_keep_last(self, tmp_path, monkeypatch):
-        from soup_cli.utils.rl_checkpoint import (
+        from ai_forge_cli.utils.rl_checkpoint import (
             RLCheckpointConfig,
             build_rl_checkpoint_callback,
         )
@@ -384,7 +384,7 @@ class TestRLCheckpointCallback:
         assert dirs == ["step-2", "step-3"]  # step-1 pruned
 
     def test_on_step_end_cadence(self, tmp_path, monkeypatch):
-        from soup_cli.utils.rl_checkpoint import (
+        from ai_forge_cli.utils.rl_checkpoint import (
             RLCheckpointConfig,
             build_rl_checkpoint_callback,
         )
@@ -406,7 +406,7 @@ class TestRLCheckpointCallback:
 
 class TestULD:
     def test_build_returns_projection(self):
-        from soup_cli.utils.uld import ULDConfig, ULDProjection, build_uld_projection
+        from ai_forge_cli.utils.uld import ULDConfig, ULDProjection, build_uld_projection
 
         proj = build_uld_projection(
             ULDConfig(strategy="wasserstein", student_vocab_size=10, teacher_vocab_size=12)
@@ -414,7 +414,7 @@ class TestULD:
         assert isinstance(proj, ULDProjection)
 
     def test_build_rejects_non_config(self):
-        from soup_cli.utils.uld import build_uld_projection
+        from ai_forge_cli.utils.uld import build_uld_projection
 
         with pytest.raises(TypeError):
             build_uld_projection({"strategy": "wasserstein"})
@@ -422,7 +422,7 @@ class TestULD:
     def test_wasserstein_loss_different_vocab(self):
         import torch
 
-        from soup_cli.utils.uld import ULDConfig, uld_distill_loss
+        from ai_forge_cli.utils.uld import ULDConfig, uld_distill_loss
 
         cfg = ULDConfig(strategy="wasserstein", student_vocab_size=8, teacher_vocab_size=12)
         s = torch.randn(2, 3, 8, requires_grad=True)
@@ -435,7 +435,7 @@ class TestULD:
     def test_topk_align_loss(self):
         import torch
 
-        from soup_cli.utils.uld import ULDConfig, uld_distill_loss
+        from ai_forge_cli.utils.uld import ULDConfig, uld_distill_loss
 
         cfg = ULDConfig(
             strategy="topk_align", student_vocab_size=8, teacher_vocab_size=12, top_k=4
@@ -449,7 +449,7 @@ class TestULD:
     def test_identical_distributions_low_loss(self):
         import torch
 
-        from soup_cli.utils.uld import ULDConfig, uld_distill_loss
+        from ai_forge_cli.utils.uld import ULDConfig, uld_distill_loss
 
         cfg = ULDConfig(strategy="wasserstein", student_vocab_size=8, teacher_vocab_size=8)
         logits = torch.randn(2, 3, 8)
@@ -459,7 +459,7 @@ class TestULD:
     def test_attention_mask_applied(self):
         import torch
 
-        from soup_cli.utils.uld import ULDConfig, uld_distill_loss
+        from ai_forge_cli.utils.uld import ULDConfig, uld_distill_loss
 
         cfg = ULDConfig(strategy="wasserstein", student_vocab_size=8, teacher_vocab_size=8)
         s = torch.randn(2, 3, 8)
@@ -476,7 +476,7 @@ class TestULD:
 
 class TestMiniLLM:
     def test_build_returns_callback(self):
-        from soup_cli.utils.minillm import (
+        from ai_forge_cli.utils.minillm import (
             MiniLLMCallback,
             MiniLLMConfig,
             build_minillm_callback,
@@ -486,7 +486,7 @@ class TestMiniLLM:
         assert isinstance(cb, MiniLLMCallback)
 
     def test_build_rejects_non_config(self):
-        from soup_cli.utils.minillm import build_minillm_callback
+        from ai_forge_cli.utils.minillm import build_minillm_callback
 
         with pytest.raises(TypeError):
             build_minillm_callback({})
@@ -494,7 +494,7 @@ class TestMiniLLM:
     def test_distill_term_finite_and_differentiable(self):
         import torch
 
-        from soup_cli.utils.minillm import MiniLLMConfig, minillm_distill_term
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, minillm_distill_term
 
         cfg = MiniLLMConfig(teacher_mix_ratio=0.5, length_normalize=True)
         s = torch.randn(2, 4, 16, requires_grad=True)
@@ -509,7 +509,7 @@ class TestMiniLLM:
     def test_teacher_mix_ratio_zero_gives_near_zero(self):
         import torch
 
-        from soup_cli.utils.minillm import MiniLLMConfig, minillm_distill_term
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, minillm_distill_term
 
         cfg = MiniLLMConfig(teacher_mix_ratio=0.0)
         s = torch.randn(2, 4, 16)
@@ -522,7 +522,7 @@ class TestMiniLLM:
     def test_anchor_term_with_file(self, tmp_path, monkeypatch):
         import torch
 
-        from soup_cli.utils.minillm import MiniLLMConfig, build_minillm_callback
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, build_minillm_callback
 
         # Loading a tokenizer/model from the Hub flakes on CI runners that get
         # HF-rate-limited (the cache-warm step is best-effort). Skip on network
@@ -560,7 +560,7 @@ class TestMiniLLM:
         import torch
         import torch.nn as nn
 
-        from soup_cli.utils.minillm import MiniLLMConfig, build_minillm_callback
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, build_minillm_callback
 
         class _FakeOut:
             def __init__(self, logits):
@@ -599,7 +599,7 @@ class TestMiniLLM:
     def test_anchor_term_disabled_returns_none(self):
         import torch.nn as nn
 
-        from soup_cli.utils.minillm import MiniLLMConfig, build_minillm_callback
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, build_minillm_callback
 
         cb = build_minillm_callback(MiniLLMConfig(teacher_mix_ratio=0.3))
         assert cb.anchor_term(nn.Linear(2, 2)) is None
@@ -612,14 +612,14 @@ class TestMiniLLM:
 
 class TestIterativeDPO:
     def test_build_pairs_from_scored(self):
-        from soup_cli.utils.iterative_dpo import build_pairs_from_scored
+        from ai_forge_cli.utils.iterative_dpo import build_pairs_from_scored
 
         assert build_pairs_from_scored([("a", 1.0), ("b", 3.0)]) == ("b", "a")
         assert build_pairs_from_scored([("a", 1.0)]) is None
         assert build_pairs_from_scored([("a", 2.0), ("b", 2.0)]) is None
 
     def test_run_iterative_dpo_with_fakes(self, tmp_path, monkeypatch):
-        from soup_cli.utils.iterative_dpo import (
+        from ai_forge_cli.utils.iterative_dpo import (
             IterativeDPOResult,
             build_iterative_dpo_plan,
             run_iterative_dpo,
@@ -672,7 +672,7 @@ class TestIterativeDPO:
         assert (tmp_path / "out" / "round-00" / "pairs.jsonl").is_file()
 
     def test_run_rejects_non_plan(self):
-        from soup_cli.utils.iterative_dpo import run_iterative_dpo
+        from ai_forge_cli.utils.iterative_dpo import run_iterative_dpo
 
         with pytest.raises(TypeError):
             run_iterative_dpo({"rounds": 1})
@@ -680,7 +680,7 @@ class TestIterativeDPO:
     def test_cli_plan_only_still_exits_zero(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.iterative_dpo import app
+        from ai_forge_cli.commands.iterative_dpo import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "p.jsonl").write_text(json.dumps({"prompt": "q"}))
@@ -698,9 +698,9 @@ class TestIterativeDPO:
     def test_cli_runs_with_monkeypatched_runner(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        import soup_cli.utils.iterative_dpo as idpo
-        from soup_cli.commands.iterative_dpo import app
-        from soup_cli.utils.iterative_dpo import IterativeDPOResult
+        import ai_forge_cli.utils.iterative_dpo as idpo
+        from ai_forge_cli.commands.iterative_dpo import app
+        from ai_forge_cli.utils.iterative_dpo import IterativeDPOResult
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "p.jsonl").write_text(json.dumps({"prompt": "q"}))
@@ -747,12 +747,12 @@ class _FakeGRPOBase:
 
 class TestGrpoVariantFallbackWarning:
     def test_fallback_warns_once(self, caplog):
-        from soup_cli.trainer.grpo import make_grpo_trainer_variant
+        from ai_forge_cli.trainer.grpo import make_grpo_trainer_variant
 
         cls = make_grpo_trainer_variant(_FakeGRPOBase, "gspo")
         inst = cls()
         # inputs missing per-token logps → fallback path.
-        with caplog.at_level(logging.WARNING, logger="soup_cli.trainer.grpo"):
+        with caplog.at_level(logging.WARNING, logger="ai_forge_cli.trainer.grpo"):
             inst.compute_loss(None, {})
             inst.compute_loss(None, {})
         warnings = [r for r in caplog.records if "fell back" in r.message]
@@ -770,7 +770,7 @@ class TestGrpoEmaInPlace:
         import torch
         import torch.nn as nn
 
-        from soup_cli.monitoring.grpo_stability_callback import update_ema_in_place
+        from ai_forge_cli.monitoring.grpo_stability_callback import update_ema_in_place
 
         ref = nn.Linear(3, 3)
         pol = nn.Linear(3, 3)
@@ -784,7 +784,7 @@ class TestGrpoEmaInPlace:
     def test_returns_updated_count(self):
         import torch.nn as nn
 
-        from soup_cli.monitoring.grpo_stability_callback import update_ema_in_place
+        from ai_forge_cli.monitoring.grpo_stability_callback import update_ema_in_place
 
         # nn.Linear(2, 2) has weight + bias → 2 shared params updated.
         n = update_ema_in_place(nn.Linear(2, 2), nn.Linear(2, 2), 0.5)
@@ -793,7 +793,7 @@ class TestGrpoEmaInPlace:
     def test_zero_overlap_returns_zero(self):
         import torch.nn as nn
 
-        from soup_cli.monitoring.grpo_stability_callback import update_ema_in_place
+        from ai_forge_cli.monitoring.grpo_stability_callback import update_ema_in_place
 
         # Disjoint parameter names → no overlap → count 0.
         class _A(nn.Module):
@@ -811,7 +811,7 @@ class TestGrpoEmaInPlace:
     def test_rejects_bool_alpha(self):
         import torch.nn as nn
 
-        from soup_cli.monitoring.grpo_stability_callback import update_ema_in_place
+        from ai_forge_cli.monitoring.grpo_stability_callback import update_ema_in_place
 
         with pytest.raises(TypeError):
             update_ema_in_place(nn.Linear(2, 2), nn.Linear(2, 2), True)
@@ -819,7 +819,7 @@ class TestGrpoEmaInPlace:
     def test_rejects_out_of_range_alpha(self):
         import torch.nn as nn
 
-        from soup_cli.monitoring.grpo_stability_callback import update_ema_in_place
+        from ai_forge_cli.monitoring.grpo_stability_callback import update_ema_in_place
 
         with pytest.raises(ValueError):
             update_ema_in_place(nn.Linear(2, 2), nn.Linear(2, 2), 1.5)
@@ -828,7 +828,7 @@ class TestGrpoEmaInPlace:
         import torch
         import torch.nn as nn
 
-        from soup_cli.monitoring.grpo_stability_callback import update_ema_in_place
+        from ai_forge_cli.monitoring.grpo_stability_callback import update_ema_in_place
 
         ref = nn.Linear(3, 3)
         pol = nn.Linear(2, 2)  # different shapes for the same param name
@@ -843,7 +843,7 @@ class TestGrpoEmaInPlace:
 
         import torch.nn as nn
 
-        from soup_cli.monitoring.grpo_stability_callback import (
+        from ai_forge_cli.monitoring.grpo_stability_callback import (
             GRPOStabilityCallback,
         )
 
@@ -875,7 +875,7 @@ class TestGrpoEmaInPlace:
 class TestSourceWiring:
     def _read(self, rel: str) -> str:
         root = Path(__file__).resolve().parent.parent
-        return (root / "src" / "soup_cli" / rel).read_text(encoding="utf-8")
+        return (root / "src" / "ai_forge_cli" / rel).read_text(encoding="utf-8")
 
     def test_grpo_wires_rl_callbacks(self):
         src = self._read("trainer/grpo.py")
@@ -910,5 +910,5 @@ class TestSourceWiring:
 
 class TestPatchInvariants:
     def test_version_bumped(self):
-        parts = soup_cli.__version__.split(".")
+        parts = ai_forge_cli.__version__.split(".")
         assert (int(parts[0]), int(parts[1]), int(parts[2])) >= (0, 71, 11)

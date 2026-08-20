@@ -7,7 +7,7 @@ import sqlite3
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -19,27 +19,27 @@ runner = CliRunner()
 
 class TestHashing:
     def test_hash_config_is_deterministic(self, tmp_path):
-        from soup_cli.registry.hashing import hash_config
+        from ai_forge_cli.registry.hashing import hash_config
 
         config = {"base": "llama", "task": "sft", "training": {"lr": 2e-5}}
         assert hash_config(config) == hash_config(config)
 
     def test_hash_config_order_independent(self):
-        from soup_cli.registry.hashing import hash_config
+        from ai_forge_cli.registry.hashing import hash_config
 
         config_a = {"base": "llama", "task": "sft"}
         config_b = {"task": "sft", "base": "llama"}
         assert hash_config(config_a) == hash_config(config_b)
 
     def test_hash_config_changes_on_mutation(self):
-        from soup_cli.registry.hashing import hash_config
+        from ai_forge_cli.registry.hashing import hash_config
 
         config_a = {"base": "llama", "task": "sft"}
         config_b = {"base": "llama", "task": "dpo"}
         assert hash_config(config_a) != hash_config(config_b)
 
     def test_hash_file_matches_content(self, tmp_path):
-        from soup_cli.registry.hashing import hash_file
+        from ai_forge_cli.registry.hashing import hash_file
 
         f = tmp_path / "data.jsonl"
         f.write_text("hello world\n", encoding="utf-8")
@@ -48,7 +48,7 @@ class TestHashing:
         assert digest == hash_file(str(f))
 
     def test_hash_file_different_content_different_hash(self, tmp_path):
-        from soup_cli.registry.hashing import hash_file
+        from ai_forge_cli.registry.hashing import hash_file
 
         f_a = tmp_path / "a.txt"
         f_a.write_text("hello", encoding="utf-8")
@@ -57,13 +57,13 @@ class TestHashing:
         assert hash_file(str(f_a)) != hash_file(str(f_b))
 
     def test_hash_file_missing_raises(self, tmp_path):
-        from soup_cli.registry.hashing import hash_file
+        from ai_forge_cli.registry.hashing import hash_file
 
         with pytest.raises(FileNotFoundError):
             hash_file(str(tmp_path / "nope.bin"))
 
     def test_hash_entry_combines_config_and_data(self, tmp_path):
-        from soup_cli.registry.hashing import hash_entry
+        from ai_forge_cli.registry.hashing import hash_entry
 
         data_file = tmp_path / "data.jsonl"
         data_file.write_text("x", encoding="utf-8")
@@ -75,7 +75,7 @@ class TestHashing:
         )
 
     def test_hash_entry_changes_with_base(self, tmp_path):
-        from soup_cli.registry.hashing import hash_entry
+        from ai_forge_cli.registry.hashing import hash_entry
 
         data_file = tmp_path / "data.jsonl"
         data_file.write_text("x", encoding="utf-8")
@@ -85,7 +85,7 @@ class TestHashing:
         assert a != b
 
     def test_hash_entry_without_data_path(self):
-        from soup_cli.registry.hashing import hash_entry
+        from ai_forge_cli.registry.hashing import hash_entry
 
         config = {"base": "m1", "task": "sft"}
         digest = hash_entry(config=config, data_path=None, base_model="m1")
@@ -99,54 +99,54 @@ class TestHashing:
 
 class TestValidation:
     def test_valid_name_accepted(self):
-        from soup_cli.registry.store import validate_name
+        from ai_forge_cli.registry.store import validate_name
 
         validate_name("my-model_v1.0")  # no raise
 
     def test_name_rejects_path_separator(self):
-        from soup_cli.registry.store import validate_name
+        from ai_forge_cli.registry.store import validate_name
 
         with pytest.raises(ValueError, match="invalid"):
             validate_name("../evil")
 
     def test_name_rejects_null_byte(self):
-        from soup_cli.registry.store import validate_name
+        from ai_forge_cli.registry.store import validate_name
 
         with pytest.raises(ValueError, match="invalid"):
             validate_name("bad\x00name")
 
     def test_name_rejects_empty(self):
-        from soup_cli.registry.store import validate_name
+        from ai_forge_cli.registry.store import validate_name
 
         with pytest.raises(ValueError, match="empty"):
             validate_name("")
 
     def test_name_rejects_too_long(self):
-        from soup_cli.registry.store import validate_name
+        from ai_forge_cli.registry.store import validate_name
 
         with pytest.raises(ValueError, match="long"):
             validate_name("a" * 300)
 
     def test_valid_tag_accepted(self):
-        from soup_cli.registry.store import validate_tag
+        from ai_forge_cli.registry.store import validate_tag
 
         validate_tag("v3")
         validate_tag("prod-2024")
 
     def test_tag_rejects_slash(self):
-        from soup_cli.registry.store import validate_tag
+        from ai_forge_cli.registry.store import validate_tag
 
         with pytest.raises(ValueError):
             validate_tag("v/3")
 
     def test_tag_rejects_empty(self):
-        from soup_cli.registry.store import validate_tag
+        from ai_forge_cli.registry.store import validate_tag
 
         with pytest.raises(ValueError, match="empty"):
             validate_tag("")
 
     def test_tag_rejects_too_long(self):
-        from soup_cli.registry.store import validate_tag
+        from ai_forge_cli.registry.store import validate_tag
 
         with pytest.raises(ValueError, match="long"):
             validate_tag("a" * 100)
@@ -157,7 +157,7 @@ class TestValidation:
          "-leading-dash", ".leading-dot"],
     )
     def test_validate_name_rejects_invalid(self, bad):
-        from soup_cli.registry.store import validate_name
+        from ai_forge_cli.registry.store import validate_name
 
         with pytest.raises(ValueError):
             validate_name(bad)
@@ -170,7 +170,7 @@ class TestValidation:
 
 class TestRegistryStore:
     def _store(self, tmp_path) -> "RegistryStore":  # noqa: F821
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         return RegistryStore(db_path=tmp_path / "reg.db")
 
@@ -304,8 +304,8 @@ class TestRegistryStore:
     def test_resolve_ambiguous_prefix_raises(self, tmp_path):
         """Two entries sharing a prefix must raise, not silently return None."""
         # Monkeypatch _generate_entry_id to force a prefix collision
-        import soup_cli.registry.store as store_mod
-        from soup_cli.registry.store import AmbiguousRefError, RegistryStore
+        import ai_forge_cli.registry.store as store_mod
+        from ai_forge_cli.registry.store import AmbiguousRefError, RegistryStore
         original = store_mod._generate_entry_id
 
         counter = {"n": 0}
@@ -392,7 +392,7 @@ class TestRegistryStore:
         """FK ON DELETE CASCADE must remove artifacts, tags, lineage."""
         import sqlite3
 
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         db_path = tmp_path / "reg.db"
         store = RegistryStore(db_path=db_path)
@@ -445,7 +445,7 @@ class TestRegistryStore:
         store.close()
 
     def test_context_manager_closes_connection(self, tmp_path):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         with RegistryStore(db_path=tmp_path / "reg.db") as store:
             store.push(name="m1", tag="v1", base_model="b",
@@ -461,7 +461,7 @@ class TestRegistryStore:
 
 class TestRegistryArtifacts:
     def test_add_and_list_artifact(self, tmp_path, monkeypatch):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         monkeypatch.chdir(tmp_path)
         store = RegistryStore(db_path=tmp_path / "reg.db")
@@ -480,7 +480,7 @@ class TestRegistryArtifacts:
         store.close()
 
     def test_add_artifact_rejects_unknown_kind(self, tmp_path, monkeypatch):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         monkeypatch.chdir(tmp_path)
         store = RegistryStore(db_path=tmp_path / "reg.db")
@@ -494,7 +494,7 @@ class TestRegistryArtifacts:
 
     def test_add_artifact_accepts_judge_calibration_kind(self, tmp_path, monkeypatch):
         # v0.71.1 #214 — judge_calibration is a valid artifact kind.
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         monkeypatch.chdir(tmp_path)
         store = RegistryStore(db_path=tmp_path / "reg.db")
@@ -509,7 +509,7 @@ class TestRegistryArtifacts:
 
     def test_add_artifact_default_enforces_cwd(self, tmp_path, monkeypatch):
         """By default, artifacts outside cwd are rejected."""
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         # cd somewhere else so tmp_path is NOT under cwd
         workdir = tmp_path / "work"
@@ -527,7 +527,7 @@ class TestRegistryArtifacts:
         store.close()
 
     def test_add_artifact_missing_file_raises(self, tmp_path):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore(db_path=tmp_path / "reg.db")
         eid = store.push(name="m1", tag="v1", base_model="b", task="sft",
@@ -547,7 +547,7 @@ class TestRegistryArtifacts:
 
 class TestLineage:
     def test_add_and_walk_lineage(self, tmp_path):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore(db_path=tmp_path / "reg.db")
         parent = store.push(name="base", tag="v1", base_model="b", task="sft",
@@ -564,7 +564,7 @@ class TestLineage:
         store.close()
 
     def test_lineage_rejects_unknown_relation(self, tmp_path):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore(db_path=tmp_path / "reg.db")
         a = store.push(name="a", tag="v1", base_model="b", task="sft",
@@ -576,7 +576,7 @@ class TestLineage:
         store.close()
 
     def test_lineage_prevents_self_reference(self, tmp_path):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore(db_path=tmp_path / "reg.db")
         a = store.push(name="a", tag="v1", base_model="b", task="sft",
@@ -587,7 +587,7 @@ class TestLineage:
 
     def test_lineage_prevents_indirect_cycle(self, tmp_path):
         """A→B, then B→A would close a cycle — must be rejected."""
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore(db_path=tmp_path / "reg.db")
         a = store.push(name="a", tag="v1", base_model="b", task="sft",
@@ -601,7 +601,7 @@ class TestLineage:
         store.close()
 
     def test_lineage_rejects_missing_child(self, tmp_path):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore(db_path=tmp_path / "reg.db")
         parent = store.push(name="p", tag="v1", base_model="b", task="sft",
@@ -612,7 +612,7 @@ class TestLineage:
         store.close()
 
     def test_lineage_rejects_missing_parent(self, tmp_path):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore(db_path=tmp_path / "reg.db")
         child = store.push(name="c", tag="v1", base_model="b", task="sft",
@@ -630,7 +630,7 @@ class TestLineage:
 
 class TestDiff:
     def test_config_diff_detects_changes(self):
-        from soup_cli.registry.diff import config_diff
+        from ai_forge_cli.registry.diff import config_diff
 
         left = {"base": "llama", "training": {"lr": 2e-5, "epochs": 3}}
         right = {"base": "llama", "training": {"lr": 5e-5, "epochs": 3}}
@@ -642,7 +642,7 @@ class TestDiff:
         assert change.kind == "changed"
 
     def test_config_diff_detects_added_removed(self):
-        from soup_cli.registry.diff import config_diff
+        from ai_forge_cli.registry.diff import config_diff
 
         left = {"a": 1}
         right = {"a": 1, "b": 2}
@@ -655,7 +655,7 @@ class TestDiff:
         assert "removed" in kinds
 
     def test_eval_delta(self):
-        from soup_cli.registry.diff import eval_delta
+        from ai_forge_cli.registry.diff import eval_delta
 
         left = [{"benchmark": "mmlu", "score": 0.6}]
         right = [{"benchmark": "mmlu", "score": 0.65}]
@@ -665,7 +665,7 @@ class TestDiff:
 
     def test_eval_delta_benchmark_only_on_one_side(self):
         """If a benchmark appears on one side only, delta is None."""
-        from soup_cli.registry.diff import eval_delta
+        from ai_forge_cli.registry.diff import eval_delta
 
         left = [{"benchmark": "mmlu", "score": 0.6}]
         right = [{"benchmark": "gsm8k", "score": 0.7}]
@@ -677,13 +677,13 @@ class TestDiff:
         assert by_bench["gsm8k"]["left"] is None
 
     def test_config_diff_identical_configs(self):
-        from soup_cli.registry.diff import config_diff
+        from ai_forge_cli.registry.diff import config_diff
 
         cfg = {"base": "llama", "training": {"lr": 2e-5}}
         assert config_diff(cfg, cfg) == []
 
     def test_hash_config_with_nested_lists(self):
-        from soup_cli.registry.hashing import hash_config
+        from ai_forge_cli.registry.hashing import hash_config
 
         # Config with lists (LoRA target_modules) — must hash deterministically
         cfg = {"lora": {"target_modules": ["q_proj", "v_proj"]}}
@@ -700,8 +700,8 @@ class TestDiff:
 class TestTrackerHook:
     def test_register_from_run(self, tmp_path, monkeypatch):
         monkeypatch.setenv("SOUP_DB_PATH", str(tmp_path / "exp.db"))
-        from soup_cli.experiment.tracker import ExperimentTracker
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.registry.store import RegistryStore
 
         tracker = ExperimentTracker()
         run_id = tracker.start_run(
@@ -721,8 +721,8 @@ class TestTrackerHook:
 
     def test_register_from_missing_run_raises(self, tmp_path, monkeypatch):
         monkeypatch.setenv("SOUP_DB_PATH", str(tmp_path / "exp.db"))
-        from soup_cli.experiment.tracker import ExperimentTracker
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.registry.store import RegistryStore
 
         tracker = ExperimentTracker()
         store = RegistryStore(db_path=tmp_path / "reg.db")
@@ -753,7 +753,7 @@ class TestRegistryCLI:
     def test_push_and_list(self, tmp_path, monkeypatch):
         self._setup_dbs(tmp_path, monkeypatch)
         # Create a finished run first
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         tracker = ExperimentTracker()
         run_id = tracker.start_run(
@@ -776,7 +776,7 @@ class TestRegistryCLI:
 
     def test_push_rejects_invalid_name(self, tmp_path, monkeypatch):
         self._setup_dbs(tmp_path, monkeypatch)
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         tracker = ExperimentTracker()
         run_id = tracker.start_run(
@@ -803,7 +803,7 @@ class TestRegistryCLI:
 
     def test_show(self, tmp_path, monkeypatch):
         self._setup_dbs(tmp_path, monkeypatch)
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore()
         eid = store.push(name="m1", tag="v1", base_model="llama",
@@ -824,7 +824,7 @@ class TestRegistryCLI:
 
     def test_search_cli(self, tmp_path, monkeypatch):
         self._setup_dbs(tmp_path, monkeypatch)
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore()
         store.push(name="medical-chat", tag="v1", base_model="llama",
@@ -837,7 +837,7 @@ class TestRegistryCLI:
 
     def test_diff_cli(self, tmp_path, monkeypatch):
         self._setup_dbs(tmp_path, monkeypatch)
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore()
         a = store.push(name="m1", tag="v1", base_model="llama",
@@ -854,7 +854,7 @@ class TestRegistryCLI:
 
     def test_delete_cli(self, tmp_path, monkeypatch):
         self._setup_dbs(tmp_path, monkeypatch)
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore()
         eid = store.push(name="m1", tag="v1", base_model="llama",
@@ -869,7 +869,7 @@ class TestRegistryCLI:
     def test_delete_cli_without_yes_is_noop(self, tmp_path, monkeypatch):
         """Without --yes, command is an informational no-op (exit 0)."""
         self._setup_dbs(tmp_path, monkeypatch)
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore()
         eid = store.push(name="m1", tag="v1", base_model="llama",
@@ -886,7 +886,7 @@ class TestRegistryCLI:
 
     def test_promote_cli_happy_path(self, tmp_path, monkeypatch):
         self._setup_dbs(tmp_path, monkeypatch)
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore()
         eid = store.push(name="m1", tag="v1", base_model="llama",
@@ -905,7 +905,7 @@ class TestRegistryCLI:
 
     def test_promote_cli_rejects_invalid_tag(self, tmp_path, monkeypatch):
         self._setup_dbs(tmp_path, monkeypatch)
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore()
         eid = store.push(name="m1", tag="v1", base_model="llama",
@@ -947,7 +947,7 @@ class TestHistoryCLI:
         monkeypatch.setenv("SOUP_DB_PATH", str(tmp_path / "exp.db"))
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
         monkeypatch.chdir(tmp_path)
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore()
         parent = store.push(name="base", tag="v1", base_model="llama",
@@ -978,7 +978,7 @@ class TestHistoryCLI:
 
 class TestSecurity:
     def test_artifact_path_traversal_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         # Attempt to register an artifact outside CWD
         monkeypatch.chdir(tmp_path)
@@ -999,7 +999,7 @@ class TestSecurity:
         store.close()
 
     def test_search_sql_injection_escaped(self, tmp_path):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore(db_path=tmp_path / "reg.db")
         store.push(name="clean", tag="v1", base_model="b", task="sft",
@@ -1014,7 +1014,7 @@ class TestSecurity:
 
     def test_search_like_wildcard_is_escaped(self, tmp_path):
         """A query of `%` must not match every row."""
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore(db_path=tmp_path / "reg.db")
         store.push(name="alpha", tag="v1", base_model="b",
@@ -1028,7 +1028,7 @@ class TestSecurity:
 
     def test_resolve_like_wildcard_is_escaped(self, tmp_path):
         """Prefix resolve must not treat `%` as a wildcard."""
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore(db_path=tmp_path / "reg.db")
         store.push(name="m1", tag="v1", base_model="b",
@@ -1037,14 +1037,14 @@ class TestSecurity:
         store.close()
 
     def test_tag_with_null_byte_rejected(self):
-        from soup_cli.registry.store import validate_tag
+        from ai_forge_cli.registry.store import validate_tag
 
         with pytest.raises(ValueError):
             validate_tag("bad\x00tag")
 
     def test_store_resolves_real_path_for_containment(self, tmp_path):
         """Uses realpath + commonpath, not Path.resolve + relative_to."""
-        from soup_cli.registry.store import _is_under
+        from ai_forge_cli.registry.store import _is_under
 
         inside = tmp_path / "sub" / "file.bin"
         inside.parent.mkdir(parents=True)
@@ -1066,8 +1066,8 @@ class TestAutoRegister:
         monkeypatch.setenv("SOUP_DB_PATH", str(tmp_path / "exp.db"))
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
 
-        from soup_cli.experiment.tracker import ExperimentTracker
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.registry.store import RegistryStore
 
         tracker = ExperimentTracker()
         run_id = tracker.start_run(

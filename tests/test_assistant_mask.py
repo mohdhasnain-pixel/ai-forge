@@ -104,20 +104,20 @@ class _BatchEncodingTokenizer(_FakeTokenizer):
 
 class TestSchemaFields:
     def test_train_on_responses_only_default_true(self):
-        from soup_cli.config.schema import DataConfig
+        from ai_forge_cli.config.schema import DataConfig
 
         cfg = DataConfig(train="data.jsonl")
         assert cfg.train_on_responses_only is True
 
     def test_train_on_messages_with_train_field_default_false(self):
-        from soup_cli.config.schema import DataConfig
+        from ai_forge_cli.config.schema import DataConfig
 
         cfg = DataConfig(train="data.jsonl")
         assert cfg.train_on_messages_with_train_field is False
 
     def test_train_field_requires_responses_only_disabled(self):
         """Per-message 'train' field is mutually exclusive with response-only mode."""
-        from soup_cli.config.schema import DataConfig
+        from ai_forge_cli.config.schema import DataConfig
 
         with pytest.raises(ValueError, match="mutually exclusive"):
             DataConfig(
@@ -134,7 +134,7 @@ class TestSchemaFields:
 
 class TestIgnoreIndex:
     def test_ignore_index_is_minus_100(self):
-        from soup_cli.data.loss_mask import IGNORE_INDEX
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX
 
         assert IGNORE_INDEX == -100
 
@@ -143,7 +143,7 @@ class TestPreferredPath:
     """When tokenizer supports ``return_assistant_tokens_mask=True``."""
 
     def test_assistant_only_single_turn(self):
-        from soup_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
 
         tok = _FakeTokenizer(supports_assistant_mask=True)
         messages = [
@@ -161,7 +161,7 @@ class TestPreferredPath:
         assert len(non_masked) == 2
 
     def test_assistant_only_multi_turn(self):
-        from soup_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
 
         tok = _FakeTokenizer(supports_assistant_mask=True)
         messages = [
@@ -177,7 +177,7 @@ class TestPreferredPath:
         assert len(non_masked) == 4
 
     def test_truncation_to_max_length(self):
-        from soup_cli.data.loss_mask import build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import build_assistant_only_labels
 
         tok = _FakeTokenizer(supports_assistant_mask=True)
         messages = [
@@ -190,7 +190,7 @@ class TestPreferredPath:
         assert len(out["attention_mask"]) == 128
 
     def test_real_batch_encoding_is_accepted(self):
-        from soup_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
 
         tok = _BatchEncodingTokenizer()
         out = build_assistant_only_labels(
@@ -206,7 +206,7 @@ class TestPreferredPath:
         assert all(type(token_id) is int for token_id in out["input_ids"])
 
     def test_all_zero_mask_with_assistant_falls_back(self):
-        from soup_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
 
         tok = _BatchEncodingTokenizer(zero_mask=True)
         out = build_assistant_only_labels(
@@ -221,7 +221,7 @@ class TestPreferredPath:
         assert any(label != IGNORE_INDEX for label in out["labels"])
 
     def test_all_zero_mask_without_assistant_is_valid(self):
-        from soup_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
 
         tok = _BatchEncodingTokenizer(zero_mask=True)
         out = build_assistant_only_labels(
@@ -236,7 +236,7 @@ class TestFallbackPath:
     """When tokenizer does NOT support ``return_assistant_tokens_mask``."""
 
     def test_fallback_single_turn(self):
-        from soup_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
 
         tok = _FakeTokenizer(supports_assistant_mask=False)
         messages = [
@@ -258,7 +258,7 @@ class TestFallbackPath:
             assert labels[pos] == IGNORE_INDEX
 
     def test_fallback_no_assistant_returns_all_masked(self):
-        from soup_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
 
         tok = _FakeTokenizer(supports_assistant_mask=False)
         messages = [{"role": "user", "content": "no answer"}]
@@ -268,7 +268,7 @@ class TestFallbackPath:
     def test_fallback_strict_assistant_only(self):
         """Fallback may include extra prefix tokens; strict mode keeps only
         the *content* delta against the next user/system turn."""
-        from soup_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
 
         tok = _FakeTokenizer(supports_assistant_mask=False)
         messages = [
@@ -291,7 +291,7 @@ class TestTokenIdNormalisation:
     def test_real_batch_encoding_returns_values_not_mapping_keys(self):
         from transformers import BatchEncoding
 
-        from soup_cli.data.loss_mask import _tokenize_only
+        from ai_forge_cli.data.loss_mask import _tokenize_only
 
         encoded = BatchEncoding({"input_ids": [1, 2, 3]})
         assert not isinstance(encoded, dict)
@@ -305,7 +305,7 @@ class TestTokenIdNormalisation:
     def test_tensor_ids_are_normalised_to_python_ints(self):
         import torch
 
-        from soup_cli.data.loss_mask import _tokenize_only
+        from ai_forge_cli.data.loss_mask import _tokenize_only
 
         ids = _tokenize_only(
             _StaticTokenizer(torch.tensor([4, 5, 6])),
@@ -317,7 +317,7 @@ class TestTokenIdNormalisation:
     def test_missing_input_ids_raises(self):
         from transformers import BatchEncoding
 
-        from soup_cli.data.loss_mask import _tokenize_only
+        from ai_forge_cli.data.loss_mask import _tokenize_only
 
         with pytest.raises(ValueError, match="input_ids"):
             _tokenize_only(
@@ -328,7 +328,7 @@ class TestTokenIdNormalisation:
     def test_non_integer_token_ids_raise(self):
         from transformers import BatchEncoding
 
-        from soup_cli.data.loss_mask import _tokenize_only
+        from ai_forge_cli.data.loss_mask import _tokenize_only
 
         with pytest.raises(ValueError, match="non-integer input_ids"):
             _tokenize_only(
@@ -348,7 +348,7 @@ class TestTokenizerMappingAudit:
         ]
 
     def test_show_mask_path_accepts_real_batch_encoding(self):
-        from soup_cli.utils.data_doctor import _build_row_labels
+        from ai_forge_cli.utils.data_doctor import _build_row_labels
 
         messages = self._messages()
         built = _build_row_labels(
@@ -364,12 +364,12 @@ class TestTokenizerMappingAudit:
         assert all(type(token_id) is int for token_id in built["input_ids"])
 
     def test_generation_marker_check_accepts_real_batch_encoding(self):
-        from soup_cli.utils.data_doctor import check_generation_markers
+        from ai_forge_cli.utils.data_doctor import check_generation_markers
 
         assert check_generation_markers(_BatchEncodingTokenizer()).verdict == "OK"
 
     def test_truncation_check_measures_batch_encoding_values(self):
-        from soup_cli.utils.data_doctor import check_truncation_risk
+        from ai_forge_cli.utils.data_doctor import check_truncation_risk
 
         result = check_truncation_risk(
             _BatchEncodingTokenizer(),
@@ -383,7 +383,7 @@ class TestTokenizerMappingAudit:
 
 class TestPerMessageTrainField:
     def test_train_field_overrides_default(self):
-        from soup_cli.data.loss_mask import (
+        from ai_forge_cli.data.loss_mask import (
             IGNORE_INDEX,
             build_per_message_train_labels,
         )
@@ -403,7 +403,7 @@ class TestPerMessageTrainField:
 
     def test_train_field_default_when_missing(self):
         """Missing 'train' field → role==assistant default."""
-        from soup_cli.data.loss_mask import (
+        from ai_forge_cli.data.loss_mask import (
             IGNORE_INDEX,
             build_per_message_train_labels,
         )
@@ -421,14 +421,14 @@ class TestPerMessageTrainField:
 
 class TestEdgeCases:
     def test_empty_messages_raises(self):
-        from soup_cli.data.loss_mask import build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import build_assistant_only_labels
 
         tok = _FakeTokenizer()
         with pytest.raises(ValueError, match="empty"):
             build_assistant_only_labels([], tok)
 
     def test_max_length_must_be_positive(self):
-        from soup_cli.data.loss_mask import build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import build_assistant_only_labels
 
         tok = _FakeTokenizer()
         messages = [{"role": "user", "content": "x"}]
@@ -437,7 +437,7 @@ class TestEdgeCases:
 
     def test_max_length_rejects_bool(self):
         """`bool` is a subclass of `int` — guard like v0.30.0 Candidate."""
-        from soup_cli.data.loss_mask import build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import build_assistant_only_labels
 
         tok = _FakeTokenizer()
         messages = [{"role": "user", "content": "x"}]
@@ -445,7 +445,7 @@ class TestEdgeCases:
             build_assistant_only_labels(messages, tok, max_length=True)
 
     def test_per_message_max_length_truncates(self):
-        from soup_cli.data.loss_mask import build_per_message_train_labels
+        from ai_forge_cli.data.loss_mask import build_per_message_train_labels
 
         tok = _FakeTokenizer(supports_assistant_mask=False)
         messages = [
@@ -459,7 +459,7 @@ class TestEdgeCases:
 
     def test_tokenizer_without_chat_template_raises(self):
         """Hard-fail when tokenizer has no chat_template."""
-        from soup_cli.data.loss_mask import build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import build_assistant_only_labels
 
         class _NoTemplate:
             chat_template = None
@@ -489,8 +489,8 @@ class TestBuildFormatRow:
         }
 
     def test_default_responses_only_returns_input_ids_labels(self):
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.sft_format import build_format_row
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.sft_format import build_format_row
 
         tok = _FakeTokenizer(supports_assistant_mask=True)
         cfg = DataConfig(train="data.jsonl")  # default train_on_responses_only=True
@@ -501,8 +501,8 @@ class TestBuildFormatRow:
         assert "attention_mask" in out
 
     def test_per_message_train_field_path(self):
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.sft_format import build_format_row
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.sft_format import build_format_row
 
         tok = _FakeTokenizer(supports_assistant_mask=False)
         cfg = DataConfig(
@@ -515,8 +515,8 @@ class TestBuildFormatRow:
         assert "labels" in out
 
     def test_legacy_text_path_when_both_false(self):
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.sft_format import build_format_row
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.sft_format import build_format_row
 
         tok = _FakeTokenizer(supports_assistant_mask=True)
         cfg = DataConfig(
@@ -531,8 +531,8 @@ class TestBuildFormatRow:
 
     def test_no_chat_template_calling_format_row_raises(self):
         """v0.36.0 Part C: previous silent fallback now raises ValueError."""
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.sft_format import build_format_row
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.sft_format import build_format_row
 
         class _NoTemplate:
             chat_template = None
@@ -549,8 +549,8 @@ class TestBuildFormatRow:
             fn(self._row())
 
     def test_max_length_threaded_through(self):
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.sft_format import build_format_row
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.sft_format import build_format_row
 
         tok = _FakeTokenizer(supports_assistant_mask=True)
         cfg = DataConfig(train="data.jsonl", max_length=64)

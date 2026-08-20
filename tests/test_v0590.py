@@ -22,15 +22,15 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-import soup_cli
-from soup_cli.cli import app
+import ai_forge_cli
+from ai_forge_cli.cli import app
 
 # ---------- Part A: BOM ----------
 
 
 class TestBomSpec:
     def test_imports(self):
-        from soup_cli.utils.bom import (
+        from ai_forge_cli.utils.bom import (
             BomEntry,
             build_cyclonedx_bom,
             build_spdx_bom,
@@ -44,7 +44,7 @@ class TestBomSpec:
         assert dataclasses.is_dataclass(BomEntry)
 
     def test_bom_entry_frozen(self):
-        from soup_cli.utils.bom import BomEntry
+        from ai_forge_cli.utils.bom import BomEntry
 
         entry = BomEntry(
             name="adapter-v1",
@@ -64,7 +64,7 @@ class TestBomSpec:
             entry.name = "evil"  # type: ignore[misc]
 
     def test_bom_entry_validation_rejects_null_byte(self):
-        from soup_cli.utils.bom import BomEntry
+        from ai_forge_cli.utils.bom import BomEntry
 
         with pytest.raises(ValueError):
             BomEntry(
@@ -82,7 +82,7 @@ class TestBomSpec:
             )
 
     def test_bom_entry_validation_rejects_bad_sha(self):
-        from soup_cli.utils.bom import BomEntry
+        from ai_forge_cli.utils.bom import BomEntry
 
         # too short
         with pytest.raises(ValueError):
@@ -101,7 +101,7 @@ class TestBomSpec:
             )
 
     def test_cyclonedx_shape(self):
-        from soup_cli.utils.bom import BomEntry, build_cyclonedx_bom
+        from ai_forge_cli.utils.bom import BomEntry, build_cyclonedx_bom
 
         entry = BomEntry(
             name="adapter-v1",
@@ -129,7 +129,7 @@ class TestBomSpec:
         assert any(c["name"] == "meta-llama/Llama-3.1-8B" for c in comps)
 
     def test_cyclonedx_license_chain(self):
-        from soup_cli.utils.bom import BomEntry, build_cyclonedx_bom
+        from ai_forge_cli.utils.bom import BomEntry, build_cyclonedx_bom
 
         entry = BomEntry(
             name="adapter-v1",
@@ -150,7 +150,7 @@ class TestBomSpec:
         assert license_field[0]["license"]["id"].lower() == "apache-2.0"
 
     def test_spdx_shape(self):
-        from soup_cli.utils.bom import BomEntry, build_spdx_bom
+        from ai_forge_cli.utils.bom import BomEntry, build_spdx_bom
 
         entry = BomEntry(
             name="adapter-v1",
@@ -175,7 +175,7 @@ class TestBomSpec:
         assert any(p.get("primaryPackagePurpose") == "AI-MODEL" for p in pkgs)
 
     def test_render_bom_format_dispatch(self):
-        from soup_cli.utils.bom import BomEntry, render_bom
+        from ai_forge_cli.utils.bom import BomEntry, render_bom
 
         entry = BomEntry(
             name="adapter",
@@ -198,7 +198,7 @@ class TestBomSpec:
             render_bom(entry, "xml")
 
     def test_write_bom_atomic_and_containment(self, tmp_path, monkeypatch):
-        from soup_cli.utils.bom import BomEntry, write_bom
+        from ai_forge_cli.utils.bom import BomEntry, write_bom
 
         monkeypatch.chdir(tmp_path)
         entry = BomEntry(
@@ -221,7 +221,7 @@ class TestBomSpec:
         assert data["bomFormat"] == "CycloneDX"
 
     def test_write_bom_rejects_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.utils.bom import BomEntry, write_bom
+        from ai_forge_cli.utils.bom import BomEntry, write_bom
 
         monkeypatch.chdir(tmp_path)
         entry = BomEntry(
@@ -242,7 +242,7 @@ class TestBomSpec:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX symlink rejection")
     def test_write_bom_rejects_symlink_target(self, tmp_path, monkeypatch):
-        from soup_cli.utils.bom import BomEntry, write_bom
+        from ai_forge_cli.utils.bom import BomEntry, write_bom
 
         monkeypatch.chdir(tmp_path)
         entry = BomEntry(
@@ -299,7 +299,7 @@ class TestBomSpec:
 
 class TestAttestation:
     def test_imports(self):
-        from soup_cli.utils.attest import (
+        from ai_forge_cli.utils.attest import (
             AttestationStatement,
             build_in_toto_statement,
             build_slsa_provenance,
@@ -311,13 +311,13 @@ class TestAttestation:
         assert dataclasses.is_dataclass(AttestationStatement)
 
     def test_attestation_statement_frozen(self):
-        from soup_cli.utils.attest import AttestationStatement
+        from ai_forge_cli.utils.attest import AttestationStatement
 
         s = AttestationStatement(
             stage="train",
             subject_name="adapter-v1",
             subject_sha256="a" * 64,
-            builder_id="soup-cli@0.59.0",
+            builder_id="ai-forge@0.59.0",
             invocation={"command": "soup train"},
             materials=({"uri": "hf://meta-llama/Llama-3.1-8B", "digest": "b" * 64},),
             created_at="2026-05-18T12:00:00+00:00",
@@ -326,7 +326,7 @@ class TestAttestation:
             s.stage = "evil"  # type: ignore[misc]
 
     def test_attestation_stage_allowlist(self):
-        from soup_cli.utils.attest import AttestationStatement
+        from ai_forge_cli.utils.attest import AttestationStatement
 
         with pytest.raises(ValueError):
             AttestationStatement(
@@ -340,7 +340,7 @@ class TestAttestation:
             )
 
     def test_in_toto_shape(self):
-        from soup_cli.utils.attest import (
+        from ai_forge_cli.utils.attest import (
             AttestationStatement,
             build_in_toto_statement,
         )
@@ -349,7 +349,7 @@ class TestAttestation:
             stage="train",
             subject_name="adapter-v1",
             subject_sha256="a" * 64,
-            builder_id="soup-cli@0.59.0",
+            builder_id="ai-forge@0.59.0",
             invocation={"command": "soup train"},
             materials=(),
             created_at="2026-05-18T12:00:00+00:00",
@@ -362,7 +362,7 @@ class TestAttestation:
         assert subjects[0]["digest"]["sha256"] == "a" * 64
 
     def test_slsa_provenance_shape(self):
-        from soup_cli.utils.attest import (
+        from ai_forge_cli.utils.attest import (
             AttestationStatement,
             build_slsa_provenance,
         )
@@ -371,17 +371,17 @@ class TestAttestation:
             stage="train",
             subject_name="adapter-v1",
             subject_sha256="a" * 64,
-            builder_id="soup-cli@0.59.0",
+            builder_id="ai-forge@0.59.0",
             invocation={"command": "soup train"},
             materials=(),
             created_at="2026-05-18T12:00:00+00:00",
         )
         prov = build_slsa_provenance(s)
         assert prov["buildDefinition"]["buildType"].endswith("/build/v1")
-        assert prov["runDetails"]["builder"]["id"] == "soup-cli@0.59.0"
+        assert prov["runDetails"]["builder"]["id"] == "ai-forge@0.59.0"
 
     def test_subject_sha_must_be_64_hex(self):
-        from soup_cli.utils.attest import AttestationStatement
+        from ai_forge_cli.utils.attest import AttestationStatement
 
         with pytest.raises(ValueError):
             AttestationStatement(
@@ -395,7 +395,7 @@ class TestAttestation:
             )
 
     def test_attestation_write_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.attest import (
+        from ai_forge_cli.utils.attest import (
             AttestationStatement,
             write_attestation,
         )
@@ -405,7 +405,7 @@ class TestAttestation:
             stage="train",
             subject_name="adapter-v1",
             subject_sha256="a" * 64,
-            builder_id="soup-cli@0.59.0",
+            builder_id="ai-forge@0.59.0",
             invocation={},
             materials=(),
             created_at="2026-05-18T12:00:00+00:00",
@@ -414,7 +414,7 @@ class TestAttestation:
             write_attestation(s, "/tmp/x.json")
 
     def test_attestation_write_atomic(self, tmp_path, monkeypatch):
-        from soup_cli.utils.attest import (
+        from ai_forge_cli.utils.attest import (
             AttestationStatement,
             write_attestation,
         )
@@ -424,7 +424,7 @@ class TestAttestation:
             stage="train",
             subject_name="adapter-v1",
             subject_sha256="a" * 64,
-            builder_id="soup-cli@0.59.0",
+            builder_id="ai-forge@0.59.0",
             invocation={},
             materials=(),
             created_at="2026-05-18T12:00:00+00:00",
@@ -437,14 +437,14 @@ class TestAttestation:
 
     def test_sign_attestation_stub_signature(self):
         """Sigstore signing deferred to v0.59.1 — ed25519 fallback returns marker."""
-        from soup_cli.utils.attest import SignatureBackend, sign_attestation
+        from ai_forge_cli.utils.attest import SignatureBackend, sign_attestation
 
         out = sign_attestation(b"payload", backend=SignatureBackend.UNSIGNED)
         assert out["signature"] == ""
         assert out["backend"] == "unsigned"
 
     def test_sign_attestation_rejects_unknown_backend(self):
-        from soup_cli.utils.attest import sign_attestation
+        from ai_forge_cli.utils.attest import sign_attestation
 
         with pytest.raises(ValueError):
             sign_attestation(b"payload", backend="weird")  # type: ignore[arg-type]
@@ -460,7 +460,7 @@ class TestAttestation:
 
 class TestAnnexXI:
     def test_imports(self):
-        from soup_cli.utils.annex_xi import (
+        from ai_forge_cli.utils.annex_xi import (
             AnnexXIData,
             render_annex_xi_markdown,
             render_annex_xii_markdown,
@@ -472,7 +472,7 @@ class TestAnnexXI:
         assert callable(write_annex_doc)
 
     def test_annex_xi_data_frozen(self):
-        from soup_cli.utils.annex_xi import AnnexXIData
+        from ai_forge_cli.utils.annex_xi import AnnexXIData
 
         d = AnnexXIData(
             model_name="adapter-v1",
@@ -492,7 +492,7 @@ class TestAnnexXI:
             d.model_name = "evil"  # type: ignore[misc]
 
     def test_annex_xi_markdown_contains_sections(self):
-        from soup_cli.utils.annex_xi import (
+        from ai_forge_cli.utils.annex_xi import (
             AnnexXIData,
             render_annex_xi_markdown,
         )
@@ -524,7 +524,7 @@ class TestAnnexXI:
         assert "huggingface.co" in md
 
     def test_annex_xii_summary_markdown(self):
-        from soup_cli.utils.annex_xi import (
+        from ai_forge_cli.utils.annex_xi import (
             AnnexXIData,
             render_annex_xii_markdown,
         )
@@ -548,7 +548,7 @@ class TestAnnexXI:
         assert "Article 53" in md
 
     def test_top_domains_capped_at_10(self):
-        from soup_cli.utils.annex_xi import AnnexXIData
+        from ai_forge_cli.utils.annex_xi import AnnexXIData
 
         many = tuple((f"d{i}.com", 1.0) for i in range(20))
         # Should be accepted but capped on render (kept on data for round-trip)
@@ -566,14 +566,14 @@ class TestAnnexXI:
             run_id="r",
             created_at="2026-05-18T12:00:00+00:00",
         )
-        from soup_cli.utils.annex_xi import render_annex_xi_markdown
+        from ai_forge_cli.utils.annex_xi import render_annex_xi_markdown
         md = render_annex_xi_markdown(d)
         # We slice to top-10
         for i in range(10):
             assert f"d{i}.com" in md
 
     def test_negative_flops_rejected(self):
-        from soup_cli.utils.annex_xi import AnnexXIData
+        from ai_forge_cli.utils.annex_xi import AnnexXIData
 
         with pytest.raises(ValueError):
             AnnexXIData(
@@ -585,7 +585,7 @@ class TestAnnexXI:
             )
 
     def test_null_byte_model_name_rejected(self):
-        from soup_cli.utils.annex_xi import AnnexXIData
+        from ai_forge_cli.utils.annex_xi import AnnexXIData
 
         with pytest.raises(ValueError):
             AnnexXIData(
@@ -597,7 +597,7 @@ class TestAnnexXI:
             )
 
     def test_write_annex_doc_atomic(self, tmp_path, monkeypatch):
-        from soup_cli.utils.annex_xi import AnnexXIData, write_annex_doc
+        from ai_forge_cli.utils.annex_xi import AnnexXIData, write_annex_doc
 
         monkeypatch.chdir(tmp_path)
         d = AnnexXIData(
@@ -613,7 +613,7 @@ class TestAnnexXI:
         assert "Annex XI" in out.read_text()
 
     def test_write_annex_unknown_section_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.annex_xi import AnnexXIData, write_annex_doc
+        from ai_forge_cli.utils.annex_xi import AnnexXIData, write_annex_doc
 
         monkeypatch.chdir(tmp_path)
         d = AnnexXIData(
@@ -632,7 +632,7 @@ class TestAnnexXI:
 
 class TestAuditLog:
     def test_imports(self):
-        from soup_cli.utils.audit_log import (
+        from ai_forge_cli.utils.audit_log import (
             AuditEvent,
             append_audit_event,
             redact_event,
@@ -644,7 +644,7 @@ class TestAuditLog:
         assert callable(rotate_if_needed)
 
     def test_audit_event_frozen_and_validated(self):
-        from soup_cli.utils.audit_log import AuditEvent
+        from ai_forge_cli.utils.audit_log import AuditEvent
 
         ev = AuditEvent(
             timestamp="2026-05-18T12:00:00+00:00",
@@ -659,7 +659,7 @@ class TestAuditLog:
         assert ev.exit_code == 0
 
     def test_audit_event_null_byte_rejected(self):
-        from soup_cli.utils.audit_log import AuditEvent
+        from ai_forge_cli.utils.audit_log import AuditEvent
 
         with pytest.raises(ValueError):
             AuditEvent(
@@ -672,7 +672,7 @@ class TestAuditLog:
             )
 
     def test_redact_event_strips_secrets(self):
-        from soup_cli.utils.audit_log import AuditEvent, redact_event
+        from ai_forge_cli.utils.audit_log import AuditEvent, redact_event
 
         ev = AuditEvent(
             timestamp="t",
@@ -688,7 +688,7 @@ class TestAuditLog:
         assert "<redacted>" in " ".join(red.args)
 
     def test_append_audit_event_writes_line(self, tmp_path):
-        from soup_cli.utils.audit_log import AuditEvent, append_audit_event
+        from ai_forge_cli.utils.audit_log import AuditEvent, append_audit_event
 
         log_path = tmp_path / "audit.jsonl"
         ev = AuditEvent(
@@ -706,7 +706,7 @@ class TestAuditLog:
         assert rec["exit_code"] == 0
 
     def test_append_audit_event_appends_not_overwrites(self, tmp_path):
-        from soup_cli.utils.audit_log import AuditEvent, append_audit_event
+        from ai_forge_cli.utils.audit_log import AuditEvent, append_audit_event
 
         log_path = tmp_path / "audit.jsonl"
         for cmd in ("train", "eval", "push"):
@@ -727,7 +727,7 @@ class TestAuditLog:
         assert len(lines) == 3
 
     def test_rotate_if_needed_renames_at_cap(self, tmp_path):
-        from soup_cli.utils.audit_log import rotate_if_needed
+        from ai_forge_cli.utils.audit_log import rotate_if_needed
 
         log_path = tmp_path / "audit.jsonl"
         log_path.write_text("x" * 200)
@@ -737,7 +737,7 @@ class TestAuditLog:
         assert (tmp_path / "audit.jsonl.1").is_file()
 
     def test_rotate_does_nothing_under_cap(self, tmp_path):
-        from soup_cli.utils.audit_log import rotate_if_needed
+        from ai_forge_cli.utils.audit_log import rotate_if_needed
 
         log_path = tmp_path / "audit.jsonl"
         log_path.write_text("small")
@@ -745,7 +745,7 @@ class TestAuditLog:
         assert rotated is False
 
     def test_rotate_rejects_invalid_cap(self, tmp_path):
-        from soup_cli.utils.audit_log import rotate_if_needed
+        from ai_forge_cli.utils.audit_log import rotate_if_needed
 
         with pytest.raises(ValueError):
             rotate_if_needed(str(tmp_path / "x"), cap_bytes=0)
@@ -754,7 +754,7 @@ class TestAuditLog:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX 0o600 perms")
     def test_audit_log_perms_0o600(self, tmp_path):
-        from soup_cli.utils.audit_log import AuditEvent, append_audit_event
+        from ai_forge_cli.utils.audit_log import AuditEvent, append_audit_event
 
         log_path = tmp_path / "audit.jsonl"
         ev = AuditEvent(
@@ -771,7 +771,7 @@ class TestAuditLog:
 
 class TestReproReceipt:
     def test_imports(self):
-        from soup_cli.utils.repro_receipt import (
+        from ai_forge_cli.utils.repro_receipt import (
             ReproReceipt,
             build_repro_receipt,
             write_repro_receipt,
@@ -781,7 +781,7 @@ class TestReproReceipt:
         assert callable(write_repro_receipt)
 
     def test_receipt_captures_basic_env(self):
-        from soup_cli.utils.repro_receipt import build_repro_receipt
+        from ai_forge_cli.utils.repro_receipt import build_repro_receipt
 
         r = build_repro_receipt(
             seeds={"torch": 42, "numpy": 42, "python": 0},
@@ -794,27 +794,27 @@ class TestReproReceipt:
         assert d.get("os")
 
     def test_receipt_frozen(self):
-        from soup_cli.utils.repro_receipt import build_repro_receipt
+        from ai_forge_cli.utils.repro_receipt import build_repro_receipt
 
         r = build_repro_receipt(seeds={"torch": 0}, run_id="abc")
         with pytest.raises(dataclasses.FrozenInstanceError):
             r.run_id = "evil"  # type: ignore[misc]
 
     def test_receipt_seeds_validation(self):
-        from soup_cli.utils.repro_receipt import build_repro_receipt
+        from ai_forge_cli.utils.repro_receipt import build_repro_receipt
 
         # non-int seed
         with pytest.raises(ValueError):
             build_repro_receipt(seeds={"torch": "abc"}, run_id="x")  # type: ignore[dict-item]
 
     def test_receipt_run_id_validation(self):
-        from soup_cli.utils.repro_receipt import build_repro_receipt
+        from ai_forge_cli.utils.repro_receipt import build_repro_receipt
 
         with pytest.raises(ValueError):
             build_repro_receipt(seeds={}, run_id="bad\x00")
 
     def test_write_repro_receipt_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.utils.repro_receipt import build_repro_receipt, write_repro_receipt
+        from ai_forge_cli.utils.repro_receipt import build_repro_receipt, write_repro_receipt
 
         monkeypatch.chdir(tmp_path)
         r = build_repro_receipt(seeds={}, run_id="abc")
@@ -822,7 +822,7 @@ class TestReproReceipt:
             write_repro_receipt(r, "/tmp/x.json")
 
     def test_write_repro_receipt_atomic(self, tmp_path, monkeypatch):
-        from soup_cli.utils.repro_receipt import build_repro_receipt, write_repro_receipt
+        from ai_forge_cli.utils.repro_receipt import build_repro_receipt, write_repro_receipt
 
         monkeypatch.chdir(tmp_path)
         r = build_repro_receipt(seeds={"torch": 1}, run_id="abc")
@@ -839,7 +839,7 @@ class TestReproReceipt:
 
 class TestEnergy:
     def test_imports(self):
-        from soup_cli.utils.energy import (
+        from ai_forge_cli.utils.energy import (
             EnergyMeasurement,
             adjust_for_pue,
             measure_run_energy,
@@ -851,7 +851,7 @@ class TestEnergy:
         assert callable(adjust_for_pue)
 
     def test_measurement_frozen(self):
-        from soup_cli.utils.energy import EnergyMeasurement
+        from ai_forge_cli.utils.energy import EnergyMeasurement
 
         m = EnergyMeasurement(
             energy_kwh=1.0, co2_kg=0.4, pue=1.2,
@@ -862,7 +862,7 @@ class TestEnergy:
             m.energy_kwh = 0.0  # type: ignore[misc]
 
     def test_measure_returns_zero_when_codecarbon_missing(self):
-        from soup_cli.utils.energy import measure_run_energy
+        from ai_forge_cli.utils.energy import measure_run_energy
 
         # No live codecarbon — returns None or zero, never crashes
         out = measure_run_energy(duration_seconds=0.0)
@@ -870,44 +870,44 @@ class TestEnergy:
         assert out is None or out.energy_kwh == 0.0
 
     def test_validate_electricity_map_endpoint_loopback_ok(self):
-        from soup_cli.utils.energy import validate_electricity_map_endpoint
+        from ai_forge_cli.utils.energy import validate_electricity_map_endpoint
 
         assert validate_electricity_map_endpoint(
             "http://localhost:8080/co2"
         ) == "http://localhost:8080/co2"
 
     def test_validate_electricity_map_endpoint_https_ok(self):
-        from soup_cli.utils.energy import validate_electricity_map_endpoint
+        from ai_forge_cli.utils.energy import validate_electricity_map_endpoint
 
         v = validate_electricity_map_endpoint("https://api.electricitymap.org/v3")
         assert v.startswith("https://")
 
     def test_validate_electricity_map_rejects_lan_http(self):
-        from soup_cli.utils.energy import validate_electricity_map_endpoint
+        from ai_forge_cli.utils.energy import validate_electricity_map_endpoint
 
         with pytest.raises(ValueError):
             validate_electricity_map_endpoint("http://10.0.0.1/co2")
 
     def test_validate_electricity_map_rejects_null_byte(self):
-        from soup_cli.utils.energy import validate_electricity_map_endpoint
+        from ai_forge_cli.utils.energy import validate_electricity_map_endpoint
 
         with pytest.raises(ValueError):
             validate_electricity_map_endpoint("http://localhost\x00/x")
 
     def test_validate_electricity_map_rejects_bad_scheme(self):
-        from soup_cli.utils.energy import validate_electricity_map_endpoint
+        from ai_forge_cli.utils.energy import validate_electricity_map_endpoint
 
         with pytest.raises(ValueError):
             validate_electricity_map_endpoint("file:///etc/passwd")
 
     def test_adjust_for_pue(self):
-        from soup_cli.utils.energy import adjust_for_pue
+        from ai_forge_cli.utils.energy import adjust_for_pue
 
         assert adjust_for_pue(1.0, 1.5) == pytest.approx(1.5)
         assert adjust_for_pue(0.0, 1.5) == 0.0
 
     def test_adjust_for_pue_rejects_bad_inputs(self):
-        from soup_cli.utils.energy import adjust_for_pue
+        from ai_forge_cli.utils.energy import adjust_for_pue
 
         with pytest.raises(ValueError):
             adjust_for_pue(-1.0, 1.5)
@@ -924,8 +924,8 @@ class TestEnergy:
 
 class TestBomEnergyAttach:
     def test_bom_with_energy_metadata(self):
-        from soup_cli.utils.bom import BomEntry, attach_energy, build_cyclonedx_bom
-        from soup_cli.utils.energy import EnergyMeasurement
+        from ai_forge_cli.utils.bom import BomEntry, attach_energy, build_cyclonedx_bom
+        from ai_forge_cli.utils.energy import EnergyMeasurement
 
         entry = BomEntry(
             name="adapter",
@@ -958,7 +958,7 @@ class TestBomEnergyAttach:
 
 class TestSourceWiring:
     def test_cli_registers_bom(self):
-        cli_path = Path(soup_cli.__file__).parent / "cli.py"
+        cli_path = Path(ai_forge_cli.__file__).parent / "cli.py"
         text = cli_path.read_text()
         # bom and attest must be wired
         assert "bom" in text.lower()
@@ -970,12 +970,12 @@ class TestSourceWiring:
         Matches the v0.51.0 / v0.54.0 floor-check idiom so later releases
         don't have to edit this assertion.
         """
-        major, minor, _patch = soup_cli.__version__.split(".")
-        assert int(major) == 0 and int(minor) >= 59, soup_cli.__version__
+        major, minor, _patch = ai_forge_cli.__version__.split(".")
+        assert int(major) == 0 and int(minor) >= 59, ai_forge_cli.__version__
 
     def test_no_top_level_heavy_imports(self):
         """v0.59 modules must not import torch/transformers at module top."""
-        utils = Path(soup_cli.__file__).parent / "utils"
+        utils = Path(ai_forge_cli.__file__).parent / "utils"
         for name in ("bom.py", "attest.py", "annex_xi.py", "audit_log.py",
                      "repro_receipt.py", "energy.py"):
             text = (utils / name).read_text()
@@ -1045,7 +1045,7 @@ class TestReviewFollowups:
 
     # --- Security HIGH H3 / Code review #9: redaction extended to all fields ---
     def test_redact_event_redacts_host_and_operator_fields(self):
-        from soup_cli.utils.audit_log import AuditEvent, redact_event
+        from ai_forge_cli.utils.audit_log import AuditEvent, redact_event
 
         ev = AuditEvent(
             timestamp="2026-05-18T12:00:00+00:00",
@@ -1060,7 +1060,7 @@ class TestReviewFollowups:
         assert "<redacted>" in red.operator_id
 
     def test_redact_event_handles_bearer_in_args(self):
-        from soup_cli.utils.audit_log import AuditEvent, redact_event
+        from ai_forge_cli.utils.audit_log import AuditEvent, redact_event
 
         ev = AuditEvent(
             timestamp="t", command="serve",
@@ -1077,7 +1077,7 @@ class TestReviewFollowups:
     # --- Security HIGH H1: rotation symlink rejection at backup path ---
     @pytest.mark.skipif(os.name == "nt", reason="POSIX symlink rejection")
     def test_rotate_refuses_symlink_backup(self, tmp_path):
-        from soup_cli.utils.audit_log import rotate_if_needed
+        from ai_forge_cli.utils.audit_log import rotate_if_needed
 
         log_path = tmp_path / "audit.jsonl"
         log_path.write_text("x" * 200)
@@ -1092,7 +1092,7 @@ class TestReviewFollowups:
 
     # --- Security M2: env override path containment ---
     def test_default_log_path_rejects_unsafe_env_override(self, monkeypatch, tmp_path):
-        from soup_cli.utils.audit_log import default_log_path
+        from ai_forge_cli.utils.audit_log import default_log_path
 
         # /etc/cron.d is outside $HOME / $CWD / $TMPDIR — fall back to default.
         monkeypatch.setenv("SOUP_AUDIT_LOG_PATH", "/etc/cron.d/x")
@@ -1102,7 +1102,7 @@ class TestReviewFollowups:
         assert "/etc/cron.d/x" not in resolved
 
     def test_default_log_path_honours_in_bounds_env(self, monkeypatch, tmp_path):
-        from soup_cli.utils.audit_log import default_log_path
+        from ai_forge_cli.utils.audit_log import default_log_path
 
         target = tmp_path / "audit.jsonl"
         monkeypatch.chdir(tmp_path)
@@ -1116,7 +1116,7 @@ class TestReviewFollowups:
         so we cannot inject one via monkeypatch.setenv. Test the validator
         directly instead — it must return None for any null-byte path so the
         caller falls back to the safe default."""
-        from soup_cli.utils.audit_log import _validate_log_path_override
+        from ai_forge_cli.utils.audit_log import _validate_log_path_override
 
         assert _validate_log_path_override("/tmp/\x00/audit.jsonl") is None
 
@@ -1124,7 +1124,7 @@ class TestReviewFollowups:
         """If the env layer somehow raises ValueError on read (defence in depth
         for the POSIX `embedded null byte` path), default_log_path must still
         return a safe default."""
-        from soup_cli.utils import audit_log
+        from ai_forge_cli.utils import audit_log
 
         monkeypatch.chdir(tmp_path)
 
@@ -1140,7 +1140,7 @@ class TestReviewFollowups:
 
     # --- Code review #2 / Security L1: artifact size_bytes validation ---
     def test_bom_artifact_size_bytes_non_int_rejected(self):
-        from soup_cli.utils.bom import BomEntry, build_cyclonedx_bom
+        from ai_forge_cli.utils.bom import BomEntry, build_cyclonedx_bom
 
         entry = BomEntry(
             name="a", version="0.1", base_model="m",
@@ -1154,7 +1154,7 @@ class TestReviewFollowups:
             build_cyclonedx_bom(entry)
 
     def test_bom_artifact_size_bytes_bool_rejected(self):
-        from soup_cli.utils.bom import BomEntry, build_cyclonedx_bom
+        from ai_forge_cli.utils.bom import BomEntry, build_cyclonedx_bom
 
         entry = BomEntry(
             name="a", version="0.1", base_model="m",
@@ -1169,7 +1169,7 @@ class TestReviewFollowups:
 
     # --- Security M1: Annex markdown escape ---
     def test_annex_xi_escapes_markdown_active_chars(self):
-        from soup_cli.utils.annex_xi import AnnexXIData, render_annex_xi_markdown
+        from ai_forge_cli.utils.annex_xi import AnnexXIData, render_annex_xi_markdown
 
         d = AnnexXIData(
             model_name="adapter|injected]more",
@@ -1194,7 +1194,7 @@ class TestReviewFollowups:
         assert "[click]" not in md
 
     def test_annex_xi_neutralises_newline_in_model_name(self):
-        from soup_cli.utils.annex_xi import AnnexXIData, render_annex_xi_markdown
+        from ai_forge_cli.utils.annex_xi import AnnexXIData, render_annex_xi_markdown
 
         # A newline injected into model_name would otherwise forge a heading.
         d = AnnexXIData(
@@ -1212,7 +1212,7 @@ class TestReviewFollowups:
 
     # --- Python review #2: public default_log_path ---
     def test_default_log_path_public_symbol(self):
-        from soup_cli.utils import audit_log
+        from ai_forge_cli.utils import audit_log
 
         assert hasattr(audit_log, "default_log_path")
         assert callable(audit_log.default_log_path)
@@ -1220,7 +1220,7 @@ class TestReviewFollowups:
     # --- TDD #1 / TOCTOU: symlink rejection on each write helper ---
     @pytest.mark.skipif(os.name == "nt", reason="POSIX symlink rejection")
     def test_write_attestation_rejects_symlink_target(self, tmp_path, monkeypatch):
-        from soup_cli.utils.attest import AttestationStatement, write_attestation
+        from ai_forge_cli.utils.attest import AttestationStatement, write_attestation
 
         monkeypatch.chdir(tmp_path)
         s = AttestationStatement(
@@ -1235,7 +1235,7 @@ class TestReviewFollowups:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX symlink rejection")
     def test_write_annex_doc_rejects_symlink_target(self, tmp_path, monkeypatch):
-        from soup_cli.utils.annex_xi import AnnexXIData, write_annex_doc
+        from ai_forge_cli.utils.annex_xi import AnnexXIData, write_annex_doc
 
         monkeypatch.chdir(tmp_path)
         d = AnnexXIData(
@@ -1253,7 +1253,7 @@ class TestReviewFollowups:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX symlink rejection")
     def test_write_repro_receipt_rejects_symlink_target(self, tmp_path, monkeypatch):
-        from soup_cli.utils.repro_receipt import build_repro_receipt, write_repro_receipt
+        from ai_forge_cli.utils.repro_receipt import build_repro_receipt, write_repro_receipt
 
         monkeypatch.chdir(tmp_path)
         r = build_repro_receipt(seeds={}, run_id="abc")
@@ -1264,7 +1264,7 @@ class TestReviewFollowups:
 
     # --- TDD #2: append_audit_event rejects outside-cwd null-byte path ---
     def test_append_audit_event_null_byte_path_rejected(self):
-        from soup_cli.utils.audit_log import AuditEvent, append_audit_event
+        from ai_forge_cli.utils.audit_log import AuditEvent, append_audit_event
 
         ev = AuditEvent(
             timestamp="t", command="train", args=(),
@@ -1274,7 +1274,7 @@ class TestReviewFollowups:
             append_audit_event(ev, "/tmp/\x00/x")
 
     def test_append_audit_event_empty_path_rejected(self):
-        from soup_cli.utils.audit_log import AuditEvent, append_audit_event
+        from ai_forge_cli.utils.audit_log import AuditEvent, append_audit_event
 
         ev = AuditEvent(
             timestamp="t", command="train", args=(),
@@ -1285,7 +1285,7 @@ class TestReviewFollowups:
 
     # --- TDD #3: rotate boundary at exactly cap_bytes (returns False) ---
     def test_rotate_at_exact_cap_does_not_rotate(self, tmp_path):
-        from soup_cli.utils.audit_log import rotate_if_needed
+        from ai_forge_cli.utils.audit_log import rotate_if_needed
 
         log = tmp_path / "audit.jsonl"
         log.write_text("x" * 100)
@@ -1293,7 +1293,7 @@ class TestReviewFollowups:
         assert rotated is False
 
     def test_rotate_just_over_cap_rotates(self, tmp_path):
-        from soup_cli.utils.audit_log import rotate_if_needed
+        from ai_forge_cli.utils.audit_log import rotate_if_needed
 
         log = tmp_path / "audit.jsonl"
         log.write_text("x" * 101)
@@ -1303,25 +1303,25 @@ class TestReviewFollowups:
 
     # --- TDD #4: read_audit_tail validation ---
     def test_read_audit_tail_bool_limit_rejected(self):
-        from soup_cli.utils.audit_log import read_audit_tail
+        from ai_forge_cli.utils.audit_log import read_audit_tail
 
         with pytest.raises(ValueError):
             read_audit_tail(limit=True)  # type: ignore[arg-type]
 
     def test_read_audit_tail_zero_limit_rejected(self):
-        from soup_cli.utils.audit_log import read_audit_tail
+        from ai_forge_cli.utils.audit_log import read_audit_tail
 
         with pytest.raises(ValueError):
             read_audit_tail(limit=0)
 
     def test_read_audit_tail_missing_file_returns_empty(self, tmp_path):
-        from soup_cli.utils.audit_log import read_audit_tail
+        from ai_forge_cli.utils.audit_log import read_audit_tail
 
         out = read_audit_tail(str(tmp_path / "missing.jsonl"), limit=10)
         assert out == []
 
     def test_read_audit_tail_skips_malformed_lines(self, tmp_path):
-        from soup_cli.utils.audit_log import read_audit_tail
+        from ai_forge_cli.utils.audit_log import read_audit_tail
 
         log = tmp_path / "audit.jsonl"
         log.write_text(
@@ -1336,7 +1336,7 @@ class TestReviewFollowups:
 
     # --- TDD #6: bool-as-int rejection on AnnexXIData numeric fields ---
     def test_annex_xi_flops_bool_rejected(self):
-        from soup_cli.utils.annex_xi import AnnexXIData
+        from ai_forge_cli.utils.annex_xi import AnnexXIData
 
         with pytest.raises(ValueError):
             AnnexXIData(
@@ -1350,7 +1350,7 @@ class TestReviewFollowups:
             )
 
     def test_annex_xi_kwh_bool_rejected(self):
-        from soup_cli.utils.annex_xi import AnnexXIData
+        from ai_forge_cli.utils.annex_xi import AnnexXIData
 
         with pytest.raises(ValueError):
             AnnexXIData(
@@ -1364,7 +1364,7 @@ class TestReviewFollowups:
             )
 
     def test_audit_event_exit_code_bool_rejected(self):
-        from soup_cli.utils.audit_log import AuditEvent
+        from ai_forge_cli.utils.audit_log import AuditEvent
 
         with pytest.raises(ValueError):
             AuditEvent(
@@ -1374,7 +1374,7 @@ class TestReviewFollowups:
             )
 
     def test_repro_seeds_bool_value_rejected(self):
-        from soup_cli.utils.repro_receipt import build_repro_receipt
+        from ai_forge_cli.utils.repro_receipt import build_repro_receipt
 
         with pytest.raises(ValueError):
             build_repro_receipt(
@@ -1392,7 +1392,7 @@ class TestReviewFollowups:
 
     # --- TDD #12: top_domains cap absent ---
     def test_top_domains_only_first_10_rendered(self):
-        from soup_cli.utils.annex_xi import (
+        from ai_forge_cli.utils.annex_xi import (
             AnnexXIData,
             render_annex_xi_markdown,
         )
@@ -1415,19 +1415,19 @@ class TestReviewFollowups:
 
     # --- Code review #6: atomic_write_text central helper ---
     def test_atomic_write_text_helper_importable(self):
-        from soup_cli.utils.paths import atomic_write_text
+        from ai_forge_cli.utils.paths import atomic_write_text
 
         assert callable(atomic_write_text)
 
     def test_atomic_write_text_rejects_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.utils.paths import atomic_write_text
+        from ai_forge_cli.utils.paths import atomic_write_text
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError):
             atomic_write_text("hi", "/tmp/x.txt")
 
     def test_atomic_write_text_happy(self, tmp_path, monkeypatch):
-        from soup_cli.utils.paths import atomic_write_text
+        from ai_forge_cli.utils.paths import atomic_write_text
 
         monkeypatch.chdir(tmp_path)
         out = tmp_path / "out.txt"

@@ -8,25 +8,25 @@ import pytest
 
 class TestLoraConfigFields:
     def test_use_vera_default_false(self):
-        from soup_cli.config.schema import LoraConfig
+        from ai_forge_cli.config.schema import LoraConfig
 
         cfg = LoraConfig()
         assert cfg.use_vera is False
 
     def test_use_olora_default_false(self):
-        from soup_cli.config.schema import LoraConfig
+        from ai_forge_cli.config.schema import LoraConfig
 
         cfg = LoraConfig()
         assert cfg.use_olora is False
 
     def test_use_vera_enabled(self):
-        from soup_cli.config.schema import LoraConfig
+        from ai_forge_cli.config.schema import LoraConfig
 
         cfg = LoraConfig(use_vera=True)
         assert cfg.use_vera is True
 
     def test_use_olora_enabled(self):
-        from soup_cli.config.schema import LoraConfig
+        from ai_forge_cli.config.schema import LoraConfig
 
         cfg = LoraConfig(use_olora=True)
         assert cfg.use_olora is True
@@ -40,7 +40,7 @@ class TestPeftMutualExclusion:
     def test_vera_and_olora_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import LoraConfig
+        from ai_forge_cli.config.schema import LoraConfig
 
         with pytest.raises(ValidationError):
             LoraConfig(use_vera=True, use_olora=True)
@@ -48,7 +48,7 @@ class TestPeftMutualExclusion:
     def test_vera_and_dora_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import LoraConfig
+        from ai_forge_cli.config.schema import LoraConfig
 
         with pytest.raises(ValidationError):
             LoraConfig(use_vera=True, use_dora=True)
@@ -56,7 +56,7 @@ class TestPeftMutualExclusion:
     def test_olora_and_dora_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import LoraConfig
+        from ai_forge_cli.config.schema import LoraConfig
 
         with pytest.raises(ValidationError):
             LoraConfig(use_olora=True, use_dora=True)
@@ -68,8 +68,8 @@ class TestPeftMutualExclusion:
 
 class TestPeftBuilder:
     def test_standard_lora_returns_lora_config(self):
-        from soup_cli.config.schema import LoraConfig as SchemaLoraConfig
-        from soup_cli.utils.peft_builder import build_peft_config
+        from ai_forge_cli.config.schema import LoraConfig as SchemaLoraConfig
+        from ai_forge_cli.utils.peft_builder import build_peft_config
 
         schema_cfg = SchemaLoraConfig()
         result = build_peft_config(
@@ -81,8 +81,8 @@ class TestPeftBuilder:
         assert result["peft_cls"] == "LoraConfig"
 
     def test_olora_adds_init_weights(self):
-        from soup_cli.config.schema import LoraConfig as SchemaLoraConfig
-        from soup_cli.utils.peft_builder import build_peft_config
+        from ai_forge_cli.config.schema import LoraConfig as SchemaLoraConfig
+        from ai_forge_cli.utils.peft_builder import build_peft_config
 
         schema_cfg = SchemaLoraConfig(use_olora=True)
         result = build_peft_config(
@@ -94,8 +94,8 @@ class TestPeftBuilder:
         assert result["init_kwargs"].get("init_lora_weights") == "olora"
 
     def test_vera_returns_vera_config(self):
-        from soup_cli.config.schema import LoraConfig as SchemaLoraConfig
-        from soup_cli.utils.peft_builder import build_peft_config
+        from ai_forge_cli.config.schema import LoraConfig as SchemaLoraConfig
+        from ai_forge_cli.utils.peft_builder import build_peft_config
 
         schema_cfg = SchemaLoraConfig(use_vera=True)
         result = build_peft_config(
@@ -106,8 +106,8 @@ class TestPeftBuilder:
         assert result["peft_cls"] == "VeraConfig"
 
     def test_dora_preserved(self):
-        from soup_cli.config.schema import LoraConfig as SchemaLoraConfig
-        from soup_cli.utils.peft_builder import build_peft_config
+        from ai_forge_cli.config.schema import LoraConfig as SchemaLoraConfig
+        from ai_forge_cli.utils.peft_builder import build_peft_config
 
         schema_cfg = SchemaLoraConfig(use_dora=True)
         result = build_peft_config(
@@ -119,8 +119,8 @@ class TestPeftBuilder:
         assert result["init_kwargs"].get("use_dora") is True
 
     def test_target_modules_propagated_lora(self):
-        from soup_cli.config.schema import LoraConfig as SchemaLoraConfig
-        from soup_cli.utils.peft_builder import build_peft_config
+        from ai_forge_cli.config.schema import LoraConfig as SchemaLoraConfig
+        from ai_forge_cli.utils.peft_builder import build_peft_config
 
         modules = ["q_proj", "k_proj", "v_proj", "o_proj"]
         result = build_peft_config(
@@ -131,8 +131,8 @@ class TestPeftBuilder:
         assert result["init_kwargs"]["target_modules"] == modules
 
     def test_target_modules_propagated_vera(self):
-        from soup_cli.config.schema import LoraConfig as SchemaLoraConfig
-        from soup_cli.utils.peft_builder import build_peft_config
+        from ai_forge_cli.config.schema import LoraConfig as SchemaLoraConfig
+        from ai_forge_cli.utils.peft_builder import build_peft_config
 
         modules = ["q_proj", "v_proj"]
         result = build_peft_config(
@@ -143,8 +143,8 @@ class TestPeftBuilder:
         assert result["init_kwargs"]["target_modules"] == modules
 
     def test_task_type_propagated(self):
-        from soup_cli.config.schema import LoraConfig as SchemaLoraConfig
-        from soup_cli.utils.peft_builder import build_peft_config
+        from ai_forge_cli.config.schema import LoraConfig as SchemaLoraConfig
+        from ai_forge_cli.utils.peft_builder import build_peft_config
 
         result = build_peft_config(
             SchemaLoraConfig(),
@@ -160,13 +160,13 @@ class TestPeftBuilder:
 
 class TestPeftSweep:
     def test_sweep_accepts_use_vera(self, tmp_path, monkeypatch):
-        from soup_cli.commands.sweep import _parse_sweep_params
+        from ai_forge_cli.commands.sweep import _parse_sweep_params
 
         params = _parse_sweep_params(["lora.use_vera=true,false"])
         assert "lora.use_vera" in params
 
     def test_sweep_accepts_use_olora(self):
-        from soup_cli.commands.sweep import _parse_sweep_params
+        from ai_forge_cli.commands.sweep import _parse_sweep_params
 
         params = _parse_sweep_params(["lora.use_olora=true,false"])
         assert "lora.use_olora" in params
@@ -178,7 +178,7 @@ class TestPeftSweep:
 
 class TestPeftYamlConfig:
     def test_yaml_with_vera(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: meta-llama/Llama-3.1-8B-Instruct
@@ -197,7 +197,7 @@ output: ./output
         assert cfg.training.lora.use_olora is False
 
     def test_yaml_with_olora(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: meta-llama/Llama-3.1-8B-Instruct

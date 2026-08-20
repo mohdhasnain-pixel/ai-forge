@@ -32,7 +32,7 @@ import pytest
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlinks")
 def test_plan_yaml_symlink_rejected(tmp_path, monkeypatch):
-    from soup_cli.commands.plan import _load_yaml_config
+    from ai_forge_cli.commands.plan import _load_yaml_config
 
     monkeypatch.chdir(tmp_path)
     real = tmp_path / "real.yaml"
@@ -44,7 +44,7 @@ def test_plan_yaml_symlink_rejected(tmp_path, monkeypatch):
 
 
 def test_plan_yaml_outside_cwd_rejected(tmp_path, monkeypatch):
-    from soup_cli.commands.plan import _load_yaml_config
+    from ai_forge_cli.commands.plan import _load_yaml_config
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "evil.yaml"
@@ -54,7 +54,7 @@ def test_plan_yaml_outside_cwd_rejected(tmp_path, monkeypatch):
 
 
 def test_plan_yaml_null_byte_rejected(tmp_path, monkeypatch):
-    from soup_cli.commands.plan import _load_yaml_config
+    from ai_forge_cli.commands.plan import _load_yaml_config
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(ValueError, match="null"):
@@ -68,7 +68,7 @@ def test_plan_yaml_null_byte_rejected(tmp_path, monkeypatch):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlinks")
 def test_tunability_load_report_symlink_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.tunability import load_report
+    from ai_forge_cli.utils.tunability import load_report
 
     monkeypatch.chdir(tmp_path)
     real = tmp_path / "real.json"
@@ -80,7 +80,7 @@ def test_tunability_load_report_symlink_rejected(tmp_path, monkeypatch):
 
 
 def test_tunability_load_report_null_byte_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.tunability import load_report
+    from ai_forge_cli.utils.tunability import load_report
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(ValueError, match="null"):
@@ -93,7 +93,7 @@ def test_tunability_load_report_containment_before_existence(tmp_path, monkeypat
     Otherwise an attacker can distinguish "file exists out of cwd" from
     "file missing" via the exception type — MEDIUM M8 review fix.
     """
-    from soup_cli.utils.tunability import load_report
+    from ai_forge_cli.utils.tunability import load_report
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "definitely-missing.json"
@@ -108,7 +108,7 @@ def test_tunability_load_report_containment_before_existence(tmp_path, monkeypat
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlinks")
 def test_env_read_lock_symlink_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.env_lock import read_lock
+    from ai_forge_cli.utils.env_lock import read_lock
 
     monkeypatch.chdir(tmp_path)
     real = tmp_path / "real.lock"
@@ -120,7 +120,7 @@ def test_env_read_lock_symlink_rejected(tmp_path, monkeypatch):
 
 
 def test_env_read_lock_null_byte_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.env_lock import read_lock
+    from ai_forge_cli.utils.env_lock import read_lock
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(ValueError, match="null"):
@@ -128,7 +128,7 @@ def test_env_read_lock_null_byte_rejected(tmp_path, monkeypatch):
 
 
 def test_env_read_lock_outside_cwd_before_existence(tmp_path, monkeypatch):
-    from soup_cli.utils.env_lock import read_lock
+    from ai_forge_cli.utils.env_lock import read_lock
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "missing.lock"
@@ -143,7 +143,7 @@ def test_env_read_lock_outside_cwd_before_existence(tmp_path, monkeypatch):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlinks")
 def test_terraform_read_state_symlink_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import read_state
+    from ai_forge_cli.utils.terraform_plan import read_state
 
     monkeypatch.chdir(tmp_path)
     real = tmp_path / "real.tfstate"
@@ -155,7 +155,7 @@ def test_terraform_read_state_symlink_rejected(tmp_path, monkeypatch):
 
 
 def test_terraform_read_state_null_byte_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import read_state
+    from ai_forge_cli.utils.terraform_plan import read_state
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(ValueError, match="null"):
@@ -163,7 +163,7 @@ def test_terraform_read_state_null_byte_rejected(tmp_path, monkeypatch):
 
 
 def test_terraform_read_state_outside_cwd_before_existence(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import read_state
+    from ai_forge_cli.utils.terraform_plan import read_state
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "missing.tfstate"
@@ -177,7 +177,7 @@ def test_terraform_read_state_outside_cwd_before_existence(tmp_path, monkeypatch
 
 
 def test_compute_dataset_sha_empty_returns_zero():
-    from soup_cli.utils.terraform_plan import compute_dataset_sha
+    from ai_forge_cli.utils.terraform_plan import compute_dataset_sha
 
     assert compute_dataset_sha("") == "0" * 64
 
@@ -188,7 +188,7 @@ def test_compute_dataset_sha_outside_cwd_returns_zero(tmp_path, monkeypatch):
     Defends against `data.train: /etc/shadow` smuggling file contents
     into the SHA — H5 review fix.
     """
-    from soup_cli.utils.terraform_plan import compute_dataset_sha
+    from ai_forge_cli.utils.terraform_plan import compute_dataset_sha
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "evil.jsonl"
@@ -201,7 +201,7 @@ def test_compute_dataset_sha_outside_cwd_returns_zero(tmp_path, monkeypatch):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlinks")
 def test_compute_dataset_sha_symlink_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import compute_dataset_sha
+    from ai_forge_cli.utils.terraform_plan import compute_dataset_sha
 
     monkeypatch.chdir(tmp_path)
     real = tmp_path / "real.jsonl"
@@ -213,7 +213,7 @@ def test_compute_dataset_sha_symlink_rejected(tmp_path, monkeypatch):
 
 
 def test_compute_dataset_sha_null_byte_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import compute_dataset_sha
+    from ai_forge_cli.utils.terraform_plan import compute_dataset_sha
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(ValueError, match="null"):
@@ -221,7 +221,7 @@ def test_compute_dataset_sha_null_byte_rejected(tmp_path, monkeypatch):
 
 
 def test_compute_dataset_sha_missing_returns_zero(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import compute_dataset_sha
+    from ai_forge_cli.utils.terraform_plan import compute_dataset_sha
 
     monkeypatch.chdir(tmp_path)
     sha = compute_dataset_sha("missing.jsonl")
@@ -235,7 +235,7 @@ def test_compute_dataset_sha_missing_returns_zero(tmp_path, monkeypatch):
 
 def test_compute_config_sha_strict_no_default_str():
     """A non-serialisable value must raise, not silently `str()` it."""
-    from soup_cli.utils.terraform_plan import compute_config_sha
+    from ai_forge_cli.utils.terraform_plan import compute_config_sha
 
     # `set` is not JSON-serialisable
     with pytest.raises(TypeError):
@@ -250,7 +250,7 @@ def test_compute_config_sha_strict_no_default_str():
 def test_read_state_rejects_non_bool_applied(tmp_path, monkeypatch):
     import json
 
-    from soup_cli.utils.terraform_plan import read_state
+    from ai_forge_cli.utils.terraform_plan import read_state
 
     monkeypatch.chdir(tmp_path)
     bad = tmp_path / "bad.tfstate"
@@ -283,7 +283,7 @@ def test_activation_bytes_clamped_at_extreme():
     """Even at schema max seq_len * batch_size, result stays finite."""
     import math
 
-    from soup_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
 
     inp = HardwareFitInput(
         params_b=1000.0,
@@ -309,7 +309,7 @@ def test_flag_downstream_risk_unknown_llama_variant_does_not_trip_mau_gate():
 
     Tight allowlist defends against future Meta licence id surprises.
     """
-    from soup_cli.utils.license_advisor import flag_downstream_risk
+    from ai_forge_cli.utils.license_advisor import flag_downstream_risk
 
     # `llama-permissive-2030` is not in `_LLAMA_COMMUNITY_LICENSES` AND
     # is not in the known matrix, so it should fall through to the
@@ -324,7 +324,7 @@ def test_flag_downstream_risk_unknown_llama_variant_does_not_trip_mau_gate():
 
 
 def test_flag_downstream_risk_llama_3_under_cap_is_warn_not_block():
-    from soup_cli.utils.license_advisor import flag_downstream_risk
+    from ai_forge_cli.utils.license_advisor import flag_downstream_risk
 
     r = flag_downstream_risk(
         license_id="llama-3",
@@ -342,7 +342,7 @@ def test_flag_downstream_risk_llama_3_under_cap_is_warn_not_block():
 
 def test_detect_cuda_version_windows_path(monkeypatch):
     """`v12.1` token at end of a Windows-style path is extracted."""
-    from soup_cli.utils import env_lock
+    from ai_forge_cli.utils import env_lock
 
     monkeypatch.setenv("CUDA_HOME", r"C:\Program Files\NVIDIA\CUDA\v12.1")
     # Ensure no other env var pre-empts
@@ -355,7 +355,7 @@ def test_detect_cuda_version_windows_path(monkeypatch):
 
 
 def test_detect_cuda_version_posix_path(monkeypatch):
-    from soup_cli.utils import env_lock
+    from ai_forge_cli.utils import env_lock
 
     monkeypatch.setenv("CUDA_HOME", "/usr/local/cuda-12.1")
     monkeypatch.delenv("CUDA_VERSION", raising=False)
@@ -366,7 +366,7 @@ def test_detect_cuda_version_posix_path(monkeypatch):
 
 
 def test_detect_cuda_version_none_when_no_env(monkeypatch):
-    from soup_cli.utils import env_lock
+    from ai_forge_cli.utils import env_lock
 
     monkeypatch.delenv("CUDA_HOME", raising=False)
     monkeypatch.delenv("CUDA_VERSION", raising=False)
@@ -381,7 +381,7 @@ def test_detect_cuda_version_none_when_no_env(monkeypatch):
 
 
 def test_tunability_uses_atomic_write_text():
-    src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "utils" / "tunability.py"
+    src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "utils" / "tunability.py"
     text = src.read_text(encoding="utf-8")
     assert "atomic_write_text" in text, "tunability.write_report must use shared helper"
 
@@ -389,14 +389,14 @@ def test_tunability_uses_atomic_write_text():
 def test_terraform_plan_uses_atomic_write_text():
     src = (
         Path(__file__).resolve().parent.parent
-        / "src" / "soup_cli" / "utils" / "terraform_plan.py"
+        / "src" / "ai_forge_cli" / "utils" / "terraform_plan.py"
     )
     text = src.read_text(encoding="utf-8")
     assert "atomic_write_text" in text, "terraform_plan.write_state must use shared helper"
 
 
 def test_env_lock_uses_atomic_write_text():
-    src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "utils" / "env_lock.py"
+    src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "utils" / "env_lock.py"
     text = src.read_text(encoding="utf-8")
     assert "atomic_write_text" in text, "env_lock.write_lock must use shared helper"
 
@@ -407,7 +407,7 @@ def test_env_lock_uses_atomic_write_text():
 
 
 def test_mau_oversize_rejected():
-    from soup_cli.utils.license_advisor import flag_downstream_risk
+    from ai_forge_cli.utils.license_advisor import flag_downstream_risk
 
     with pytest.raises(ValueError, match="monthly_active_users"):
         flag_downstream_risk(
@@ -427,7 +427,7 @@ def test_tunability_sequence_imported_from_collections_abc():
 
     Use `collections.abc.Sequence` for runtime isinstance checks.
     """
-    src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "utils" / "tunability.py"
+    src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "utils" / "tunability.py"
     text = src.read_text(encoding="utf-8")
     # Either explicit `from collections.abc import Sequence`, or NO
     # mention of `typing.Sequence` in an isinstance context.
@@ -444,7 +444,7 @@ def test_tunability_sequence_imported_from_collections_abc():
 def test_apply_refuses_drift_end_to_end(tmp_path, monkeypatch):
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     runner = CliRunner()
     monkeypatch.chdir(tmp_path)

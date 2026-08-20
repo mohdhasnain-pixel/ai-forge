@@ -12,32 +12,32 @@ import time
 
 import pytest
 
-from soup_cli.utils.gpu_monitor import (
+from ai_forge_cli.utils.gpu_monitor import (
     GpuSample,
     parse_nvidia_smi_csv,
 )
-from soup_cli.utils.llama_server_timings import (
+from ai_forge_cli.utils.llama_server_timings import (
     LlamaServerTimings,
     format_kv_bar,
     parse_timings,
 )
-from soup_cli.utils.qr_url import (
+from ai_forge_cli.utils.qr_url import (
     build_phone_url,
     render_qr_ascii,
     validate_token,
 )
-from soup_cli.utils.sse_train_stream import (
+from ai_forge_cli.utils.sse_train_stream import (
     TrainEvent,
     format_sse_frame,
     to_payload,
 )
-from soup_cli.utils.tail_latency import (
+from ai_forge_cli.utils.tail_latency import (
     TailLatencySummary,
     percentile,
     summarise_latency,
     update_ema,
 )
-from soup_cli.utils.tool_outputs import (
+from ai_forge_cli.utils.tool_outputs import (
     ToolCallTimer,
     ToolOutputsBuffer,
 )

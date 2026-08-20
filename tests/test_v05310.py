@@ -49,7 +49,7 @@ class TestMixExtra:
         assert "scikit-optimize" in mix_block.group(1)
 
     def test_describe_default_optimizer_returns_label(self):
-        from soup_cli.utils.data_mix import describe_default_optimizer
+        from ai_forge_cli.utils.data_mix import describe_default_optimizer
 
         label = describe_default_optimizer()
         assert label in ("scikit-optimize", "dirichlet-fallback")
@@ -57,7 +57,7 @@ class TestMixExtra:
     def test_describe_dirichlet_fallback_when_skopt_missing(self):
         # Force find_spec to report skopt missing.
         with patch("importlib.util.find_spec", return_value=None):
-            from soup_cli.utils.data_mix import describe_default_optimizer
+            from ai_forge_cli.utils.data_mix import describe_default_optimizer
 
             assert describe_default_optimizer() == "dirichlet-fallback"
 
@@ -83,7 +83,7 @@ class TestDataProExtra:
     def test_detect_language_falls_back_to_heuristic_without_langdetect(self):
         # Force the lazy import inside _langdetect_fast to fail by removing
         # any ``langdetect`` from sys.modules + blocking re-import.
-        from soup_cli.utils import data_score
+        from ai_forge_cli.utils import data_score
 
         with patch.object(
             data_score, "_langdetect_fast", return_value=None
@@ -94,7 +94,7 @@ class TestDataProExtra:
             ) == "en"
 
     def test_detect_language_uses_langdetect_when_available(self):
-        from soup_cli.utils import data_score
+        from ai_forge_cli.utils import data_score
 
         with patch.object(data_score, "_langdetect_fast", return_value="ja"):
             assert data_score.detect_language(
@@ -102,7 +102,7 @@ class TestDataProExtra:
             ) == "ja"
 
     def test_detect_pii_falls_back_to_regex_without_presidio(self):
-        from soup_cli.utils import data_score
+        from ai_forge_cli.utils import data_score
 
         with patch.object(data_score, "_presidio_pii", return_value=None):
             hits = data_score.detect_pii(
@@ -112,7 +112,7 @@ class TestDataProExtra:
             assert "email" in kinds
 
     def test_detect_pii_uses_presidio_when_available(self):
-        from soup_cli.utils import data_score
+        from ai_forge_cli.utils import data_score
 
         presidio_hits = [{"kind": "email", "snippet": "user@example.com"}]
         with patch.object(
@@ -128,7 +128,7 @@ class TestDataProExtra:
 
 class TestPostHogEnvOverride:
     def test_resolve_uses_default_key_when_env_unset(self):
-        from soup_cli.utils.trackers import _POSTHOG_DEFAULT_KEY, _resolve_posthog_target
+        from ai_forge_cli.utils.trackers import _POSTHOG_DEFAULT_KEY, _resolve_posthog_target
 
         # No env override; endpoint omitted to use the sentinel default.
         resolved = _resolve_posthog_target(None, env={})
@@ -137,7 +137,7 @@ class TestPostHogEnvOverride:
         assert key == _POSTHOG_DEFAULT_KEY
 
     def test_resolve_env_key_overrides_default(self):
-        from soup_cli.utils.trackers import _resolve_posthog_target
+        from ai_forge_cli.utils.trackers import _resolve_posthog_target
 
         env = {"SOUP_POSTHOG_KEY": "phc_user_project"}
         resolved = _resolve_posthog_target(None, env=env)
@@ -146,7 +146,7 @@ class TestPostHogEnvOverride:
         assert key == "phc_user_project"
 
     def test_resolve_explicit_arg_wins_over_env(self):
-        from soup_cli.utils.trackers import _resolve_posthog_target
+        from ai_forge_cli.utils.trackers import _resolve_posthog_target
 
         env = {"SOUP_POSTHOG_KEY": "phc_env"}
         resolved = _resolve_posthog_target("phc_caller", env=env)
@@ -155,7 +155,7 @@ class TestPostHogEnvOverride:
         assert key == "phc_caller"
 
     def test_resolve_env_endpoint_overrides_default(self):
-        from soup_cli.utils.trackers import _resolve_posthog_target
+        from ai_forge_cli.utils.trackers import _resolve_posthog_target
 
         env = {"SOUP_POSTHOG_ENDPOINT": "https://eu.i.posthog.com/i/v0/e/"}
         resolved = _resolve_posthog_target(None, env=env)
@@ -164,7 +164,7 @@ class TestPostHogEnvOverride:
         assert endpoint == "https://eu.i.posthog.com/i/v0/e/"
 
     def test_resolve_rejects_http_endpoint(self):
-        from soup_cli.utils.trackers import _resolve_posthog_target
+        from ai_forge_cli.utils.trackers import _resolve_posthog_target
 
         env = {"SOUP_POSTHOG_ENDPOINT": "http://attacker.example.com/"}
         assert _resolve_posthog_target(None, env=env) is None
@@ -172,7 +172,7 @@ class TestPostHogEnvOverride:
     def test_resolve_explicit_endpoint_locks_against_env(self):
         # code-review HIGH fix: a caller passing the default URL string
         # explicitly should NOT be silently overridden by the env var.
-        from soup_cli.utils.trackers import _POSTHOG_ENDPOINT, _resolve_posthog_target
+        from ai_forge_cli.utils.trackers import _POSTHOG_ENDPOINT, _resolve_posthog_target
 
         env = {"SOUP_POSTHOG_ENDPOINT": "https://eu.i.posthog.com/i/v0/e/"}
         resolved = _resolve_posthog_target(None, endpoint=_POSTHOG_ENDPOINT, env=env)
@@ -181,27 +181,27 @@ class TestPostHogEnvOverride:
         assert endpoint == _POSTHOG_ENDPOINT
 
     def test_resolve_rejects_control_char_key(self):
-        from soup_cli.utils.trackers import _resolve_posthog_target
+        from ai_forge_cli.utils.trackers import _resolve_posthog_target
 
         env = {"SOUP_POSTHOG_KEY": "phc\nAuthorization: bypass"}
         assert _resolve_posthog_target(None, env=env) is None
 
     def test_resolve_rejects_null_byte_key(self):
-        from soup_cli.utils.trackers import _resolve_posthog_target
+        from ai_forge_cli.utils.trackers import _resolve_posthog_target
 
         env = {"SOUP_POSTHOG_KEY": "phc\x00bypass"}
         assert _resolve_posthog_target(None, env=env) is None
 
     def test_resolve_rejects_oversize_key(self):
         # tdd-review MEDIUM #3: 257-char SOUP_POSTHOG_KEY must reject.
-        from soup_cli.utils.trackers import _resolve_posthog_target
+        from ai_forge_cli.utils.trackers import _resolve_posthog_target
 
         env = {"SOUP_POSTHOG_KEY": "x" * 257}
         assert _resolve_posthog_target(None, env=env) is None
 
     def test_resolve_rejects_explicit_empty_key(self):
         # tdd-review MEDIUM #4: explicit empty-string `api_key` must reject.
-        from soup_cli.utils.trackers import _resolve_posthog_target
+        from ai_forge_cli.utils.trackers import _resolve_posthog_target
 
         assert _resolve_posthog_target("", env={}) is None
 
@@ -213,7 +213,7 @@ class TestPostHogEnvOverride:
 
 class TestHubPrefetchHelper:
     def test_hf_short_circuits_no_download(self):
-        from soup_cli.utils.hubs import apply_hub_to_cli_model
+        from ai_forge_cli.utils.hubs import apply_hub_to_cli_model
 
         model_out, base_out = apply_hub_to_cli_model(
             "meta-llama/Llama-3.1-8B", None, "hf"
@@ -222,7 +222,7 @@ class TestHubPrefetchHelper:
         assert base_out is None
 
     def test_none_hub_passes_through(self):
-        from soup_cli.utils.hubs import apply_hub_to_cli_model
+        from ai_forge_cli.utils.hubs import apply_hub_to_cli_model
 
         # None or empty hub is treated as no-op.
         assert apply_hub_to_cli_model("foo", None, "") == ("foo", None)
@@ -233,7 +233,7 @@ class TestHubPrefetchHelper:
         monkeypatch.chdir(tmp_path)
         local = tmp_path / "merged"
         local.mkdir()
-        from soup_cli.utils.hubs import apply_hub_to_cli_model
+        from ai_forge_cli.utils.hubs import apply_hub_to_cli_model
 
         model_out, base_out = apply_hub_to_cli_model(
             str(local), None, "modelscope"
@@ -243,7 +243,7 @@ class TestHubPrefetchHelper:
     def test_non_existent_base_invokes_prefetch(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         # patch prefetch to avoid network
-        from soup_cli.utils import hubs
+        from ai_forge_cli.utils import hubs
 
         with patch.object(
             hubs, "prefetch_model_from_hub", return_value=str(tmp_path / "snap")
@@ -256,13 +256,13 @@ class TestHubPrefetchHelper:
 
     def test_apply_hub_to_cli_model_both_none(self):
         # tdd-review LOW #7: neither model nor base set should no-op.
-        from soup_cli.utils.hubs import apply_hub_to_cli_model
+        from ai_forge_cli.utils.hubs import apply_hub_to_cli_model
 
         assert apply_hub_to_cli_model(None, None, "modelscope") == (None, None)
 
     def test_prefetch_unknown_hub_raises(self):
         # Unknown hub name must propagate validation error.
-        from soup_cli.utils.hubs import apply_hub_to_cli_model
+        from ai_forge_cli.utils.hubs import apply_hub_to_cli_model
 
         with pytest.raises(ValueError):
             apply_hub_to_cli_model(None, "some/repo", "evilhub")
@@ -270,7 +270,7 @@ class TestHubPrefetchHelper:
     def test_prefetch_outside_cwd_cache_root_raises(self, tmp_path, monkeypatch):
         # tdd-review MEDIUM #5: cache_root outside cwd must raise.
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.hubs import prefetch_model_from_hub
+        from ai_forge_cli.utils.hubs import prefetch_model_from_hub
 
         outside = tmp_path.parent / "outside_cache"
         with pytest.raises(ValueError, match="escapes"):
@@ -283,12 +283,12 @@ class TestCliHubFlags:
     @pytest.mark.parametrize(
         "cmd_module,cmd_name",
         [
-            ("soup_cli.commands.chat", "chat"),
-            ("soup_cli.commands.serve", "serve"),
-            ("soup_cli.commands.infer", "infer"),
-            ("soup_cli.commands.merge", "merge"),
-            ("soup_cli.commands.export", "export"),
-            ("soup_cli.commands.push", "push"),
+            ("ai_forge_cli.commands.chat", "chat"),
+            ("ai_forge_cli.commands.serve", "serve"),
+            ("ai_forge_cli.commands.infer", "infer"),
+            ("ai_forge_cli.commands.merge", "merge"),
+            ("ai_forge_cli.commands.export", "export"),
+            ("ai_forge_cli.commands.push", "push"),
         ],
     )
     def test_hub_flag_present_in_signature(self, cmd_module, cmd_name):
@@ -308,7 +308,7 @@ class TestCliHubFlags:
         # tdd-review HIGH #1: every command except push must use the
         # shared helper so a future refactor cannot silently drop it.
         for mod in ("chat", "serve", "infer", "merge", "export"):
-            src = (REPO_ROOT / f"src/soup_cli/commands/{mod}.py").read_text(
+            src = (REPO_ROOT / f"src/ai_forge_cli/commands/{mod}.py").read_text(
                 encoding="utf-8"
             )
             assert "apply_hub_to_cli_model" in src, (
@@ -318,7 +318,7 @@ class TestCliHubFlags:
     def test_push_uses_upload_repo_path(self):
         # push.py does NOT call apply_hub_to_cli_model (it's an upload
         # surface, not a download). It must call upload_repo + validate_hub_name.
-        src = (REPO_ROOT / "src/soup_cli/commands/push.py").read_text(
+        src = (REPO_ROOT / "src/ai_forge_cli/commands/push.py").read_text(
             encoding="utf-8"
         )
         assert "upload_repo" in src
@@ -334,7 +334,7 @@ class TestDataDownloadNonHfLive:
     def test_modelers_unknown_sdk_friendly_error(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         # No openmind_hub installed; expect ImportError advisory.
         result = CliRunner().invoke(
@@ -350,7 +350,7 @@ class TestDataDownloadNonHfLive:
     def test_modelscope_unknown_sdk_friendly_error(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         if "modelscope" in sys.modules:
             pytest.skip("modelscope is installed; live branch tested separately")
@@ -366,7 +366,7 @@ class TestDataDownloadNonHfLive:
         # tdd-review LOW #9: a future regression of the advisory text
         # "wait for v0.53.9" must be caught at source-grep time, since
         # v0.53.11 lifted that advisory to live SDK dispatch.
-        src = (REPO_ROOT / "src/soup_cli/commands/data.py").read_text(
+        src = (REPO_ROOT / "src/ai_forge_cli/commands/data.py").read_text(
             encoding="utf-8"
         )
         assert "wait for v0.53.9" not in src
@@ -379,7 +379,7 @@ class TestDataDownloadNonHfLive:
 
 class TestWebUiToolOutputsPanel:
     def test_index_html_has_tools_nav_entry(self):
-        html = (REPO_ROOT / "src/soup_cli/ui/static/index.html").read_text(
+        html = (REPO_ROOT / "src/ai_forge_cli/ui/static/index.html").read_text(
             encoding="utf-8"
         )
         assert 'data-page="tools"' in html
@@ -387,7 +387,7 @@ class TestWebUiToolOutputsPanel:
         assert 'id="page-tools"' in html
 
     def test_app_js_has_load_tool_outputs(self):
-        js = (REPO_ROOT / "src/soup_cli/ui/static/app.js").read_text(encoding="utf-8")
+        js = (REPO_ROOT / "src/ai_forge_cli/ui/static/app.js").read_text(encoding="utf-8")
         assert "loadToolOutputs" in js
         assert "/api/tool-outputs" in js
         # XSS-safe — uses textContent or DOM API, NOT innerHTML for records.
@@ -401,13 +401,13 @@ class TestWebUiToolOutputsPanel:
 
 class TestCallbackToolBuffer:
     def test_on_step_end_method_exists(self):
-        from soup_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
 
         assert hasattr(SoupTrainerCallback, "on_step_end")
 
     def test_on_step_end_no_op_when_inputs_absent(self):
-        from soup_cli.monitoring.callback import SoupTrainerCallback
-        from soup_cli.utils.tool_outputs import (
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.utils.tool_outputs import (
             get_global_tool_buffer,
             reset_global_tool_buffer,
         )
@@ -426,8 +426,8 @@ class TestCallbackToolBuffer:
         assert len(list(get_global_tool_buffer().snapshot(limit=10))) == 0
 
     def test_on_step_end_records_when_tool_calls_present(self):
-        from soup_cli.monitoring.callback import SoupTrainerCallback
-        from soup_cli.utils.tool_outputs import (
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.utils.tool_outputs import (
             get_global_tool_buffer,
             reset_global_tool_buffer,
         )
@@ -452,8 +452,8 @@ class TestCallbackToolBuffer:
         # tdd-review MEDIUM #6: empty list short-circuits.
         from types import SimpleNamespace
 
-        from soup_cli.monitoring.callback import SoupTrainerCallback
-        from soup_cli.utils.tool_outputs import (
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.utils.tool_outputs import (
             get_global_tool_buffer,
             reset_global_tool_buffer,
         )
@@ -473,8 +473,8 @@ class TestCallbackToolBuffer:
         # short-circuit AND rejected by the numeric-branch bool guard.
         from types import SimpleNamespace
 
-        from soup_cli.monitoring.callback import SoupTrainerCallback
-        from soup_cli.utils.tool_outputs import (
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.utils.tool_outputs import (
             get_global_tool_buffer,
             reset_global_tool_buffer,
         )
@@ -499,7 +499,7 @@ class TestCallbackToolBuffer:
 
 class TestVersionBump:
     def test_init_py_pin(self):
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
 
         # v0.54.0+: forward-compatible — assert the package is at least the
         # version this test ships with.

@@ -5,8 +5,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.commands.merge import _detect_base_model, _format_size
+from ai_forge_cli.cli import app
+from ai_forge_cli.commands.merge import _detect_base_model, _format_size
 
 runner = CliRunner()
 

@@ -8,8 +8,8 @@ import re
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.utils.log_level import (
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils.log_level import (
     LOG_LEVELS,
     LogLevel,
     parse_log_level,

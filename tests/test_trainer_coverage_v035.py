@@ -66,13 +66,13 @@ def _make_tcfg(feature: str) -> SimpleNamespace:
 @pytest.mark.parametrize("task", ALL_TRAINER_TASKS)
 def test_supports_v028_features_covers_every_trainer(task: str) -> None:
     """Each of the 11 transformer-backend trainers must report supported."""
-    from soup_cli.utils.v028_features import supports_v028_features
+    from ai_forge_cli.utils.v028_features import supports_v028_features
 
     assert supports_v028_features(task) is True
 
 
 def test_supports_v028_features_rejects_unknown_task() -> None:
-    from soup_cli.utils.v028_features import supports_v028_features
+    from ai_forge_cli.utils.v028_features import supports_v028_features
 
     assert supports_v028_features("future_task_v999") is False
 
@@ -92,7 +92,7 @@ def test_apply_v028_speed_memory_no_exception(task: str, feature: str) -> None:
     helper returns a dict instead of crashing. kernel_auto_compose's picker
     raises when no candidates have finite times — also degrades silently.
     """
-    from soup_cli.utils import v028_features as vf
+    from ai_forge_cli.utils import v028_features as vf
 
     tcfg = _make_tcfg(feature)
     result = vf.apply_v028_speed_memory(
@@ -111,10 +111,10 @@ def test_apply_v028_speed_memory_no_exception(task: str, feature: str) -> None:
 @pytest.mark.parametrize("task", ALL_TRAINER_TASKS)
 def test_apply_v028_speed_memory_invokes_cut_ce_patcher(task: str) -> None:
     """When use_cut_ce=True and the patcher succeeds, applied['cut_ce'] is True."""
-    from soup_cli.utils import v028_features as vf
+    from ai_forge_cli.utils import v028_features as vf
 
     tcfg = _make_tcfg("use_cut_ce")
-    with patch("soup_cli.utils.cut_ce.apply_cut_ce", return_value=True):
+    with patch("ai_forge_cli.utils.cut_ce.apply_cut_ce", return_value=True):
         result = vf.apply_v028_speed_memory(
             model=MagicMock(), tcfg=tcfg,
             base_model="meta-llama/Llama-3.2-1B", console=None,
@@ -124,10 +124,10 @@ def test_apply_v028_speed_memory_invokes_cut_ce_patcher(task: str) -> None:
 
 @pytest.mark.parametrize("task", ALL_TRAINER_TASKS)
 def test_apply_v028_speed_memory_invokes_fp8(task: str) -> None:
-    from soup_cli.utils import v028_features as vf
+    from ai_forge_cli.utils import v028_features as vf
 
     tcfg = _make_tcfg("fp8")
-    with patch("soup_cli.utils.fp8.apply_fp8_training", return_value=True):
+    with patch("ai_forge_cli.utils.fp8.apply_fp8_training", return_value=True):
         result = vf.apply_v028_speed_memory(
             model=MagicMock(), tcfg=tcfg,
             base_model="meta-llama/Llama-3.2-1B", console=None,
@@ -138,7 +138,7 @@ def test_apply_v028_speed_memory_invokes_fp8(task: str) -> None:
 @pytest.mark.parametrize("task", ALL_TRAINER_TASKS)
 def test_apply_v028_speed_memory_invokes_kernel_picker(task: str) -> None:
     """The kernel_auto_compose path delegates to _bench_and_pick_kernel."""
-    from soup_cli.utils import v028_features as vf
+    from ai_forge_cli.utils import v028_features as vf
 
     tcfg = _make_tcfg("kernel_auto_compose")
     with patch.object(vf, "_bench_and_pick_kernel", return_value="liger+flash"):
@@ -156,7 +156,7 @@ def test_apply_v028_speed_memory_invokes_kernel_picker(task: str) -> None:
 
 
 def test_activation_offloading_context_none_passes_through(tmp_path) -> None:
-    from soup_cli.utils.v028_features import activation_offloading_context
+    from ai_forge_cli.utils.v028_features import activation_offloading_context
 
     tcfg = SimpleNamespace(activation_offloading=None)
     with activation_offloading_context(tcfg, str(tmp_path)):
@@ -164,7 +164,7 @@ def test_activation_offloading_context_none_passes_through(tmp_path) -> None:
 
 
 def test_activation_offloading_context_cpu_no_save_dir(tmp_path) -> None:
-    from soup_cli.utils.v028_features import activation_offloading_context
+    from ai_forge_cli.utils.v028_features import activation_offloading_context
 
     tcfg = SimpleNamespace(activation_offloading="cpu")
     with activation_offloading_context(tcfg, str(tmp_path)):
@@ -175,7 +175,7 @@ def test_activation_offloading_context_disk_rejects_outside_cwd() -> None:
     """Disk mode must refuse output dirs outside cwd — defence in depth."""
     import os
 
-    from soup_cli.utils.v028_features import activation_offloading_context
+    from ai_forge_cli.utils.v028_features import activation_offloading_context
 
     tcfg = SimpleNamespace(activation_offloading="disk")
     # Use the parent of cwd, which is guaranteed to be outside containment.
@@ -187,7 +187,7 @@ def test_activation_offloading_context_disk_rejects_outside_cwd() -> None:
 
 def test_activation_offloading_context_missing_attr_safe(tmp_path) -> None:
     """A tcfg-like object missing the attr should not raise."""
-    from soup_cli.utils.v028_features import activation_offloading_context
+    from ai_forge_cli.utils.v028_features import activation_offloading_context
 
     tcfg = SimpleNamespace()  # no activation_offloading attr at all
     with activation_offloading_context(tcfg, str(tmp_path)):
@@ -227,7 +227,7 @@ def test_schema_gate_lifted_for_use_cut_ce(task: str) -> None:
     """Each of the 8 newly-wired trainers must accept use_cut_ce at config-load."""
     import yaml
 
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     body = _build_yaml_config(task, use_cut_ce=True)
     cfg = load_config_from_string(yaml.safe_dump(body))
@@ -243,7 +243,7 @@ def test_schema_gate_lifted_for_activation_offloading(task: str) -> None:
     """activation_offloading="cpu" must now be accepted on every trainer."""
     import yaml
 
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     body = _build_yaml_config(task, activation_offloading="cpu")
     cfg = load_config_from_string(yaml.safe_dump(body))
@@ -256,7 +256,7 @@ def test_mlx_backend_still_rejects_v028_features() -> None:
     in a ValueError carrying the same message)."""
     import yaml
 
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     body = {
         "base": "meta-llama/Llama-3.2-1B",
@@ -277,7 +277,7 @@ def test_unknown_task_v028_features_rejected_with_distinct_message() -> None:
     "task=" message, not the MLX message."""
     from pydantic import ValidationError
 
-    from soup_cli.config.schema import SoupConfig
+    from ai_forge_cli.config.schema import SoupConfig
 
     # Bypass the loader (which wraps ValueError) so we can inspect the
     # raw Pydantic error message directly.
@@ -301,7 +301,7 @@ def test_schema_gate_lifted_for_kernel_auto_compose(task: str) -> None:
     """v0.35.0 #60 — kernel_auto_compose must now be accepted on every trainer."""
     import yaml
 
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     body = _build_yaml_config(task, kernel_auto_compose=True)
     cfg = load_config_from_string(yaml.safe_dump(body))
@@ -316,7 +316,7 @@ def test_schema_gate_lifted_for_fp8(task: str) -> None:
     """v0.35.0 #60 — quantization_aware="fp8" must now be accepted on every trainer."""
     import yaml
 
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     body = _build_yaml_config(task, quantization_aware="fp8")
     cfg = load_config_from_string(yaml.safe_dump(body))
@@ -331,17 +331,17 @@ def test_schema_gate_lifted_for_fp8(task: str) -> None:
 @pytest.mark.parametrize(
     "module_path",
     (
-        "soup_cli.trainer.sft",
-        "soup_cli.trainer.dpo",
-        "soup_cli.trainer.pretrain",
-        "soup_cli.trainer.grpo",
-        "soup_cli.trainer.kto",
-        "soup_cli.trainer.orpo",
-        "soup_cli.trainer.simpo",
-        "soup_cli.trainer.ipo",
-        "soup_cli.trainer.ppo",
-        "soup_cli.trainer.reward_model",
-        "soup_cli.trainer.embedding",
+        "ai_forge_cli.trainer.sft",
+        "ai_forge_cli.trainer.dpo",
+        "ai_forge_cli.trainer.pretrain",
+        "ai_forge_cli.trainer.grpo",
+        "ai_forge_cli.trainer.kto",
+        "ai_forge_cli.trainer.orpo",
+        "ai_forge_cli.trainer.simpo",
+        "ai_forge_cli.trainer.ipo",
+        "ai_forge_cli.trainer.ppo",
+        "ai_forge_cli.trainer.reward_model",
+        "ai_forge_cli.trainer.embedding",
     ),
 )
 def test_trainer_module_calls_apply_v028_speed_memory(module_path: str) -> None:
@@ -373,17 +373,17 @@ def test_trainer_module_calls_apply_v028_speed_memory(module_path: str) -> None:
 @pytest.mark.parametrize(
     "module_path",
     (
-        "soup_cli.trainer.sft",
-        "soup_cli.trainer.dpo",
-        "soup_cli.trainer.pretrain",
-        "soup_cli.trainer.grpo",
-        "soup_cli.trainer.kto",
-        "soup_cli.trainer.orpo",
-        "soup_cli.trainer.simpo",
-        "soup_cli.trainer.ipo",
-        "soup_cli.trainer.ppo",
-        "soup_cli.trainer.reward_model",
-        "soup_cli.trainer.embedding",
+        "ai_forge_cli.trainer.sft",
+        "ai_forge_cli.trainer.dpo",
+        "ai_forge_cli.trainer.pretrain",
+        "ai_forge_cli.trainer.grpo",
+        "ai_forge_cli.trainer.kto",
+        "ai_forge_cli.trainer.orpo",
+        "ai_forge_cli.trainer.simpo",
+        "ai_forge_cli.trainer.ipo",
+        "ai_forge_cli.trainer.ppo",
+        "ai_forge_cli.trainer.reward_model",
+        "ai_forge_cli.trainer.embedding",
     ),
 )
 def test_trainer_module_wraps_train_with_offloading_context(
@@ -424,19 +424,19 @@ class TestQuantNameTranslators:
         ),
     )
     def test_quant_name_to_vllm_kwargs_known(self, name, expected) -> None:
-        from soup_cli.utils.auto_quant import quant_name_to_vllm_kwargs
+        from ai_forge_cli.utils.auto_quant import quant_name_to_vllm_kwargs
 
         assert quant_name_to_vllm_kwargs(name) == expected
 
     def test_quant_name_to_vllm_kwargs_unknown_returns_empty(self) -> None:
-        from soup_cli.utils.auto_quant import quant_name_to_vllm_kwargs
+        from ai_forge_cli.utils.auto_quant import quant_name_to_vllm_kwargs
 
         # ``int8`` is not in the mapping; pass-through returns {} so caller
         # uses the engine default.
         assert quant_name_to_vllm_kwargs("int8") == {}
 
     def test_quant_name_to_vllm_kwargs_rejects_invalid_name(self) -> None:
-        from soup_cli.utils.auto_quant import quant_name_to_vllm_kwargs
+        from ai_forge_cli.utils.auto_quant import quant_name_to_vllm_kwargs
 
         with pytest.raises(ValueError, match="candidate name must match"):
             quant_name_to_vllm_kwargs("AWQ")  # uppercase not allowed
@@ -445,7 +445,7 @@ class TestQuantNameTranslators:
 
     def test_quant_name_to_vllm_kwargs_returns_new_dict(self) -> None:
         """Mutation-safe — caller must not be able to corrupt the mapping."""
-        from soup_cli.utils.auto_quant import quant_name_to_vllm_kwargs
+        from ai_forge_cli.utils.auto_quant import quant_name_to_vllm_kwargs
 
         a = quant_name_to_vllm_kwargs("awq")
         a["leak"] = True
@@ -453,7 +453,7 @@ class TestQuantNameTranslators:
         assert "leak" not in b
 
     def test_quant_name_to_bnb_kwargs(self) -> None:
-        from soup_cli.utils.auto_quant import quant_name_to_bnb_kwargs
+        from ai_forge_cli.utils.auto_quant import quant_name_to_bnb_kwargs
 
         assert quant_name_to_bnb_kwargs("awq") == {"load_in_4bit": True}
         assert quant_name_to_bnb_kwargs("gptq") == {"load_in_4bit": True}
@@ -464,19 +464,19 @@ class TestQuantNameTranslators:
 class TestFreeEngine:
     def test_free_engine_no_torch(self) -> None:
         """free_engine must never raise even if torch is unavailable."""
-        from soup_cli.utils.auto_quant import free_engine
+        from ai_forge_cli.utils.auto_quant import free_engine
 
         # Smoke — no torch on this CI? Still no-raise.
         free_engine(MagicMock())
 
     def test_free_engine_torch_no_cuda(self) -> None:
-        from soup_cli.utils.auto_quant import free_engine
+        from ai_forge_cli.utils.auto_quant import free_engine
 
         with patch("torch.cuda.is_available", return_value=False):
             free_engine(MagicMock())  # no exception
 
     def test_free_engine_torch_cuda_available(self) -> None:
-        from soup_cli.utils.auto_quant import free_engine
+        from ai_forge_cli.utils.auto_quant import free_engine
 
         with (
             patch("torch.cuda.is_available", return_value=True),
@@ -488,12 +488,12 @@ class TestFreeEngine:
 
 class TestTryReloadWithFallback:
     def _candidate(self, name: str, score: float = 0.95):
-        from soup_cli.utils.auto_quant import Candidate
+        from ai_forge_cli.utils.auto_quant import Candidate
 
         return Candidate(name=name, score=score, latency_ms=10.0, ok=True)
 
     def test_picked_loads_first_try(self) -> None:
-        from soup_cli.utils.auto_quant import try_reload_with_fallback
+        from ai_forge_cli.utils.auto_quant import try_reload_with_fallback
 
         picked = self._candidate("awq")
         all_c = [picked, self._candidate("gptq", 0.90)]
@@ -511,7 +511,7 @@ class TestTryReloadWithFallback:
         assert engines_built == ["awq"]  # no fallback exercised
 
     def test_falls_back_to_next_highest_on_first_failure(self) -> None:
-        from soup_cli.utils.auto_quant import try_reload_with_fallback
+        from ai_forge_cli.utils.auto_quant import try_reload_with_fallback
 
         picked = self._candidate("awq", 0.92)
         gptq = self._candidate("gptq", 0.95)
@@ -533,7 +533,7 @@ class TestTryReloadWithFallback:
         assert engines_built == ["awq", "gptq"]
 
     def test_raises_when_all_candidates_fail(self) -> None:
-        from soup_cli.utils.auto_quant import try_reload_with_fallback
+        from ai_forge_cli.utils.auto_quant import try_reload_with_fallback
 
         picked = self._candidate("awq")
         all_c = [picked, self._candidate("gptq")]
@@ -548,7 +548,7 @@ class TestTryReloadWithFallback:
 
     def test_duplicate_candidate_name_deduped(self) -> None:
         """Two candidates with the same name shouldn't double-build."""
-        from soup_cli.utils.auto_quant import try_reload_with_fallback
+        from ai_forge_cli.utils.auto_quant import try_reload_with_fallback
 
         picked = self._candidate("awq", 0.95)
         dup = self._candidate("awq", 0.92)  # same name
@@ -570,7 +570,7 @@ class TestTryReloadWithFallback:
 
     def test_empty_all_candidates_uses_only_picked(self) -> None:
         """If all_candidates is empty, only picked is in the queue."""
-        from soup_cli.utils.auto_quant import try_reload_with_fallback
+        from ai_forge_cli.utils.auto_quant import try_reload_with_fallback
 
         picked = self._candidate("awq")
 
@@ -584,7 +584,7 @@ class TestTryReloadWithFallback:
 
     def test_redacts_load_error_path_in_message(self) -> None:
         """RuntimeError message must not embed repr() (which can leak paths)."""
-        from soup_cli.utils.auto_quant import try_reload_with_fallback
+        from ai_forge_cli.utils.auto_quant import try_reload_with_fallback
 
         picked = self._candidate("awq")
 
@@ -610,7 +610,7 @@ class TestTryReloadWithFallback:
     def test_picked_is_always_tried_first_even_if_lower_score(self) -> None:
         """The picker's choice respects (score, -latency); fallback queue
         must lead with picked even when another candidate has higher score."""
-        from soup_cli.utils.auto_quant import try_reload_with_fallback
+        from ai_forge_cli.utils.auto_quant import try_reload_with_fallback
 
         picked = self._candidate("awq", 0.85)
         gptq = self._candidate("gptq", 0.99)  # higher score but not picked
@@ -632,7 +632,7 @@ class TestVllmCreateEngineQuantizationParam:
         """Source-level proof that the new quantization kwarg is exposed."""
         import inspect
 
-        from soup_cli.utils import vllm as vllm_mod
+        from ai_forge_cli.utils import vllm as vllm_mod
 
         sig = inspect.signature(vllm_mod.create_vllm_engine)
         assert "quantization" in sig.parameters
@@ -645,7 +645,7 @@ class TestVllmCreateEngineQuantizationParam:
         We patch out the heavy ``AsyncEngineArgs`` import so the validation
         check fires before any real engine machinery is loaded.
         """
-        from soup_cli.utils import vllm as vllm_mod
+        from ai_forge_cli.utils import vllm as vllm_mod
 
         # Stub the vllm import so we exercise our own validation, not a
         # real engine-construction failure that would mask the assertion.
@@ -679,7 +679,7 @@ class TestVllmCreateEngineQuantizationParam:
 
 def test_benchmark_kernel_combos_cpu_returns_none_times() -> None:
     """CI runs CPU-only — benchmark must return None times (degrade gracefully)."""
-    from soup_cli.utils.kernel_picker import benchmark_kernel_combos
+    from ai_forge_cli.utils.kernel_picker import benchmark_kernel_combos
 
     candidates = [
         {"name": "baseline", "use_liger": False, "use_flash_attn": False,
@@ -695,7 +695,7 @@ def test_benchmark_kernel_combos_cpu_returns_none_times() -> None:
 
 def test_benchmark_kernel_combos_no_cuda_returns_none_times() -> None:
     """Even with device="cuda", if torch.cuda is unavailable, return None times."""
-    from soup_cli.utils.kernel_picker import benchmark_kernel_combos
+    from ai_forge_cli.utils.kernel_picker import benchmark_kernel_combos
 
     candidates = [{"name": "baseline"}]
     # Mock torch.cuda.is_available returning False
@@ -709,7 +709,7 @@ def test_benchmark_kernel_combos_no_cuda_returns_none_times() -> None:
 
 def test_benchmark_kernel_combos_does_not_mutate_input() -> None:
     """Benchmark must return a NEW list — input candidates remain untouched."""
-    from soup_cli.utils.kernel_picker import benchmark_kernel_combos
+    from ai_forge_cli.utils.kernel_picker import benchmark_kernel_combos
 
     candidates = [{"name": "baseline"}]
     out = benchmark_kernel_combos(
@@ -721,7 +721,7 @@ def test_benchmark_kernel_combos_does_not_mutate_input() -> None:
 
 def test_benchmark_kernel_combos_clamps_seq_len() -> None:
     """seq_len > 512 must be clamped — defence against caller OOM."""
-    from soup_cli.utils.kernel_picker import benchmark_kernel_combos
+    from ai_forge_cli.utils.kernel_picker import benchmark_kernel_combos
 
     # device="cpu" short-circuits without ever touching seq_len, so this just
     # confirms no exception escapes the bounds-clamp branch.
@@ -734,7 +734,7 @@ def test_benchmark_kernel_combos_clamps_seq_len() -> None:
 
 def test_bench_and_pick_kernel_returns_none_on_cpu() -> None:
     """The internal helper degrades to None on CPU so caller advisories fire."""
-    from soup_cli.utils.v028_features import _bench_and_pick_kernel
+    from ai_forge_cli.utils.v028_features import _bench_and_pick_kernel
 
     result = _bench_and_pick_kernel(
         model=MagicMock(), device="cpu", backend="transformers",
@@ -745,7 +745,7 @@ def test_bench_and_pick_kernel_returns_none_on_cpu() -> None:
 
 def test_bench_and_pick_kernel_returns_none_on_unsloth() -> None:
     """unsloth backend uses its own kernels — picker degrades."""
-    from soup_cli.utils.v028_features import _bench_and_pick_kernel
+    from ai_forge_cli.utils.v028_features import _bench_and_pick_kernel
 
     result = _bench_and_pick_kernel(
         model=MagicMock(), device="cuda", backend="unsloth",
@@ -755,7 +755,7 @@ def test_bench_and_pick_kernel_returns_none_on_unsloth() -> None:
 
 def test_apply_v028_kernel_auto_compose_invokes_bench_and_pick() -> None:
     """When kernel_auto_compose=True, the apply helper consults the bench."""
-    from soup_cli.utils import v028_features as vf
+    from ai_forge_cli.utils import v028_features as vf
 
     tcfg = SimpleNamespace(
         use_cut_ce=False, quantization_aware=False,
@@ -772,7 +772,7 @@ def test_apply_v028_kernel_auto_compose_invokes_bench_and_pick() -> None:
 
 def test_apply_v028_kernel_auto_compose_degrades_on_bench_failure() -> None:
     """When _bench_and_pick_kernel returns None, applied flag stays False."""
-    from soup_cli.utils import v028_features as vf
+    from ai_forge_cli.utils import v028_features as vf
 
     tcfg = SimpleNamespace(
         use_cut_ce=False, quantization_aware=False,
@@ -790,16 +790,16 @@ def test_apply_v028_kernel_auto_compose_degrades_on_bench_failure() -> None:
 @pytest.mark.parametrize(
     "module_path",
     (
-        "soup_cli.trainer.dpo",
-        "soup_cli.trainer.pretrain",
-        "soup_cli.trainer.grpo",
-        "soup_cli.trainer.kto",
-        "soup_cli.trainer.orpo",
-        "soup_cli.trainer.simpo",
-        "soup_cli.trainer.ipo",
-        "soup_cli.trainer.ppo",
-        "soup_cli.trainer.reward_model",
-        "soup_cli.trainer.embedding",
+        "ai_forge_cli.trainer.dpo",
+        "ai_forge_cli.trainer.pretrain",
+        "ai_forge_cli.trainer.grpo",
+        "ai_forge_cli.trainer.kto",
+        "ai_forge_cli.trainer.orpo",
+        "ai_forge_cli.trainer.simpo",
+        "ai_forge_cli.trainer.ipo",
+        "ai_forge_cli.trainer.ppo",
+        "ai_forge_cli.trainer.reward_model",
+        "ai_forge_cli.trainer.embedding",
     ),
 )
 def test_trainer_passes_device_and_backend_to_apply_helper(
@@ -825,14 +825,14 @@ def test_trainer_passes_device_and_backend_to_apply_helper(
 @pytest.mark.parametrize(
     "module_path",
     (
-        "soup_cli.trainer.dpo",
-        "soup_cli.trainer.pretrain",
-        "soup_cli.trainer.grpo",
-        "soup_cli.trainer.kto",
-        "soup_cli.trainer.orpo",
-        "soup_cli.trainer.simpo",
-        "soup_cli.trainer.ipo",
-        "soup_cli.trainer.ppo",
+        "ai_forge_cli.trainer.dpo",
+        "ai_forge_cli.trainer.pretrain",
+        "ai_forge_cli.trainer.grpo",
+        "ai_forge_cli.trainer.kto",
+        "ai_forge_cli.trainer.orpo",
+        "ai_forge_cli.trainer.simpo",
+        "ai_forge_cli.trainer.ipo",
+        "ai_forge_cli.trainer.ppo",
     ),
 )
 def test_trainer_qat_guard_excludes_fp8(module_path: str) -> None:

@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app as soup_app
+from ai_forge_cli.cli import app as soup_app
 
 runner = CliRunner()
 

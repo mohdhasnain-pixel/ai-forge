@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from soup_cli.utils.crash import (
+from ai_forge_cli.utils.crash import (
     CRASH_FORMAT_VERSION,
     MAX_BUNDLE_BYTES,
     build_crash_bundle,

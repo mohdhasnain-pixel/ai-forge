@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from soup_cli.utils.profiling import (
+from ai_forge_cli.utils.profiling import (
     DEFAULT_ACTIVE_STEPS,
     MAX_ACTIVE_STEPS,
     ProfilerSchedule,

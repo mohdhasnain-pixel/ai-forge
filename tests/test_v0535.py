@@ -22,21 +22,21 @@ import pytest
 import yaml
 from typer.testing import CliRunner
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.monitoring.curriculum_callback import (
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.monitoring.curriculum_callback import (
     DynamicCurriculumCallback,
     _is_rank_zero,
     _pick_bucket,
 )
-from soup_cli.recipes.catalog import RECIPES, get_recipe
-from soup_cli.utils.curriculum_dynamic import DynamicCurriculumPolicy
-from soup_cli.utils.data_mix import (
+from ai_forge_cli.recipes.catalog import RECIPES, get_recipe
+from ai_forge_cli.utils.curriculum_dynamic import DynamicCurriculumPolicy
+from ai_forge_cli.utils.data_mix import (
     _build_skopt_optimizer,
     build_optimization_plan,
     run_mix_optimizer,
 )
-from soup_cli.utils.mix_proxy import proxy_run_for_weights
-from soup_cli.utils.peft_wiring import attach_curriculum_callback
+from ai_forge_cli.utils.mix_proxy import proxy_run_for_weights
+from ai_forge_cli.utils.peft_wiring import attach_curriculum_callback
 
 # ----------------------------------------------------------------------
 # #114 — DynamicCurriculumCallback
@@ -354,7 +354,7 @@ def test_attach_curriculum_callback_returns_false_on_invalid_path(
 
 def test_trainer_source_grep_curriculum_wired_everywhere():
     """v0.53.5 #115 — every transformer-backend trainer wires the callback."""
-    root = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "trainer"
+    root = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "trainer"
     trainers = [
         "sft", "dpo", "grpo", "kto", "orpo", "simpo", "ipo", "bco",
         "embedding", "reward_model", "ppo", "pretrain", "distill",
@@ -506,7 +506,7 @@ def test_overlay_yaml_loads_through_config_schema(tmp_path):
     # training subprocess/GPU and isn't practical in this suite; the
     # remaining `--live` coverage below intentionally mocks `subprocess.run`
     # and asserts orchestration instead.)
-    from soup_cli.utils.mix_proxy import _render_overlay_yaml
+    from ai_forge_cli.utils.mix_proxy import _render_overlay_yaml
 
     base_text = _make_base_yaml(tmp_path).read_text(encoding="utf-8")
     overlay = _render_overlay_yaml(
@@ -524,7 +524,7 @@ def test_overlay_comment_does_not_drift_from_train_value(tmp_path):
     # every other test still passes. Tying the assertion to the *parsed
     # config's* value rather than the renderer's own variable is what makes
     # the second mutation fail here.
-    from soup_cli.utils.mix_proxy import _render_overlay_yaml
+    from ai_forge_cli.utils.mix_proxy import _render_overlay_yaml
 
     base_text = _make_base_yaml(tmp_path).read_text(encoding="utf-8")
     overlay = _render_overlay_yaml(
@@ -548,12 +548,12 @@ def test_proxy_happy_path_reads_tracker(tmp_path, monkeypatch):
     ]
     with patch.object(subprocess, "run", return_value=fake_result), \
             patch(
-                "soup_cli.utils.mix_proxy.ExperimentTracker",
+                "ai_forge_cli.utils.mix_proxy.ExperimentTracker",
                 return_value=fake_tracker,
                 create=True,
             ):
         # We need to patch the lazy import inside `_read_final_eval_loss`:
-        import soup_cli.experiment.tracker as tracker_mod
+        import ai_forge_cli.experiment.tracker as tracker_mod
 
         with patch.object(
             tracker_mod, "ExperimentTracker", return_value=fake_tracker
@@ -695,7 +695,7 @@ def test_recipe_deepseek_v3_yaml_safe_load_structure():
 def test_cli_mix_help_lists_live_flag():
     import re
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     runner = CliRunner()
     result = runner.invoke(app, ["data", "mix", "--help"])
@@ -708,7 +708,7 @@ def test_cli_mix_help_lists_live_flag():
 
 
 def test_cli_mix_live_requires_base_yaml(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     ds = tmp_path / "a.jsonl"

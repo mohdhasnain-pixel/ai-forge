@@ -12,9 +12,9 @@ import pytest
 import yaml
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.recipes.catalog import RECIPES, get_recipe, search_recipes
+from ai_forge_cli.cli import app
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.recipes.catalog import RECIPES, get_recipe, search_recipes
 
 runner = CliRunner()
 

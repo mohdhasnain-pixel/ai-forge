@@ -1,6 +1,6 @@
 """v0.67.0 Part A — Evolutionary merge (CMA-ES) over LoRA adapter weights.
 
-Tests for ``soup_cli/utils/cmaes_merge.py``:
+Tests for ``ai_forge_cli/utils/cmaes_merge.py``:
 
 - Closed allowlist + frozen dataclasses + parse_budget reuse from blame.py
 - ``run_cmaes_merge`` orchestrator with operator-supplied ``eval_fn`` injection
@@ -24,7 +24,7 @@ import pytest
 
 class TestPublicSurface:
     def test_module_importable(self) -> None:
-        from soup_cli.utils import cmaes_merge
+        from ai_forge_cli.utils import cmaes_merge
 
         assert hasattr(cmaes_merge, "CmaesPlan")
         assert hasattr(cmaes_merge, "CmaesResult")
@@ -33,7 +33,7 @@ class TestPublicSurface:
         assert hasattr(cmaes_merge, "validate_generations")
 
     def test_constants_immutable(self) -> None:
-        from soup_cli.utils import cmaes_merge
+        from ai_forge_cli.utils import cmaes_merge
 
         assert cmaes_merge.MIN_POPULATION >= 2
         assert cmaes_merge.MAX_POPULATION <= 256
@@ -48,30 +48,30 @@ class TestPublicSurface:
 
 class TestValidatePopulationSize:
     def test_happy(self) -> None:
-        from soup_cli.utils.cmaes_merge import validate_population_size
+        from ai_forge_cli.utils.cmaes_merge import validate_population_size
 
         assert validate_population_size(8) == 8
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.cmaes_merge import validate_population_size
+        from ai_forge_cli.utils.cmaes_merge import validate_population_size
 
         with pytest.raises(TypeError):
             validate_population_size(True)  # type: ignore[arg-type]
 
     def test_below_floor(self) -> None:
-        from soup_cli.utils.cmaes_merge import validate_population_size
+        from ai_forge_cli.utils.cmaes_merge import validate_population_size
 
         with pytest.raises(ValueError):
             validate_population_size(1)
 
     def test_above_cap(self) -> None:
-        from soup_cli.utils.cmaes_merge import MAX_POPULATION, validate_population_size
+        from ai_forge_cli.utils.cmaes_merge import MAX_POPULATION, validate_population_size
 
         with pytest.raises(ValueError):
             validate_population_size(MAX_POPULATION + 1)
 
     def test_non_int_rejected(self) -> None:
-        from soup_cli.utils.cmaes_merge import validate_population_size
+        from ai_forge_cli.utils.cmaes_merge import validate_population_size
 
         with pytest.raises(TypeError):
             validate_population_size("8")  # type: ignore[arg-type]
@@ -79,24 +79,24 @@ class TestValidatePopulationSize:
 
 class TestValidateGenerations:
     def test_happy(self) -> None:
-        from soup_cli.utils.cmaes_merge import validate_generations
+        from ai_forge_cli.utils.cmaes_merge import validate_generations
 
         assert validate_generations(20) == 20
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.cmaes_merge import validate_generations
+        from ai_forge_cli.utils.cmaes_merge import validate_generations
 
         with pytest.raises(TypeError):
             validate_generations(False)  # type: ignore[arg-type]
 
     def test_below_floor(self) -> None:
-        from soup_cli.utils.cmaes_merge import validate_generations
+        from ai_forge_cli.utils.cmaes_merge import validate_generations
 
         with pytest.raises(ValueError):
             validate_generations(0)
 
     def test_above_cap(self) -> None:
-        from soup_cli.utils.cmaes_merge import MAX_GENERATIONS, validate_generations
+        from ai_forge_cli.utils.cmaes_merge import MAX_GENERATIONS, validate_generations
 
         with pytest.raises(ValueError):
             validate_generations(MAX_GENERATIONS + 1)
@@ -109,7 +109,7 @@ class TestValidateGenerations:
 
 class TestCmaesPlan:
     def test_construct(self) -> None:
-        from soup_cli.utils.cmaes_merge import CmaesPlan
+        from ai_forge_cli.utils.cmaes_merge import CmaesPlan
 
         plan = CmaesPlan(
             adapters=("a", "b"),
@@ -123,7 +123,7 @@ class TestCmaesPlan:
         assert plan.eval_suite == "suite.yaml"
 
     def test_frozen(self) -> None:
-        from soup_cli.utils.cmaes_merge import CmaesPlan
+        from ai_forge_cli.utils.cmaes_merge import CmaesPlan
 
         plan = CmaesPlan(
             adapters=("a", "b"),
@@ -139,7 +139,7 @@ class TestCmaesPlan:
 
 class TestCmaesResult:
     def test_construct(self) -> None:
-        from soup_cli.utils.cmaes_merge import CmaesResult
+        from ai_forge_cli.utils.cmaes_merge import CmaesResult
 
         result = CmaesResult(
             best_weights=(0.5, 0.5),
@@ -155,7 +155,7 @@ class TestCmaesResult:
         assert result.converged is True
 
     def test_frozen(self) -> None:
-        from soup_cli.utils.cmaes_merge import CmaesResult
+        from ai_forge_cli.utils.cmaes_merge import CmaesResult
 
         result = CmaesResult(
             best_weights=(0.5, 0.5),
@@ -170,7 +170,7 @@ class TestCmaesResult:
             result.best_score = 9.99  # type: ignore[misc]
 
     def test_weights_must_be_simplex(self) -> None:
-        from soup_cli.utils.cmaes_merge import CmaesResult
+        from ai_forge_cli.utils.cmaes_merge import CmaesResult
 
         with pytest.raises(ValueError):
             CmaesResult(
@@ -184,7 +184,7 @@ class TestCmaesResult:
             )
 
     def test_bool_score_rejected(self) -> None:
-        from soup_cli.utils.cmaes_merge import CmaesResult
+        from ai_forge_cli.utils.cmaes_merge import CmaesResult
 
         with pytest.raises(TypeError):
             CmaesResult(
@@ -198,7 +198,7 @@ class TestCmaesResult:
             )
 
     def test_non_finite_score_rejected(self) -> None:
-        from soup_cli.utils.cmaes_merge import CmaesResult
+        from ai_forge_cli.utils.cmaes_merge import CmaesResult
 
         with pytest.raises(ValueError):
             CmaesResult(
@@ -219,7 +219,7 @@ class TestCmaesResult:
 
 class TestBuildCmaesPlan:
     def test_happy(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.cmaes_merge import build_cmaes_plan
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_plan
 
         monkeypatch.chdir(tmp_path)
         adapter_a = tmp_path / "a"
@@ -242,7 +242,7 @@ class TestBuildCmaesPlan:
         assert plan.max_generations == 15
 
     def test_invalid_budget_string(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.cmaes_merge import build_cmaes_plan
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_plan
 
         monkeypatch.chdir(tmp_path)
         for name in ("a", "b"):
@@ -261,7 +261,7 @@ class TestBuildCmaesPlan:
             )
 
     def test_below_min_adapters(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.cmaes_merge import build_cmaes_plan
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_plan
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "a").mkdir()
@@ -279,7 +279,7 @@ class TestBuildCmaesPlan:
             )
 
     def test_eval_suite_outside_cwd(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.cmaes_merge import build_cmaes_plan
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_plan
 
         cwd = tmp_path / "work"
         cwd.mkdir()
@@ -307,7 +307,7 @@ class TestBuildCmaesPlan:
 
 class TestRunCmaesMerge:
     def test_returns_result(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.cmaes_merge import build_cmaes_plan, run_cmaes_merge
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_plan, run_cmaes_merge
 
         monkeypatch.chdir(tmp_path)
         for name in ("a", "b"):
@@ -338,7 +338,7 @@ class TestRunCmaesMerge:
         assert math.isclose(sum(result.best_weights), 1.0, abs_tol=1e-6)
 
     def test_eval_fn_required(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.cmaes_merge import build_cmaes_plan, run_cmaes_merge
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_plan, run_cmaes_merge
 
         monkeypatch.chdir(tmp_path)
         for name in ("a", "b"):
@@ -358,7 +358,7 @@ class TestRunCmaesMerge:
             run_cmaes_merge(plan, eval_fn=None)  # type: ignore[arg-type]
 
     def test_eval_fn_exceptions_logged(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.cmaes_merge import build_cmaes_plan, run_cmaes_merge
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_plan, run_cmaes_merge
 
         monkeypatch.chdir(tmp_path)
         for name in ("a", "b"):
@@ -385,7 +385,7 @@ class TestRunCmaesMerge:
         assert result.evaluations >= 1
 
     def test_non_plan_rejected(self) -> None:
-        from soup_cli.utils.cmaes_merge import run_cmaes_merge
+        from ai_forge_cli.utils.cmaes_merge import run_cmaes_merge
 
         with pytest.raises(TypeError):
             run_cmaes_merge("not-a-plan", eval_fn=lambda w: 0.5)  # type: ignore[arg-type]
@@ -398,7 +398,7 @@ class TestRunCmaesMerge:
 
 class TestAdapterMergeIntegration:
     def test_cmaes_in_supported_strategies(self) -> None:
-        from soup_cli.utils.adapter_merge import SUPPORTED_STRATEGIES
+        from ai_forge_cli.utils.adapter_merge import SUPPORTED_STRATEGIES
 
         assert "cmaes" in SUPPORTED_STRATEGIES
 
@@ -412,7 +412,7 @@ class TestCliSmoke:
     def test_merge_help_lists_cmaes(self) -> None:
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["merge", "--help"])
@@ -423,7 +423,7 @@ class TestCliSmoke:
         """cmaes without --eval should exit 2 with friendly message."""
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -457,7 +457,7 @@ class TestSourceWiring:
         from pathlib import Path
 
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "utils" / "cmaes_merge.py").read_text(
+        src = (root / "src" / "ai_forge_cli" / "utils" / "cmaes_merge.py").read_text(
             encoding="utf-8"
         )
         # Only first 30 non-comment lines (matches v0.66 review-grep policy)
@@ -474,7 +474,7 @@ class TestSourceWiring:
         from pathlib import Path
 
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "utils" / "adapter_merge.py").read_text(
+        src = (root / "src" / "ai_forge_cli" / "utils" / "adapter_merge.py").read_text(
             encoding="utf-8"
         )
         assert "cmaes" in src

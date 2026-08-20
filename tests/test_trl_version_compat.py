@@ -35,7 +35,7 @@ _SIX = ("bco", "dpo", "ipo", "kto", "orpo", "simpo")
 # --------------------------------------------------------------------------
 class TestPromptLengthIsDecidedByCapabilityNotVersion:
     def test_kwarg_is_passed_when_the_config_accepts_it(self):
-        from soup_cli.trainer._trl_compat import prompt_length_kwargs
+        from ai_forge_cli.trainer._trl_compat import prompt_length_kwargs
 
         class OldStyleConfig:
             def __init__(self, output_dir=None, max_length=None, max_prompt_length=None):
@@ -47,7 +47,7 @@ class TestPromptLengthIsDecidedByCapabilityNotVersion:
         """The control for the test above. Without it, a helper that returned
         ``{}`` unconditionally — i.e. one that had silently stopped passing the
         cap on EVERY trl — would pass a one-sided suite."""
-        from soup_cli.trainer._trl_compat import prompt_length_kwargs
+        from ai_forge_cli.trainer._trl_compat import prompt_length_kwargs
 
         class NewStyleConfig:
             def __init__(self, output_dir=None, max_length=None):
@@ -60,7 +60,7 @@ class TestPromptLengthIsDecidedByCapabilityNotVersion:
         the keyword even though the INSTALLED trl may be one that removed it —
         which is only possible if the answer comes from the class, not from
         ``trl.__version__``."""
-        from soup_cli.trainer._trl_compat import prompt_length_kwargs
+        from ai_forge_cli.trainer._trl_compat import prompt_length_kwargs
 
         class StillHasIt:
             def __init__(self, max_prompt_length=None):
@@ -72,7 +72,7 @@ class TestPromptLengthIsDecidedByCapabilityNotVersion:
         """trl's configs inherit most of their fields from ``TrainingArguments``.
         A probe that only looked at a class's OWN annotations would answer False
         for every inherited field and silently drop real arguments."""
-        from soup_cli.trainer._trl_compat import config_accepts
+        from ai_forge_cli.trainer._trl_compat import config_accepts
 
         class Base:
             def __init__(self, inherited=None):
@@ -87,7 +87,7 @@ class TestPromptLengthIsDecidedByCapabilityNotVersion:
     def test_an_unintrospectable_class_degrades_to_false(self):
         """Some C-level ``__init__``s raise from ``inspect.signature``. Dropping
         an optional kwarg is recoverable; raising out of ``setup()`` is not."""
-        from soup_cli.trainer._trl_compat import config_accepts
+        from ai_forge_cli.trainer._trl_compat import config_accepts
 
         assert config_accepts(object(), "max_prompt_length") is False
 
@@ -106,7 +106,7 @@ class TestResolveTrlSymbol:
     def test_public_namespace_is_used_when_available(self):
         import trl
 
-        from soup_cli.trainer._trl_compat import resolve_trl_symbol
+        from ai_forge_cli.trainer._trl_compat import resolve_trl_symbol
 
         assert resolve_trl_symbol("DPOConfig", "trl.experimental.dpo") is trl.DPOConfig
 
@@ -118,7 +118,7 @@ class TestResolveTrlSymbol:
         was chosen; asserting only "it returned something" would not."""
         import trl
 
-        from soup_cli.trainer._trl_compat import resolve_trl_symbol
+        from ai_forge_cli.trainer._trl_compat import resolve_trl_symbol
 
         sentinel = object()
         monkeypatch.setitem(
@@ -131,7 +131,7 @@ class TestResolveTrlSymbol:
     def test_experimental_fallback_is_used_when_the_symbol_left_trl(self, monkeypatch):
         """The 0.29.0 case. Uses a name trl has never exported, so the test does
         not depend on which trl is installed."""
-        from soup_cli.trainer._trl_compat import resolve_trl_symbol
+        from ai_forge_cli.trainer._trl_compat import resolve_trl_symbol
 
         sentinel = object()
         monkeypatch.setitem(
@@ -146,7 +146,7 @@ class TestResolveTrlSymbol:
         than surfacing a bare AttributeError from inside a lazy module."""
         import trl
 
-        from soup_cli.trainer._trl_compat import resolve_trl_symbol
+        from ai_forge_cli.trainer._trl_compat import resolve_trl_symbol
 
         with pytest.raises(ImportError) as excinfo:
             resolve_trl_symbol("SoupDefinitelyAbsent", "soup_module_that_does_not_exist")
@@ -156,14 +156,14 @@ class TestResolveTrlSymbol:
         assert "soup_module_that_does_not_exist" in message
 
     def test_the_original_failure_is_chained_not_swallowed(self):
-        from soup_cli.trainer._trl_compat import resolve_trl_symbol
+        from ai_forge_cli.trainer._trl_compat import resolve_trl_symbol
 
         with pytest.raises(ImportError) as excinfo:
             resolve_trl_symbol("SoupDefinitelyAbsent")
         assert excinfo.value.__cause__ is not None, "root cause was discarded"
 
     def test_no_experimental_module_given_still_raises_cleanly(self):
-        from soup_cli.trainer._trl_compat import resolve_trl_symbol
+        from ai_forge_cli.trainer._trl_compat import resolve_trl_symbol
 
         with pytest.raises(ImportError, match="SoupDefinitelyAbsent"):
             resolve_trl_symbol("SoupDefinitelyAbsent")
@@ -183,7 +183,7 @@ class TestTheTrainersRouteThroughTheCompatLayer:
         path = (
             pathlib.Path(__file__).resolve().parents[1]
             / "src"
-            / "soup_cli"
+            / "ai_forge_cli"
             / "trainer"
             / f"{name}.py"
         )
@@ -223,7 +223,7 @@ class TestTheDeclaredBoundMatchesTheInstalledTrl:
         """Resolution, not a bare import: three of these legitimately live under
         ``trl.experimental`` on a new enough trl, so a plain ``from trl import``
         check would report a false failure there."""
-        from soup_cli.trainer._trl_compat import resolve_trl_symbol
+        from ai_forge_cli.trainer._trl_compat import resolve_trl_symbol
 
         needed = {
             "DPOConfig": None,

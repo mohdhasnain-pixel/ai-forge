@@ -18,7 +18,7 @@ import pytest
 
 class TestMiniLLMPublicSurface:
     def test_module_imports(self):
-        from soup_cli.utils import minillm
+        from ai_forge_cli.utils import minillm
 
         assert hasattr(minillm, "MiniLLMConfig")
         assert hasattr(minillm, "validate_teacher_mix_ratio")
@@ -30,52 +30,52 @@ class TestValidateTeacherMixRatio:
     """Teacher mix ratio in [0, 1]. 0 = student-only; 1 = teacher-only."""
 
     def test_happy_boundary_zero(self):
-        from soup_cli.utils.minillm import validate_teacher_mix_ratio
+        from ai_forge_cli.utils.minillm import validate_teacher_mix_ratio
 
         assert validate_teacher_mix_ratio(0.0) == 0.0
 
     def test_happy_boundary_one(self):
-        from soup_cli.utils.minillm import validate_teacher_mix_ratio
+        from ai_forge_cli.utils.minillm import validate_teacher_mix_ratio
 
         assert validate_teacher_mix_ratio(1.0) == 1.0
 
     def test_happy_mid(self):
-        from soup_cli.utils.minillm import validate_teacher_mix_ratio
+        from ai_forge_cli.utils.minillm import validate_teacher_mix_ratio
 
         assert validate_teacher_mix_ratio(0.3) == 0.3
 
     def test_above_one_rejected(self):
-        from soup_cli.utils.minillm import validate_teacher_mix_ratio
+        from ai_forge_cli.utils.minillm import validate_teacher_mix_ratio
 
         with pytest.raises(ValueError, match=r"\[0\.0, 1\.0\]"):
             validate_teacher_mix_ratio(1.5)
 
     def test_negative_rejected(self):
-        from soup_cli.utils.minillm import validate_teacher_mix_ratio
+        from ai_forge_cli.utils.minillm import validate_teacher_mix_ratio
 
         with pytest.raises(ValueError, match=r"\[0\.0, 1\.0\]"):
             validate_teacher_mix_ratio(-0.1)
 
     def test_nan_rejected(self):
-        from soup_cli.utils.minillm import validate_teacher_mix_ratio
+        from ai_forge_cli.utils.minillm import validate_teacher_mix_ratio
 
         with pytest.raises(ValueError, match="finite"):
             validate_teacher_mix_ratio(float("nan"))
 
     def test_inf_rejected(self):
-        from soup_cli.utils.minillm import validate_teacher_mix_ratio
+        from ai_forge_cli.utils.minillm import validate_teacher_mix_ratio
 
         with pytest.raises(ValueError, match="finite"):
             validate_teacher_mix_ratio(float("inf"))
 
     def test_bool_rejected(self):
-        from soup_cli.utils.minillm import validate_teacher_mix_ratio
+        from ai_forge_cli.utils.minillm import validate_teacher_mix_ratio
 
         with pytest.raises(ValueError, match="bool"):
             validate_teacher_mix_ratio(True)
 
     def test_non_number_rejected(self):
-        from soup_cli.utils.minillm import validate_teacher_mix_ratio
+        from ai_forge_cli.utils.minillm import validate_teacher_mix_ratio
 
         with pytest.raises(ValueError, match="number"):
             validate_teacher_mix_ratio("0.5")
@@ -85,40 +85,40 @@ class TestValidatePretrainAnchorWeight:
     """Pretrain anchor weight: small non-negative float, bounded [0, 1]."""
 
     def test_happy_path(self):
-        from soup_cli.utils.minillm import validate_pretrain_anchor_weight
+        from ai_forge_cli.utils.minillm import validate_pretrain_anchor_weight
 
         assert validate_pretrain_anchor_weight(0.1) == 0.1
 
     def test_zero_allowed(self):
-        from soup_cli.utils.minillm import validate_pretrain_anchor_weight
+        from ai_forge_cli.utils.minillm import validate_pretrain_anchor_weight
 
         assert validate_pretrain_anchor_weight(0.0) == 0.0
 
     def test_one_allowed(self):
-        from soup_cli.utils.minillm import validate_pretrain_anchor_weight
+        from ai_forge_cli.utils.minillm import validate_pretrain_anchor_weight
 
         assert validate_pretrain_anchor_weight(1.0) == 1.0
 
     def test_above_one_rejected(self):
-        from soup_cli.utils.minillm import validate_pretrain_anchor_weight
+        from ai_forge_cli.utils.minillm import validate_pretrain_anchor_weight
 
         with pytest.raises(ValueError, match=r"\[0\.0, 1\.0\]"):
             validate_pretrain_anchor_weight(1.1)
 
     def test_negative_rejected(self):
-        from soup_cli.utils.minillm import validate_pretrain_anchor_weight
+        from ai_forge_cli.utils.minillm import validate_pretrain_anchor_weight
 
         with pytest.raises(ValueError, match=r"\[0\.0, 1\.0\]"):
             validate_pretrain_anchor_weight(-0.1)
 
     def test_non_finite_rejected(self):
-        from soup_cli.utils.minillm import validate_pretrain_anchor_weight
+        from ai_forge_cli.utils.minillm import validate_pretrain_anchor_weight
 
         with pytest.raises(ValueError, match="finite"):
             validate_pretrain_anchor_weight(float("inf"))
 
     def test_bool_rejected(self):
-        from soup_cli.utils.minillm import validate_pretrain_anchor_weight
+        from ai_forge_cli.utils.minillm import validate_pretrain_anchor_weight
 
         with pytest.raises(ValueError, match="bool"):
             validate_pretrain_anchor_weight(True)
@@ -126,7 +126,7 @@ class TestValidatePretrainAnchorWeight:
 
 class TestMiniLLMConfig:
     def test_defaults(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         cfg = MiniLLMConfig()
         assert cfg.teacher_mix_ratio == 0.0
@@ -135,7 +135,7 @@ class TestMiniLLMConfig:
         assert cfg.pretrain_anchor_path is None
 
     def test_basic_config(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         cfg = MiniLLMConfig(
             teacher_mix_ratio=0.3,
@@ -147,27 +147,27 @@ class TestMiniLLMConfig:
         assert cfg.pretrain_anchor_path == "./pretrain.jsonl"
 
     def test_frozen(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         cfg = MiniLLMConfig()
         with pytest.raises(FrozenInstanceError):
             cfg.teacher_mix_ratio = 0.5  # type: ignore[misc]
 
     def test_invalid_mix_ratio_propagates(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         with pytest.raises(ValueError):
             MiniLLMConfig(teacher_mix_ratio=2.0)
 
     def test_invalid_anchor_weight_propagates(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         with pytest.raises(ValueError):
             MiniLLMConfig(pretrain_anchor_weight=-0.1)
 
     def test_anchor_weight_without_path_rejected(self):
         """If anchor_weight > 0, pretrain_anchor_path is required."""
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         with pytest.raises(ValueError, match="pretrain_anchor_path"):
             MiniLLMConfig(
@@ -177,7 +177,7 @@ class TestMiniLLMConfig:
 
     def test_anchor_path_without_weight_rejected(self):
         """If path is set but weight=0, silent no-op — reject."""
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         with pytest.raises(ValueError, match="pretrain_anchor_weight"):
             MiniLLMConfig(
@@ -186,13 +186,13 @@ class TestMiniLLMConfig:
             )
 
     def test_length_normalize_must_be_bool(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         with pytest.raises(TypeError, match="bool"):
             MiniLLMConfig(length_normalize="yes")  # type: ignore[arg-type]
 
     def test_anchor_path_null_byte_rejected(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         with pytest.raises(ValueError, match="null byte"):
             MiniLLMConfig(
@@ -201,7 +201,7 @@ class TestMiniLLMConfig:
             )
 
     def test_anchor_path_oversize_rejected(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         with pytest.raises(ValueError, match="exceeds"):
             MiniLLMConfig(
@@ -214,13 +214,13 @@ class TestBuildMiniLLMCallback:
     """Live in v0.71.11 #237 — returns a MiniLLMCallback; validates type."""
 
     def test_non_config_rejected(self):
-        from soup_cli.utils.minillm import build_minillm_callback
+        from ai_forge_cli.utils.minillm import build_minillm_callback
 
         with pytest.raises(TypeError, match="MiniLLMConfig"):
             build_minillm_callback({})  # type: ignore[arg-type]
 
     def test_live_returns_callback(self):
-        from soup_cli.utils.minillm import (
+        from ai_forge_cli.utils.minillm import (
             MiniLLMCallback,
             MiniLLMConfig,
             build_minillm_callback,
@@ -236,7 +236,7 @@ class TestBuildMiniLLMCallback:
 
 class TestSchemaTrainingConfig:
     def test_defaults(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig()
         assert tcfg.minillm_enabled is False
@@ -246,7 +246,7 @@ class TestSchemaTrainingConfig:
         assert tcfg.minillm_pretrain_anchor_path is None
 
     def test_enabled_with_all_defaults(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig(minillm_enabled=True)
         assert tcfg.minillm_enabled is True
@@ -254,7 +254,7 @@ class TestSchemaTrainingConfig:
     def test_invalid_mix_ratio_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(minillm_teacher_mix_ratio=2.0)
@@ -262,7 +262,7 @@ class TestSchemaTrainingConfig:
     def test_invalid_anchor_weight_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(minillm_pretrain_anchor_weight=1.5)
@@ -287,7 +287,7 @@ training:
 {teacher_line}{extra_lines}"""
 
     def test_distill_minillm_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             self._yaml(task="distill", minillm_enabled=True)
@@ -295,7 +295,7 @@ training:
         assert cfg.training.minillm_enabled is True
 
     def test_sft_minillm_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="minillm"):
             load_config_from_string(
@@ -303,7 +303,7 @@ training:
             )
 
     def test_mlx_minillm_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError):
             load_config_from_string(
@@ -321,7 +321,7 @@ training:
             )
 
     def test_anchor_weight_without_path_rejected_at_schema(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="minillm_pretrain_anchor_path"):
             load_config_from_string(
@@ -333,7 +333,7 @@ training:
             )
 
     def test_anchor_path_without_weight_rejected_at_schema(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="minillm_pretrain_anchor_weight"):
             load_config_from_string(
@@ -346,7 +346,7 @@ training:
 
     def test_minillm_fields_without_enabled_rejected(self):
         """Setting tunables without minillm_enabled=True is a silent no-op."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="minillm_enabled"):
             load_config_from_string(
@@ -368,7 +368,7 @@ class TestSourceWiring:
 
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "utils"
             / "minillm.py"
         )
@@ -387,7 +387,7 @@ class TestSourceWiring:
 
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "utils"
             / "minillm.py"
         )

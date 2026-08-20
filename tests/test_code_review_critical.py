@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-import soup_cli
-from soup_cli.config.loader import load_config_from_string
+import ai_forge_cli
+from ai_forge_cli.config.loader import load_config_from_string
 
 # ─────────────────────────── CRITICAL 1: RLVR verifiable rewards ───────────────
 
@@ -44,7 +44,7 @@ training:
 
 def test_load_reward_fn_requires_domain_and_config_carries_it():
     """The verifiable_domain is load-bearing; the config carries it."""
-    from soup_cli.trainer.rewards import load_reward_fn, math_verify_reward
+    from ai_forge_cli.trainer.rewards import load_reward_fn, math_verify_reward
 
     cfg = load_config_from_string(_GRPO_YAML)
     # This is exactly what the fixed grpo.setup / ppo._setup_reward now do.
@@ -59,8 +59,8 @@ def test_load_reward_fn_requires_domain_and_config_carries_it():
 
 def test_ppo_setup_reward_loads_verifiable_end_to_end():
     """PPO's real reward-setup path must load a verifiable reward, not crash."""
-    from soup_cli.trainer.ppo import PPOTrainerWrapper
-    from soup_cli.trainer.rewards import math_verify_reward
+    from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
+    from ai_forge_cli.trainer.rewards import math_verify_reward
 
     cfg = load_config_from_string(_PPO_YAML)
     # Bypass __init__ (which resolves trust_remote_code) — we only exercise
@@ -79,7 +79,7 @@ def test_grpo_setup_passes_verifiable_domain(monkeypatch):
     """GRPO's real setup() must forward verifiable_domain to load_reward_fn."""
     pytest.importorskip("trl")
     pytest.importorskip("datasets")
-    import soup_cli.trainer.grpo as grpo_mod
+    import ai_forge_cli.trainer.grpo as grpo_mod
 
     captured: dict = {}
 
@@ -91,9 +91,9 @@ def test_grpo_setup_passes_verifiable_domain(monkeypatch):
         captured["domain"] = verifiable_domain
         raise _StopError()
 
-    # grpo.setup() does `from soup_cli.trainer.rewards import load_reward_fn`
+    # grpo.setup() does `from ai_forge_cli.trainer.rewards import load_reward_fn`
     # at call time, so patching the source module attribute is effective.
-    monkeypatch.setattr("soup_cli.trainer.rewards.load_reward_fn", _spy)
+    monkeypatch.setattr("ai_forge_cli.trainer.rewards.load_reward_fn", _spy)
 
     cfg = load_config_from_string(_GRPO_YAML)
     wrapper = grpo_mod.GRPOTrainerWrapper(cfg, device="cpu")
@@ -107,7 +107,7 @@ def test_grpo_setup_passes_verifiable_domain(monkeypatch):
 
 
 def test_serve_host_defaults_to_loopback():
-    from soup_cli.commands.serve import serve
+    from ai_forge_cli.commands.serve import serve
 
     host_param = inspect.signature(serve).parameters["host"].default
     # typer.Option(...) returns an OptionInfo whose .default holds the value.
@@ -115,13 +115,13 @@ def test_serve_host_defaults_to_loopback():
 
 
 def test_serve_exposes_tool_auth_token_option():
-    from soup_cli.commands.serve import serve
+    from ai_forge_cli.commands.serve import serve
 
     assert "tool_auth_token" in inspect.signature(serve).parameters
 
 
 def _build_tool_app(auth_token):
-    from soup_cli.commands.serve import _create_app
+    from ai_forge_cli.commands.serve import _create_app
 
     return _create_app(
         model_obj=None,
@@ -164,7 +164,7 @@ def test_tool_python_gate_is_noop_without_token():
 def test_eval_benchmark_rejects_trust_remote_code_injection(tmp_path, monkeypatch):
     from typer.testing import CliRunner
 
-    from soup_cli.commands.eval import app
+    from ai_forge_cli.commands.eval import app
 
     monkeypatch.chdir(tmp_path)
     adapter = tmp_path / "adapter"
@@ -182,7 +182,7 @@ def test_eval_benchmark_rejects_trust_remote_code_injection(tmp_path, monkeypatc
 
 
 def test_webhook_rejects_https_to_internal_ips():
-    from soup_cli.utils.webhooks import validate_webhook_url
+    from ai_forge_cli.utils.webhooks import validate_webhook_url
 
     for url in (
         "https://169.254.169.254/latest/meta-data/",  # cloud metadata
@@ -196,7 +196,7 @@ def test_webhook_rejects_https_to_internal_ips():
 
 
 def test_webhook_allows_public_https_and_loopback():
-    from soup_cli.utils.webhooks import validate_webhook_url
+    from ai_forge_cli.utils.webhooks import validate_webhook_url
 
     assert (
         validate_webhook_url("https://hooks.slack.com/services/T/B/x")
@@ -210,7 +210,7 @@ def test_webhook_allows_public_https_and_loopback():
 
 
 def test_modal_stub_cannot_inject_via_output_dir():
-    from soup_cli.cloud.modal import render_modal_stub
+    from ai_forge_cli.cloud.modal import render_modal_stub
 
     payload = '"); import os; os.system("evil") #'
     stub = render_modal_stub(
@@ -284,8 +284,8 @@ def test_eval_gate_halts_training_end_to_end(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _write_failing_gate(tmp_path)
 
-    from soup_cli.config.schema import EvalGateConfig
-    from soup_cli.monitoring.callback import SoupTrainerCallback
+    from ai_forge_cli.config.schema import EvalGateConfig
+    from ai_forge_cli.monitoring.callback import SoupTrainerCallback
 
     cfg = EvalGateConfig(
         enabled=True,
@@ -310,7 +310,7 @@ def test_eval_gate_halts_training_end_to_end(tmp_path, monkeypatch):
 
 def test_no_eval_gate_config_never_halts(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.monitoring.callback import SoupTrainerCallback
+    from ai_forge_cli.monitoring.callback import SoupTrainerCallback
 
     cb = SoupTrainerCallback(_StubDisplay())  # eval_gate_config=None
     args, state, control = _FakeArgs(), _FakeState(epoch=1, max_steps=1), _FakeControl()
@@ -328,7 +328,7 @@ _TRAINERS_WITH_CALLBACK = [
 @pytest.mark.parametrize("name", _TRAINERS_WITH_CALLBACK)
 def test_trainer_wires_eval_gate_config(name):
     """Every trainer that builds SoupTrainerCallback must pass eval_gate_config."""
-    src = (Path(soup_cli.__file__).parent / "trainer" / f"{name}.py").read_text(
+    src = (Path(ai_forge_cli.__file__).parent / "trainer" / f"{name}.py").read_text(
         encoding="utf-8"
     )
     assert "eval_gate_config=" in src, f"{name}.py does not wire eval_gate_config"

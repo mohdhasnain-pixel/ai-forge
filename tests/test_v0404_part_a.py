@@ -7,7 +7,7 @@ commands (diff / export / merge / infer / generate).
 
 Strategy: each trainer wrapper now accepts ``trust_remote_code: bool``
 on ``__init__`` and resolves it via ``resolve_trust_remote_code`` from
-``soup_cli.utils.trust_remote``. We assert source-level invariants
+``ai_forge_cli.utils.trust_remote``. We assert source-level invariants
 (closes the v0.36.0 known-gap family) plus a live-call test that
 exercises the resolver path on each wrapper.
 """
@@ -55,7 +55,7 @@ ALL_TRAINER_TARGETS = TRAINER_TARGETS + DISPATCHER_TARGETS
 
 def _minimal_cfg(base: str = "meta-llama/Llama-3.2-1B"):
     """Minimal SoupConfig stub with required fields for trainer ctor."""
-    from soup_cli.config.schema import SoupConfig
+    from ai_forge_cli.config.schema import SoupConfig
 
     # The ``preference`` task has a cross-validator on preference_loss —
     # for non-preference trainers we use sft as the task.
@@ -72,7 +72,7 @@ class TestTrainerCtorAcceptsTrustRemoteCode:
 
     @pytest.mark.parametrize("module,cls_name", TRAINER_TARGETS)
     def test_init_accepts_kwarg(self, module: str, cls_name: str):
-        mod = __import__(f"soup_cli.trainer.{module}", fromlist=[cls_name])
+        mod = __import__(f"ai_forge_cli.trainer.{module}", fromlist=[cls_name])
         cls = getattr(mod, cls_name)
         cfg = _minimal_cfg()
         # Must not raise on a meta-llama/* base (allowlisted, opt-in safe).
@@ -85,7 +85,7 @@ class TestTrainerCtorAcceptsTrustRemoteCode:
 
     @pytest.mark.parametrize("module,cls_name", TRAINER_TARGETS)
     def test_init_with_opt_in(self, module: str, cls_name: str):
-        mod = __import__(f"soup_cli.trainer.{module}", fromlist=[cls_name])
+        mod = __import__(f"ai_forge_cli.trainer.{module}", fromlist=[cls_name])
         cls = getattr(mod, cls_name)
         cfg = _minimal_cfg()
         instance = cls(cfg, device="cpu", trust_remote_code=True)
@@ -109,7 +109,7 @@ class TestUnknownOrgRejectionWithoutOptIn:
             '{"model_type": "fake", "auto_map": {"AutoConfig": "x.MyConfig"}}',
             encoding="utf-8",
         )
-        mod = __import__(f"soup_cli.trainer.{module}", fromlist=[cls_name])
+        mod = __import__(f"ai_forge_cli.trainer.{module}", fromlist=[cls_name])
         cls = getattr(mod, cls_name)
         cfg = _minimal_cfg(base=str(local))
         with pytest.raises(ValueError, match="trust_remote_code"):
@@ -124,7 +124,7 @@ class TestSourceLevelInvariants:
 
     @pytest.mark.parametrize("module,_cls", ALL_TRAINER_TARGETS)
     def test_no_hardcoded_true_in_trainer(self, module: str, _cls: str):
-        text = Path(f"src/soup_cli/trainer/{module}.py").read_text(encoding="utf-8")
+        text = Path(f"src/ai_forge_cli/trainer/{module}.py").read_text(encoding="utf-8")
         # Allow text only in comments / docstrings — assert exact-arg form
         # ``trust_remote_code=True`` is absent.
         assert "trust_remote_code=True" not in text, (
@@ -134,7 +134,7 @@ class TestSourceLevelInvariants:
 
     def test_no_hardcoded_true_in_sft(self):
         # SFT was already cleaned in v0.36.0 — regression guard.
-        text = Path("src/soup_cli/trainer/sft.py").read_text(encoding="utf-8")
+        text = Path("src/ai_forge_cli/trainer/sft.py").read_text(encoding="utf-8")
         assert "trust_remote_code=True" not in text
 
 
@@ -158,7 +158,7 @@ class TestCommandFlagsExist:
 
     @pytest.mark.parametrize("argv,label", _COMMANDS)
     def test_cli_help_lists_flag(self, argv: list[str], label: str):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, argv)
@@ -175,7 +175,7 @@ class TestTrainPyWiresFlagToAllTrainers:
     """
 
     def test_no_sft_kwargs_split(self):
-        text = Path("src/soup_cli/commands/train.py").read_text(encoding="utf-8")
+        text = Path("src/ai_forge_cli/commands/train.py").read_text(encoding="utf-8")
         # The v0.36.0 vintage line ``sft_kwargs = dict(trainer_kwargs, ...``
         # no longer needs a separate dict — assert it's gone.
         assert "sft_kwargs = dict(trainer_kwargs," not in text
@@ -192,14 +192,14 @@ class TestPpoLoadRewardModelHelperGated:
     def test_helper_signature_accepts_flag(self):
         import inspect
 
-        from soup_cli.trainer.ppo import _load_reward_model
+        from ai_forge_cli.trainer.ppo import _load_reward_model
 
         sig = inspect.signature(_load_reward_model)
         assert "trust_remote_code" in sig.parameters
         assert sig.parameters["trust_remote_code"].default is False
 
     def test_helper_rejects_unknown_org_local_auto_map(self, tmp_path):
-        from soup_cli.trainer.ppo import _load_reward_model
+        from ai_forge_cli.trainer.ppo import _load_reward_model
 
         local = tmp_path / "fake_rm"
         local.mkdir()
@@ -219,7 +219,7 @@ class TestExportHelperSignatures:
     def test_merge_adapter_signature(self):
         import inspect
 
-        from soup_cli.commands.export import _merge_adapter
+        from ai_forge_cli.commands.export import _merge_adapter
 
         params = inspect.signature(_merge_adapter).parameters
         assert "trust_remote_code" in params
@@ -231,7 +231,7 @@ class TestExportHelperSignatures:
     def test_export_helper_signature(self, fn_name: str):
         import inspect
 
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         fn = getattr(export_mod, fn_name)
         params = inspect.signature(fn).parameters
@@ -247,7 +247,7 @@ class TestPreferenceForwardsToInner:
     """
 
     def test_preference_inner_kwargs_include_flag(self):
-        text = Path("src/soup_cli/trainer/preference.py").read_text(encoding="utf-8")
+        text = Path("src/ai_forge_cli/trainer/preference.py").read_text(encoding="utf-8")
         # Both _build_inner and _build_multi_objective build a kwargs dict;
         # both must include the flag forwarding.
         assert text.count('"trust_remote_code": self.trust_remote_code') >= 2
@@ -257,13 +257,13 @@ class TestBcoAlreadyOnHelper:
     """Re-verify that BCO (v0.40.0 Part A) is now on the v0.36.0 helper too."""
 
     def test_bco_uses_resolver(self):
-        text = Path("src/soup_cli/trainer/bco.py").read_text(encoding="utf-8")
+        text = Path("src/ai_forge_cli/trainer/bco.py").read_text(encoding="utf-8")
         assert "resolve_trust_remote_code" in text
         assert "self._trust_remote_code" in text
 
 
 class TestResolverLoadedLazily:
-    """The resolver import inside ``__init__`` keeps ``import soup_cli.trainer.<x>``
+    """The resolver import inside ``__init__`` keeps ``import ai_forge_cli.trainer.<x>``
     cheap — heavy deps are still gated behind ``setup()``.
     """
 
@@ -272,7 +272,7 @@ class TestResolverLoadedLazily:
     def test_init_does_not_call_from_pretrained(
         self, mock_model, mock_tok,
     ):
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = _minimal_cfg()
         DPOTrainerWrapper(cfg, device="cpu", trust_remote_code=False)
@@ -298,21 +298,21 @@ class TestCommandHelpersGateRemoteCode:
         return local
 
     def test_diff_load_model_rejects(self, tmp_path):
-        from soup_cli.commands.diff import _load_model
+        from ai_forge_cli.commands.diff import _load_model
 
         local = self._make_local_auto_map(tmp_path)
         with pytest.raises(ValueError, match="trust_remote_code"):
             _load_model(str(local), None, "cpu", trust_remote_code=False)
 
     def test_infer_load_model_rejects(self, tmp_path):
-        from soup_cli.commands.infer import _load_model
+        from ai_forge_cli.commands.infer import _load_model
 
         local = self._make_local_auto_map(tmp_path)
         with pytest.raises(ValueError, match="trust_remote_code"):
             _load_model(str(local), None, "cpu", trust_remote_code=False)
 
     def test_export_merge_adapter_rejects(self, tmp_path):
-        from soup_cli.commands.export import _merge_adapter
+        from ai_forge_cli.commands.export import _merge_adapter
 
         local = self._make_local_auto_map(tmp_path)
         with pytest.raises(ValueError, match="trust_remote_code"):
@@ -324,7 +324,7 @@ class TestCommandHelpersGateRemoteCode:
             )
 
     def test_generate_local_rejects(self, tmp_path):
-        from soup_cli.commands.generate import _generate_local
+        from ai_forge_cli.commands.generate import _generate_local
 
         local = self._make_local_auto_map(tmp_path)
         with pytest.raises(ValueError, match="trust_remote_code"):
@@ -354,8 +354,8 @@ class TestPreferenceDispatcherLiveForwardsRejection:
             encoding="utf-8",
         )
 
-        from soup_cli.config.schema import SoupConfig
-        from soup_cli.trainer.preference import PreferenceTrainerWrapper
+        from ai_forge_cli.config.schema import SoupConfig
+        from ai_forge_cli.trainer.preference import PreferenceTrainerWrapper
 
         cfg = SoupConfig(
             base=str(local),

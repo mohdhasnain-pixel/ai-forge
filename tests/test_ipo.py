@@ -6,7 +6,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Config Tests ───────────────────────────────────────────────────────────
 
@@ -106,12 +106,12 @@ class TestIPOTrainRouting:
     """Test that train command routes to IPO trainer."""
 
     def test_ipo_import_exists(self):
-        from soup_cli.trainer.ipo import IPOTrainerWrapper
+        from ai_forge_cli.trainer.ipo import IPOTrainerWrapper
 
         assert IPOTrainerWrapper is not None
 
     def test_ipo_wrapper_init(self):
-        from soup_cli.trainer.ipo import IPOTrainerWrapper
+        from ai_forge_cli.trainer.ipo import IPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -125,7 +125,7 @@ class TestIPOTrainRouting:
         assert wrapper.trainer is None
 
     def test_ipo_wrapper_init_with_options(self):
-        from soup_cli.trainer.ipo import IPOTrainerWrapper
+        from ai_forge_cli.trainer.ipo import IPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -146,21 +146,21 @@ class TestIPOSweepParams:
     """Test IPO parameter shortcuts in sweep."""
 
     def test_ipo_tau_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"ipo_tau": 0.1}}
         _set_nested_param(config, "ipo_tau", 0.5)
         assert config["training"]["ipo_tau"] == 0.5
 
     def test_ipo_tau_shortcut_creates_nested_key(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "ipo_tau", 0.2)
         assert config["training"]["ipo_tau"] == pytest.approx(0.2)
 
     def test_sweep_run_single_routes_to_ipo_trainer(self):
-        from soup_cli.commands.sweep import _run_single
+        from ai_forge_cli.commands.sweep import _run_single
 
         cfg = SoupConfig(
             base="some-model",
@@ -183,14 +183,14 @@ class TestIPOSweepParams:
         }
 
         fake_gpu_info = {"memory_total": "0 MB", "memory_total_bytes": 0}
-        with mock_patch("soup_cli.data.loader.load_dataset", return_value=fake_dataset), \
-             mock_patch("soup_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
-             mock_patch("soup_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
-             mock_patch("soup_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
-             mock_patch("soup_cli.monitoring.display.TrainingDisplay"), \
-             mock_patch("soup_cli.trainer.ipo.IPOTrainerWrapper.setup"), \
+        with mock_patch("ai_forge_cli.data.loader.load_dataset", return_value=fake_dataset), \
+             mock_patch("ai_forge_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
+             mock_patch("ai_forge_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
+             mock_patch("ai_forge_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
+             mock_patch("ai_forge_cli.monitoring.display.TrainingDisplay"), \
+             mock_patch("ai_forge_cli.trainer.ipo.IPOTrainerWrapper.setup"), \
              mock_patch(
-                 "soup_cli.trainer.ipo.IPOTrainerWrapper.train", return_value=fake_result
+                 "ai_forge_cli.trainer.ipo.IPOTrainerWrapper.train", return_value=fake_result
              ) as mock_train:
             mock_tracker = MagicMock()
             mock_tracker.start_run.return_value = "run-ipo-1"
@@ -235,7 +235,7 @@ class TestIPOConfigEdgeCases:
         assert cfg.task == "ipo"
 
     def test_ipo_tokenizer_none_before_setup(self):
-        from soup_cli.trainer.ipo import IPOTrainerWrapper
+        from ai_forge_cli.trainer.ipo import IPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -246,7 +246,7 @@ class TestIPOConfigEdgeCases:
         assert wrapper.tokenizer is None
 
     def test_ipo_output_dir_none_before_setup(self):
-        from soup_cli.trainer.ipo import IPOTrainerWrapper
+        from ai_forge_cli.trainer.ipo import IPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -262,7 +262,7 @@ class TestIPOConfigEdgeCases:
 
 class TestIPOTrainGuard:
     def test_train_before_setup_raises_runtime_error(self):
-        from soup_cli.trainer.ipo import IPOTrainerWrapper
+        from ai_forge_cli.trainer.ipo import IPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -279,7 +279,7 @@ class TestIPOTrainGuard:
 
 class TestIPOTrainResults:
     def _make_wrapper_with_mock_trainer(self, log_history=None, global_step=20):
-        from soup_cli.trainer.ipo import IPOTrainerWrapper
+        from ai_forge_cli.trainer.ipo import IPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -341,7 +341,7 @@ class TestIPOInitTemplate:
     def test_init_ipo_template_creates_file(self, tmp_path):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -358,8 +358,8 @@ class TestIPOInitTemplate:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.config.loader import load_config
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.config.loader import load_config
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -374,9 +374,9 @@ class TestIPOInitTemplate:
 
 class TestIPOWizardPath:
     def test_wizard_ipo_task_sets_dpo_format(self):
-        from soup_cli.commands.init import _interactive_wizard
+        from ai_forge_cli.commands.init import _interactive_wizard
 
-        with mock_patch("soup_cli.commands.init.Prompt.ask", side_effect=[
+        with mock_patch("ai_forge_cli.commands.init.Prompt.ask", side_effect=[
             "some-model",
             "ipo",
             "./data.jsonl",
@@ -395,7 +395,7 @@ class TestIPOWizardPath:
 
 class TestIPOConfigLoaderRoundTrip:
     def test_ipo_template_round_trip(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(TEMPLATES["ipo"])
         assert cfg.task == "ipo"
@@ -403,7 +403,7 @@ class TestIPOConfigLoaderRoundTrip:
         assert cfg.data.format == "dpo"
 
     def test_ipo_custom_yaml_round_trip(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: custom-model/llama-7b

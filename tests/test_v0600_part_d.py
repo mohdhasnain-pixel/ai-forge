@@ -19,7 +19,7 @@ import pytest
 
 class TestNamespacePin:
     def test_imports(self):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePin,
             NamespacePinStore,
             record_repo_first_seen,
@@ -32,7 +32,7 @@ class TestNamespacePin:
         assert hasattr(NamespacePinStore, "put")
 
     def test_pin_frozen(self):
-        from soup_cli.utils.namespace_pin import NamespacePin
+        from ai_forge_cli.utils.namespace_pin import NamespacePin
 
         pin = NamespacePin(
             repo_id="meta-llama/Llama-3.1-8B",
@@ -45,7 +45,7 @@ class TestNamespacePin:
             pin.author = "attacker"  # type: ignore[misc]
 
     def test_pin_rejects_null_byte(self):
-        from soup_cli.utils.namespace_pin import NamespacePin
+        from ai_forge_cli.utils.namespace_pin import NamespacePin
 
         with pytest.raises(ValueError):
             NamespacePin(
@@ -56,7 +56,7 @@ class TestNamespacePin:
             )
 
     def test_pin_rejects_empty_repo(self):
-        from soup_cli.utils.namespace_pin import NamespacePin
+        from ai_forge_cli.utils.namespace_pin import NamespacePin
 
         with pytest.raises(ValueError):
             NamespacePin(
@@ -67,7 +67,7 @@ class TestNamespacePin:
             )
 
     def test_pin_rejects_oversize_repo(self):
-        from soup_cli.utils.namespace_pin import NamespacePin
+        from ai_forge_cli.utils.namespace_pin import NamespacePin
 
         with pytest.raises(ValueError):
             NamespacePin(
@@ -80,7 +80,7 @@ class TestNamespacePin:
 
 class TestStore:
     def test_put_then_get(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePin,
             NamespacePinStore,
         )
@@ -97,13 +97,13 @@ class TestStore:
         assert loaded == pin
 
     def test_get_missing_returns_none(self, tmp_path):
-        from soup_cli.utils.namespace_pin import NamespacePinStore
+        from ai_forge_cli.utils.namespace_pin import NamespacePinStore
         db = tmp_path / "ns.db"
         store = NamespacePinStore(str(db))
         assert store.get("nobody/nothing") is None
 
     def test_put_idempotent(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePin,
             NamespacePinStore,
         )
@@ -120,7 +120,7 @@ class TestStore:
         assert store.get(pin.repo_id) == pin
 
     def test_put_does_not_overwrite_first_seen(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePin,
             NamespacePinStore,
         )
@@ -146,7 +146,7 @@ class TestStore:
         assert loaded.first_seen == "2024-06-01T00:00:00+00:00"
 
     def test_invalid_repo_id_rejected(self, tmp_path):
-        from soup_cli.utils.namespace_pin import NamespacePinStore
+        from ai_forge_cli.utils.namespace_pin import NamespacePinStore
         db = tmp_path / "ns.db"
         store = NamespacePinStore(str(db))
         with pytest.raises(ValueError):
@@ -155,7 +155,7 @@ class TestStore:
 
 class TestVerify:
     def test_first_seen_records(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             record_repo_first_seen,
         )
@@ -172,7 +172,7 @@ class TestVerify:
         assert store.get(pin.repo_id) == pin
 
     def test_verify_namespace_clean_pass(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             record_repo_first_seen,
             verify_namespace,
@@ -194,7 +194,7 @@ class TestVerify:
         assert report.ok is True
 
     def test_verify_namespace_author_change_flagged(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             record_repo_first_seen,
             verify_namespace,
@@ -217,7 +217,7 @@ class TestVerify:
         assert "author" in report.reason.lower()
 
     def test_verify_namespace_backward_created_at_flagged(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             record_repo_first_seen,
             verify_namespace,
@@ -241,7 +241,7 @@ class TestVerify:
         assert "created" in report.reason.lower() or "backward" in report.reason.lower()
 
     def test_verify_namespace_unknown_repo_first_seen(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             verify_namespace,
         )
@@ -258,7 +258,7 @@ class TestVerify:
         assert "first" in report.reason.lower()
 
     def test_verify_namespace_allow_shift(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             record_repo_first_seen,
             verify_namespace,
@@ -287,7 +287,7 @@ class TestVerify:
         assert updated.author == "attacker"
 
     def test_verify_namespace_allow_shift_must_match(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             record_repo_first_seen,
             verify_namespace,
@@ -312,7 +312,7 @@ class TestVerify:
 
     def test_verify_namespace_rejects_bool_allow(self, tmp_path):
         """``allow_namespace_shift=True`` must NOT be a free-for-all bypass."""
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             verify_namespace,
         )
@@ -341,7 +341,7 @@ class TestSecurityReviewFixes:
         # outside every allowed root.
         import sys
 
-        from soup_cli.utils.namespace_pin import NamespacePinStore
+        from ai_forge_cli.utils.namespace_pin import NamespacePinStore
         bogus = "Z:/no/such/dir/ns.db" if sys.platform == "win32" else "/no/such/dir/ns.db"
         with pytest.raises(ValueError):
             NamespacePinStore(bogus)
@@ -351,7 +351,7 @@ class TestSecurityReviewFixes:
     def test_store_rejects_symlink_at_db_path(self, tmp_path):
         import os as _os
 
-        from soup_cli.utils.namespace_pin import NamespacePinStore
+        from ai_forge_cli.utils.namespace_pin import NamespacePinStore
 
         link = tmp_path / "ns.db"
         target = tmp_path / "real_target.db"
@@ -369,7 +369,7 @@ class TestSecurityReviewFixes:
         so a string compare would miss the backward jump — but the datetime
         parser catches it.
         """
-        from soup_cli.utils.namespace_pin import _is_backward
+        from ai_forge_cli.utils.namespace_pin import _is_backward
 
         assert _is_backward(
             "2024-01-01T01:00:00+02:00",
@@ -387,7 +387,7 @@ class TestSecurityReviewFixes:
         ) is False
 
     def test_author_override_case_insensitive(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             record_repo_first_seen,
             verify_namespace,
@@ -410,7 +410,7 @@ class TestSecurityReviewFixes:
 
 class TestSourceWiring:
     def test_module_imports(self):
-        from soup_cli.utils import namespace_pin as m
+        from ai_forge_cli.utils import namespace_pin as m
 
         assert hasattr(m, "NamespacePin")
         assert hasattr(m, "NamespacePinStore")
@@ -420,7 +420,7 @@ class TestSourceWiring:
     def test_no_top_level_torch(self):
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "namespace_pin.py"
+            / "src" / "ai_forge_cli" / "utils" / "namespace_pin.py"
         )
         text = src.read_text(encoding="utf-8")
         # no top-level torch/transformers imports

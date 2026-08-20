@@ -3,7 +3,7 @@ old preinstalled torchao (Colab ships 0.10.0; peft demands >0.16.0), and the
 raw message names torchao while giving no fix, so the failure looks like a
 Soup bug nine frames inside get_peft_model.
 
-Fix lives in soup_cli.utils.errors.ERROR_MAP, following the existing
+Fix lives in ai_forge_cli.utils.errors.ERROR_MAP, following the existing
 pattern-based string-match mechanism exactly (no new machinery): the mapper
 never imports torchao or peft, it only matches the exception text that
 already happened.
@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 from rich.console import Console
 
-from soup_cli.utils.errors import format_friendly_error
+from ai_forge_cli.utils.errors import format_friendly_error
 
 # The exact message peft's is_torchao_available() raises (peft/import_utils.py),
 # reproduced verbatim from the Colab traceback in GH #389.
@@ -28,7 +28,7 @@ def test_torchao_version_error_is_mapped_to_actionable_fix():
     """The real peft message text is mapped to a friendly, actionable message."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ImportError(_REAL_PEFT_TORCHAO_MESSAGE)
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
@@ -61,7 +61,7 @@ def test_torchao_version_error_mapping_does_not_import_torchao_or_peft():
 
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ImportError(_REAL_PEFT_TORCHAO_MESSAGE)
         format_friendly_error(exc, verbose=False)
 
@@ -76,7 +76,7 @@ def test_unrelated_import_error_is_not_rewritten_as_torchao():
     to the generic unknown-error path)."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ImportError("cannot import name 'foo' from 'bar'")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
@@ -94,7 +94,7 @@ def test_unrelated_torchao_mention_without_version_shape_is_not_rewritten():
     specific 'incompatible version of torchao' shape peft raises should."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ModuleNotFoundError("No module named 'torchao'")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()

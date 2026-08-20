@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -516,7 +516,7 @@ class TestLlamaFactoryMigration:
 
     def test_sft_basic(self, tmp_path):
         """SFT config maps correctly."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_SFT, encoding="utf-8")
@@ -538,7 +538,7 @@ class TestLlamaFactoryMigration:
 
     def test_sft_lora_target_all(self, tmp_path):
         """lora_target: all → auto (Soup auto-detects)."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_SFT, encoding="utf-8")
@@ -547,7 +547,7 @@ class TestLlamaFactoryMigration:
 
     def test_dpo_config(self, tmp_path):
         """DPO stage maps to task: dpo with dpo_beta."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_DPO, encoding="utf-8")
@@ -558,7 +558,7 @@ class TestLlamaFactoryMigration:
 
     def test_kto_config(self, tmp_path):
         """KTO stage maps to task: kto with kto_beta."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_KTO, encoding="utf-8")
@@ -569,7 +569,7 @@ class TestLlamaFactoryMigration:
 
     def test_ppo_config(self, tmp_path):
         """PPO stage maps to task: ppo with reward_model."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_PPO, encoding="utf-8")
@@ -579,7 +579,7 @@ class TestLlamaFactoryMigration:
 
     def test_pretrain_config(self, tmp_path):
         """pt stage maps to task: pretrain, format: plaintext."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_PRETRAIN, encoding="utf-8")
@@ -589,7 +589,7 @@ class TestLlamaFactoryMigration:
 
     def test_reward_model_config(self, tmp_path):
         """rm stage maps to task: reward_model."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_RM, encoding="utf-8")
@@ -599,7 +599,7 @@ class TestLlamaFactoryMigration:
 
     def test_orpo_via_pref_loss(self, tmp_path):
         """stage: dpo + pref_loss: orpo → task: orpo."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_ORPO, encoding="utf-8")
@@ -609,7 +609,7 @@ class TestLlamaFactoryMigration:
 
     def test_simpo_via_pref_loss(self, tmp_path):
         """stage: dpo + pref_loss: simpo → task: simpo."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_SIMPO, encoding="utf-8")
@@ -618,7 +618,7 @@ class TestLlamaFactoryMigration:
 
     def test_neftune_and_dora(self, tmp_path):
         """NEFTune, DoRA, LoRA+ are mapped."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_NEFTUNE, encoding="utf-8")
@@ -628,7 +628,7 @@ class TestLlamaFactoryMigration:
 
     def test_dataset_warning(self, tmp_path):
         """Dataset name (not path) triggers a warning."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_SFT, encoding="utf-8")
@@ -637,7 +637,7 @@ class TestLlamaFactoryMigration:
 
     def test_empty_config(self, tmp_path):
         """Empty YAML raises ValueError."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text("", encoding="utf-8")
@@ -646,7 +646,7 @@ class TestLlamaFactoryMigration:
 
     def test_missing_model(self, tmp_path):
         """Config without model_name_or_path raises ValueError."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text("stage: sft\n", encoding="utf-8")
@@ -655,7 +655,7 @@ class TestLlamaFactoryMigration:
 
     def test_full_finetuning_no_lora(self, tmp_path):
         """finetuning_type: full → no lora section."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(
@@ -672,7 +672,7 @@ class TestLlamaFactoryMigration:
 
     def test_quantization_8bit(self, tmp_path):
         """quantization_bit: 8 → quantization: 8bit."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(
@@ -691,9 +691,9 @@ class TestLlamaFactoryMigration:
 
     def test_round_trip_valid_config(self, tmp_path):
         """Migrated config loads as valid SoupConfig."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.migrate.common import config_to_yaml
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.migrate.common import config_to_yaml
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_SFT, encoding="utf-8")
@@ -713,7 +713,7 @@ class TestAxolotlMigration:
 
     def test_sft_basic(self, tmp_path):
         """SFT config maps correctly."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(AXOLOTL_SFT, encoding="utf-8")
@@ -736,7 +736,7 @@ class TestAxolotlMigration:
 
     def test_dpo_with_qlora(self, tmp_path):
         """rl: dpo → task: dpo, adapter: qlora → quantization: 4bit."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(AXOLOTL_DPO, encoding="utf-8")
@@ -747,7 +747,7 @@ class TestAxolotlMigration:
 
     def test_grpo_with_flash_attn(self, tmp_path):
         """rl: grpo → task: grpo, flash_attention → use_flash_attn."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(AXOLOTL_GRPO, encoding="utf-8")
@@ -757,7 +757,7 @@ class TestAxolotlMigration:
 
     def test_multi_dataset_warning(self, tmp_path):
         """Multiple datasets triggers a warning (Soup uses single dataset)."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(AXOLOTL_MULTI_DATASET, encoding="utf-8")
@@ -767,7 +767,7 @@ class TestAxolotlMigration:
 
     def test_sample_packing_warning(self, tmp_path):
         """sample_packing generates unsupported feature warning."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(AXOLOTL_SAMPLE_PACKING, encoding="utf-8")
@@ -776,7 +776,7 @@ class TestAxolotlMigration:
 
     def test_load_in_4bit(self, tmp_path):
         """load_in_4bit: true → quantization: 4bit."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(AXOLOTL_LOAD_IN_4BIT, encoding="utf-8")
@@ -785,7 +785,7 @@ class TestAxolotlMigration:
 
     def test_lora_target_linear(self, tmp_path):
         """lora_target_linear: true → target_modules: auto."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(AXOLOTL_LORA_TARGET_LINEAR, encoding="utf-8")
@@ -794,7 +794,7 @@ class TestAxolotlMigration:
 
     def test_adamw_8bit_mapping(self, tmp_path):
         """adamw_8bit → adamw_bnb_8bit."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(AXOLOTL_ADAMW_8BIT, encoding="utf-8")
@@ -803,7 +803,7 @@ class TestAxolotlMigration:
 
     def test_empty_config(self, tmp_path):
         """Empty YAML raises ValueError."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text("", encoding="utf-8")
@@ -812,7 +812,7 @@ class TestAxolotlMigration:
 
     def test_missing_base_model(self, tmp_path):
         """Config without base_model raises ValueError."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text("num_epochs: 3\n", encoding="utf-8")
@@ -821,9 +821,9 @@ class TestAxolotlMigration:
 
     def test_round_trip_valid_config(self, tmp_path):
         """Migrated config loads as valid SoupConfig."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.migrate.axolotl import migrate_axolotl
-        from soup_cli.migrate.common import config_to_yaml
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.common import config_to_yaml
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(AXOLOTL_SFT, encoding="utf-8")
@@ -842,7 +842,7 @@ class TestUnslothMigration:
 
     def test_sft_notebook(self, tmp_path):
         """SFT notebook extracted correctly."""
-        from soup_cli.migrate.unsloth import migrate_unsloth
+        from ai_forge_cli.migrate.unsloth import migrate_unsloth
 
         nb_file = tmp_path / "finetune.ipynb"
         nb_file.write_text(json.dumps(UNSLOTH_SFT_NOTEBOOK), encoding="utf-8")
@@ -866,7 +866,7 @@ class TestUnslothMigration:
 
     def test_dpo_notebook(self, tmp_path):
         """DPO notebook extracted correctly."""
-        from soup_cli.migrate.unsloth import migrate_unsloth
+        from ai_forge_cli.migrate.unsloth import migrate_unsloth
 
         nb_file = tmp_path / "dpo.ipynb"
         nb_file.write_text(json.dumps(UNSLOTH_DPO_NOTEBOOK), encoding="utf-8")
@@ -878,7 +878,7 @@ class TestUnslothMigration:
 
     def test_grpo_notebook(self, tmp_path):
         """GRPO notebook extracted correctly."""
-        from soup_cli.migrate.unsloth import migrate_unsloth
+        from ai_forge_cli.migrate.unsloth import migrate_unsloth
 
         nb_file = tmp_path / "grpo.ipynb"
         nb_file.write_text(json.dumps(UNSLOTH_GRPO_NOTEBOOK), encoding="utf-8")
@@ -890,7 +890,7 @@ class TestUnslothMigration:
 
     def test_rslora_propagated(self, tmp_path):
         """use_rslora=True is propagated to lora config."""
-        from soup_cli.migrate.unsloth import migrate_unsloth
+        from ai_forge_cli.migrate.unsloth import migrate_unsloth
 
         nb_file = tmp_path / "rslora.ipynb"
         nb_file.write_text(json.dumps(UNSLOTH_RSLORA_NOTEBOOK), encoding="utf-8")
@@ -899,7 +899,7 @@ class TestUnslothMigration:
 
     def test_packing_warning(self, tmp_path):
         """packing=True generates unsupported warning."""
-        from soup_cli.migrate.unsloth import migrate_unsloth
+        from ai_forge_cli.migrate.unsloth import migrate_unsloth
 
         nb_file = tmp_path / "packing.ipynb"
         nb_file.write_text(json.dumps(UNSLOTH_PACKING_NOTEBOOK), encoding="utf-8")
@@ -908,7 +908,7 @@ class TestUnslothMigration:
 
     def test_empty_notebook(self, tmp_path):
         """Notebook with no code cells raises ValueError."""
-        from soup_cli.migrate.unsloth import migrate_unsloth
+        from ai_forge_cli.migrate.unsloth import migrate_unsloth
 
         nb_file = tmp_path / "empty.ipynb"
         nb_file.write_text(json.dumps({"cells": []}), encoding="utf-8")
@@ -917,7 +917,7 @@ class TestUnslothMigration:
 
     def test_invalid_json(self, tmp_path):
         """Non-JSON file raises ValueError."""
-        from soup_cli.migrate.unsloth import migrate_unsloth
+        from ai_forge_cli.migrate.unsloth import migrate_unsloth
 
         nb_file = tmp_path / "bad.ipynb"
         nb_file.write_text("not json", encoding="utf-8")
@@ -926,9 +926,9 @@ class TestUnslothMigration:
 
     def test_round_trip_valid_config(self, tmp_path):
         """Migrated config loads as valid SoupConfig."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.migrate.common import config_to_yaml
-        from soup_cli.migrate.unsloth import migrate_unsloth
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.migrate.common import config_to_yaml
+        from ai_forge_cli.migrate.unsloth import migrate_unsloth
 
         nb_file = tmp_path / "finetune.ipynb"
         nb_file.write_text(json.dumps(UNSLOTH_SFT_NOTEBOOK), encoding="utf-8")
@@ -947,7 +947,7 @@ class TestCommon:
 
     def test_config_to_yaml_basic(self):
         """config_to_yaml generates valid YAML."""
-        from soup_cli.migrate.common import config_to_yaml
+        from ai_forge_cli.migrate.common import config_to_yaml
 
         config = {
             "base": "meta-llama/Llama-3.1-8B-Instruct",
@@ -968,7 +968,7 @@ class TestCommon:
 
     def test_config_to_yaml_strips_warnings(self):
         """_warnings key is stripped from YAML output."""
-        from soup_cli.migrate.common import config_to_yaml
+        from ai_forge_cli.migrate.common import config_to_yaml
 
         config = {
             "base": "model",
@@ -982,7 +982,7 @@ class TestCommon:
 
     def test_validate_input_path(self, tmp_path, monkeypatch):
         """Input path must exist and be under cwd."""
-        from soup_cli.migrate.common import validate_input_path
+        from ai_forge_cli.migrate.common import validate_input_path
 
         monkeypatch.chdir(tmp_path)
         cfg_file = tmp_path / "config.yaml"
@@ -993,7 +993,7 @@ class TestCommon:
 
     def test_validate_input_path_traversal(self, tmp_path, monkeypatch):
         """Path traversal outside cwd is blocked."""
-        from soup_cli.migrate.common import validate_input_path
+        from ai_forge_cli.migrate.common import validate_input_path
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="outside"):
@@ -1001,7 +1001,7 @@ class TestCommon:
 
     def test_validate_input_path_not_exists(self, tmp_path, monkeypatch):
         """Non-existent file raises ValueError."""
-        from soup_cli.migrate.common import validate_input_path
+        from ai_forge_cli.migrate.common import validate_input_path
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="not found"):
@@ -1009,7 +1009,7 @@ class TestCommon:
 
     def test_validate_output_path(self, tmp_path, monkeypatch):
         """Output path must be under cwd."""
-        from soup_cli.migrate.common import validate_output_path
+        from ai_forge_cli.migrate.common import validate_output_path
 
         monkeypatch.chdir(tmp_path)
         validated = validate_output_path(Path("soup.yaml"))
@@ -1017,7 +1017,7 @@ class TestCommon:
 
     def test_validate_output_path_traversal(self, tmp_path, monkeypatch):
         """Output path traversal outside cwd is blocked."""
-        from soup_cli.migrate.common import validate_output_path
+        from ai_forge_cli.migrate.common import validate_output_path
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="outside"):
@@ -1191,7 +1191,7 @@ class TestMigrateSecurity:
 
     def test_unsloth_no_exec(self, tmp_path):
         """Unsloth migration uses AST only, never exec/eval."""
-        from soup_cli.migrate.unsloth import migrate_unsloth
+        from ai_forge_cli.migrate.unsloth import migrate_unsloth
 
         # A notebook with dangerous code — should parse but not execute
         dangerous_nb = {
@@ -1247,14 +1247,14 @@ class TestMigrateTDDGaps:
 
     def test_oversized_input_file(self, tmp_path, monkeypatch):
         """Input file larger than MAX_CONFIG_FILE_SIZE is rejected."""
-        from soup_cli.migrate.common import validate_input_path
+        from ai_forge_cli.migrate.common import validate_input_path
 
         monkeypatch.chdir(tmp_path)
         big_file = tmp_path / "big.yaml"
         big_file.write_text("x" * 100, encoding="utf-8")
 
         # Temporarily lower the limit to test the check
-        import soup_cli.migrate.common as common_mod
+        import ai_forge_cli.migrate.common as common_mod
         original = common_mod.MAX_CONFIG_FILE_SIZE
         common_mod.MAX_CONFIG_FILE_SIZE = 50  # 50 bytes
         try:
@@ -1265,7 +1265,7 @@ class TestMigrateTDDGaps:
 
     def test_llamafactory_freeze_warning(self, tmp_path):
         """finetuning_type: freeze → warning + fallback to LoRA."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(
@@ -1285,7 +1285,7 @@ class TestMigrateTDDGaps:
 
     def test_axolotl_load_in_8bit(self, tmp_path):
         """load_in_8bit: true → quantization: 8bit."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(
@@ -1308,7 +1308,7 @@ class TestMigrateTDDGaps:
 
     def test_axolotl_gdpo_alias(self, tmp_path):
         """rl: gdpo → task: grpo."""
-        from soup_cli.migrate.axolotl import migrate_axolotl
+        from ai_forge_cli.migrate.axolotl import migrate_axolotl
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(
@@ -1331,7 +1331,7 @@ class TestMigrateTDDGaps:
 
     def test_unsloth_markdown_only_notebook(self, tmp_path):
         """Notebook with only markdown cells (no code) raises ValueError."""
-        from soup_cli.migrate.unsloth import migrate_unsloth
+        from ai_forge_cli.migrate.unsloth import migrate_unsloth
 
         nb = {
             "cells": [
@@ -1346,7 +1346,7 @@ class TestMigrateTDDGaps:
 
     def test_config_to_yaml_strips_all_private_keys(self):
         """config_to_yaml strips all underscore-prefixed keys."""
-        from soup_cli.migrate.common import config_to_yaml
+        from ai_forge_cli.migrate.common import config_to_yaml
 
         config = {
             "base": "model",
@@ -1365,7 +1365,7 @@ class TestMigrateTDDGaps:
 
     def test_llamafactory_neftune_warning_only(self, tmp_path):
         """NEFTune in LF config produces warning (not auto-migrated to config)."""
-        from soup_cli.migrate.llamafactory import migrate_llamafactory
+        from ai_forge_cli.migrate.llamafactory import migrate_llamafactory
 
         cfg_file = tmp_path / "config.yaml"
         cfg_file.write_text(LLAMA_FACTORY_NEFTUNE, encoding="utf-8")

@@ -2,7 +2,7 @@
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 

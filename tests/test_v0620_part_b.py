@@ -17,7 +17,7 @@ import yaml
 
 class TestModuleSurface:
     def test_imports(self):
-        from soup_cli.utils.ra_dit import (
+        from ai_forge_cli.utils.ra_dit import (
             SUPPORTED_RA_DIT_STAGES,
             RaDitStageSpec,
             get_ra_dit_stage_spec,
@@ -29,14 +29,14 @@ class TestModuleSurface:
         assert isinstance(SUPPORTED_RA_DIT_STAGES, frozenset)
 
     def test_stages_exact(self):
-        from soup_cli.utils.ra_dit import SUPPORTED_RA_DIT_STAGES
+        from ai_forge_cli.utils.ra_dit import SUPPORTED_RA_DIT_STAGES
 
         assert SUPPORTED_RA_DIT_STAGES == frozenset({"retriever", "generator"})
 
     def test_metadata_mapping_proxy(self):
         from types import MappingProxyType
 
-        from soup_cli.utils.ra_dit import _RA_DIT_STAGE_METADATA  # type: ignore
+        from ai_forge_cli.utils.ra_dit import _RA_DIT_STAGE_METADATA  # type: ignore
 
         assert isinstance(_RA_DIT_STAGE_METADATA, MappingProxyType)
 
@@ -46,49 +46,49 @@ class TestModuleSurface:
 
 class TestValidateStage:
     def test_happy(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_stage
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_stage
 
         assert validate_ra_dit_stage("retriever") == "retriever"
         assert validate_ra_dit_stage("generator") == "generator"
 
     def test_case_insensitive(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_stage
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_stage
 
         assert validate_ra_dit_stage("Retriever") == "retriever"
         assert validate_ra_dit_stage("GENERATOR") == "generator"
 
     def test_bool_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_stage
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_stage
 
         with pytest.raises(TypeError):
             validate_ra_dit_stage(True)
 
     def test_non_string_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_stage
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_stage
 
         with pytest.raises(TypeError):
             validate_ra_dit_stage(1)
 
     def test_empty_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_stage
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_stage
 
         with pytest.raises(ValueError):
             validate_ra_dit_stage("")
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_stage
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_stage
 
         with pytest.raises(ValueError):
             validate_ra_dit_stage("retriever\x00")
 
     def test_oversize_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_stage
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_stage
 
         with pytest.raises(ValueError):
             validate_ra_dit_stage("retriever" * 100)
 
     def test_unknown_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_stage
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_stage
 
         with pytest.raises(ValueError, match="ra_dit_stage"):
             validate_ra_dit_stage("decoder")
@@ -99,7 +99,7 @@ class TestValidateStage:
 
 class TestStageSpec:
     def test_retriever_spec(self):
-        from soup_cli.utils.ra_dit import get_ra_dit_stage_spec
+        from ai_forge_cli.utils.ra_dit import get_ra_dit_stage_spec
 
         spec = get_ra_dit_stage_spec("retriever")
         assert spec.name == "retriever"
@@ -107,7 +107,7 @@ class TestStageSpec:
         assert spec.live_wired is False
 
     def test_generator_spec(self):
-        from soup_cli.utils.ra_dit import get_ra_dit_stage_spec
+        from ai_forge_cli.utils.ra_dit import get_ra_dit_stage_spec
 
         spec = get_ra_dit_stage_spec("generator")
         assert spec.name == "generator"
@@ -115,13 +115,13 @@ class TestStageSpec:
         assert spec.live_wired is False
 
     def test_unknown_raises(self):
-        from soup_cli.utils.ra_dit import get_ra_dit_stage_spec
+        from ai_forge_cli.utils.ra_dit import get_ra_dit_stage_spec
 
         with pytest.raises(ValueError):
             get_ra_dit_stage_spec("nonsense")
 
     def test_spec_frozen(self):
-        from soup_cli.utils.ra_dit import get_ra_dit_stage_spec
+        from ai_forge_cli.utils.ra_dit import get_ra_dit_stage_spec
 
         spec = get_ra_dit_stage_spec("retriever")
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -133,36 +133,36 @@ class TestStageSpec:
 
 class TestRetrieverModel:
     def test_happy(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_retriever_model
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_retriever_model
 
         assert validate_ra_dit_retriever_model("sentence-transformers/all-mpnet-base-v2") == \
             "sentence-transformers/all-mpnet-base-v2"
 
     def test_none_passthrough(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_retriever_model
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_retriever_model
 
         assert validate_ra_dit_retriever_model(None) is None
 
     def test_empty_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_retriever_model
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_retriever_model
 
         with pytest.raises(ValueError):
             validate_ra_dit_retriever_model("")
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_retriever_model
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_retriever_model
 
         with pytest.raises(ValueError):
             validate_ra_dit_retriever_model("foo\x00bar")
 
     def test_bool_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_retriever_model
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_retriever_model
 
         with pytest.raises(TypeError):
             validate_ra_dit_retriever_model(True)
 
     def test_oversize_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_retriever_model
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_retriever_model
 
         with pytest.raises(ValueError):
             validate_ra_dit_retriever_model("a" * 1024)
@@ -173,26 +173,26 @@ class TestRetrieverModel:
 
 class TestSchemaIntegration:
     def test_default_none(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         cfg = TrainingConfig()
         assert cfg.ra_dit_stage is None
         assert cfg.ra_dit_retriever_model is None
 
     def test_retriever_accepted(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         cfg = TrainingConfig(ra_dit_stage="retriever")
         assert cfg.ra_dit_stage == "retriever"
 
     def test_generator_accepted(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         cfg = TrainingConfig(ra_dit_stage="generator")
         assert cfg.ra_dit_stage == "generator"
 
     def test_case_insensitive_at_schema(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         cfg = TrainingConfig(ra_dit_stage="Generator")
         assert cfg.ra_dit_stage == "generator"
@@ -200,13 +200,13 @@ class TestSchemaIntegration:
     def test_invalid_stage_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(ra_dit_stage="decoder")
 
     def test_retriever_model_accepted(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         cfg = TrainingConfig(
             ra_dit_stage="retriever",
@@ -217,7 +217,7 @@ class TestSchemaIntegration:
     def test_retriever_model_null_byte_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(ra_dit_retriever_model="foo\x00")
@@ -228,7 +228,7 @@ class TestSchemaIntegration:
 
 class TestSoupConfigGate:
     def test_retriever_stage_on_embedding_task(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """\
 base: sentence-transformers/all-mpnet-base-v2
@@ -250,7 +250,7 @@ output: ./output
         assert cfg.training.ra_dit_stage == "retriever"
 
     def test_generator_stage_on_sft_task(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """\
 base: meta-llama/Llama-3.1-8B-Instruct
@@ -272,7 +272,7 @@ output: ./output
         assert cfg.training.ra_dit_stage == "generator"
 
     def test_retriever_on_sft_task_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         # retriever stage requires embedding-family task
         yaml_text = """\
@@ -294,7 +294,7 @@ output: ./output
             load_config_from_string(yaml_text)
 
     def test_generator_on_grpo_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """\
 base: meta-llama/Llama-3.1-8B-Instruct
@@ -316,7 +316,7 @@ output: ./output
             load_config_from_string(yaml_text)
 
     def test_retriever_model_without_stage_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """\
 base: meta-llama/Llama-3.1-8B-Instruct
@@ -342,22 +342,22 @@ output: ./output
 
 class TestRaDitRecipes:
     def test_retriever_recipe_present(self):
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("ra-dit-retriever")
         assert recipe is not None
         assert recipe.task == "embedding"
 
     def test_generator_recipe_present(self):
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("ra-dit-llama3-8b")
         assert recipe is not None
         assert recipe.task == "sft"
 
     def test_retriever_recipe_yaml_loads(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("ra-dit-retriever")
         assert recipe is not None
@@ -365,8 +365,8 @@ class TestRaDitRecipes:
         assert cfg.training.ra_dit_stage == "retriever"
 
     def test_generator_recipe_yaml_loads(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("ra-dit-llama3-8b")
         assert recipe is not None
@@ -375,7 +375,7 @@ class TestRaDitRecipes:
         assert cfg.data.format == "raft"
 
     def test_recipe_yaml_parses_as_dict(self):
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         for name in ("ra-dit-retriever", "ra-dit-llama3-8b"):
             recipe = get_recipe(name)

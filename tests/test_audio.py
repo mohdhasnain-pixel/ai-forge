@@ -4,7 +4,7 @@
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Config Tests ───────────────────────────────────────────────────────────
 
@@ -100,14 +100,14 @@ class TestAudioDataFormat:
 
     def test_format_signature_exists(self):
         """audio format signature should be registered."""
-        from soup_cli.data.formats import FORMAT_SIGNATURES
+        from ai_forge_cli.data.formats import FORMAT_SIGNATURES
 
         assert "audio" in FORMAT_SIGNATURES
         assert FORMAT_SIGNATURES["audio"] == {"audio", "messages"}
 
     def test_detect_audio_format(self):
         """Should auto-detect audio format from audio+messages keys."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{
             "audio": "test.wav",
@@ -120,7 +120,7 @@ class TestAudioDataFormat:
 
     def test_convert_audio_format(self):
         """Should convert audio row correctly."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {
             "audio": "test.wav",
@@ -135,7 +135,7 @@ class TestAudioDataFormat:
 
     def test_convert_audio_empty_audio_returns_none(self):
         """Empty audio path should cause conversion to return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {
             "audio": "",
@@ -146,7 +146,7 @@ class TestAudioDataFormat:
 
     def test_convert_audio_missing_messages_returns_none(self):
         """Missing messages should cause conversion to return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"audio": "test.wav"}
         result = format_to_messages(row, "audio")
@@ -154,7 +154,7 @@ class TestAudioDataFormat:
 
     def test_convert_audio_empty_messages_returns_none(self):
         """Empty messages list should cause conversion to return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"audio": "test.wav", "messages": []}
         result = format_to_messages(row, "audio")
@@ -162,7 +162,7 @@ class TestAudioDataFormat:
 
     def test_audio_not_confused_with_chatml(self):
         """Audio data (audio+messages) should not be detected as chatml."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{
             "audio": "test.wav",
@@ -172,7 +172,7 @@ class TestAudioDataFormat:
 
     def test_is_audio_format(self):
         """is_audio_format should correctly identify audio format."""
-        from soup_cli.data.formats import is_audio_format
+        from ai_forge_cli.data.formats import is_audio_format
 
         assert is_audio_format("audio") is True
         assert is_audio_format("chatml") is False
@@ -214,7 +214,7 @@ class TestAudioLoader:
 
     def test_validate_audio_files_resolves_paths(self, tmp_path):
         """_validate_audio_files should resolve relative paths."""
-        from soup_cli.data.loader import _validate_audio_files
+        from ai_forge_cli.data.loader import _validate_audio_files
 
         data = [
             {"audio": "test.wav", "messages": [{"role": "user", "content": "x"}]},
@@ -227,7 +227,7 @@ class TestAudioLoader:
         """_validate_audio_files should skip rows without audio path."""
         from pathlib import Path
 
-        from soup_cli.data.loader import _validate_audio_files
+        from ai_forge_cli.data.loader import _validate_audio_files
 
         data = [
             {"audio": "", "messages": [{"role": "user", "content": "x"}]},
@@ -238,7 +238,7 @@ class TestAudioLoader:
 
     def test_validate_audio_files_keeps_absolute_paths(self, tmp_path):
         """Absolute audio paths should not be modified."""
-        from soup_cli.data.loader import _validate_audio_files
+        from ai_forge_cli.data.loader import _validate_audio_files
 
         abs_path = str(tmp_path / "test.wav")
         data = [
@@ -257,7 +257,7 @@ class TestAudioTrainerSetup:
 
     def test_sft_wrapper_accepts_audio_modality(self):
         """SFTTrainerWrapper should accept audio modality config."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="Qwen/Qwen2-Audio-7B-Instruct",
@@ -270,7 +270,7 @@ class TestAudioTrainerSetup:
 
     def test_audio_modality_triggers_audio_branch(self):
         """SFTTrainerWrapper with audio modality should have _setup_audio_transformers."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="Qwen/Qwen2-Audio-7B-Instruct",
@@ -294,7 +294,7 @@ class TestAudioInitTemplate:
         """soup init --template audio should write a file with audio modality."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -313,8 +313,8 @@ class TestAudioInitTemplate:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.config.loader import load_config
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.config.loader import load_config
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -334,7 +334,7 @@ class TestAudioConfigLoaderRoundTrip:
 
     def test_audio_template_round_trip(self):
         """TEMPLATES['audio'] should parse via load_config_from_string."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(TEMPLATES["audio"])
         assert cfg.modality == "audio"
@@ -342,7 +342,7 @@ class TestAudioConfigLoaderRoundTrip:
 
     def test_audio_custom_yaml_round_trip(self):
         """Custom audio YAML string should round-trip correctly."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: Qwen/Qwen2-Audio-7B-Instruct

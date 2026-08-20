@@ -79,7 +79,7 @@ Fine-tune on M1-M4 Macs via Apple's [MLX](https://github.com/ml-explore/mlx) fra
 
 ```bash
 # Install MLX support
-pip install "soup-cli[mlx]"
+pip install "ai-forge[mlx]"
 ```
 
 For SFT with local JSONL, JSON, or CSV data, `[mlx]` is a standalone install:
@@ -91,7 +91,7 @@ file path below does not.
 `detect_device()` and `get_gpu_info()` recognise Apple Silicon when
 `backend: mlx` is set, preserving `training.quantization: 4bit` for
 `mlx-community` pre-quantized checkpoints instead of silently downgrading to
-`none` ([#423](https://github.com/MakazhanAlpamys/Soup/issues/423)). The
+`none` ([#423](https://github.com/mohdhasnain-pixel/ai-forge/issues/423)). The
 CUDA-shaped analytical VRAM preflight is skipped on the MLX path because Apple
 unified memory is managed by Metal, not a fixed CUDA VRAM pool.
 
@@ -121,7 +121,7 @@ Use the [Unsloth](https://github.com/unslothai/unsloth) backend for significantl
 
 ```bash
 # Install unsloth support
-pip install "soup-cli[fast]"
+pip install "ai-forge[fast]"
 ```
 
 Then add one line to your config:
@@ -156,7 +156,7 @@ app from your `soup.yaml` for serverless, per-second-billed GPU training. The co
 base64-embedded as **data** — no code interpolation, no secrets in the generated stub.
 
 ```bash
-pip install "soup-cli[modal]"   # only needed for live submit
+pip install "ai-forge[modal]"   # only needed for live submit
 
 # Plan-only (default): write the stub + print the `modal run` command.
 soup train --config soup.yaml --cloud modal --gpu a100
@@ -167,7 +167,7 @@ soup train --config soup.yaml --cloud modal --gpu a100 --cloud-submit
 ```
 
 `--gpu` accepts: `t4` / `l4` / `a10g` / `a100` / `a100-80gb` / `l40s` / `h100`. The rendered
-`soup_modal_app.py` builds an image with `soup-cli[train]` pinned to your running version, writes
+`soup_modal_app.py` builds an image with `ai-forge[train]` pinned to your running version, writes
 the embedded config inside the container, and runs `soup train` on the chosen GPU.
 
 
@@ -540,7 +540,7 @@ payload schema only so you can audit it before opting in.
 CUDA memory snapshots, anomaly tracing, and an NCCL bandwidth reference table:
 
 ```python
-from soup_cli.utils.profiling_v0_43 import (
+from ai_forge_cli.utils.profiling_v0_43 import (
     memory_snapshot_context, detect_anomaly_context, nccl_bandwidth_check,
 )
 
@@ -565,7 +565,7 @@ result = nccl_bandwidth_check(
 One-shot writer for a sane debugger config:
 
 ```python
-from soup_cli.utils.vscode_setup import write_vscode_launch
+from ai_forge_cli.utils.vscode_setup import write_vscode_launch
 write_vscode_launch(config_path="soup.yaml")
 # Writes ./.vscode/launch.json with `soup train` + pytest entries.
 ```
@@ -598,7 +598,7 @@ Full-screen Textual dashboard. Two-pane: run list (left) + selected-run detail
 (right). `r` refreshes, `q` quits.
 
 ```bash
-pip install "soup-cli[tui]"
+pip install "ai-forge[tui]"
 soup tui --refresh 1.0 --limit 50
 ```
 
@@ -677,7 +677,7 @@ Path containment via `is_under_cwd`; `os.lstat + S_ISLNK` rejection at the trigg
 ## Onboarding Wizard Helper
 
 ```python
-from soup_cli.utils.onboarding import render_onboarding_yaml
+from ai_forge_cli.utils.onboarding import render_onboarding_yaml
 
 text = render_onboarding_yaml({
     "base": "meta-llama/Llama-3.2-1B",
@@ -726,7 +726,7 @@ training:
 Programmatic API:
 
 ```python
-from soup_cli.utils.hubs import download_repo, upload_repo
+from ai_forge_cli.utils.hubs import download_repo, upload_repo
 
 local_path = download_repo("modelscope", "baichuan-inc/Baichuan2-7B", local_dir="./snap")
 upload_repo("modelers", "my-org/my-model", folder_path="./output", commit_message="Soup v0.53.8")
@@ -748,11 +748,11 @@ soup train --tracker trackio
 If the package is not installed, Soup now surfaces a friendly advisory before training starts instead of a mid-run ImportError:
 
 ```
---tracker mlflow requires the 'mlflow' package. Install with: pip install soup-cli[trackers] (or pip install mlflow)
+--tracker mlflow requires the 'mlflow' package. Install with: pip install ai-forge[trackers] (or pip install mlflow)
 ```
 
 ```bash
-pip install soup-cli[trackers]   # mlflow + swanlab + trackio
+pip install ai-forge[trackers]   # mlflow + swanlab + trackio
 ```
 
 
@@ -763,10 +763,10 @@ Soup contains opt-in, hardware-info-only telemetry primitives in `utils/trackers
 
 ## Plugin System
 
-Drop a Python module under `src/soup_cli/plugins/` (or any package importable by Soup) and register at import time:
+Drop a Python module under `src/ai_forge_cli/plugins/` (or any package importable by Soup) and register at import time:
 
 ```python
-from soup_cli.plugins import register_plugin
+from ai_forge_cli.plugins import register_plugin
 
 class MyPlugin:
     def pre_train(self, ctx):
@@ -796,7 +796,7 @@ Plugin names are kebab-case (`^[a-z0-9][a-z0-9-]{0,39}$`); versions are semver-i
 ## External Integrations Catalog
 
 ```python
-from soup_cli.utils.integrations import list_integrations, get_integration
+from ai_forge_cli.utils.integrations import list_integrations, get_integration
 
 list_integrations()                       # 15 entries
 get_integration("lm-studio").target_artifacts   # ("gguf",)
@@ -808,7 +808,7 @@ get_integration("lm-studio").target_artifacts   # ("gguf",)
 ## Advanced Trainer Plugins
 
 ```python
-from soup_cli.utils.trainer_plugins import validate_trainer_plugin_list
+from ai_forge_cli.utils.trainer_plugins import validate_trainer_plugin_list
 
 validate_trainer_plugin_list(["grokfast", "spectrum"])
 # returns ("grokfast", "spectrum") — canonical lowercase, dedup, ≤ 8 entries
@@ -823,8 +823,8 @@ Register a plugin once via the v0.45.0 registry API; v0.53.6 wires it into every
 transformer-backend trainer as a real HF `TrainerCallback`:
 
 ```python
-# src/soup_cli/plugins/my_plugin.py — auto-discovered at `soup` startup
-from soup_cli.plugins import register_plugin
+# src/ai_forge_cli/plugins/my_plugin.py — auto-discovered at `soup` startup
+from ai_forge_cli.plugins import register_plugin
 
 class MyPlugin:
     def pre_train(self, ctx):
@@ -883,7 +883,7 @@ soup env check
 Given (params, seq_len, batch_size, optimizer, quant, peft, gradient_checkpointing), the analytical predictor returns a 5-bucket peak-VRAM breakdown (weights / optimizer / gradients / activations / overhead) and an OK/OOM verdict with a 10% safety margin.
 
 ```python
-from soup_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
+from ai_forge_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
 
 inp = HardwareFitInput(
     params_b=7.0, seq_len=2048, batch_size=4,

@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from soup_cli.monitoring.callback import SoupTrainerCallback
+from ai_forge_cli.monitoring.callback import SoupTrainerCallback
 
 
 def _make_state(global_step=10, max_steps=100, epoch=1.0):
@@ -53,7 +53,7 @@ def test_on_log_updates_display():
     }
     state = _make_state(global_step=42, epoch=1.5)
 
-    with patch("soup_cli.monitoring.callback.torch", create=True):
+    with patch("ai_forge_cli.monitoring.callback.torch", create=True):
         callback.on_log(_make_args(), state, MagicMock(), logs=logs)
 
     display.update.assert_called_once()

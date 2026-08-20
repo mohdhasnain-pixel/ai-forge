@@ -15,7 +15,7 @@ from typer.testing import CliRunner
 
 class TestPublicSurface:
     def test_module_importable(self) -> None:
-        from soup_cli.utils import apple_adapter
+        from ai_forge_cli.utils import apple_adapter
 
         assert hasattr(apple_adapter, "SUPPORTED_ADAPTER_DIRECTIONS")
         assert hasattr(apple_adapter, "validate_direction")
@@ -27,7 +27,7 @@ class TestPublicSurface:
 
 class TestAllowlist:
     def test_frozenset(self) -> None:
-        from soup_cli.utils.apple_adapter import SUPPORTED_ADAPTER_DIRECTIONS
+        from ai_forge_cli.utils.apple_adapter import SUPPORTED_ADAPTER_DIRECTIONS
 
         assert isinstance(SUPPORTED_ADAPTER_DIRECTIONS, frozenset)
         assert "hf-to-mlx" in SUPPORTED_ADAPTER_DIRECTIONS
@@ -36,7 +36,7 @@ class TestAllowlist:
         assert "mlx-to-apple" in SUPPORTED_ADAPTER_DIRECTIONS
 
     def test_immutable(self) -> None:
-        from soup_cli.utils.apple_adapter import SUPPORTED_ADAPTER_DIRECTIONS
+        from ai_forge_cli.utils.apple_adapter import SUPPORTED_ADAPTER_DIRECTIONS
 
         with pytest.raises(AttributeError):
             SUPPORTED_ADAPTER_DIRECTIONS.add("x")  # type: ignore[attr-defined]
@@ -44,35 +44,35 @@ class TestAllowlist:
 
 class TestValidateDirection:
     def test_happy(self) -> None:
-        from soup_cli.utils.apple_adapter import validate_direction
+        from ai_forge_cli.utils.apple_adapter import validate_direction
 
         assert validate_direction("hf-to-mlx") == "hf-to-mlx"
 
     def test_case_insensitive(self) -> None:
-        from soup_cli.utils.apple_adapter import validate_direction
+        from ai_forge_cli.utils.apple_adapter import validate_direction
 
         assert validate_direction("HF-TO-MLX") == "hf-to-mlx"
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.apple_adapter import validate_direction
+        from ai_forge_cli.utils.apple_adapter import validate_direction
 
         with pytest.raises(TypeError):
             validate_direction(True)  # type: ignore[arg-type]
 
     def test_unknown_rejected(self) -> None:
-        from soup_cli.utils.apple_adapter import validate_direction
+        from ai_forge_cli.utils.apple_adapter import validate_direction
 
         with pytest.raises(ValueError, match="unknown"):
             validate_direction("evil")
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.apple_adapter import validate_direction
+        from ai_forge_cli.utils.apple_adapter import validate_direction
 
         with pytest.raises(ValueError):
             validate_direction("hf-to-mlx\x00")
 
     def test_empty_rejected(self) -> None:
-        from soup_cli.utils.apple_adapter import validate_direction
+        from ai_forge_cli.utils.apple_adapter import validate_direction
 
         with pytest.raises(ValueError):
             validate_direction("")
@@ -80,7 +80,7 @@ class TestValidateDirection:
 
 class TestValidateSourceAdapter:
     def test_happy(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.apple_adapter import validate_source_adapter
+        from ai_forge_cli.utils.apple_adapter import validate_source_adapter
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "adapter"
@@ -91,7 +91,7 @@ class TestValidateSourceAdapter:
     def test_outside_cwd_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.apple_adapter import validate_source_adapter
+        from ai_forge_cli.utils.apple_adapter import validate_source_adapter
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -106,7 +106,7 @@ class TestValidateSourceAdapter:
     def test_non_directory_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.apple_adapter import validate_source_adapter
+        from ai_forge_cli.utils.apple_adapter import validate_source_adapter
 
         monkeypatch.chdir(tmp_path)
         f = tmp_path / "not_a_dir.json"
@@ -115,7 +115,7 @@ class TestValidateSourceAdapter:
             validate_source_adapter(str(f))
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.apple_adapter import validate_source_adapter
+        from ai_forge_cli.utils.apple_adapter import validate_source_adapter
 
         with pytest.raises(ValueError):
             validate_source_adapter("source\x00")
@@ -125,7 +125,7 @@ class TestAppleAdapterPlan:
     def test_frozen(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.apple_adapter import AppleAdapterPlan
+        from ai_forge_cli.utils.apple_adapter import AppleAdapterPlan
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "adapter"
@@ -144,7 +144,7 @@ class TestAppleAdapterPlan:
     def test_invalid_direction(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.apple_adapter import AppleAdapterPlan
+        from ai_forge_cli.utils.apple_adapter import AppleAdapterPlan
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "adapter"
@@ -162,7 +162,7 @@ class TestAppleAdapterPlan:
     def test_sign_must_be_bool(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.apple_adapter import AppleAdapterPlan
+        from ai_forge_cli.utils.apple_adapter import AppleAdapterPlan
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "adapter"
@@ -185,7 +185,7 @@ class TestConvertLive:
         """v0.71.21 #228 lifted the stub — live conversion now runs; a
         source dir without weights surfaces a friendly FileNotFoundError
         (full happy-path round-trip coverage lives in test_v07121.py)."""
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -204,7 +204,7 @@ class TestConvertLive:
             convert_apple_adapter(plan)
 
     def test_non_plan_rejected(self) -> None:
-        from soup_cli.utils.apple_adapter import convert_apple_adapter
+        from ai_forge_cli.utils.apple_adapter import convert_apple_adapter
 
         with pytest.raises(TypeError):
             convert_apple_adapter({})  # type: ignore[arg-type]
@@ -212,7 +212,7 @@ class TestConvertLive:
 
 class TestCli:
     def test_help(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["apple-adapter", "--help"])
@@ -221,7 +221,7 @@ class TestCli:
     def test_plan_only(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "adapter"
@@ -245,7 +245,7 @@ class TestCli:
     def test_unknown_direction_exits_2(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "adapter"
@@ -271,7 +271,7 @@ class TestCli:
     ) -> None:
         """v0.71.21 #228 — the runner is live; a weight-less source dir is
         a validation failure (exit 2), not the old deferred exit 3."""
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "adapter"
@@ -296,7 +296,7 @@ class TestSourceWiring:
     def test_no_top_level_heavy_imports(self) -> None:
         path = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "utils"
             / "apple_adapter.py"
         )
@@ -310,7 +310,7 @@ class TestSourceWiring:
             assert token not in text
 
     def test_cli_registered(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         names = [c.name for c in app.registered_commands]
         assert "apple-adapter" in names

@@ -19,7 +19,7 @@ DON'T-SHIP on a safe adapter.
 
 import pytest
 
-from soup_cli.utils.diagnose.refusal import looks_like_refusal
+from ai_forge_cli.utils.diagnose.refusal import looks_like_refusal
 
 # U+2019 RIGHT SINGLE QUOTATION MARK — what the model types
 CURLY = "\u2019"
@@ -56,7 +56,7 @@ class TestTheRateReflectsIt:
     def test_refusal_rate_counts_typographic_refusals(self):
         """The suite-level path shares `_apply_pattern`, so it must move too —
         this is the number that produced 0.300 against a true 1.000."""
-        from soup_cli.utils.diagnose.refusal import _REFUSAL_PATTERNS, _refusal_rate
+        from ai_forge_cli.utils.diagnose.refusal import _REFUSAL_PATTERNS, _refusal_rate
 
         prompts = ["p1", "p2", "p3", "p4"]
         replies = {

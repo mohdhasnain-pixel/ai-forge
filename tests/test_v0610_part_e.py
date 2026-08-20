@@ -19,12 +19,12 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 
 class TestDataclasses:
     def test_imports(self):
-        from soup_cli.utils.edit_diff import (
+        from ai_forge_cli.utils.edit_diff import (
             DiffReport,
             FactChange,
             build_diff_report,
@@ -40,7 +40,7 @@ class TestDataclasses:
         assert dataclasses.is_dataclass(FactChange)
 
     def test_fact_change_frozen(self):
-        from soup_cli.utils.edit_diff import FactChange
+        from ai_forge_cli.utils.edit_diff import FactChange
 
         c = FactChange(
             prompt="p", before="b", after="a", changed=True,
@@ -49,7 +49,7 @@ class TestDataclasses:
             c.prompt = "x"  # type: ignore
 
     def test_diff_report_frozen(self):
-        from soup_cli.utils.edit_diff import DiffReport, FactChange
+        from ai_forge_cli.utils.edit_diff import DiffReport, FactChange
 
         r = DiffReport(
             before_run_id="b",
@@ -62,7 +62,7 @@ class TestDataclasses:
             r.total_probes = 999  # type: ignore
 
     def test_diff_report_validates_changes_tuple(self):
-        from soup_cli.utils.edit_diff import DiffReport
+        from ai_forge_cli.utils.edit_diff import DiffReport
 
         with pytest.raises(TypeError):
             DiffReport(
@@ -74,7 +74,7 @@ class TestDataclasses:
             )
 
     def test_diff_report_to_dict(self):
-        from soup_cli.utils.edit_diff import DiffReport, FactChange
+        from ai_forge_cli.utils.edit_diff import DiffReport, FactChange
 
         r = DiffReport(
             before_run_id="b",
@@ -94,7 +94,7 @@ class TestDataclasses:
         assert json.loads(json.dumps(d)) == d
 
     def test_diff_report_total_probes_bool_rejected(self):
-        from soup_cli.utils.edit_diff import DiffReport
+        from ai_forge_cli.utils.edit_diff import DiffReport
 
         with pytest.raises(TypeError):
             DiffReport(
@@ -111,7 +111,7 @@ class TestLoadProbes:
         path.write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
 
     def test_happy_path(self, tmp_path):
-        from soup_cli.utils.edit_diff import load_probes
+        from ai_forge_cli.utils.edit_diff import load_probes
 
         p = tmp_path / "probes.jsonl"
         self._write_jsonl(p, [{"prompt": "Who is X?"}, {"prompt": "Who is Y?"}])
@@ -126,7 +126,7 @@ class TestLoadProbes:
         assert probes == ("Who is X?", "Who is Y?")
 
     def test_missing_file(self, tmp_path):
-        from soup_cli.utils.edit_diff import load_probes
+        from ai_forge_cli.utils.edit_diff import load_probes
 
         old = os.getcwd()
         os.chdir(tmp_path)
@@ -137,7 +137,7 @@ class TestLoadProbes:
             os.chdir(old)
 
     def test_skips_malformed_rows(self, tmp_path):
-        from soup_cli.utils.edit_diff import load_probes
+        from ai_forge_cli.utils.edit_diff import load_probes
 
         p = tmp_path / "probes.jsonl"
         p.write_text(
@@ -157,7 +157,7 @@ class TestLoadProbes:
         assert probes == ("good", "another good")
 
     def test_outside_cwd_rejected(self, tmp_path):
-        from soup_cli.utils.edit_diff import load_probes
+        from ai_forge_cli.utils.edit_diff import load_probes
 
         out = tmp_path / "outside.jsonl"
         out.write_text('{"prompt": "p"}', encoding="utf-8")
@@ -174,20 +174,20 @@ class TestLoadProbes:
             os.chdir(old)
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.edit_diff import load_probes
+        from ai_forge_cli.utils.edit_diff import load_probes
 
         with pytest.raises(ValueError):
             load_probes("probe\x00.jsonl")
 
     def test_empty_path_rejected(self):
-        from soup_cli.utils.edit_diff import load_probes
+        from ai_forge_cli.utils.edit_diff import load_probes
 
         with pytest.raises(ValueError):
             load_probes("")
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX-only symlink test")
     def test_symlink_rejected(self, tmp_path):
-        from soup_cli.utils.edit_diff import load_probes
+        from ai_forge_cli.utils.edit_diff import load_probes
 
         real = tmp_path / "real.jsonl"
         real.write_text('{"prompt": "p"}', encoding="utf-8")
@@ -205,7 +205,7 @@ class TestLoadProbes:
 
 class TestBuildDiffReport:
     def test_happy_path(self):
-        from soup_cli.utils.edit_diff import build_diff_report
+        from ai_forge_cli.utils.edit_diff import build_diff_report
 
         report = build_diff_report(
             before_run_id="before-run",
@@ -217,7 +217,7 @@ class TestBuildDiffReport:
         assert report.total_probes == 0
 
     def test_same_run_id_rejected(self):
-        from soup_cli.utils.edit_diff import build_diff_report
+        from ai_forge_cli.utils.edit_diff import build_diff_report
 
         with pytest.raises(ValueError, match="differ"):
             build_diff_report(
@@ -226,7 +226,7 @@ class TestBuildDiffReport:
             )
 
     def test_bool_run_id_rejected(self):
-        from soup_cli.utils.edit_diff import build_diff_report
+        from ai_forge_cli.utils.edit_diff import build_diff_report
 
         with pytest.raises(TypeError):
             build_diff_report(
@@ -235,7 +235,7 @@ class TestBuildDiffReport:
             )
 
     def test_top_k_bool_rejected(self):
-        from soup_cli.utils.edit_diff import build_diff_report
+        from ai_forge_cli.utils.edit_diff import build_diff_report
 
         with pytest.raises(TypeError):
             build_diff_report(
@@ -245,7 +245,7 @@ class TestBuildDiffReport:
             )
 
     def test_top_k_out_of_range(self):
-        from soup_cli.utils.edit_diff import build_diff_report
+        from ai_forge_cli.utils.edit_diff import build_diff_report
 
         with pytest.raises(ValueError):
             build_diff_report(
@@ -257,7 +257,7 @@ class TestBuildDiffReport:
             )
 
     def test_with_probe_file(self, tmp_path):
-        from soup_cli.utils.edit_diff import build_diff_report
+        from ai_forge_cli.utils.edit_diff import build_diff_report
 
         p = tmp_path / "probes.jsonl"
         p.write_text(
@@ -283,7 +283,7 @@ class TestRenderDiffTable:
     def test_renders(self, capsys):
         from rich.console import Console
 
-        from soup_cli.utils.edit_diff import (
+        from ai_forge_cli.utils.edit_diff import (
             DiffReport,
             FactChange,
             render_diff_table,
@@ -305,7 +305,7 @@ class TestRenderDiffTable:
     def test_non_report_rejected(self):
         from rich.console import Console
 
-        from soup_cli.utils.edit_diff import render_diff_table
+        from ai_forge_cli.utils.edit_diff import render_diff_table
 
         with pytest.raises(TypeError):
             render_diff_table("not a report", Console())  # type: ignore
@@ -313,7 +313,7 @@ class TestRenderDiffTable:
 
 class TestWriteDiffReport:
     def test_happy_path(self, tmp_path):
-        from soup_cli.utils.edit_diff import (
+        from ai_forge_cli.utils.edit_diff import (
             DiffReport,
             write_diff_report,
         )
@@ -337,7 +337,7 @@ class TestWriteDiffReport:
             os.chdir(old)
 
     def test_outside_cwd_rejected(self, tmp_path):
-        from soup_cli.utils.edit_diff import (
+        from ai_forge_cli.utils.edit_diff import (
             DiffReport,
             write_diff_report,
         )
@@ -361,7 +361,7 @@ class TestWriteDiffReport:
             os.chdir(old)
 
     def test_non_report_rejected(self, tmp_path):
-        from soup_cli.utils.edit_diff import write_diff_report
+        from ai_forge_cli.utils.edit_diff import write_diff_report
 
         with pytest.raises(TypeError):
             write_diff_report("not a report", "out.json")  # type: ignore

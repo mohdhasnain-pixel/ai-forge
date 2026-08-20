@@ -19,7 +19,7 @@ import pytest
 
 class TestLicenseMatrix:
     def test_imports(self):
-        from soup_cli.utils.license_matrix import (
+        from ai_forge_cli.utils.license_matrix import (
             KNOWN_LICENSES,
             LICENSE_MATRIX,
             LicenseConflictReport,
@@ -33,7 +33,7 @@ class TestLicenseMatrix:
         assert dataclasses.is_dataclass(LicenseConflictReport)
 
     def test_known_licenses_includes_common(self):
-        from soup_cli.utils.license_matrix import KNOWN_LICENSES
+        from ai_forge_cli.utils.license_matrix import KNOWN_LICENSES
 
         for lic in (
             "apache-2.0", "mit", "bsd-3-clause",
@@ -47,26 +47,26 @@ class TestLicenseMatrix:
             assert lic in KNOWN_LICENSES, f"missing license: {lic}"
 
     def test_matrix_immutable(self):
-        from soup_cli.utils.license_matrix import LICENSE_MATRIX
+        from ai_forge_cli.utils.license_matrix import LICENSE_MATRIX
 
         with pytest.raises(TypeError):
             LICENSE_MATRIX["evil"] = ("anything",)  # type: ignore[index]
 
     def test_normalise_license_id(self):
-        from soup_cli.utils.license_matrix import normalise_license_id
+        from ai_forge_cli.utils.license_matrix import normalise_license_id
 
         assert normalise_license_id("Apache-2.0") == "apache-2.0"
         assert normalise_license_id("MIT") == "mit"
         assert normalise_license_id("  llama-3  ") == "llama-3"
 
     def test_normalise_rejects_null_byte(self):
-        from soup_cli.utils.license_matrix import normalise_license_id
+        from ai_forge_cli.utils.license_matrix import normalise_license_id
 
         with pytest.raises(ValueError):
             normalise_license_id("apache\x00")
 
     def test_normalise_rejects_bool(self):
-        from soup_cli.utils.license_matrix import normalise_license_id
+        from ai_forge_cli.utils.license_matrix import normalise_license_id
 
         with pytest.raises(TypeError):
             normalise_license_id(True)
@@ -74,20 +74,20 @@ class TestLicenseMatrix:
 
 class TestCheckCompat:
     def test_clean_apache_only_passes(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         report = check_license_compat(["apache-2.0", "apache-2.0"])
         assert report.ok is True
         assert report.conflict_pair is None
 
     def test_apache_with_mit_passes(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         report = check_license_compat(["apache-2.0", "mit"])
         assert report.ok is True
 
     def test_apache_with_gpl_conflict(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         # Locked verdict: GPL-3.0 (strong copyleft) alongside Apache-2.0
         # (permissive) is a refused conflict in the v0.60.0 matrix. A
@@ -99,7 +99,7 @@ class TestCheckCompat:
         assert "copyleft" in report.reason.lower()
 
     def test_nc_license_with_apache_conflict(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         # NC (non-commercial) cannot be combined with any permissive license
         # that doesn't carry the same restriction.
@@ -108,32 +108,32 @@ class TestCheckCompat:
         assert "nc" in report.reason.lower() or "non-commercial" in report.reason.lower()
 
     def test_unknown_license_treated_as_conflict_or_warn(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         report = check_license_compat(["apache-2.0", "weird-unknown-license-xyz"])
         assert report.ok is False
         assert "unknown" in report.reason.lower()
 
     def test_empty_list_rejected(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         with pytest.raises(ValueError):
             check_license_compat([])
 
     def test_single_license_passes(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         report = check_license_compat(["apache-2.0"])
         assert report.ok is True
 
     def test_rejects_non_list(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         with pytest.raises(TypeError):
             check_license_compat("apache-2.0")  # type: ignore[arg-type]
 
     def test_llama_with_apache_conflict(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         # Locked verdict: Llama community license adds acceptable-use
         # restrictions that Apache does not satisfy. v0.60.0 design is
@@ -144,13 +144,13 @@ class TestCheckCompat:
         assert "restricted" in report.reason.lower() or "acceptable-use" in report.reason.lower()
 
     def test_case_insensitive(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         report = check_license_compat(["Apache-2.0", "MIT"])
         assert report.ok is True
 
     def test_report_frozen(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         report = check_license_compat(["apache-2.0"])
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -159,7 +159,7 @@ class TestCheckCompat:
 
 class TestOverride:
     def test_override_reason_required(self):
-        from soup_cli.utils.license_matrix import (
+        from ai_forge_cli.utils.license_matrix import (
             validate_license_override_reason,
         )
         # Empty reason rejected.
@@ -169,7 +169,7 @@ class TestOverride:
             validate_license_override_reason(None)  # type: ignore[arg-type]
 
     def test_override_reason_min_length(self):
-        from soup_cli.utils.license_matrix import (
+        from ai_forge_cli.utils.license_matrix import (
             validate_license_override_reason,
         )
         # A reason of 1-2 chars is too short — defends against `--license-override y`.
@@ -177,7 +177,7 @@ class TestOverride:
             validate_license_override_reason("ok")
 
     def test_override_reason_oversize_rejected(self):
-        from soup_cli.utils.license_matrix import (
+        from ai_forge_cli.utils.license_matrix import (
             validate_license_override_reason,
         )
         # 4kb cap to prevent log bloat.
@@ -186,7 +186,7 @@ class TestOverride:
 
     def test_override_reason_exact_boundary(self):
         """Exact-boundary test at 4096 / 4097 chars."""
-        from soup_cli.utils.license_matrix import (
+        from ai_forge_cli.utils.license_matrix import (
             validate_license_override_reason,
         )
         # Accepted: exactly 4096 chars.
@@ -198,7 +198,7 @@ class TestOverride:
 
     def test_override_reason_min_boundary(self):
         """Exact-boundary test at 7 / 8 chars (min cap)."""
-        from soup_cli.utils.license_matrix import (
+        from ai_forge_cli.utils.license_matrix import (
             validate_license_override_reason,
         )
         # Rejected: 7 chars.
@@ -209,14 +209,14 @@ class TestOverride:
         assert result == "x" * 8
 
     def test_override_reason_null_byte(self):
-        from soup_cli.utils.license_matrix import (
+        from ai_forge_cli.utils.license_matrix import (
             validate_license_override_reason,
         )
         with pytest.raises(ValueError):
             validate_license_override_reason("legal cleared\x00")
 
     def test_override_reason_happy(self):
-        from soup_cli.utils.license_matrix import (
+        from ai_forge_cli.utils.license_matrix import (
             validate_license_override_reason,
         )
         result = validate_license_override_reason(
@@ -239,7 +239,7 @@ class TestMergeIntegration:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
         runner = CliRunner()
         result = runner.invoke(app, ["adapters", "merge", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -255,7 +255,7 @@ class TestMergeIntegration:
         """Two adapters with incompatible licenses + no override → exit 3."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
         monkeypatch.chdir(tmp_path)
         # Create two minimal adapter dirs — the license gate fires before
         # the actual merge math, so we don't need real safetensors.
@@ -285,7 +285,7 @@ class TestMergeIntegration:
         """
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
         monkeypatch.chdir(tmp_path)
         # v0.71.2 #190 — the override path now writes an audit record; keep it
         # out of the real ~/.soup during tests.
@@ -317,7 +317,7 @@ class TestMergeIntegration:
     def test_merge_override_reason_too_short_rejected(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
         monkeypatch.chdir(tmp_path)
         for name in ("a", "b"):
             d = tmp_path / name
@@ -340,7 +340,7 @@ class TestMergeIntegration:
     def test_merge_license_count_mismatch_rejected(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
         monkeypatch.chdir(tmp_path)
         for name in ("a", "b"):
             d = tmp_path / name
@@ -362,14 +362,14 @@ class TestMergeIntegration:
 
 class TestSourceWiring:
     def test_module_imports(self):
-        from soup_cli.utils import license_matrix as m
+        from ai_forge_cli.utils import license_matrix as m
 
         assert hasattr(m, "check_license_compat")
         assert hasattr(m, "KNOWN_LICENSES")
         assert hasattr(m, "LICENSE_MATRIX")
 
     def test_matrix_has_at_least_20_entries(self):
-        from soup_cli.utils.license_matrix import KNOWN_LICENSES
+        from ai_forge_cli.utils.license_matrix import KNOWN_LICENSES
 
         # Plan says top-30 licenses — at least 20 must be cataloged.
         assert len(KNOWN_LICENSES) >= 20

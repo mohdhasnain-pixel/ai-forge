@@ -3,25 +3,25 @@ from __future__ import annotations
 
 import pytest
 
-from soup_cli.eval.arena import (
+from ai_forge_cli.eval.arena import (
     DEFAULT_BASE_RATING,
     Tournament,
     expected_score,
     update_elo,
 )
-from soup_cli.eval.benchmarks_v0_43 import (
+from ai_forge_cli.eval.benchmarks_v0_43 import (
     NEW_BENCHMARKS_V0_43,
     benchmark_metadata,
     is_v0_43_benchmark,
     lm_eval_task_for,
 )
-from soup_cli.eval.calibrate import (
+from ai_forge_cli.eval.calibrate import (
     CalibrationReport,
     classify_kl_delta,
     kl_divergence,
     run_calibration,
 )
-from soup_cli.utils.nlg_metrics import (
+from ai_forge_cli.utils.nlg_metrics import (
     NLG_METRICS,
     bleu_score,
     compute_nlg_metric,
@@ -417,7 +417,7 @@ class TestTournament:
             t.register("foo]bar")
 
     def test_model_cap_exceeded(self):
-        from soup_cli.eval.arena import _MAX_MODELS
+        from ai_forge_cli.eval.arena import _MAX_MODELS
         t = Tournament()
         for i in range(_MAX_MODELS):
             t.register(f"model_{i}")

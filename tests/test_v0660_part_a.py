@@ -40,7 +40,7 @@ def _chdir(tmp_path, monkeypatch):
 
 def test_module_imports():
     """Module exists and exposes the documented surface."""
-    from soup_cli.utils import sae_diff
+    from ai_forge_cli.utils import sae_diff
 
     for name in (
         "SaeFeatureChange",
@@ -58,7 +58,7 @@ def test_module_imports():
 
 
 def test_hf_hub_allowlist_is_frozenset():
-    from soup_cli.utils.sae_diff import HF_HUB_ALLOWLIST
+    from ai_forge_cli.utils.sae_diff import HF_HUB_ALLOWLIST
 
     assert isinstance(HF_HUB_ALLOWLIST, frozenset)
     assert len(HF_HUB_ALLOWLIST) >= 1
@@ -78,14 +78,14 @@ def test_hf_hub_allowlist_is_frozenset():
 
 
 def test_validate_sae_repo_happy():
-    from soup_cli.utils.sae_diff import HF_HUB_ALLOWLIST, validate_sae_repo
+    from ai_forge_cli.utils.sae_diff import HF_HUB_ALLOWLIST, validate_sae_repo
 
     name = next(iter(HF_HUB_ALLOWLIST))
     assert validate_sae_repo(name) == name
 
 
 def test_validate_sae_repo_case_insensitive():
-    from soup_cli.utils.sae_diff import HF_HUB_ALLOWLIST, validate_sae_repo
+    from ai_forge_cli.utils.sae_diff import HF_HUB_ALLOWLIST, validate_sae_repo
 
     name = next(iter(HF_HUB_ALLOWLIST))
     upper = name.upper()
@@ -94,35 +94,35 @@ def test_validate_sae_repo_case_insensitive():
 
 
 def test_validate_sae_repo_rejects_unknown():
-    from soup_cli.utils.sae_diff import validate_sae_repo
+    from ai_forge_cli.utils.sae_diff import validate_sae_repo
 
     with pytest.raises(ValueError, match="not in HF_HUB_ALLOWLIST"):
         validate_sae_repo("malicious/sae-x")
 
 
 def test_validate_sae_repo_rejects_bool():
-    from soup_cli.utils.sae_diff import validate_sae_repo
+    from ai_forge_cli.utils.sae_diff import validate_sae_repo
 
     with pytest.raises(TypeError):
         validate_sae_repo(True)
 
 
 def test_validate_sae_repo_rejects_non_string():
-    from soup_cli.utils.sae_diff import validate_sae_repo
+    from ai_forge_cli.utils.sae_diff import validate_sae_repo
 
     with pytest.raises(TypeError):
         validate_sae_repo(42)
 
 
 def test_validate_sae_repo_rejects_empty():
-    from soup_cli.utils.sae_diff import validate_sae_repo
+    from ai_forge_cli.utils.sae_diff import validate_sae_repo
 
     with pytest.raises(ValueError):
         validate_sae_repo("")
 
 
 def test_validate_sae_repo_rejects_null_byte():
-    from soup_cli.utils.sae_diff import HF_HUB_ALLOWLIST, validate_sae_repo
+    from ai_forge_cli.utils.sae_diff import HF_HUB_ALLOWLIST, validate_sae_repo
 
     name = next(iter(HF_HUB_ALLOWLIST))
     with pytest.raises(ValueError, match="null"):
@@ -130,7 +130,7 @@ def test_validate_sae_repo_rejects_null_byte():
 
 
 def test_validate_sae_repo_rejects_oversize():
-    from soup_cli.utils.sae_diff import validate_sae_repo
+    from ai_forge_cli.utils.sae_diff import validate_sae_repo
 
     with pytest.raises(ValueError):
         validate_sae_repo("a" * 1000)
@@ -142,7 +142,7 @@ def test_validate_sae_repo_rejects_oversize():
 
 
 def test_encode_activations_returns_correct_shape():
-    from soup_cli.utils.sae_diff import encode_activations
+    from ai_forge_cli.utils.sae_diff import encode_activations
 
     # 4 tokens × 8-dim activation -> 4 × 16 (16 SAE features)
     activations = np.random.RandomState(0).randn(4, 8).astype(np.float32)
@@ -152,7 +152,7 @@ def test_encode_activations_returns_correct_shape():
 
 
 def test_encode_activations_is_relu():
-    from soup_cli.utils.sae_diff import encode_activations
+    from ai_forge_cli.utils.sae_diff import encode_activations
 
     # Crafted: negative pre-activation -> zero output
     activations = np.array([[-1.0, -1.0]], dtype=np.float32)
@@ -163,7 +163,7 @@ def test_encode_activations_is_relu():
 
 
 def test_encode_activations_with_bias():
-    from soup_cli.utils.sae_diff import encode_activations
+    from ai_forge_cli.utils.sae_diff import encode_activations
 
     activations = np.array([[1.0, 1.0]], dtype=np.float32)
     w_enc = np.array([[1.0], [1.0]], dtype=np.float32)  # 2 -> 1
@@ -174,7 +174,7 @@ def test_encode_activations_with_bias():
 
 
 def test_encode_activations_rejects_shape_mismatch():
-    from soup_cli.utils.sae_diff import encode_activations
+    from ai_forge_cli.utils.sae_diff import encode_activations
 
     activations = np.zeros((4, 8), dtype=np.float32)
     w_enc = np.zeros((10, 16), dtype=np.float32)  # 10 != 8
@@ -183,7 +183,7 @@ def test_encode_activations_rejects_shape_mismatch():
 
 
 def test_encode_activations_rejects_non_2d_activations():
-    from soup_cli.utils.sae_diff import encode_activations
+    from ai_forge_cli.utils.sae_diff import encode_activations
 
     activations = np.zeros((4,), dtype=np.float32)
     w_enc = np.zeros((4, 16), dtype=np.float32)
@@ -192,7 +192,7 @@ def test_encode_activations_rejects_non_2d_activations():
 
 
 def test_encode_activations_rejects_non_2d_w_enc():
-    from soup_cli.utils.sae_diff import encode_activations
+    from ai_forge_cli.utils.sae_diff import encode_activations
 
     activations = np.zeros((4, 8), dtype=np.float32)
     w_enc = np.zeros((8,), dtype=np.float32)
@@ -201,7 +201,7 @@ def test_encode_activations_rejects_non_2d_w_enc():
 
 
 def test_encode_activations_rejects_non_array():
-    from soup_cli.utils.sae_diff import encode_activations
+    from ai_forge_cli.utils.sae_diff import encode_activations
 
     with pytest.raises(TypeError):
         encode_activations("not an array", np.zeros((1, 1)))
@@ -213,7 +213,7 @@ def test_encode_activations_rejects_non_array():
 
 
 def test_compute_feature_diff_zero_when_identical():
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     feats = np.array([[1.0, 2.0, 3.0]], dtype=np.float32)
     report = compute_feature_diff(feats, feats, top_k=3)
@@ -223,7 +223,7 @@ def test_compute_feature_diff_zero_when_identical():
 
 
 def test_compute_feature_diff_finds_largest_change():
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     pre = np.array([[1.0, 1.0, 1.0]], dtype=np.float32)
     post = np.array([[1.0, 5.0, 1.0]], dtype=np.float32)
@@ -235,7 +235,7 @@ def test_compute_feature_diff_finds_largest_change():
 
 
 def test_compute_feature_diff_top_k_caps():
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     pre = np.zeros((1, 100), dtype=np.float32)
     post = np.arange(100, dtype=np.float32).reshape(1, 100)
@@ -247,7 +247,7 @@ def test_compute_feature_diff_top_k_caps():
 
 
 def test_compute_feature_diff_rejects_shape_mismatch():
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     pre = np.zeros((1, 5), dtype=np.float32)
     post = np.zeros((1, 7), dtype=np.float32)
@@ -256,7 +256,7 @@ def test_compute_feature_diff_rejects_shape_mismatch():
 
 
 def test_compute_feature_diff_rejects_bool_top_k():
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     pre = np.zeros((1, 5), dtype=np.float32)
     with pytest.raises(TypeError):
@@ -264,7 +264,7 @@ def test_compute_feature_diff_rejects_bool_top_k():
 
 
 def test_compute_feature_diff_rejects_zero_top_k():
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     pre = np.zeros((1, 5), dtype=np.float32)
     with pytest.raises(ValueError):
@@ -272,7 +272,7 @@ def test_compute_feature_diff_rejects_zero_top_k():
 
 
 def test_compute_feature_diff_rejects_oversize_top_k():
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     pre = np.zeros((1, 5), dtype=np.float32)
     with pytest.raises(ValueError):
@@ -280,7 +280,7 @@ def test_compute_feature_diff_rejects_oversize_top_k():
 
 
 def test_compute_feature_diff_top_k_larger_than_features_clamps():
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     pre = np.zeros((1, 3), dtype=np.float32)
     post = np.array([[1.0, 2.0, 3.0]], dtype=np.float32)
@@ -291,7 +291,7 @@ def test_compute_feature_diff_top_k_larger_than_features_clamps():
 
 def test_compute_feature_diff_mean_pooled_over_tokens():
     """Per-feature delta is mean over the token dim."""
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     # 3 tokens, 1 feature. Pre: [0, 0, 0]. Post: [1, 2, 3]. Mean delta = 2.
     pre = np.zeros((3, 1), dtype=np.float32)
@@ -301,7 +301,7 @@ def test_compute_feature_diff_mean_pooled_over_tokens():
 
 
 def test_feature_diff_report_frozen():
-    from soup_cli.utils.sae_diff import SaeFeatureDiffReport
+    from ai_forge_cli.utils.sae_diff import SaeFeatureDiffReport
 
     report = SaeFeatureDiffReport(
         num_features=10,
@@ -314,7 +314,7 @@ def test_feature_diff_report_frozen():
 
 
 def test_feature_change_frozen():
-    from soup_cli.utils.sae_diff import SaeFeatureChange
+    from ai_forge_cli.utils.sae_diff import SaeFeatureChange
 
     change = SaeFeatureChange(
         feature_id=0,
@@ -327,21 +327,21 @@ def test_feature_change_frozen():
 
 
 def test_feature_change_rejects_negative_feature_id():
-    from soup_cli.utils.sae_diff import SaeFeatureChange
+    from ai_forge_cli.utils.sae_diff import SaeFeatureChange
 
     with pytest.raises(ValueError):
         SaeFeatureChange(feature_id=-1, delta=0.0, pre_mean=0.0, post_mean=0.0)
 
 
 def test_feature_change_rejects_bool_feature_id():
-    from soup_cli.utils.sae_diff import SaeFeatureChange
+    from ai_forge_cli.utils.sae_diff import SaeFeatureChange
 
     with pytest.raises(TypeError):
         SaeFeatureChange(feature_id=True, delta=0.0, pre_mean=0.0, post_mean=0.0)
 
 
 def test_feature_change_rejects_non_finite_delta():
-    from soup_cli.utils.sae_diff import SaeFeatureChange
+    from ai_forge_cli.utils.sae_diff import SaeFeatureChange
 
     with pytest.raises(ValueError):
         SaeFeatureChange(
@@ -350,7 +350,7 @@ def test_feature_change_rejects_non_finite_delta():
 
 
 def test_feature_diff_report_l2_drift_computed():
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     pre = np.zeros((1, 3), dtype=np.float32)
     post = np.array([[3.0, 4.0, 0.0]], dtype=np.float32)
@@ -365,7 +365,7 @@ def test_feature_diff_report_l2_drift_computed():
 
 
 def test_load_sae_weights_outside_cwd_rejected(tmp_path):
-    from soup_cli.utils.sae_diff import load_sae_weights
+    from ai_forge_cli.utils.sae_diff import load_sae_weights
 
     # tmp_path/.. exists but is outside cwd
     outside = str(tmp_path.parent / "evil")
@@ -374,28 +374,28 @@ def test_load_sae_weights_outside_cwd_rejected(tmp_path):
 
 
 def test_load_sae_weights_missing_file_raises(tmp_path):
-    from soup_cli.utils.sae_diff import load_sae_weights
+    from ai_forge_cli.utils.sae_diff import load_sae_weights
 
     with pytest.raises(FileNotFoundError):
         load_sae_weights("nonexistent_sae.safetensors")
 
 
 def test_load_sae_weights_null_byte_rejected():
-    from soup_cli.utils.sae_diff import load_sae_weights
+    from ai_forge_cli.utils.sae_diff import load_sae_weights
 
     with pytest.raises(ValueError):
         load_sae_weights("bad\x00.safetensors")
 
 
 def test_load_sae_weights_non_string_rejected():
-    from soup_cli.utils.sae_diff import load_sae_weights
+    from ai_forge_cli.utils.sae_diff import load_sae_weights
 
     with pytest.raises(TypeError):
         load_sae_weights(42)
 
 
 def test_load_sae_weights_empty_path_rejected():
-    from soup_cli.utils.sae_diff import load_sae_weights
+    from ai_forge_cli.utils.sae_diff import load_sae_weights
 
     with pytest.raises(ValueError):
         load_sae_weights("")
@@ -403,7 +403,7 @@ def test_load_sae_weights_empty_path_rejected():
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink test")
 def test_load_sae_weights_symlink_rejected(tmp_path):
-    from soup_cli.utils.sae_diff import load_sae_weights
+    from ai_forge_cli.utils.sae_diff import load_sae_weights
 
     target = tmp_path / "real.safetensors"
     target.write_bytes(b"x")
@@ -420,7 +420,7 @@ def test_load_sae_weights_symlink_rejected(tmp_path):
 
 
 def test_compute_sae_diff_happy(tmp_path):
-    from soup_cli.utils.sae_diff import compute_sae_diff
+    from ai_forge_cli.utils.sae_diff import compute_sae_diff
 
     # Synthetic activations: 4 tokens, 8 model dims
     pre = np.random.RandomState(0).randn(4, 8).astype(np.float32)
@@ -434,7 +434,7 @@ def test_compute_sae_diff_happy(tmp_path):
 
 
 def test_compute_sae_diff_rejects_non_dict_sae():
-    from soup_cli.utils.sae_diff import compute_sae_diff
+    from ai_forge_cli.utils.sae_diff import compute_sae_diff
 
     pre = np.zeros((1, 8), dtype=np.float32)
     post = np.zeros((1, 8), dtype=np.float32)
@@ -443,7 +443,7 @@ def test_compute_sae_diff_rejects_non_dict_sae():
 
 
 def test_compute_sae_diff_missing_w_enc_raises():
-    from soup_cli.utils.sae_diff import compute_sae_diff
+    from ai_forge_cli.utils.sae_diff import compute_sae_diff
 
     pre = np.zeros((1, 8), dtype=np.float32)
     post = np.zeros((1, 8), dtype=np.float32)
@@ -452,7 +452,7 @@ def test_compute_sae_diff_missing_w_enc_raises():
 
 
 def test_compute_sae_diff_rejects_pre_post_mismatch():
-    from soup_cli.utils.sae_diff import compute_sae_diff
+    from ai_forge_cli.utils.sae_diff import compute_sae_diff
 
     pre = np.zeros((4, 8), dtype=np.float32)
     post = np.zeros((4, 10), dtype=np.float32)
@@ -467,7 +467,7 @@ def test_compute_sae_diff_rejects_pre_post_mismatch():
 
 
 def test_render_report_json_roundtrip():
-    from soup_cli.utils.sae_diff import (
+    from ai_forge_cli.utils.sae_diff import (
         SaeFeatureChange,
         SaeFeatureDiffReport,
         render_report_json,
@@ -492,14 +492,14 @@ def test_render_report_json_roundtrip():
 
 
 def test_render_report_json_rejects_non_report():
-    from soup_cli.utils.sae_diff import render_report_json
+    from ai_forge_cli.utils.sae_diff import render_report_json
 
     with pytest.raises(TypeError):
         render_report_json("not a report")
 
 
 def test_render_report_markdown_has_table():
-    from soup_cli.utils.sae_diff import (
+    from ai_forge_cli.utils.sae_diff import (
         SaeFeatureChange,
         SaeFeatureDiffReport,
         render_report_markdown,
@@ -520,14 +520,14 @@ def test_render_report_markdown_has_table():
 
 
 def test_render_report_markdown_rejects_non_report():
-    from soup_cli.utils.sae_diff import render_report_markdown
+    from ai_forge_cli.utils.sae_diff import render_report_markdown
 
     with pytest.raises(TypeError):
         render_report_markdown(None)
 
 
 def test_render_report_markdown_empty_changes():
-    from soup_cli.utils.sae_diff import SaeFeatureDiffReport, render_report_markdown
+    from ai_forge_cli.utils.sae_diff import SaeFeatureDiffReport, render_report_markdown
 
     report = SaeFeatureDiffReport(
         num_features=0,
@@ -552,7 +552,7 @@ def test_no_heavy_top_level_imports():
     """
     import inspect
 
-    from soup_cli.utils import sae_diff
+    from ai_forge_cli.utils import sae_diff
 
     source = inspect.getsource(sae_diff)
     # Only inspect top-level lines (no leading whitespace).

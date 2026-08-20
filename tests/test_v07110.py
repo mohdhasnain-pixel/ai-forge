@@ -92,7 +92,7 @@ def _raft_row(distractors: int = 2) -> dict:
 
 class TestBuildRaftPrompt:
     def test_basic_prompt_shape(self):
-        from soup_cli.utils.raft import RAFT_INSTRUCTION, build_raft_prompt
+        from ai_forge_cli.utils.raft import RAFT_INSTRUCTION, build_raft_prompt
 
         composed = build_raft_prompt(_raft_row(2))
         assert RAFT_INSTRUCTION in composed.prompt
@@ -102,7 +102,7 @@ class TestBuildRaftPrompt:
         assert composed.answer == "The capital is Paris [doc-0]."
 
     def test_doc_ids_assigned_and_golden_tracked(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         composed = build_raft_prompt(_raft_row(2))
         # 1 golden + 2 distractors → doc-0, doc-1, doc-2.
@@ -112,7 +112,7 @@ class TestBuildRaftPrompt:
         assert f"[{composed.golden_doc_id}] Paris has been the capital" in composed.prompt
 
     def test_shuffle_reproducible_for_same_seed(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         a = build_raft_prompt(_raft_row(4), shuffle_seed=42, row_index=3)
         b = build_raft_prompt(_raft_row(4), shuffle_seed=42, row_index=3)
@@ -120,7 +120,7 @@ class TestBuildRaftPrompt:
         assert a.golden_doc_id == b.golden_doc_id
 
     def test_different_row_index_differs(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         # Across a handful of indices the golden position should vary at least
         # once (deterministic shuffle keyed on index).
@@ -131,32 +131,32 @@ class TestBuildRaftPrompt:
         assert len(positions) > 1
 
     def test_no_distractors_ok(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         composed = build_raft_prompt(_raft_row(0))
         assert composed.doc_ids == ("doc-0",)
         assert composed.golden_doc_id == "doc-0"
 
     def test_missing_field_rejected(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         with pytest.raises(ValueError, match="query"):
             build_raft_prompt({"golden_doc": "x", "answer": "y"})
 
     def test_shuffle_seed_bool_rejected(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         with pytest.raises(TypeError, match="shuffle_seed"):
             build_raft_prompt(_raft_row(), shuffle_seed=True)
 
     def test_row_index_negative_rejected(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         with pytest.raises(ValueError, match="row_index"):
             build_raft_prompt(_raft_row(), row_index=-1)
 
     def test_too_many_docs_rejected(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         row = _raft_row(0)
         row["distractor_docs"] = [f"d{i}" for i in range(65)]
@@ -164,7 +164,7 @@ class TestBuildRaftPrompt:
             build_raft_prompt(row)
 
     def test_non_mapping_rejected(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         with pytest.raises(ValueError, match="mapping"):
             build_raft_prompt(["not", "a", "dict"])
@@ -177,12 +177,12 @@ class TestBuildRaftPrompt:
 
 class TestTokenizeRaftExample:
     def _composed(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         return build_raft_prompt(_raft_row(1))
 
     def test_answer_only_mask(self):
-        from soup_cli.utils.raft import tokenize_raft_example
+        from ai_forge_cli.utils.raft import tokenize_raft_example
 
         tok = _FakeTokenizer()
         row = tokenize_raft_example(tok, self._composed(), max_length=512)
@@ -202,14 +202,14 @@ class TestTokenizeRaftExample:
         assert row["attention_mask"] == [1] * len(row["input_ids"])
 
     def test_eos_appended(self):
-        from soup_cli.utils.raft import tokenize_raft_example
+        from ai_forge_cli.utils.raft import tokenize_raft_example
 
         tok = _FakeTokenizer()
         row = tokenize_raft_example(tok, self._composed(), max_length=512)
         assert row["input_ids"][-1] == tok.eos_token_id
 
     def test_truncation_respects_max_length(self):
-        from soup_cli.utils.raft import tokenize_raft_example
+        from ai_forge_cli.utils.raft import tokenize_raft_example
 
         tok = _FakeTokenizer()
         row = tokenize_raft_example(tok, self._composed(), max_length=8)
@@ -218,7 +218,7 @@ class TestTokenizeRaftExample:
         assert len(row["loss_weights"]) == 8
 
     def test_citation_boost_applied(self):
-        from soup_cli.utils.raft import tokenize_raft_example
+        from ai_forge_cli.utils.raft import tokenize_raft_example
 
         tok = _FakeTokenizer()
         # Answer with a [doc-0] citation token → that token's weight boosted.
@@ -230,7 +230,7 @@ class TestTokenizeRaftExample:
         assert any(w > 1.0 for w in row["loss_weights"])
 
     def test_no_citation_boost_when_disabled(self):
-        from soup_cli.utils.raft import tokenize_raft_example
+        from ai_forge_cli.utils.raft import tokenize_raft_example
 
         tok = _FakeTokenizer()
         row = tokenize_raft_example(
@@ -239,7 +239,7 @@ class TestTokenizeRaftExample:
         assert all(w in (0.0, 1.0) for w in row["loss_weights"])
 
     def test_slow_tokenizer_degrades_to_flat_mask(self):
-        from soup_cli.utils.raft import tokenize_raft_example
+        from ai_forge_cli.utils.raft import tokenize_raft_example
 
         tok = _FakeTokenizer(fast=False)  # no offset mapping
         row = tokenize_raft_example(
@@ -249,7 +249,7 @@ class TestTokenizeRaftExample:
         assert all(w in (0.0, 1.0) for w in row["loss_weights"])
 
     def test_bad_max_length_rejected(self):
-        from soup_cli.utils.raft import tokenize_raft_example
+        from ai_forge_cli.utils.raft import tokenize_raft_example
 
         tok = _FakeTokenizer()
         with pytest.raises(ValueError, match="max_length"):
@@ -265,7 +265,7 @@ class TestTokenizeRaftExample:
 
 class TestCitationSpanTokenWeights:
     def test_overlapping_tokens_boosted(self):
-        from soup_cli.utils.raft import citation_span_token_weights
+        from ai_forge_cli.utils.raft import citation_span_token_weights
 
         answer = "Paris [doc-0] is."
         # offsets for: "Paris"(0-5) "[doc-0]"(6-13) "is."(14-17)
@@ -274,19 +274,19 @@ class TestCitationSpanTokenWeights:
         assert weights == [1.0, 5.0, 1.0]
 
     def test_no_citation_all_one(self):
-        from soup_cli.utils.raft import citation_span_token_weights
+        from ai_forge_cli.utils.raft import citation_span_token_weights
 
         weights = citation_span_token_weights("plain text", [(0, 5), (6, 10)])
         assert weights == [1.0, 1.0]
 
     def test_boost_below_one_rejected(self):
-        from soup_cli.utils.raft import citation_span_token_weights
+        from ai_forge_cli.utils.raft import citation_span_token_weights
 
         with pytest.raises(ValueError, match="boost"):
             citation_span_token_weights("x", [(0, 1)], boost=0.5)
 
     def test_boost_bool_rejected(self):
-        from soup_cli.utils.raft import citation_span_token_weights
+        from ai_forge_cli.utils.raft import citation_span_token_weights
 
         with pytest.raises(TypeError, match="boost"):
             citation_span_token_weights("x", [(0, 1)], boost=True)
@@ -301,7 +301,7 @@ class TestRaftDataCollator:
     def test_pads_ragged_batch(self):
         import torch
 
-        from soup_cli.trainer.raft import RaftDataCollator
+        from ai_forge_cli.trainer.raft import RaftDataCollator
 
         collate = RaftDataCollator(_FakeTokenizer())
         batch = collate([
@@ -319,7 +319,7 @@ class TestRaftDataCollator:
         assert batch["loss_weights"].dtype == torch.float32
 
     def test_empty_batch_rejected(self):
-        from soup_cli.trainer.raft import RaftDataCollator
+        from ai_forge_cli.trainer.raft import RaftDataCollator
 
         with pytest.raises(ValueError, match="empty batch"):
             RaftDataCollator(_FakeTokenizer())([])
@@ -332,7 +332,7 @@ class TestRaftDataCollator:
 
 class TestRaftTrainerComputeLoss:
     def test_factory_caches(self):
-        from soup_cli.trainer.raft import make_raft_trainer_class
+        from ai_forge_cli.trainer.raft import make_raft_trainer_class
 
         a = make_raft_trainer_class(_FakeBaseTrainer)
         b = make_raft_trainer_class(_FakeBaseTrainer)
@@ -342,7 +342,7 @@ class TestRaftTrainerComputeLoss:
     def test_weighted_loss_finite(self):
         import torch
 
-        from soup_cli.trainer.raft import make_raft_trainer_class
+        from ai_forge_cli.trainer.raft import make_raft_trainer_class
 
         cls = make_raft_trainer_class(_FakeBaseTrainer)
         trainer = cls()
@@ -363,7 +363,7 @@ class TestRaftTrainerComputeLoss:
         import torch
         from torch.nn.functional import cross_entropy
 
-        from soup_cli.trainer.raft import make_raft_trainer_class
+        from ai_forge_cli.trainer.raft import make_raft_trainer_class
 
         cls = make_raft_trainer_class(_FakeBaseTrainer)
         trainer = cls()
@@ -406,25 +406,25 @@ class TestRaftShuffleSeedSchema:
         )
 
     def test_accepts_int(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(self._yaml("  raft_shuffle_seed: 42\n"))
         assert cfg.data.raft_shuffle_seed == 42
 
     def test_default_none(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(self._yaml(""))
         assert cfg.data.raft_shuffle_seed is None
 
     def test_bool_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="raft_shuffle_seed"):
             load_config_from_string(self._yaml("  raft_shuffle_seed: true\n"))
 
     def test_negative_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="raft_shuffle_seed"):
             load_config_from_string(self._yaml("  raft_shuffle_seed: -1\n"))
@@ -437,7 +437,7 @@ class TestRaftShuffleSeedSchema:
 
 class TestSftRaftWiring:
     def _sft_src(self) -> str:
-        import soup_cli.trainer.sft as sft
+        import ai_forge_cli.trainer.sft as sft
 
         with open(sft.__file__, encoding="utf-8") as fh:
             return fh.read()
@@ -450,7 +450,7 @@ class TestSftRaftWiring:
         assert 'cfg.data.format == "raft"' in src
 
     def test_raft_modules_have_no_top_level_torch(self):
-        import soup_cli.utils.raft as raft
+        import ai_forge_cli.utils.raft as raft
 
         with open(raft.__file__, encoding="utf-8") as fh:
             src = fh.read()
@@ -465,19 +465,19 @@ class TestSftRaftWiring:
 
 class TestPerStyleExtractors:
     def test_bracket_default(self):
-        from soup_cli.utils.citation_faithful import extract_citation_ids
+        from ai_forge_cli.utils.citation_faithful import extract_citation_ids
 
         assert extract_citation_ids("see [doc-1] and [doc-2]") == ("doc-1", "doc-2")
 
     def test_inline_style(self):
-        from soup_cli.utils.citation_faithful import extract_citation_ids
+        from ai_forge_cli.utils.citation_faithful import extract_citation_ids
 
         assert extract_citation_ids("see (doc-1) here", style="inline") == ("doc-1",)
         # bracket extractor must NOT match the parenthetical form.
         assert extract_citation_ids("see (doc-1) here") == ()
 
     def test_footnote_style(self):
-        from soup_cli.utils.citation_faithful import extract_citation_ids
+        from ai_forge_cli.utils.citation_faithful import extract_citation_ids
 
         assert extract_citation_ids("fact[^3] more", style="footnote") == ("3",)
         # footnote `[^3]` must not be picked up by the bracket extractor
@@ -485,13 +485,13 @@ class TestPerStyleExtractors:
         assert extract_citation_ids("fact[^3] more") == ()
 
     def test_citation_spans_cover_delimiters(self):
-        from soup_cli.utils.citation_faithful import citation_spans
+        from ai_forge_cli.utils.citation_faithful import citation_spans
 
         spans = citation_spans("ab [doc-0] cd")
         assert spans == ((3, 10),)  # covers the full "[doc-0]"
 
     def test_score_citations_with_style(self):
-        from soup_cli.utils.citation_faithful import score_citations
+        from ai_forge_cli.utils.citation_faithful import score_citations
 
         cs = score_citations(
             predicted="answer (doc-0)", expected_ids=["doc-0"], style="inline"
@@ -500,7 +500,7 @@ class TestPerStyleExtractors:
         assert cs.recall == 1.0
 
     def test_unknown_style_rejected(self):
-        from soup_cli.utils.citation_faithful import extract_citation_ids
+        from ai_forge_cli.utils.citation_faithful import extract_citation_ids
 
         with pytest.raises(ValueError, match="citation_style"):
             extract_citation_ids("x", style="bogus")
@@ -513,7 +513,7 @@ class TestEvalCitationCli:
         return CliRunner()
 
     def test_citation_in_eval_help(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = self._runner().invoke(app, ["eval", "--help"])
         assert result.exit_code == 0
@@ -522,7 +522,7 @@ class TestEvalCitationCli:
     def test_citation_predicted_expected(self):
         import json
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = self._runner()
         with runner.isolated_filesystem():
@@ -548,7 +548,7 @@ class TestEvalCitationCli:
     def test_citation_raft_rows(self):
         import json
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = self._runner()
         with runner.isolated_filesystem():
@@ -564,7 +564,7 @@ class TestEvalCitationCli:
             assert "Citation aggregate" in result.output
 
     def test_invalid_style_exit_2(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = self._runner()
         with runner.isolated_filesystem():
@@ -574,7 +574,7 @@ class TestEvalCitationCli:
             assert result.exit_code == 2
 
     def test_missing_file_exit(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = self._runner()
         with runner.isolated_filesystem():
@@ -582,7 +582,7 @@ class TestEvalCitationCli:
             assert result.exit_code != 0
 
     def test_no_scorable_rows_exit_2(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = self._runner()
         with runner.isolated_filesystem():
@@ -594,25 +594,25 @@ class TestEvalCitationCli:
 
 class TestDiagnoseCitationMode:
     def test_citation_in_failure_modes(self):
-        from soup_cli.utils.diagnose.report import FAILURE_MODES
+        from ai_forge_cli.utils.diagnose.report import FAILURE_MODES
 
         assert "citation" in FAILURE_MODES
 
     def test_is_raft_row(self):
-        from soup_cli.utils.diagnose.citation import is_raft_row
+        from ai_forge_cli.utils.diagnose.citation import is_raft_row
 
         assert is_raft_row({"query": "q", "golden_doc": "g", "answer": "a"})
         assert not is_raft_row({"prompt": "p"})
         assert not is_raft_row("not a dict")
 
     def test_score_citation_recall_ok(self):
-        from soup_cli.utils.diagnose.citation import score_citation
+        from ai_forge_cli.utils.diagnose.citation import score_citation
 
         rows = [_raft_row(2)]
 
         def gen(prompt: str) -> str:
             # Always cite the golden doc id present in the prompt's [doc-N].
-            from soup_cli.utils.raft import build_raft_prompt
+            from ai_forge_cli.utils.raft import build_raft_prompt
 
             golden = build_raft_prompt(rows[0]).golden_doc_id
             return f"the answer is correct [{golden}]"
@@ -623,7 +623,7 @@ class TestDiagnoseCitationMode:
         assert result.verdict == "OK"
 
     def test_score_citation_no_citation_major(self):
-        from soup_cli.utils.diagnose.citation import score_citation
+        from ai_forge_cli.utils.diagnose.citation import score_citation
 
         rows = [_raft_row(2), _raft_row(2)]
         result = score_citation(rows, lambda p: "no citation at all")
@@ -631,20 +631,20 @@ class TestDiagnoseCitationMode:
         assert result.verdict == "MAJOR"
 
     def test_score_citation_no_raft_rows_raises(self):
-        from soup_cli.utils.diagnose.citation import score_citation
+        from ai_forge_cli.utils.diagnose.citation import score_citation
 
         with pytest.raises(ValueError, match="RAFT"):
             score_citation([{"prompt": "p"}], lambda p: "x")
 
     def test_build_report_fills_citation_neutral(self):
-        from soup_cli.utils.diagnose.runner import build_report
+        from ai_forge_cli.utils.diagnose.runner import build_report
 
         report = build_report(run_id="r", base="b", adapter="a", scores={})
         assert "citation" in report.scores
         assert report.scores["citation"].verdict == "OK"
 
     def test_citation_probe_torch_free(self):
-        import soup_cli.utils.diagnose.citation as cit
+        import ai_forge_cli.utils.diagnose.citation as cit
 
         with open(cit.__file__, encoding="utf-8") as fh:
             src = fh.read()
@@ -660,7 +660,7 @@ class TestSteeringMath:
     def test_caa_mean_difference(self):
         import numpy as np
 
-        from soup_cli.utils.steering import compute_caa_vector
+        from ai_forge_cli.utils.steering import compute_caa_vector
 
         pos = np.array([[2.0, 0.0], [4.0, 0.0]])  # mean [3,0]
         neg = np.array([[0.0, 1.0], [0.0, 3.0]])  # mean [0,2]
@@ -671,7 +671,7 @@ class TestSteeringMath:
     def test_caa_dim_mismatch_rejected(self):
         import numpy as np
 
-        from soup_cli.utils.steering import compute_caa_vector
+        from ai_forge_cli.utils.steering import compute_caa_vector
 
         with pytest.raises(ValueError, match="mismatch"):
             compute_caa_vector(np.zeros((2, 3)), np.zeros((2, 4)))
@@ -679,7 +679,7 @@ class TestSteeringMath:
     def test_caa_empty_rejected(self):
         import numpy as np
 
-        from soup_cli.utils.steering import compute_caa_vector
+        from ai_forge_cli.utils.steering import compute_caa_vector
 
         with pytest.raises(ValueError):
             compute_caa_vector(np.zeros((0, 3)), np.zeros((2, 3)))
@@ -687,7 +687,7 @@ class TestSteeringMath:
     def test_repe_direction_aligned(self):
         import numpy as np
 
-        from soup_cli.utils.steering import compute_repe_direction
+        from ai_forge_cli.utils.steering import compute_repe_direction
 
         # Diffs scattered along the +x axis → top PC ≈ x, sign-aligned positive.
         diffs = np.array([[2.0, 0.1], [3.0, -0.1], [4.0, 0.05]])
@@ -698,7 +698,7 @@ class TestSteeringMath:
     def test_iti_selects_top_heads(self):
         import numpy as np
 
-        from soup_cli.utils.steering import compute_iti_directions
+        from ai_forge_cli.utils.steering import compute_iti_directions
 
         # 3 heads; head 1 has the biggest pos/neg separation.
         pos = np.zeros((2, 3, 2))
@@ -713,7 +713,7 @@ class TestSteeringMath:
     def test_iti_top_k_bool_rejected(self):
         import numpy as np
 
-        from soup_cli.utils.steering import compute_iti_directions
+        from ai_forge_cli.utils.steering import compute_iti_directions
 
         with pytest.raises(ValueError, match="top_k"):
             compute_iti_directions(np.zeros((1, 2, 2)), np.zeros((1, 2, 2)), top_k=True)
@@ -723,7 +723,7 @@ class TestLoadContrastivePairs:
     def test_loads_pairs(self, tmp_path, monkeypatch):
         import json
 
-        from soup_cli.utils.steering import load_contrastive_pairs
+        from ai_forge_cli.utils.steering import load_contrastive_pairs
 
         monkeypatch.chdir(tmp_path)
         p = tmp_path / "pairs.jsonl"
@@ -736,7 +736,7 @@ class TestLoadContrastivePairs:
         assert pairs == [("be kind", "be rude"), ("help", "refuse")]
 
     def test_outside_cwd_rejected(self, tmp_path):
-        from soup_cli.utils.steering import load_contrastive_pairs
+        from ai_forge_cli.utils.steering import load_contrastive_pairs
 
         outside = tmp_path / "pairs.jsonl"
         outside.write_text('{"positive":"a","negative":"b"}\n', encoding="utf-8")
@@ -744,7 +744,7 @@ class TestLoadContrastivePairs:
             load_contrastive_pairs(str(outside))
 
     def test_empty_file_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.steering import load_contrastive_pairs
+        from ai_forge_cli.utils.steering import load_contrastive_pairs
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "empty.jsonl").write_text("\n\n", encoding="utf-8")
@@ -754,25 +754,25 @@ class TestLoadContrastivePairs:
 
 class TestBuildSteeringVectorValidation:
     def test_method_validated_first(self):
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         with pytest.raises(ValueError, match="steering method"):
             build_steering_vector(method="nonsense", name="x", base="m", pairs_path="p")
 
     def test_name_validated(self):
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         with pytest.raises(ValueError, match="steering name"):
             build_steering_vector(method="caa", name="bad/path", base="m", pairs_path="p")
 
     def test_base_required(self):
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         with pytest.raises(ValueError, match="base"):
             build_steering_vector(method="caa", name="ok", pairs_path="p")
 
     def test_pairs_required(self):
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         with pytest.raises(ValueError, match="pairs_path"):
             build_steering_vector(method="caa", name="ok", base="m")
@@ -805,7 +805,7 @@ class TestSteeringArtifactRoundtrip:
     def test_load_roundtrip(self, tmp_path, monkeypatch):
         import numpy as np
 
-        from soup_cli.utils.steering import load_steering_artifact
+        from ai_forge_cli.utils.steering import load_steering_artifact
 
         monkeypatch.chdir(tmp_path)
         self._write_artifact("steering/safety-v1")
@@ -816,7 +816,7 @@ class TestSteeringArtifactRoundtrip:
         assert np.allclose(loaded.vector, [0.1, 0.2, 0.3, 0.4])
 
     def test_resolve_steering_dir_local_fallback(self, tmp_path, monkeypatch):
-        from soup_cli.utils.steering import resolve_steering_dir
+        from ai_forge_cli.utils.steering import resolve_steering_dir
 
         monkeypatch.chdir(tmp_path)
         self._write_artifact("steering/safety-v1")
@@ -824,14 +824,14 @@ class TestSteeringArtifactRoundtrip:
         assert resolved.replace("\\", "/").endswith("steering/safety-v1")
 
     def test_resolve_unknown_raises(self, tmp_path, monkeypatch):
-        from soup_cli.utils.steering import resolve_steering_dir
+        from ai_forge_cli.utils.steering import resolve_steering_dir
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="no steering vector"):
             resolve_steering_dir("does-not-exist")
 
     def test_load_missing_files_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.steering import load_steering_artifact
+        from ai_forge_cli.utils.steering import load_steering_artifact
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "empty").mkdir()
@@ -869,7 +869,7 @@ class TestInstallSteeringHook:
         return FakeModel()
 
     def _loaded(self, intervention, vec):
-        from soup_cli.utils.steering import LoadedSteering
+        from ai_forge_cli.utils.steering import LoadedSteering
 
         return LoadedSteering(
             method="caa" if intervention == "residual" else "iti",
@@ -884,7 +884,7 @@ class TestInstallSteeringHook:
         import numpy as np
         import torch
 
-        from soup_cli.utils.steering import install_steering_hook
+        from ai_forge_cli.utils.steering import install_steering_hook
 
         model = self._fake_model(d=4)
         vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
@@ -899,7 +899,7 @@ class TestInstallSteeringHook:
         import numpy as np
         import torch
 
-        from soup_cli.utils.steering import install_steering_hook
+        from ai_forge_cli.utils.steering import install_steering_hook
 
         model = self._fake_model(d=4)
         vec = np.array([0.0, 3.0, 0.0, 0.0], dtype=np.float32)
@@ -912,7 +912,7 @@ class TestInstallSteeringHook:
         handle.remove()
 
     def test_non_loaded_rejected(self):
-        from soup_cli.utils.steering import install_steering_hook
+        from ai_forge_cli.utils.steering import install_steering_hook
 
         with pytest.raises(TypeError, match="LoadedSteering"):
             install_steering_hook(self._fake_model(), {"not": "loaded"}, strength=1.0)
@@ -925,7 +925,7 @@ class TestServeSteerCli:
         return CliRunner()
 
     def test_steer_flag_in_serve_help(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = self._runner().invoke(app, ["serve", "--help"])
         assert result.exit_code == 0
@@ -936,7 +936,7 @@ class TestServeSteerCli:
         assert "--steer" in plain
 
     def test_steer_requires_transformers_backend(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = self._runner().invoke(
             app, ["serve", "-m", "model", "--steer", "safety-v1", "--backend", "vllm"]
@@ -945,7 +945,7 @@ class TestServeSteerCli:
         assert "transformers" in result.output
 
     def test_steer_bad_name_rejected(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = self._runner().invoke(
             app, ["serve", "-m", "model", "--steer", "bad/name"]
@@ -962,7 +962,7 @@ class TestSteerCommandPlumbing:
         from safetensors.numpy import save_file
         from typer.testing import CliRunner
 
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         monkeypatch.chdir(tmp_path)
         d = "steering/safety-v1"
@@ -984,7 +984,7 @@ class TestSteerCommandPlumbing:
     def test_steer_train_help_has_output(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         result = CliRunner().invoke(app, ["train", "--help"])
         assert result.exit_code == 0
@@ -1005,7 +1005,7 @@ def _seed_registry(db_path, *, embedding_output, with_generator=False):
     import os
 
     os.environ["SOUP_REGISTRY_DB_PATH"] = str(db_path)
-    from soup_cli.registry.store import RegistryStore
+    from ai_forge_cli.registry.store import RegistryStore
 
     with RegistryStore() as store:
         # A non-RA-DIT embedding run (should NOT be picked).
@@ -1048,7 +1048,7 @@ def _seed_registry(db_path, *, embedding_output, with_generator=False):
 
 class TestDiscoverLatestRetriever:
     def test_finds_ra_dit_retriever_output(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ra_dit_run import discover_latest_retriever
+        from ai_forge_cli.utils.ra_dit_run import discover_latest_retriever
 
         db = tmp_path / "reg.db"
         _seed_registry(db, embedding_output="./retriever-out")
@@ -1059,8 +1059,8 @@ class TestDiscoverLatestRetriever:
     def test_returns_none_when_no_retriever(self, tmp_path, monkeypatch):
         import os
 
-        from soup_cli.registry.store import RegistryStore
-        from soup_cli.utils.ra_dit_run import discover_latest_retriever
+        from ai_forge_cli.registry.store import RegistryStore
+        from ai_forge_cli.utils.ra_dit_run import discover_latest_retriever
 
         db = tmp_path / "reg.db"
         os.environ["SOUP_REGISTRY_DB_PATH"] = str(db)
@@ -1074,7 +1074,7 @@ class TestDiscoverLatestRetriever:
         assert discover_latest_retriever() is None
 
     def test_empty_registry_returns_none(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ra_dit_run import discover_latest_retriever
+        from ai_forge_cli.utils.ra_dit_run import discover_latest_retriever
 
         db = tmp_path / "reg.db"
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(db))
@@ -1083,7 +1083,7 @@ class TestDiscoverLatestRetriever:
 
 class TestResolveRetrieverForGenerator:
     def test_manual_override_wins(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ra_dit_run import resolve_retriever_for_generator
+        from ai_forge_cli.utils.ra_dit_run import resolve_retriever_for_generator
 
         db = tmp_path / "reg.db"
         _seed_registry(db, embedding_output="./auto-retriever")
@@ -1093,7 +1093,7 @@ class TestResolveRetrieverForGenerator:
         assert "override" in advisory.lower() or "manual" in advisory.lower()
 
     def test_autolinks_when_none(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ra_dit_run import resolve_retriever_for_generator
+        from ai_forge_cli.utils.ra_dit_run import resolve_retriever_for_generator
 
         db = tmp_path / "reg.db"
         _seed_registry(db, embedding_output="./auto-retriever")
@@ -1103,7 +1103,7 @@ class TestResolveRetrieverForGenerator:
         assert "auto" in advisory.lower()
 
     def test_not_found_advisory(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ra_dit_run import resolve_retriever_for_generator
+        from ai_forge_cli.utils.ra_dit_run import resolve_retriever_for_generator
 
         db = tmp_path / "reg.db"
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(db))
@@ -1135,7 +1135,7 @@ class TestRunRaDit:
         return retr, gen
 
     def test_chains_two_stages_with_autolink(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ra_dit_run import run_ra_dit
+        from ai_forge_cli.utils.ra_dit_run import run_ra_dit
 
         monkeypatch.chdir(tmp_path)
         retr, gen = self._write_configs(tmp_path)
@@ -1159,7 +1159,7 @@ class TestRunRaDit:
         assert result.autolinked is True
 
     def test_manual_override_skips_autolink(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ra_dit_run import run_ra_dit
+        from ai_forge_cli.utils.ra_dit_run import run_ra_dit
 
         monkeypatch.chdir(tmp_path)
         self._write_configs(tmp_path)
@@ -1175,7 +1175,7 @@ class TestRunRaDit:
     def test_rewrites_generator_with_retriever_model(self, tmp_path, monkeypatch):
         import yaml
 
-        from soup_cli.utils.ra_dit_run import run_ra_dit
+        from ai_forge_cli.utils.ra_dit_run import run_ra_dit
 
         monkeypatch.chdir(tmp_path)
         self._write_configs(tmp_path)
@@ -1197,7 +1197,7 @@ class TestRunRaDit:
         assert "ra_dit_retriever_model" in training
 
     def test_outside_cwd_config_rejected(self, tmp_path):
-        from soup_cli.utils.ra_dit_run import run_ra_dit
+        from ai_forge_cli.utils.ra_dit_run import run_ra_dit
 
         retr, gen = self._write_configs(tmp_path)
         with pytest.raises(ValueError, match="cwd"):
@@ -1209,7 +1209,7 @@ class TestTrainAutolinkHook:
         """`soup train` of a generator stage with no retriever model auto-links."""
         import os
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         db = tmp_path / "reg.db"
         _seed_registry(db, embedding_output="./linked-retriever")
@@ -1224,15 +1224,15 @@ class TestTrainAutolinkHook:
             "data:\n  train: ./raft.jsonl\n  format: raft\n"
         )
         assert cfg.training.ra_dit_retriever_model is None
-        from soup_cli.utils.ra_dit_run import autolink_generator_retriever
+        from ai_forge_cli.utils.ra_dit_run import autolink_generator_retriever
 
         advisory = autolink_generator_retriever(cfg)
         assert cfg.training.ra_dit_retriever_model == "./linked-retriever"
         assert advisory is not None and "auto" in advisory.lower()
 
     def test_no_autolink_when_not_generator(self, tmp_path, monkeypatch):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils.ra_dit_run import autolink_generator_retriever
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils.ra_dit_run import autolink_generator_retriever
 
         db = tmp_path / "reg.db"
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(db))
@@ -1244,8 +1244,8 @@ class TestTrainAutolinkHook:
         assert advisory is None
 
     def test_manual_retriever_model_not_overwritten(self, tmp_path, monkeypatch):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils.ra_dit_run import autolink_generator_retriever
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils.ra_dit_run import autolink_generator_retriever
 
         db = tmp_path / "reg.db"
         _seed_registry(db, embedding_output="./auto")
@@ -1268,21 +1268,21 @@ class TestRaDitCli:
         return CliRunner()
 
     def test_help(self):
-        from soup_cli.commands.ra_dit import app
+        from ai_forge_cli.commands.ra_dit import app
 
         result = self._runner().invoke(app, ["--help"])
         assert result.exit_code == 0
         assert "retriever" in result.output.lower()
 
     def test_cli_registered(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = self._runner().invoke(app, ["--help"])
         assert result.exit_code == 0
         assert "ra-dit" in result.output.lower()
 
     def test_plan_only(self, tmp_path, monkeypatch):
-        from soup_cli.commands.ra_dit import app
+        from ai_forge_cli.commands.ra_dit import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "retriever.yaml").write_text(
@@ -1307,7 +1307,7 @@ class TestRaDitCli:
         assert "generator" in result.output.lower()
 
     def test_missing_config_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.ra_dit import app
+        from ai_forge_cli.commands.ra_dit import app
 
         monkeypatch.chdir(tmp_path)
         result = self._runner().invoke(app, [
@@ -1320,7 +1320,7 @@ class TestRaDitCli:
 
 class TestRaDitRunTorchFree:
     def test_module_torch_free(self):
-        import soup_cli.utils.ra_dit_run as rr
+        import ai_forge_cli.utils.ra_dit_run as rr
 
         with open(rr.__file__, encoding="utf-8") as fh:
             src = fh.read()
@@ -1336,52 +1336,52 @@ class TestValidateSteeringStrengthBounds:
     """#201 — validate_steering_strength boundary suite (HIGH)."""
 
     def test_zero_ok(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         assert validate_steering_strength(0.0) == 0.0
 
     def test_upper_bound_ok(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         assert validate_steering_strength(10.0) == 10.0
 
     def test_lower_bound_ok(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         assert validate_steering_strength(-10.0) == -10.0
 
     def test_just_over_upper_rejected(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         with pytest.raises(ValueError, match="<="):
             validate_steering_strength(10.0001)
 
     def test_just_under_lower_rejected(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         with pytest.raises(ValueError, match="<="):
             validate_steering_strength(-10.0001)
 
     def test_nan_rejected(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         with pytest.raises(ValueError, match="finite"):
             validate_steering_strength(float("nan"))
 
     def test_inf_rejected(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         with pytest.raises(ValueError, match="finite"):
             validate_steering_strength(float("inf"))
 
     def test_bool_rejected(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         with pytest.raises(TypeError, match="bool"):
             validate_steering_strength(True)
 
     def test_non_number_rejected(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         with pytest.raises(TypeError, match="number"):
             validate_steering_strength("2.0")
@@ -1393,7 +1393,7 @@ class TestRepeDirectionSign:
     def test_sign_aligned_with_mean(self):
         import numpy as np
 
-        from soup_cli.utils.steering import compute_repe_direction
+        from ai_forge_cli.utils.steering import compute_repe_direction
 
         # Variance + mean both along -x → returned vector points -x AND its
         # projection onto the mean diff is non-negative (sign-aligned). This
@@ -1406,7 +1406,7 @@ class TestRepeDirectionSign:
     def test_empty_rejected(self):
         import numpy as np
 
-        from soup_cli.utils.steering import compute_repe_direction
+        from ai_forge_cli.utils.steering import compute_repe_direction
 
         with pytest.raises(ValueError):
             compute_repe_direction(np.zeros((0, 3)))
@@ -1414,7 +1414,7 @@ class TestRepeDirectionSign:
     def test_non_2d_rejected(self):
         import numpy as np
 
-        from soup_cli.utils.steering import compute_repe_direction
+        from ai_forge_cli.utils.steering import compute_repe_direction
 
         with pytest.raises(ValueError):
             compute_repe_direction(np.zeros((3,)))
@@ -1424,7 +1424,7 @@ class TestBuildSteeringVectorPreLoadValidation:
     """#201 — layer / top_k validated BEFORE the model load (HIGH)."""
 
     def test_layer_out_of_range_rejected_pre_load(self):
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         # layer=99999 fails the bounds check before load_contrastive_pairs /
         # the model load (base + pairs_path are never touched).
@@ -1434,7 +1434,7 @@ class TestBuildSteeringVectorPreLoadValidation:
             )
 
     def test_layer_bool_rejected(self):
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         with pytest.raises(TypeError, match="layer"):
             build_steering_vector(
@@ -1442,7 +1442,7 @@ class TestBuildSteeringVectorPreLoadValidation:
             )
 
     def test_top_k_zero_rejected_pre_load(self):
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         with pytest.raises(ValueError, match="top_k"):
             build_steering_vector(
@@ -1450,7 +1450,7 @@ class TestBuildSteeringVectorPreLoadValidation:
             )
 
     def test_top_k_bool_rejected_pre_load(self):
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         with pytest.raises(ValueError, match="top_k"):
             build_steering_vector(
@@ -1460,7 +1460,7 @@ class TestBuildSteeringVectorPreLoadValidation:
     def test_repe_requires_two_pairs(self, tmp_path, monkeypatch):
         import json
 
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "one.jsonl").write_text(
@@ -1478,7 +1478,7 @@ class TestCitationBoostCap:
     """#199 — citation boost upper bound (MEDIUM)."""
 
     def test_boost_100_ok(self):
-        from soup_cli.utils.raft import citation_span_token_weights
+        from ai_forge_cli.utils.raft import citation_span_token_weights
 
         weights = citation_span_token_weights(
             "[doc-0] x", [(0, 7), (8, 9)], boost=100.0
@@ -1486,13 +1486,13 @@ class TestCitationBoostCap:
         assert weights[0] == 100.0
 
     def test_boost_over_100_rejected(self):
-        from soup_cli.utils.raft import citation_span_token_weights
+        from ai_forge_cli.utils.raft import citation_span_token_weights
 
         with pytest.raises(ValueError, match="boost"):
             citation_span_token_weights("x", [(0, 1)], boost=100.1)
 
     def test_tokenize_citation_boost_applied(self):
-        from soup_cli.utils.raft import RaftComposed, tokenize_raft_example
+        from ai_forge_cli.utils.raft import RaftComposed, tokenize_raft_example
 
         composed = RaftComposed(
             prompt="Q", answer="Paris [doc-0]", golden_doc_id="doc-0",
@@ -1506,7 +1506,7 @@ class TestCitationBoostCap:
         assert 7.0 in row["loss_weights"]
 
     def test_tokenize_citation_boost_below_one_rejected(self):
-        from soup_cli.utils.raft import RaftComposed, tokenize_raft_example
+        from ai_forge_cli.utils.raft import RaftComposed, tokenize_raft_example
 
         composed = RaftComposed(
             prompt="Q", answer="Paris [doc-0]", golden_doc_id="doc-0",
@@ -1523,19 +1523,19 @@ class TestRaftDocCap:
     """#199 — _MAX_DOCS + _MAX_FIELD_LEN boundaries (MEDIUM)."""
 
     def test_64_distractors_ok(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         composed = build_raft_prompt(_raft_row(64))  # 1 golden + 64 = 65 = cap
         assert len(composed.doc_ids) == 65
 
     def test_65_distractors_rejected(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         with pytest.raises(ValueError, match="documents"):
             build_raft_prompt(_raft_row(65))  # 66 > 65 cap
 
     def test_oversize_field_rejected(self):
-        from soup_cli.utils.raft import build_raft_prompt
+        from ai_forge_cli.utils.raft import build_raft_prompt
 
         row = _raft_row(1)
         row["golden_doc"] = "x" * 70_000  # > _MAX_FIELD_LEN
@@ -1549,7 +1549,7 @@ class TestV07110FrozenDataclasses:
     def test_raft_composed_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.raft import RaftComposed
+        from ai_forge_cli.utils.raft import RaftComposed
 
         c = RaftComposed(
             prompt="p", answer="a", golden_doc_id="doc-0", doc_ids=("doc-0",)
@@ -1560,7 +1560,7 @@ class TestV07110FrozenDataclasses:
     def test_steering_artifact_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.steering import SteeringArtifact
+        from ai_forge_cli.utils.steering import SteeringArtifact
 
         a = SteeringArtifact(
             method="caa", name="n", layer=1, hidden_dim=4,
@@ -1574,7 +1574,7 @@ class TestV07110FrozenDataclasses:
 
         import numpy as np
 
-        from soup_cli.utils.steering import LoadedSteering
+        from ai_forge_cli.utils.steering import LoadedSteering
 
         loaded = LoadedSteering(
             method="caa", name="n", layer=0, intervention_point="residual",
@@ -1586,7 +1586,7 @@ class TestV07110FrozenDataclasses:
     def test_radit_run_result_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.ra_dit_run import RaDitRunResult
+        from ai_forge_cli.utils.ra_dit_run import RaDitRunResult
 
         r = RaDitRunResult(
             retriever_output="r", generator_output="g",
@@ -1617,7 +1617,7 @@ class TestRunRaDitValidation:
         return retr, gen
 
     def test_bad_timeout_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ra_dit_run import run_ra_dit
+        from ai_forge_cli.utils.ra_dit_run import run_ra_dit
 
         monkeypatch.chdir(tmp_path)
         self._configs(tmp_path)
@@ -1628,7 +1628,7 @@ class TestRunRaDitValidation:
             )
 
     def test_timeout_bool_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ra_dit_run import run_ra_dit
+        from ai_forge_cli.utils.ra_dit_run import run_ra_dit
 
         monkeypatch.chdir(tmp_path)
         self._configs(tmp_path)
@@ -1639,7 +1639,7 @@ class TestRunRaDitValidation:
             )
 
     def test_oversize_yaml_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ra_dit_run import run_ra_dit
+        from ai_forge_cli.utils.ra_dit_run import run_ra_dit
 
         monkeypatch.chdir(tmp_path)
         retr, _gen = self._configs(tmp_path)
@@ -1680,7 +1680,7 @@ class TestInstallSteeringHookExtras:
         return FakeModel()
 
     def _loaded(self, layer, vec):
-        from soup_cli.utils.steering import LoadedSteering
+        from ai_forge_cli.utils.steering import LoadedSteering
 
         return LoadedSteering(
             method="caa", name="t", layer=layer,
@@ -1690,7 +1690,7 @@ class TestInstallSteeringHookExtras:
     def test_strength_cap_rejected(self):
         import numpy as np
 
-        from soup_cli.utils.steering import install_steering_hook
+        from ai_forge_cli.utils.steering import install_steering_hook
 
         model = self._fake_model()
         vec = np.zeros(4, dtype=np.float32)
@@ -1700,7 +1700,7 @@ class TestInstallSteeringHookExtras:
     def test_bad_layer_rejected(self):
         import numpy as np
 
-        from soup_cli.utils.steering import install_steering_hook
+        from ai_forge_cli.utils.steering import install_steering_hook
 
         model = self._fake_model(n=2)
         vec = np.zeros(4, dtype=np.float32)
@@ -1711,7 +1711,7 @@ class TestInstallSteeringHookExtras:
         import numpy as np
         import torch
 
-        from soup_cli.utils.steering import install_steering_hook
+        from ai_forge_cli.utils.steering import install_steering_hook
 
         model = self._fake_model(d=4)
         vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
@@ -1726,7 +1726,7 @@ class TestInstallSteeringHookExtras:
 
 class TestSteeringNoTopLevelTorch:
     def test_steering_no_top_level_torch(self):
-        import soup_cli.utils.steering as steering
+        import ai_forge_cli.utils.steering as steering
 
         with open(steering.__file__, encoding="utf-8") as fh:
             src = fh.read()
@@ -1740,7 +1740,7 @@ class TestPrepareRaftDatasetExecution:
     def _call(self, rows, *, max_length, citation=False):
         import types
 
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         stub = types.SimpleNamespace(tokenizer=_FakeTokenizer(fast=True))
         cfg = types.SimpleNamespace(
@@ -1773,7 +1773,7 @@ class TestRaftComputeLossEdges:
     def test_all_masked_returns_finite_zero(self):
         import torch
 
-        from soup_cli.trainer.raft import make_raft_trainer_class
+        from ai_forge_cli.trainer.raft import make_raft_trainer_class
 
         cls = make_raft_trainer_class(_FakeBaseTrainer)
         trainer = cls()
@@ -1790,7 +1790,7 @@ class TestRaftComputeLossEdges:
     def test_nan_logits_returns_structural_zero_with_grad(self):
         import torch
 
-        from soup_cli.trainer.raft import make_raft_trainer_class
+        from ai_forge_cli.trainer.raft import make_raft_trainer_class
 
         cls = make_raft_trainer_class(_FakeBaseTrainer)
         trainer = cls()
@@ -1810,7 +1810,7 @@ class TestRaftComputeLossEdges:
     def test_citation_boost_shifts_loss(self):
         import torch
 
-        from soup_cli.trainer.raft import make_raft_trainer_class
+        from ai_forge_cli.trainer.raft import make_raft_trainer_class
 
         cls = make_raft_trainer_class(_FakeBaseTrainer)
         trainer = cls()
@@ -1837,7 +1837,7 @@ class TestV07110ReviewFixRegressions:
     """Regression guards for the v0.71.10 review-fix code changes."""
 
     def test_validate_ra_dit_config_path_public_and_alias(self):
-        from soup_cli.utils import ra_dit_run
+        from ai_forge_cli.utils import ra_dit_run
 
         assert hasattr(ra_dit_run, "validate_ra_dit_config_path")
         assert "validate_ra_dit_config_path" in ra_dit_run.__all__
@@ -1848,7 +1848,7 @@ class TestV07110ReviewFixRegressions:
         )
 
     def test_render_raft_prompt_public_and_alias(self):
-        from soup_cli.utils import raft
+        from ai_forge_cli.utils import raft
 
         assert hasattr(raft, "render_raft_prompt")
         # back-compat private alias (L3).
@@ -1857,8 +1857,8 @@ class TestV07110ReviewFixRegressions:
     def test_discover_skips_corrupt_registry_output(self, tmp_path, monkeypatch):
         import os
 
-        from soup_cli.registry.store import RegistryStore
-        from soup_cli.utils.ra_dit_run import discover_latest_retriever
+        from ai_forge_cli.registry.store import RegistryStore
+        from ai_forge_cli.utils.ra_dit_run import discover_latest_retriever
 
         db = tmp_path / "reg.db"
         os.environ["SOUP_REGISTRY_DB_PATH"] = str(db)
@@ -1879,7 +1879,7 @@ class TestV07110ReviewFixRegressions:
         assert discover_latest_retriever() is None
 
     def test_load_yaml_config_o_nofollow(self):
-        import soup_cli.utils.ra_dit_run as rr
+        import ai_forge_cli.utils.ra_dit_run as rr
 
         with open(rr.__file__, encoding="utf-8") as fh:
             src = fh.read()
@@ -1887,14 +1887,14 @@ class TestV07110ReviewFixRegressions:
         assert "os.fstat" in src
 
     def test_load_steering_artifact_outside_cwd_rejected(self, tmp_path):
-        from soup_cli.utils.steering import load_steering_artifact
+        from ai_forge_cli.utils.steering import load_steering_artifact
 
         # An absolute out-of-cwd dir is rejected by the containment helper.
         with pytest.raises(ValueError, match="cwd"):
             load_steering_artifact(str(tmp_path / "elsewhere"))
 
     def test_train_autolink_source_grep(self):
-        import soup_cli.commands.train as train_mod
+        import ai_forge_cli.commands.train as train_mod
 
         with open(train_mod.__file__, encoding="utf-8") as fh:
             src = fh.read()
@@ -1903,7 +1903,7 @@ class TestV07110ReviewFixRegressions:
         assert "escape" in src
 
     def test_serve_steer_strength_source_grep(self):
-        import soup_cli.commands.serve as serve_mod
+        import ai_forge_cli.commands.serve as serve_mod
 
         with open(serve_mod.__file__, encoding="utf-8") as fh:
             src = fh.read()
@@ -1912,7 +1912,7 @@ class TestV07110ReviewFixRegressions:
     def test_serve_bad_steer_name_message(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(
             app, ["serve", "-m", "model", "--steer", "bad/name"]

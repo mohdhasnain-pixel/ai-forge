@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -19,7 +19,7 @@ class TestRecipeCatalog:
 
     def test_list_recipes(self):
         """list_recipes returns all recipes."""
-        from soup_cli.recipes.catalog import RECIPES, list_recipes
+        from ai_forge_cli.recipes.catalog import RECIPES, list_recipes
 
         recipes = list_recipes()
         assert len(recipes) > 0
@@ -27,7 +27,7 @@ class TestRecipeCatalog:
 
     def test_get_recipe_exists(self):
         """get_recipe returns a known recipe."""
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("llama3.1-8b-sft")
         assert recipe is not None
@@ -36,14 +36,14 @@ class TestRecipeCatalog:
 
     def test_get_recipe_not_exists(self):
         """get_recipe returns None for unknown recipe."""
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("nonexistent-recipe")
         assert recipe is None
 
     def test_search_by_task(self):
         """search_recipes filters by task."""
-        from soup_cli.recipes.catalog import search_recipes
+        from ai_forge_cli.recipes.catalog import search_recipes
 
         results = search_recipes(task="grpo")
         assert len(results) > 0
@@ -51,14 +51,14 @@ class TestRecipeCatalog:
 
     def test_search_by_keyword(self):
         """search_recipes matches by keyword."""
-        from soup_cli.recipes.catalog import search_recipes
+        from ai_forge_cli.recipes.catalog import search_recipes
 
         results = search_recipes(query="reasoning")
         assert len(results) > 0
 
     def test_search_by_size(self):
         """search_recipes filters by model size."""
-        from soup_cli.recipes.catalog import search_recipes
+        from ai_forge_cli.recipes.catalog import search_recipes
 
         results = search_recipes(size="7b")
         assert len(results) > 0
@@ -67,15 +67,15 @@ class TestRecipeCatalog:
 
     def test_search_no_results(self):
         """search_recipes returns empty list for no matches."""
-        from soup_cli.recipes.catalog import search_recipes
+        from ai_forge_cli.recipes.catalog import search_recipes
 
         results = search_recipes(query="zzzznonexistent")
         assert results == []
 
     def test_all_recipes_valid_yaml(self):
         """All recipes contain valid YAML that loads as SoupConfig."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         for name, recipe in RECIPES.items():
             try:
@@ -86,7 +86,7 @@ class TestRecipeCatalog:
 
     def test_recipe_has_required_fields(self):
         """All recipes have model, task, size, tags, yaml_str."""
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         for name, recipe in RECIPES.items():
             assert recipe.model, f"Recipe {name} missing model"
@@ -98,7 +98,7 @@ class TestRecipeCatalog:
         """Recipe.task matches the task in the YAML content."""
         import yaml
 
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         for name, recipe in RECIPES.items():
             parsed = yaml.safe_load(recipe.yaml_str)
@@ -218,8 +218,8 @@ class TestIssue278Qwen35PretrainRecipe:
     """Regression coverage for the qwen3.5-4b-pretrain recipe."""
 
     def test_recipe_loads_with_expected_pretrain_shape(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("qwen3.5-4b-pretrain")
         assert recipe is not None
@@ -256,8 +256,8 @@ class TestIssue279DeepSeekV4FlashGrpoRecipe:
     """Regression coverage for the deepseek-v4-flash-grpo recipe."""
 
     def test_recipe_loads_with_expected_grpo_moe_shape(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("deepseek-v4-flash-grpo")
         assert recipe is not None
@@ -297,8 +297,8 @@ class TestIssue277Qwen35GrpoRecipe:
     """Regression coverage for the qwen3.5-9b-grpo recipe."""
 
     def test_recipe_loads_with_expected_grpo_shape(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("qwen3.5-9b-grpo")
         assert recipe is not None
@@ -341,8 +341,8 @@ class TestIssue280Glm51DpoRecipe:
     """Regression coverage for the glm-5.1-dpo recipe."""
 
     def test_recipe_loads_with_expected_dpo_moe_shape(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("glm-5.1-dpo")
         assert recipe is not None
@@ -401,14 +401,14 @@ class TestV025NewRecipes:
 
     def test_all_new_recipes_registered(self):
         """All 9 new recipes are in the catalog."""
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         for name, _task, _model in self.EXPECTED:
             assert name in RECIPES, f"Missing recipe: {name}"
 
     def test_new_recipes_have_correct_task_and_model(self):
         """Each new recipe has the expected task and model."""
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         for name, task, model in self.EXPECTED:
             recipe = get_recipe(name)
@@ -418,8 +418,8 @@ class TestV025NewRecipes:
 
     def test_new_recipes_load_as_soupconfig(self):
         """All new recipes produce a valid SoupConfig."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         for name, _task, _model in self.EXPECTED:
             recipe = get_recipe(name)
@@ -447,13 +447,13 @@ class TestV025NewRecipes:
         Issue #277 added 1 (qwen3.5-9b-grpo) -> 145.
         Issue #280 added 1 (glm-5.1-dpo) -> 146.
         """
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         assert len(RECIPES) == 146
 
     def test_new_recipes_searchable(self):
         """Search returns the new recipes via keyword/task filter."""
-        from soup_cli.recipes.catalog import search_recipes
+        from ai_forge_cli.recipes.catalog import search_recipes
 
         llama4_results = search_recipes(query="Llama-4")
         llama4_names = {r.model for r in llama4_results}
@@ -465,8 +465,8 @@ class TestV025NewRecipes:
 
     def test_deepseek_v3_uses_moe_lora(self):
         """deepseek-v3-7b-sft recipe enables moe_lora."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("deepseek-v3-7b-sft")
         cfg = load_config_from_string(recipe.yaml_str)

@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from soup_cli.utils.multipack_trainer import (
+from ai_forge_cli.utils.multipack_trainer import (
     attach_multipack_state,
     detect_arch_name,
     lengths_from_dataset,
@@ -227,14 +227,14 @@ class TestSftAndPretrainWiringLive:
     """
 
     def test_sft_wires_live_factory(self):
-        text = Path("src/soup_cli/trainer/sft.py").read_text(encoding="utf-8")
+        text = Path("src/ai_forge_cli/trainer/sft.py").read_text(encoding="utf-8")
         assert "v0.40.4" in text
         assert "make_multipack_trainer_class(SFTTrainer)" in text
         # The deferred advisory must be GONE (no fallback in v0.40.4+).
         assert "live HF Trainer wiring is deferred to" not in text
 
     def test_pretrain_wires_live_factory(self):
-        text = Path("src/soup_cli/trainer/pretrain.py").read_text(encoding="utf-8")
+        text = Path("src/ai_forge_cli/trainer/pretrain.py").read_text(encoding="utf-8")
         assert "v0.40.4" in text
         assert "make_multipack_trainer_class(SFTTrainer)" in text
         assert "live HF Trainer wiring is deferred to" not in text
@@ -242,7 +242,7 @@ class TestSftAndPretrainWiringLive:
 
 class TestSamplerRespectsArchitectureAllowlist:
     def test_unknown_arch_loud_fails(self):
-        from soup_cli.utils.multipack_sampler import (
+        from ai_forge_cli.utils.multipack_sampler import (
             validate_multipack_architecture,
         )
 
@@ -275,7 +275,7 @@ class TestLengthsAllZeroLogsWarning:
     def test_all_zero_logs_warning(self, caplog):
         import logging
 
-        caplog.set_level(logging.WARNING, logger="soup_cli.utils.multipack_trainer")
+        caplog.set_level(logging.WARNING, logger="ai_forge_cli.utils.multipack_trainer")
         ds = [{"foo": "bar"}, {"baz": "qux"}]
         result = lengths_from_dataset(ds)
         assert result == [0, 0]
@@ -284,7 +284,7 @@ class TestLengthsAllZeroLogsWarning:
     def test_partial_zero_does_not_log(self, caplog):
         import logging
 
-        caplog.set_level(logging.WARNING, logger="soup_cli.utils.multipack_trainer")
+        caplog.set_level(logging.WARNING, logger="ai_forge_cli.utils.multipack_trainer")
         ds = [{"input_ids": [1, 2, 3]}, {}]
         result = lengths_from_dataset(ds)
         assert result == [3, 0]

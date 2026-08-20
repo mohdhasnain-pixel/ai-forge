@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.config.schema import TrainingConfig
-from soup_cli.utils.prm import (
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.schema import TrainingConfig
+from ai_forge_cli.utils.prm import (
     build_prm_trainer,
     validate_prm_compat,
     validate_vision_grpo_compat,
@@ -116,7 +116,7 @@ training:
 
 def test_build_prm_trainer_now_live():
     """v0.53.11 #126 lifted the stub — factory now returns a PRMTrainerWrapper."""
-    from soup_cli.trainer.prm import PRMTrainerWrapper
+    from ai_forge_cli.trainer.prm import PRMTrainerWrapper
 
     class _Cfg:
         base = "hf-internal-testing/tiny-random-gpt2"

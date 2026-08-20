@@ -9,7 +9,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 from click.exceptions import Exit as ClickExit
 
-from soup_cli.commands.export import SUPPORTED_FORMATS
+from ai_forge_cli.commands.export import SUPPORTED_FORMATS
 
 
 def _mock_import(awq_mock=None, gptq_mock=None):
@@ -62,7 +62,7 @@ class TestAwqExportCLI:
         """soup export --format awq should fail if model path doesn't exist."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(
@@ -74,7 +74,7 @@ class TestAwqExportCLI:
         """Export help should mention awq format."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["export", "--help"])
@@ -84,7 +84,7 @@ class TestAwqExportCLI:
         """Export help should mention gptq format."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["export", "--help"])
@@ -101,7 +101,7 @@ class TestGptqExportCLI:
         """soup export --format gptq should fail if model path doesn't exist."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(
@@ -120,7 +120,7 @@ class TestAwqExportFunction:
         """AWQ export should print friendly error when autoawq not installed."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         model_dir = tmp_path / "model"
         model_dir.mkdir()
@@ -145,7 +145,7 @@ class TestAwqExportFunction:
         awq_mod = MagicMock()
         awq_mod.AutoAWQForCausalLM = mock_awq_class
 
-        import soup_cli.commands.export as export_mod
+        import ai_forge_cli.commands.export as export_mod
 
         out_path = tmp_path / "out"
         with mock_patch.object(builtins, "__import__", side_effect=_mock_import(awq_mock=awq_mod)):
@@ -154,7 +154,7 @@ class TestAwqExportFunction:
                 return_value=mock_tokenizer,
             ):
                 with mock_patch(
-                    "soup_cli.commands.export._validate_output_path",
+                    "ai_forge_cli.commands.export._validate_output_path",
                     return_value=out_path,
                 ):
                     export_mod._export_awq(
@@ -178,7 +178,7 @@ class TestAwqExportFunction:
         awq_mod = MagicMock()
         awq_mod.AutoAWQForCausalLM = mock_awq_class
 
-        import soup_cli.commands.export as export_mod
+        import ai_forge_cli.commands.export as export_mod
 
         with mock_patch.object(builtins, "__import__", side_effect=_mock_import(awq_mock=awq_mod)):
             with mock_patch(
@@ -212,7 +212,7 @@ class TestAwqExportFunction:
         awq_mod = MagicMock()
         awq_mod.AutoAWQForCausalLM = mock_awq_class
 
-        import soup_cli.commands.export as export_mod
+        import ai_forge_cli.commands.export as export_mod
 
         out_path = tmp_path / "out"
         with mock_patch.object(builtins, "__import__", side_effect=_mock_import(awq_mock=awq_mod)):
@@ -221,11 +221,11 @@ class TestAwqExportFunction:
                 return_value=mock_tokenizer,
             ):
                 with mock_patch(
-                    "soup_cli.commands.export._validate_calibration_path",
+                    "ai_forge_cli.commands.export._validate_calibration_path",
                     return_value=cal_file,
                 ):
                     with mock_patch(
-                        "soup_cli.commands.export._validate_output_path",
+                        "ai_forge_cli.commands.export._validate_output_path",
                         return_value=out_path,
                     ):
                         export_mod._export_awq(
@@ -242,7 +242,7 @@ class TestAwqExportFunction:
         model_dir = tmp_path / "model"
         model_dir.mkdir()
 
-        import soup_cli.commands.export as export_mod
+        import ai_forge_cli.commands.export as export_mod
 
         with pytest.raises(ClickExit):
             export_mod._export_awq(
@@ -255,7 +255,7 @@ class TestAwqExportFunction:
         model_dir = tmp_path / "model"
         model_dir.mkdir()
 
-        import soup_cli.commands.export as export_mod
+        import ai_forge_cli.commands.export as export_mod
 
         with pytest.raises(ClickExit):
             export_mod._export_awq(
@@ -274,7 +274,7 @@ class TestGptqExportFunction:
         """GPTQ export should print friendly error when auto-gptq not installed."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         model_dir = tmp_path / "model"
         model_dir.mkdir()
@@ -300,7 +300,7 @@ class TestGptqExportFunction:
         gptq_mod.AutoGPTQForCausalLM = mock_gptq_class
         gptq_mod.BaseQuantizeConfig = MagicMock
 
-        import soup_cli.commands.export as export_mod
+        import ai_forge_cli.commands.export as export_mod
 
         out_path = tmp_path / "out"
         with mock_patch.object(
@@ -311,7 +311,7 @@ class TestGptqExportFunction:
                 return_value=mock_tokenizer,
             ):
                 with mock_patch(
-                    "soup_cli.commands.export._validate_output_path",
+                    "ai_forge_cli.commands.export._validate_output_path",
                     return_value=out_path,
                 ):
                     export_mod._export_gptq(
@@ -336,7 +336,7 @@ class TestGptqExportFunction:
         gptq_mod.AutoGPTQForCausalLM = mock_gptq_class
         gptq_mod.BaseQuantizeConfig = MagicMock
 
-        import soup_cli.commands.export as export_mod
+        import ai_forge_cli.commands.export as export_mod
 
         with mock_patch.object(
             builtins, "__import__", side_effect=_mock_import(gptq_mock=gptq_mod)
@@ -358,7 +358,7 @@ class TestGptqExportFunction:
         model_dir = tmp_path / "model"
         model_dir.mkdir()
 
-        import soup_cli.commands.export as export_mod
+        import ai_forge_cli.commands.export as export_mod
 
         with pytest.raises(ClickExit):
             export_mod._export_gptq(
@@ -371,7 +371,7 @@ class TestGptqExportFunction:
         model_dir = tmp_path / "model"
         model_dir.mkdir()
 
-        import soup_cli.commands.export as export_mod
+        import ai_forge_cli.commands.export as export_mod
 
         with pytest.raises(ClickExit):
             export_mod._export_gptq(
@@ -390,7 +390,7 @@ class TestAwqGptqCLIArgs:
         """Export function should have a --bits parameter."""
         import inspect
 
-        from soup_cli.commands.export import export
+        from ai_forge_cli.commands.export import export
 
         sig = inspect.signature(export)
         assert "bits" in sig.parameters
@@ -399,7 +399,7 @@ class TestAwqGptqCLIArgs:
         """Export function should have a --group-size parameter."""
         import inspect
 
-        from soup_cli.commands.export import export
+        from ai_forge_cli.commands.export import export
 
         sig = inspect.signature(export)
         assert "group_size" in sig.parameters
@@ -408,7 +408,7 @@ class TestAwqGptqCLIArgs:
         """Export function should have a --calibration-data parameter."""
         import inspect
 
-        from soup_cli.commands.export import export
+        from ai_forge_cli.commands.export import export
 
         sig = inspect.signature(export)
         assert "calibration_data" in sig.parameters
@@ -417,7 +417,7 @@ class TestAwqGptqCLIArgs:
         """Export function should have a --calibration-samples parameter."""
         import inspect
 
-        from soup_cli.commands.export import export
+        from ai_forge_cli.commands.export import export
 
         sig = inspect.signature(export)
         assert "calibration_samples" in sig.parameters
@@ -432,7 +432,7 @@ class TestAwqGptqSecurity:
     def test_calibration_data_path_traversal_awq(self, tmp_path):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         model_dir = tmp_path / "model"
         model_dir.mkdir()
@@ -451,7 +451,7 @@ class TestAwqGptqSecurity:
     def test_calibration_data_path_traversal_gptq(self, tmp_path):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         model_dir = tmp_path / "model"
         model_dir.mkdir()
@@ -477,7 +477,7 @@ class TestCalibrationLoader:
     def test_load_text_field(self, tmp_path):
         import json
 
-        from soup_cli.commands.export import _load_calibration_texts
+        from ai_forge_cli.commands.export import _load_calibration_texts
 
         cal_file = tmp_path / "cal.jsonl"
         lines = [json.dumps({"text": f"line {i}"}) for i in range(5)]
@@ -490,7 +490,7 @@ class TestCalibrationLoader:
     def test_load_max_samples(self, tmp_path):
         import json
 
-        from soup_cli.commands.export import _load_calibration_texts
+        from ai_forge_cli.commands.export import _load_calibration_texts
 
         cal_file = tmp_path / "cal.jsonl"
         lines = [json.dumps({"text": f"line {i}"}) for i in range(100)]
@@ -500,14 +500,14 @@ class TestCalibrationLoader:
         assert len(texts) == 10
 
     def test_load_none_returns_empty(self):
-        from soup_cli.commands.export import _load_calibration_texts
+        from ai_forge_cli.commands.export import _load_calibration_texts
 
         assert _load_calibration_texts(None) == []
 
     def test_load_skips_empty_lines(self, tmp_path):
         import json
 
-        from soup_cli.commands.export import _load_calibration_texts
+        from ai_forge_cli.commands.export import _load_calibration_texts
 
         cal_file = tmp_path / "cal.jsonl"
         content = json.dumps({"text": "hello"}) + "\n\n" + json.dumps({"text": "world"})
@@ -519,7 +519,7 @@ class TestCalibrationLoader:
     def test_load_concatenates_non_text_fields(self, tmp_path):
         import json
 
-        from soup_cli.commands.export import _load_calibration_texts
+        from ai_forge_cli.commands.export import _load_calibration_texts
 
         cal_file = tmp_path / "cal.jsonl"
         cal_file.write_text(
@@ -540,13 +540,13 @@ class TestCalibrationPathValidation:
     """Test _validate_calibration_path function."""
 
     def test_none_returns_none(self):
-        from soup_cli.commands.export import _validate_calibration_path
+        from ai_forge_cli.commands.export import _validate_calibration_path
 
         assert _validate_calibration_path(None) is None
 
     def test_nonexistent_file_raises(self):
         """Nonexistent calibration file should raise ClickExit."""
-        from soup_cli.commands.export import _validate_calibration_path
+        from ai_forge_cli.commands.export import _validate_calibration_path
 
         nope = Path.cwd() / "nonexistent_cal_data_test_xyzzy.jsonl"
         with pytest.raises(ClickExit):
@@ -554,7 +554,7 @@ class TestCalibrationPathValidation:
 
     def test_valid_path_returns_path(self):
         """Valid path under cwd should return resolved Path."""
-        from soup_cli.commands.export import _validate_calibration_path
+        from ai_forge_cli.commands.export import _validate_calibration_path
 
         cal_file = Path.cwd() / "test_cal_temp_xyzzy.jsonl"
         try:
@@ -567,7 +567,7 @@ class TestCalibrationPathValidation:
                 cal_file.unlink()
 
     def test_path_outside_cwd_raises(self):
-        from soup_cli.commands.export import _validate_calibration_path
+        from ai_forge_cli.commands.export import _validate_calibration_path
 
         with pytest.raises(ClickExit):
             _validate_calibration_path("C:/Windows/System32/drivers/etc/hosts")
@@ -580,13 +580,13 @@ class TestOutputPathValidation:
     """Test _validate_output_path function."""
 
     def test_none_returns_none(self):
-        from soup_cli.commands.export import _validate_output_path
+        from ai_forge_cli.commands.export import _validate_output_path
 
         assert _validate_output_path(None) is None
 
     def test_valid_path_returns_path(self):
         """Valid path under cwd should return resolved Path."""
-        from soup_cli.commands.export import _validate_output_path
+        from ai_forge_cli.commands.export import _validate_output_path
 
         out = Path.cwd() / "test_output_xyzzy"
         result = _validate_output_path(str(out))
@@ -595,7 +595,7 @@ class TestOutputPathValidation:
 
     def test_path_outside_cwd_raises(self):
         """Path outside cwd should raise ClickExit."""
-        from soup_cli.commands.export import _validate_output_path
+        from ai_forge_cli.commands.export import _validate_output_path
 
         # Use a path guaranteed to be outside cwd on all platforms
         outside = Path(tempfile.gettempdir()).resolve()
@@ -611,7 +611,7 @@ class TestOutputPathValidation:
 
     def test_path_traversal_rejected(self, tmp_path, monkeypatch):
         """Path outside cwd via relative traversal should be rejected."""
-        from soup_cli.commands.export import _validate_output_path
+        from ai_forge_cli.commands.export import _validate_output_path
 
         # Set cwd to a subdirectory so ../evil is outside
         sub = tmp_path / "deep" / "nested"

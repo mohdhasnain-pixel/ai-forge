@@ -10,8 +10,8 @@ only ever `train`).
 
 from __future__ import annotations
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.utils.data_mix import MixOptimizationReport, render_mix_recipe_yaml
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.utils.data_mix import MixOptimizationReport, render_mix_recipe_yaml
 
 
 def _make_files(tmp_path, names):
@@ -70,7 +70,7 @@ def test_apply_cli_prints_new_string_shape_recipe(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     runner = CliRunner()
     result = runner.invoke(
@@ -134,7 +134,7 @@ def test_apply_cli_quotes_path_needing_quoting(tmp_path, monkeypatch):
     )
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     runner = CliRunner()
     result = runner.invoke(app, ["data", "mix", "--apply", "odd.yaml"])
@@ -162,7 +162,7 @@ def test_apply_handles_pre_fix_list_shaped_recipe(tmp_path, monkeypatch):
     )
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     runner = CliRunner()
     result = runner.invoke(app, ["data", "mix", "--apply", "old.yaml"])

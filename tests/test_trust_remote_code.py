@@ -31,43 +31,43 @@ def _strip_ansi(text: str) -> str:
 
 class TestKnownSafePrefixes:
     def test_meta_llama_is_safe(self):
-        from soup_cli.utils.trust_remote import is_known_safe
+        from ai_forge_cli.utils.trust_remote import is_known_safe
 
         assert is_known_safe("meta-llama/Llama-3.2-1B")
 
     def test_qwen_is_safe(self):
-        from soup_cli.utils.trust_remote import is_known_safe
+        from ai_forge_cli.utils.trust_remote import is_known_safe
 
         assert is_known_safe("Qwen/Qwen2.5-7B")
 
     def test_mistral_is_safe(self):
-        from soup_cli.utils.trust_remote import is_known_safe
+        from ai_forge_cli.utils.trust_remote import is_known_safe
 
         assert is_known_safe("mistralai/Mistral-7B-Instruct-v0.3")
 
     def test_random_org_not_safe(self):
-        from soup_cli.utils.trust_remote import is_known_safe
+        from ai_forge_cli.utils.trust_remote import is_known_safe
 
         assert not is_known_safe("randomuser/SomeModel")
 
     def test_local_path_not_safe(self):
-        from soup_cli.utils.trust_remote import is_known_safe
+        from ai_forge_cli.utils.trust_remote import is_known_safe
 
         assert not is_known_safe("./local-checkpoint")
 
     def test_partial_prefix_does_not_match(self):
         """`meta-llama-evil/...` must NOT match the `meta-llama/` prefix."""
-        from soup_cli.utils.trust_remote import is_known_safe
+        from ai_forge_cli.utils.trust_remote import is_known_safe
 
         assert not is_known_safe("meta-llama-evil/SomeModel")
 
     def test_empty_string_not_safe(self):
-        from soup_cli.utils.trust_remote import is_known_safe
+        from ai_forge_cli.utils.trust_remote import is_known_safe
 
         assert not is_known_safe("")
 
     def test_non_string_not_safe(self):
-        from soup_cli.utils.trust_remote import is_known_safe
+        from ai_forge_cli.utils.trust_remote import is_known_safe
 
         assert not is_known_safe(None)
         assert not is_known_safe(123)
@@ -81,7 +81,7 @@ class TestKnownSafePrefixes:
 class TestResolve:
     def test_default_off_for_safe_prefix_passes_silently(self):
         """Trusted org + flag off → returns False, no warning."""
-        from soup_cli.utils.trust_remote import resolve_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import resolve_trust_remote_code
 
         buf = StringIO()
         console = Console(file=buf, force_terminal=False)
@@ -96,7 +96,7 @@ class TestResolve:
 
     def test_flag_enabled_warns_once(self):
         """User opted in → return True + warning panel."""
-        from soup_cli.utils.trust_remote import resolve_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import resolve_trust_remote_code
 
         buf = StringIO()
         console = Console(file=buf, force_terminal=False)
@@ -113,7 +113,7 @@ class TestResolve:
 
     def test_flag_enabled_safe_prefix_suppresses_warning(self):
         """Trusted org doesn't ship custom code — suppress warning even when flag set."""
-        from soup_cli.utils.trust_remote import resolve_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import resolve_trust_remote_code
 
         buf = StringIO()
         console = Console(file=buf, force_terminal=False)
@@ -129,7 +129,7 @@ class TestResolve:
 
     def test_default_off_for_unknown_with_remote_code_raises(self):
         """Model needs custom code + flag off → fail fast with actionable error."""
-        from soup_cli.utils.trust_remote import resolve_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import resolve_trust_remote_code
 
         buf = StringIO()
         console = Console(file=buf, force_terminal=False)
@@ -146,7 +146,7 @@ class TestResolve:
 
     def test_default_off_for_unknown_without_remote_code_passes(self):
         """Standard model + flag off → returns False, no error."""
-        from soup_cli.utils.trust_remote import resolve_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import resolve_trust_remote_code
 
         buf = StringIO()
         console = Console(file=buf, force_terminal=False)
@@ -160,7 +160,7 @@ class TestResolve:
 
     def test_console_optional(self):
         """resolve_trust_remote_code must work when console is None."""
-        from soup_cli.utils.trust_remote import resolve_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import resolve_trust_remote_code
 
         out = resolve_trust_remote_code(
             "meta-llama/Llama-3.2-1B",
@@ -171,7 +171,7 @@ class TestResolve:
         assert out is True
 
     def test_invalid_model_name_rejected(self):
-        from soup_cli.utils.trust_remote import resolve_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import resolve_trust_remote_code
 
         with pytest.raises(ValueError, match="model_name"):
             resolve_trust_remote_code(
@@ -190,14 +190,14 @@ class TestResolve:
 class TestRequiresProbe:
     def test_local_path_no_auto_map_returns_false(self, tmp_path, monkeypatch):
         """Local path with config.json lacking auto_map → False."""
-        from soup_cli.utils.trust_remote import model_requires_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import model_requires_trust_remote_code
 
         config = tmp_path / "config.json"
         config.write_text('{"model_type": "llama"}', encoding="utf-8")
         assert model_requires_trust_remote_code(str(tmp_path)) is False
 
     def test_local_path_with_auto_map_returns_true(self, tmp_path):
-        from soup_cli.utils.trust_remote import model_requires_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import model_requires_trust_remote_code
 
         config = tmp_path / "config.json"
         config.write_text(
@@ -209,13 +209,13 @@ class TestRequiresProbe:
 
     def test_missing_config_returns_none(self, tmp_path):
         """Missing config.json → None (unknown — caller decides)."""
-        from soup_cli.utils.trust_remote import model_requires_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import model_requires_trust_remote_code
 
         out = model_requires_trust_remote_code(str(tmp_path))
         assert out is None
 
     def test_malformed_config_returns_none(self, tmp_path):
-        from soup_cli.utils.trust_remote import model_requires_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import model_requires_trust_remote_code
 
         config = tmp_path / "config.json"
         config.write_text("{this is not json", encoding="utf-8")
@@ -224,7 +224,7 @@ class TestRequiresProbe:
 
     def test_non_dict_root_returns_none(self, tmp_path):
         """Config with non-dict root (e.g. JSON array) → None."""
-        from soup_cli.utils.trust_remote import model_requires_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import model_requires_trust_remote_code
 
         config = tmp_path / "config.json"
         config.write_text("[1, 2, 3]", encoding="utf-8")
@@ -233,7 +233,7 @@ class TestRequiresProbe:
 
     def test_non_directory_path_returns_none(self):
         """Bare HF repo id (not a local dir) → None (unknown)."""
-        from soup_cli.utils.trust_remote import model_requires_trust_remote_code
+        from ai_forge_cli.utils.trust_remote import model_requires_trust_remote_code
 
         out = model_requires_trust_remote_code("meta-llama/Llama-3.2-1B")
         assert out is None
@@ -250,7 +250,7 @@ class TestCLIPlumbing:
     def test_train_help_lists_flag(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["train", "--help"])
@@ -260,7 +260,7 @@ class TestCLIPlumbing:
     def test_chat_help_lists_flag(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["chat", "--help"])
@@ -270,7 +270,7 @@ class TestCLIPlumbing:
     def test_serve_help_lists_flag(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])

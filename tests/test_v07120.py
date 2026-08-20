@@ -23,9 +23,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from soup_cli import __version__
+from ai_forge_cli import __version__
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "soup_cli"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli"
 
 
 # --------------------------------------------------------------------------- #
@@ -33,7 +33,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src" / "soup_cli"
 # --------------------------------------------------------------------------- #
 class TestTtsCodecPackage:
     def test_per_family_packages(self):
-        from soup_cli.utils.tts import TTS_CODEC_PACKAGES, tts_codec_package
+        from ai_forge_cli.utils.tts import TTS_CODEC_PACKAGES, tts_codec_package
 
         for fam in ("orpheus", "sesame_csm", "llasa", "spark", "oute"):
             assert tts_codec_package(fam) == TTS_CODEC_PACKAGES[fam]
@@ -41,18 +41,18 @@ class TestTtsCodecPackage:
         assert tts_codec_package("spark") == "sparktts"
 
     def test_case_insensitive(self):
-        from soup_cli.utils.tts import tts_codec_package
+        from ai_forge_cli.utils.tts import tts_codec_package
 
         assert tts_codec_package("OrPheus") == "snac"
 
     def test_unknown_rejected(self):
-        from soup_cli.utils.tts import tts_codec_package
+        from ai_forge_cli.utils.tts import tts_codec_package
 
         with pytest.raises(ValueError, match="not supported"):
             tts_codec_package("bark")
 
     def test_packages_immutable(self):
-        from soup_cli.utils.tts import TTS_CODEC_PACKAGES
+        from ai_forge_cli.utils.tts import TTS_CODEC_PACKAGES
 
         with pytest.raises(TypeError):
             TTS_CODEC_PACKAGES["x"] = "y"  # type: ignore[index]
@@ -67,26 +67,26 @@ class TestFormatTtsMessages:
         ]
 
     def test_no_emotion_passthrough(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         out = format_tts_messages(self._msgs(), "spark", emotion=None)
         assert out[1]["content"] == "Hello there."
 
     def test_orpheus_emotion_prefixes_user(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         out = format_tts_messages(self._msgs(), "orpheus", emotion="happy")
         assert out[1]["content"].startswith("<|emotion|>happy<|/emotion|>")
         assert "Hello there." in out[1]["content"]
 
     def test_oute_emotion_template(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         out = format_tts_messages(self._msgs(), "oute", emotion="calm")
         assert out[1]["content"].startswith("[emotion: calm]")
 
     def test_caller_list_not_mutated(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         msgs = self._msgs()
         original = msgs[1]["content"]
@@ -94,25 +94,25 @@ class TestFormatTtsMessages:
         assert msgs[1]["content"] == original
 
     def test_emotion_on_unsupported_family_rejected(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         with pytest.raises(ValueError, match="does not support emotion"):
             format_tts_messages(self._msgs(), "spark", emotion="happy")
 
     def test_non_list_rejected(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         with pytest.raises(TypeError, match="messages must be a list"):
             format_tts_messages("nope", "spark")
 
     def test_non_dict_message_rejected(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         with pytest.raises(TypeError, match="must be a dict"):
             format_tts_messages(["nope"], "spark")
 
     def test_only_first_user_turn_prefixed(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         msgs = [
             {"role": "user", "content": "one"},
@@ -123,7 +123,7 @@ class TestFormatTtsMessages:
         assert out[1]["content"] == "two"
 
     def test_non_str_content_left_unchanged(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         parts = [{"type": "text", "text": "hi"}]
         msgs = [{"role": "user", "content": parts}]
@@ -133,7 +133,7 @@ class TestFormatTtsMessages:
         assert out[0]["content"] is not parts
 
     def test_no_user_turn_with_emotion(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         msgs = [
             {"role": "system", "content": "Speak."},
@@ -144,7 +144,7 @@ class TestFormatTtsMessages:
         assert out[1]["content"] == "<codec>1</codec>"
 
     def test_nested_value_not_shared(self):
-        from soup_cli.utils.tts import format_tts_messages
+        from ai_forge_cli.utils.tts import format_tts_messages
 
         msgs = [{"role": "user", "content": "hi", "tool_calls": [{"x": 1}]}]
         out = format_tts_messages(msgs, "orpheus", emotion="happy")
@@ -154,15 +154,15 @@ class TestFormatTtsMessages:
 
 class TestBuildTtsTrainer:
     def test_no_arg_typeerror(self):
-        from soup_cli.utils.tts import build_tts_trainer
+        from ai_forge_cli.utils.tts import build_tts_trainer
 
         with pytest.raises(TypeError):
             build_tts_trainer()
 
     def test_returns_wrapper(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.tts import TTSTrainerWrapper
-        from soup_cli.utils.tts import build_tts_trainer
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.tts import TTSTrainerWrapper
+        from ai_forge_cli.utils.tts import build_tts_trainer
 
         yaml_str = (
             "base: hf-internal-testing/tiny-random-gpt2\n"
@@ -184,7 +184,7 @@ class TestBuildTtsTrainer:
 
 class TestTtsTrainerSetup:
     def _wrapper(self, *, data_format, family="spark", emotion=None):
-        from soup_cli.trainer.tts import TTSTrainerWrapper
+        from ai_forge_cli.trainer.tts import TTSTrainerWrapper
 
         w = object.__new__(TTSTrainerWrapper)
         w.config = SimpleNamespace(
@@ -221,7 +221,7 @@ class TestTtsTrainerSetup:
     def test_chat_mode_applies_templating_and_delegates(self):
         # In pre-encoded chat mode, setup() emotion-templates the dataset then
         # calls super().setup(). Stub super().setup to capture the dataset.
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         w = self._wrapper(data_format="auto", family="orpheus", emotion="happy")
         captured = {}
@@ -329,7 +329,7 @@ class TestTtsTrainerSetup:
 
 class TestTtsSchemaAndRouting:
     def test_tts_config_loads(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = (
             "base: hf-internal-testing/tiny-random-gpt2\n"
@@ -362,15 +362,15 @@ class TestTtsSchemaAndRouting:
 # --------------------------------------------------------------------------- #
 class TestBuildBitnetTrainer:
     def test_no_arg_typeerror(self):
-        from soup_cli.utils.bitnet import build_bitnet_trainer
+        from ai_forge_cli.utils.bitnet import build_bitnet_trainer
 
         with pytest.raises(TypeError):
             build_bitnet_trainer()
 
     def test_returns_wrapper(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.bitnet import BitNetTrainerWrapper
-        from soup_cli.utils.bitnet import build_bitnet_trainer
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.bitnet import BitNetTrainerWrapper
+        from ai_forge_cli.utils.bitnet import build_bitnet_trainer
 
         yaml_str = (
             "base: hf-internal-testing/tiny-random-gpt2\n"
@@ -386,7 +386,7 @@ class TestBuildBitnetTrainer:
         assert isinstance(wrapper, BitNetTrainerWrapper)
 
     def test_setup_gates_on_onebitllms(self):
-        from soup_cli.trainer.bitnet import BitNetTrainerWrapper
+        from ai_forge_cli.trainer.bitnet import BitNetTrainerWrapper
 
         # onebitllms is not installed on the maintainer's box → friendly gate.
         if "onebitllms" in sys.modules or _spec("onebitllms"):
@@ -398,7 +398,7 @@ class TestBuildBitnetTrainer:
 
 class TestBitnetGgufQuantArg:
     def test_maps_to_tq1_0(self):
-        from soup_cli.utils.bitnet import _BITNET_GGUF_QUANT_ARG
+        from ai_forge_cli.utils.bitnet import _BITNET_GGUF_QUANT_ARG
 
         assert _BITNET_GGUF_QUANT_ARG["bitnet"] == "TQ1_0"
         assert _BITNET_GGUF_QUANT_ARG["tq1_0"] == "TQ1_0"
@@ -406,13 +406,13 @@ class TestBitnetGgufQuantArg:
 
 class TestExportBitnetGguf:
     def test_no_arg_typeerror(self):
-        from soup_cli.utils.bitnet import export_bitnet_gguf
+        from ai_forge_cli.utils.bitnet import export_bitnet_gguf
 
         with pytest.raises(TypeError):
             export_bitnet_gguf()
 
     def test_unknown_format_rejected(self, tmp_path):
-        from soup_cli.utils.bitnet import export_bitnet_gguf
+        from ai_forge_cli.utils.bitnet import export_bitnet_gguf
 
         with pytest.raises(ValueError, match="not supported"):
             export_bitnet_gguf(
@@ -423,7 +423,7 @@ class TestExportBitnetGguf:
             )
 
     def test_outside_cwd_model_rejected(self, tmp_path):
-        from soup_cli.utils.bitnet import export_bitnet_gguf
+        from ai_forge_cli.utils.bitnet import export_bitnet_gguf
 
         # tmp_path is outside cwd → containment rejection.
         with pytest.raises(ValueError, match="under cwd"):
@@ -435,7 +435,7 @@ class TestExportBitnetGguf:
             )
 
     def test_missing_dir_in_cwd(self, monkeypatch, tmp_path):
-        from soup_cli.utils.bitnet import export_bitnet_gguf
+        from ai_forge_cli.utils.bitnet import export_bitnet_gguf
 
         monkeypatch.chdir(tmp_path)
         # model dir under cwd but does not exist → FileNotFoundError.
@@ -448,7 +448,7 @@ class TestExportBitnetGguf:
             )
 
     def test_no_llama_cpp_dir(self, monkeypatch, tmp_path):
-        from soup_cli.utils.bitnet import export_bitnet_gguf
+        from ai_forge_cli.utils.bitnet import export_bitnet_gguf
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "model").mkdir()
@@ -464,7 +464,7 @@ class TestExportBitnetGguf:
     def test_symlink_model_rejected(self, monkeypatch, tmp_path):
         import os
 
-        from soup_cli.utils.bitnet import export_bitnet_gguf
+        from ai_forge_cli.utils.bitnet import export_bitnet_gguf
 
         monkeypatch.chdir(tmp_path)
         target = tmp_path / "outside"
@@ -485,14 +485,14 @@ class TestBitnetExportCli:
         import typer
         from typer.testing import CliRunner
 
-        from soup_cli.commands.export import export
+        from ai_forge_cli.commands.export import export
 
         app = typer.Typer()
         app.command()(export)
         return CliRunner(), app
 
     def test_help_lists_bitnet(self):
-        from soup_cli.commands.export import SUPPORTED_FORMATS
+        from ai_forge_cli.commands.export import SUPPORTED_FORMATS
 
         assert "bitnet" in SUPPORTED_FORMATS
         assert "tq1_0" in SUPPORTED_FORMATS
@@ -534,7 +534,7 @@ class TestMoeRouterDetection:
         ],
     )
     def test_is_router_param(self, name, is_router):
-        from soup_cli.utils.moe_quant import _is_router_param
+        from ai_forge_cli.utils.moe_quant import _is_router_param
 
         assert _is_router_param(name) is is_router
 
@@ -571,7 +571,7 @@ class TestMoeExpertHelpers:
         return torch, Model()
 
     def test_find_expert_linears(self):
-        from soup_cli.utils.moe_quant import _find_expert_linears
+        from ai_forge_cli.utils.moe_quant import _find_expert_linears
 
         _torch, model = self._fake_moe()
         found = _find_expert_linears(model)
@@ -586,7 +586,7 @@ class TestMoeExpertHelpers:
         pytest.importorskip("torch")
         import torch.nn as nn
 
-        from soup_cli.utils.moe_quant import _find_expert_linears
+        from ai_forge_cli.utils.moe_quant import _find_expert_linears
 
         class Plain(nn.Module):
             def __init__(self):
@@ -596,7 +596,7 @@ class TestMoeExpertHelpers:
         assert _find_expert_linears(Plain()) == []
 
     def test_freeze_experts_train_router(self):
-        from soup_cli.utils.moe_quant import freeze_experts_train_router
+        from ai_forge_cli.utils.moe_quant import freeze_experts_train_router
 
         _torch, model = self._fake_moe()
         frozen, trainable = freeze_experts_train_router(model)
@@ -611,7 +611,7 @@ class TestMoeExpertHelpers:
 
 class TestApplyMoeExpertQuant:
     def test_unknown_format_rejected(self):
-        from soup_cli.utils.moe_quant import apply_moe_expert_quant
+        from ai_forge_cli.utils.moe_quant import apply_moe_expert_quant
 
         with pytest.raises(ValueError, match="not supported"):
             apply_moe_expert_quant(object(), "weird")
@@ -620,7 +620,7 @@ class TestApplyMoeExpertQuant:
         pytest.importorskip("torch")
         import torch.nn as nn
 
-        from soup_cli.utils.moe_quant import apply_moe_expert_quant
+        from ai_forge_cli.utils.moe_quant import apply_moe_expert_quant
 
         class Plain(nn.Module):
             def __init__(self):
@@ -653,7 +653,7 @@ class TestApplyMoeExpertQuant:
         torch = pytest.importorskip("torch")
         if torch.cuda.is_available() and _spec("bitsandbytes"):
             pytest.skip("CUDA + bitsandbytes present; real quant path used")
-        from soup_cli.utils.moe_quant import apply_moe_expert_quant
+        from ai_forge_cli.utils.moe_quant import apply_moe_expert_quant
 
         with pytest.raises(RuntimeError, match="bitsandbytes|CUDA"):
             apply_moe_expert_quant(self._moe_with_experts(), "nf4")
@@ -667,7 +667,7 @@ class TestApplyMoeExpertQuant:
             pytest.skip("requires CUDA + bitsandbytes")
         import bitsandbytes as bnb  # noqa: PLC0415
 
-        from soup_cli.utils.moe_quant import apply_moe_expert_quant
+        from ai_forge_cli.utils.moe_quant import apply_moe_expert_quant
 
         model = self._moe_with_experts()
         n = apply_moe_expert_quant(model, "nf4")
@@ -702,14 +702,14 @@ class TestApplyMoeFeaturesIfConfigured:
         return Model()
 
     def test_quant_noop_when_unset(self):
-        from soup_cli.utils.moe_quant import apply_moe_expert_quant_if_configured
+        from ai_forge_cli.utils.moe_quant import apply_moe_expert_quant_if_configured
 
         tcfg = SimpleNamespace(moe_expert_quant=None)
         # Should not touch the model (object() would error on any access).
         apply_moe_expert_quant_if_configured(object(), tcfg)
 
     def test_freeze_noop_when_unset(self):
-        from soup_cli.utils.moe_quant import apply_router_only_freeze_if_configured
+        from ai_forge_cli.utils.moe_quant import apply_router_only_freeze_if_configured
 
         tcfg = SimpleNamespace(train_router_only=False)
         apply_router_only_freeze_if_configured(object(), tcfg)
@@ -717,7 +717,7 @@ class TestApplyMoeFeaturesIfConfigured:
     def test_router_only_freezes_and_prints(self):
         pytest.importorskip("torch")
 
-        from soup_cli.utils.moe_quant import apply_router_only_freeze_if_configured
+        from ai_forge_cli.utils.moe_quant import apply_router_only_freeze_if_configured
 
         model = self._model()
         printed = []
@@ -734,7 +734,7 @@ class TestApplyMoeFeaturesIfConfigured:
     def test_quant_prints_when_set(self, monkeypatch):
         pytest.importorskip("torch")
 
-        from soup_cli.utils import moe_quant
+        from ai_forge_cli.utils import moe_quant
 
         model = self._model()
         printed = []
@@ -748,7 +748,7 @@ class TestApplyMoeFeaturesIfConfigured:
 
 class TestMoeSchemaAndWiring:
     def test_moe_features_config_loads(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = (
             "base: hf-internal-testing/tiny-random-gpt2\n"
@@ -766,7 +766,7 @@ class TestMoeSchemaAndWiring:
         assert cfg.training.train_router_only is True
 
     def test_moe_expert_quant_requires_moe_lora(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = (
             "base: hf-internal-testing/tiny-random-gpt2\n"
@@ -791,7 +791,7 @@ class TestMoeSchemaAndWiring:
         assert quant_at < peft_at < freeze_at
 
     def test_validate_moe_expert_quant_compat_matrix(self):
-        from soup_cli.utils.moe_quant import validate_moe_expert_quant_compat
+        from ai_forge_cli.utils.moe_quant import validate_moe_expert_quant_compat
 
         # happy
         validate_moe_expert_quant_compat(backend="transformers", moe_lora=True)
@@ -805,7 +805,7 @@ class TestMoeSchemaAndWiring:
             validate_moe_expert_quant_compat(backend="transformers", moe_lora="yes")
 
     def test_validate_train_router_only_compat_matrix(self):
-        from soup_cli.utils.moe_quant import validate_train_router_only_compat
+        from ai_forge_cli.utils.moe_quant import validate_train_router_only_compat
 
         validate_train_router_only_compat(backend="transformers", moe_lora=True)
         with pytest.raises(ValueError, match="mlx"):

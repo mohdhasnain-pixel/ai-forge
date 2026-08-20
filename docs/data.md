@@ -337,7 +337,7 @@ soup data generate --prompt "..." --validate
 # Auto-filter by quality (coherence scoring)
 soup data generate --prompt "..." --filter
 
-# Auto-dedup (MinHash, requires: pip install "soup-cli[data]")
+# Auto-dedup (MinHash, requires: pip install "ai-forge[data]")
 soup data generate --prompt "..." --dedup
 
 # Full quality pipeline: validate + filter + dedup
@@ -591,7 +591,7 @@ soup data convert ./data/train.jsonl --to sharegpt --output converted.jsonl
 # Merge multiple datasets
 soup data merge data1.jsonl data2.jsonl --output merged.jsonl --shuffle
 
-# Remove near-duplicates (requires: pip install "soup-cli[data]")
+# Remove near-duplicates (requires: pip install "ai-forge[data]")
 soup data dedup ./data/train.jsonl --threshold 0.8
 
 # Extended statistics (length distribution, token counts, languages)
@@ -692,7 +692,7 @@ data:
 Recognised schemes: `s3://`, `gs://`, `gcs://`, `az://`, `abfs://`, `abfss://`, `oci://`. The matching backend SDK (`s3fs` / `gcsfs` / `adlfs` / `ocifs`) is lazy-imported — install only what you need or grab the convenience extra:
 
 ```bash
-pip install soup-cli[remote]   # fsspec + s3fs + gcsfs + adlfs
+pip install ai-forge[remote]   # fsspec + s3fs + gcsfs + adlfs
 ```
 
 Materialised rows are capped at 1M to defend against pathological remote objects; use a local split for larger jobs.
@@ -814,7 +814,7 @@ Five checks: `length_bias` — the **#1 silent DPO degradation**: `chosen`
 systematically longer than `rejected`, reported as a Cohen's d effect size —
 `label_imbalance` (KTO desirable:undesirable ratio), `near_duplicates`
 (MinHash/LSH, reuses the `soup data dedup` kernel; requires
-`pip install "soup-cli[data]"`, degrades to an advisory skip otherwise),
+`pip install "ai-forge[data]"`, degrades to an advisory skip otherwise),
 `identical_pairs` (`chosen == rejected` — zero preference signal), and
 `prompt_leak` (the prompt echoed verbatim inside the completion, a common
 synthetic-data pipeline bug). Same OK/MINOR/MAJOR taxonomy and exit codes as

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Config Tests ───────────────────────────────────────────────────────────
 
@@ -123,14 +123,14 @@ class TestUnslothDetection:
             # Need to reimport to avoid cached result
             import importlib
 
-            import soup_cli.utils.unsloth
+            import ai_forge_cli.utils.unsloth
 
-            importlib.reload(soup_cli.utils.unsloth)
-            assert soup_cli.utils.unsloth.is_unsloth_available() is True
+            importlib.reload(ai_forge_cli.utils.unsloth)
+            assert ai_forge_cli.utils.unsloth.is_unsloth_available() is True
 
     def test_is_unsloth_available_when_not_installed(self):
         """Should return False when unsloth is not importable."""
-        from soup_cli.utils.unsloth import is_unsloth_available
+        from ai_forge_cli.utils.unsloth import is_unsloth_available
 
         # Default environment doesn't have unsloth
         # This test works because unsloth isn't installed in test env
@@ -139,7 +139,7 @@ class TestUnslothDetection:
 
     def test_get_unsloth_version_when_not_installed(self):
         """Should return None when unsloth is not installed."""
-        from soup_cli.utils.unsloth import get_unsloth_version
+        from ai_forge_cli.utils.unsloth import get_unsloth_version
 
         result = get_unsloth_version()
         # In test env, unsloth is not installed
@@ -152,10 +152,10 @@ class TestUnslothDetection:
         with patch.dict("sys.modules", {"unsloth": mock_module}):
             import importlib
 
-            import soup_cli.utils.unsloth
+            import ai_forge_cli.utils.unsloth
 
-            importlib.reload(soup_cli.utils.unsloth)
-            result = soup_cli.utils.unsloth.get_unsloth_version()
+            importlib.reload(ai_forge_cli.utils.unsloth)
+            result = ai_forge_cli.utils.unsloth.get_unsloth_version()
             assert result == "2024.11.0"
 
 
@@ -167,7 +167,7 @@ class TestSFTUnslothIntegration:
 
     def test_sft_wrapper_init_with_unsloth(self):
         """SFTTrainerWrapper should accept unsloth backend config."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -179,7 +179,7 @@ class TestSFTUnslothIntegration:
 
     def test_sft_wrapper_init_with_transformers(self):
         """SFTTrainerWrapper should work with default transformers backend."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -190,7 +190,7 @@ class TestSFTUnslothIntegration:
 
     def test_sft_setup_unsloth_calls_load(self):
         """_setup_unsloth should call utils.unsloth.load_model_and_tokenizer."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -206,7 +206,7 @@ class TestSFTUnslothIntegration:
         mock_tokenizer.pad_token = "pad"
 
         with patch(
-            "soup_cli.utils.unsloth.load_model_and_tokenizer",
+            "ai_forge_cli.utils.unsloth.load_model_and_tokenizer",
             return_value=(mock_model, mock_tokenizer),
         ) as mock_load:
             wrapper._setup_unsloth(cfg, cfg.training)
@@ -228,7 +228,7 @@ class TestDPOUnslothIntegration:
 
     def test_dpo_wrapper_init_with_unsloth(self):
         """DPOTrainerWrapper should accept unsloth backend config."""
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -241,7 +241,7 @@ class TestDPOUnslothIntegration:
 
     def test_dpo_setup_unsloth_calls_load(self):
         """_setup_unsloth should call utils.unsloth.load_model_and_tokenizer."""
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -256,7 +256,7 @@ class TestDPOUnslothIntegration:
         mock_tokenizer.pad_token = "pad"
 
         with patch(
-            "soup_cli.utils.unsloth.load_model_and_tokenizer",
+            "ai_forge_cli.utils.unsloth.load_model_and_tokenizer",
             return_value=(mock_model, mock_tokenizer),
         ) as mock_load:
             wrapper._setup_unsloth(cfg, cfg.training)
@@ -269,7 +269,7 @@ class TestGRPOUnslothIntegration:
 
     def test_grpo_wrapper_init_with_unsloth(self):
         """GRPOTrainerWrapper should accept unsloth backend config."""
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -282,7 +282,7 @@ class TestGRPOUnslothIntegration:
 
     def test_grpo_setup_unsloth_calls_load(self):
         """_setup_unsloth should call utils.unsloth.load_model_and_tokenizer."""
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -297,7 +297,7 @@ class TestGRPOUnslothIntegration:
         mock_tokenizer.pad_token = "pad"
 
         with patch(
-            "soup_cli.utils.unsloth.load_model_and_tokenizer",
+            "ai_forge_cli.utils.unsloth.load_model_and_tokenizer",
             return_value=(mock_model, mock_tokenizer),
         ) as mock_load:
             wrapper._setup_unsloth(cfg, cfg.training)
@@ -336,7 +336,7 @@ class TestBackendSweepParam:
     """Test backend parameter in sweep shortcuts."""
 
     def test_backend_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"backend": "transformers"}
         _set_nested_param(config, "backend", "unsloth")
@@ -350,13 +350,13 @@ class TestDoctorUnsloth:
     """Test that doctor checks for unsloth."""
 
     def test_unsloth_in_deps_list(self):
-        from soup_cli.commands.doctor import DEPS
+        from ai_forge_cli.commands.doctor import DEPS
 
         pkg_names = [pkg_name for _, pkg_name, _, _ in DEPS]
         assert "unsloth" in pkg_names
 
     def test_unsloth_is_optional(self):
-        from soup_cli.commands.doctor import DEPS
+        from ai_forge_cli.commands.doctor import DEPS
 
         for import_name, pkg_name, _, required in DEPS:
             if pkg_name == "unsloth":
@@ -383,10 +383,10 @@ class TestLoadModelAndTokenizer:
         with patch.dict("sys.modules", {"unsloth": MagicMock(FastLanguageModel=mock_flm)}):
             import importlib
 
-            import soup_cli.utils.unsloth
+            import ai_forge_cli.utils.unsloth
 
-            importlib.reload(soup_cli.utils.unsloth)
-            model, tokenizer = soup_cli.utils.unsloth.load_model_and_tokenizer(
+            importlib.reload(ai_forge_cli.utils.unsloth)
+            model, tokenizer = ai_forge_cli.utils.unsloth.load_model_and_tokenizer(
                 model_name="test-model",
                 max_seq_length=2048,
                 quantization="4bit",
@@ -406,10 +406,10 @@ class TestLoadModelAndTokenizer:
         with patch.dict("sys.modules", {"unsloth": MagicMock(FastLanguageModel=mock_flm)}):
             import importlib
 
-            import soup_cli.utils.unsloth
+            import ai_forge_cli.utils.unsloth
 
-            importlib.reload(soup_cli.utils.unsloth)
-            soup_cli.utils.unsloth.load_model_and_tokenizer(
+            importlib.reload(ai_forge_cli.utils.unsloth)
+            ai_forge_cli.utils.unsloth.load_model_and_tokenizer(
                 model_name="test-model",
                 max_seq_length=2048,
                 quantization="none",
@@ -428,10 +428,10 @@ class TestLoadModelAndTokenizer:
         with patch.dict("sys.modules", {"unsloth": MagicMock(FastLanguageModel=mock_flm)}):
             import importlib
 
-            import soup_cli.utils.unsloth
+            import ai_forge_cli.utils.unsloth
 
-            importlib.reload(soup_cli.utils.unsloth)
-            soup_cli.utils.unsloth.load_model_and_tokenizer(
+            importlib.reload(ai_forge_cli.utils.unsloth)
+            ai_forge_cli.utils.unsloth.load_model_and_tokenizer(
                 model_name="test-model",
                 max_seq_length=2048,
                 target_modules="auto",
@@ -452,11 +452,11 @@ class TestLoadModelAndTokenizer:
         with patch.dict("sys.modules", {"unsloth": MagicMock(FastLanguageModel=mock_flm)}):
             import importlib
 
-            import soup_cli.utils.unsloth
+            import ai_forge_cli.utils.unsloth
 
-            importlib.reload(soup_cli.utils.unsloth)
+            importlib.reload(ai_forge_cli.utils.unsloth)
             custom_modules = ["q_proj", "k_proj"]
-            soup_cli.utils.unsloth.load_model_and_tokenizer(
+            ai_forge_cli.utils.unsloth.load_model_and_tokenizer(
                 model_name="test-model",
                 max_seq_length=2048,
                 target_modules=custom_modules,
@@ -475,10 +475,10 @@ class TestLoadModelAndTokenizer:
         with patch.dict("sys.modules", {"unsloth": MagicMock(FastLanguageModel=mock_flm)}):
             import importlib
 
-            import soup_cli.utils.unsloth
+            import ai_forge_cli.utils.unsloth
 
-            importlib.reload(soup_cli.utils.unsloth)
-            soup_cli.utils.unsloth.load_model_and_tokenizer(
+            importlib.reload(ai_forge_cli.utils.unsloth)
+            ai_forge_cli.utils.unsloth.load_model_and_tokenizer(
                 model_name="test-model",
                 max_seq_length=2048,
                 lora_r=128,

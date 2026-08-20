@@ -20,7 +20,7 @@ import pytest
 
 class TestRewardHackingPublicSurface:
     def test_module_imports(self):
-        from soup_cli.utils import reward_hacking
+        from ai_forge_cli.utils import reward_hacking
 
         assert hasattr(reward_hacking, "SUPPORTED_HACK_DETECTORS")
         assert hasattr(reward_hacking, "validate_hack_detector")
@@ -31,14 +31,14 @@ class TestRewardHackingPublicSurface:
         assert hasattr(reward_hacking, "build_reward_hack_callback")
 
     def test_supported_detectors_is_frozenset(self):
-        from soup_cli.utils.reward_hacking import SUPPORTED_HACK_DETECTORS
+        from ai_forge_cli.utils.reward_hacking import SUPPORTED_HACK_DETECTORS
 
         assert isinstance(SUPPORTED_HACK_DETECTORS, frozenset)
         assert "info_rm" in SUPPORTED_HACK_DETECTORS
         assert "rm_ensemble" in SUPPORTED_HACK_DETECTORS
 
     def test_supported_detectors_immutable(self):
-        from soup_cli.utils.reward_hacking import SUPPORTED_HACK_DETECTORS
+        from ai_forge_cli.utils.reward_hacking import SUPPORTED_HACK_DETECTORS
 
         with pytest.raises((AttributeError, TypeError)):
             SUPPORTED_HACK_DETECTORS.add("evil")
@@ -46,49 +46,49 @@ class TestRewardHackingPublicSurface:
 
 class TestValidateHackDetector:
     def test_happy_path(self):
-        from soup_cli.utils.reward_hacking import validate_hack_detector
+        from ai_forge_cli.utils.reward_hacking import validate_hack_detector
 
         assert validate_hack_detector("info_rm") == "info_rm"
         assert validate_hack_detector("rm_ensemble") == "rm_ensemble"
 
     def test_case_insensitive(self):
-        from soup_cli.utils.reward_hacking import validate_hack_detector
+        from ai_forge_cli.utils.reward_hacking import validate_hack_detector
 
         assert validate_hack_detector("INFO_RM") == "info_rm"
         assert validate_hack_detector("Rm_Ensemble") == "rm_ensemble"
 
     def test_unknown_raises(self):
-        from soup_cli.utils.reward_hacking import validate_hack_detector
+        from ai_forge_cli.utils.reward_hacking import validate_hack_detector
 
         with pytest.raises(ValueError, match="not supported"):
             validate_hack_detector("evil")
 
     def test_bool_rejected(self):
-        from soup_cli.utils.reward_hacking import validate_hack_detector
+        from ai_forge_cli.utils.reward_hacking import validate_hack_detector
 
         with pytest.raises(ValueError, match="bool"):
             validate_hack_detector(True)
 
     def test_empty_rejected(self):
-        from soup_cli.utils.reward_hacking import validate_hack_detector
+        from ai_forge_cli.utils.reward_hacking import validate_hack_detector
 
         with pytest.raises(ValueError, match="non-empty"):
             validate_hack_detector("")
 
     def test_non_string_rejected(self):
-        from soup_cli.utils.reward_hacking import validate_hack_detector
+        from ai_forge_cli.utils.reward_hacking import validate_hack_detector
 
         with pytest.raises(ValueError, match="string"):
             validate_hack_detector(123)
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.reward_hacking import validate_hack_detector
+        from ai_forge_cli.utils.reward_hacking import validate_hack_detector
 
         with pytest.raises(ValueError, match="null byte"):
             validate_hack_detector("info_rm\x00")
 
     def test_oversize_rejected(self):
-        from soup_cli.utils.reward_hacking import validate_hack_detector
+        from ai_forge_cli.utils.reward_hacking import validate_hack_detector
 
         with pytest.raises(ValueError, match="exceeds"):
             validate_hack_detector("x" * 64)
@@ -103,7 +103,7 @@ class TestComputeClusterSeparation:
     """
 
     def test_perfect_separation(self):
-        from soup_cli.utils.reward_hacking import compute_cluster_separation
+        from ai_forge_cli.utils.reward_hacking import compute_cluster_separation
 
         good_scores = [10.0, 9.5, 11.0]
         bad_scores = [1.0, 0.5, 1.5]
@@ -113,7 +113,7 @@ class TestComputeClusterSeparation:
         assert value > 1.0
 
     def test_no_separation(self):
-        from soup_cli.utils.reward_hacking import compute_cluster_separation
+        from ai_forge_cli.utils.reward_hacking import compute_cluster_separation
 
         good_scores = [5.0, 5.5, 4.5]
         bad_scores = [5.0, 5.5, 4.5]
@@ -123,7 +123,7 @@ class TestComputeClusterSeparation:
 
     def test_zero_variance_groups(self):
         """Zero variance is gracefully handled (small epsilon)."""
-        from soup_cli.utils.reward_hacking import compute_cluster_separation
+        from ai_forge_cli.utils.reward_hacking import compute_cluster_separation
 
         good_scores = [5.0, 5.0, 5.0]
         bad_scores = [1.0, 1.0, 1.0]
@@ -132,19 +132,19 @@ class TestComputeClusterSeparation:
         assert value > 0.0
 
     def test_empty_good_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_cluster_separation
+        from ai_forge_cli.utils.reward_hacking import compute_cluster_separation
 
         with pytest.raises(ValueError, match="empty"):
             compute_cluster_separation([], [1.0])
 
     def test_empty_bad_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_cluster_separation
+        from ai_forge_cli.utils.reward_hacking import compute_cluster_separation
 
         with pytest.raises(ValueError, match="empty"):
             compute_cluster_separation([1.0], [])
 
     def test_non_finite_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_cluster_separation
+        from ai_forge_cli.utils.reward_hacking import compute_cluster_separation
 
         with pytest.raises(ValueError, match="finite"):
             compute_cluster_separation([1.0, float("nan")], [0.0])
@@ -152,13 +152,13 @@ class TestComputeClusterSeparation:
             compute_cluster_separation([float("inf")], [0.0])
 
     def test_bool_in_list_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_cluster_separation
+        from ai_forge_cli.utils.reward_hacking import compute_cluster_separation
 
         with pytest.raises(ValueError, match="bool"):
             compute_cluster_separation([1.0, True], [0.0])
 
     def test_non_list_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_cluster_separation
+        from ai_forge_cli.utils.reward_hacking import compute_cluster_separation
 
         with pytest.raises(TypeError):
             compute_cluster_separation("not a list", [0.0])
@@ -172,7 +172,7 @@ class TestComputeRmEnsembleDivergence:
     """
 
     def test_perfect_agreement(self):
-        from soup_cli.utils.reward_hacking import compute_rm_ensemble_divergence
+        from ai_forge_cli.utils.reward_hacking import compute_rm_ensemble_divergence
 
         rm_scores = [
             [1.0, 2.0, 3.0],  # RM 1
@@ -184,7 +184,7 @@ class TestComputeRmEnsembleDivergence:
         assert value < 1e-6
 
     def test_disagreement(self):
-        from soup_cli.utils.reward_hacking import compute_rm_ensemble_divergence
+        from ai_forge_cli.utils.reward_hacking import compute_rm_ensemble_divergence
 
         rm_scores = [
             [1.0, 2.0, 3.0],
@@ -196,43 +196,43 @@ class TestComputeRmEnsembleDivergence:
         assert value > 1.0
 
     def test_single_rm_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_rm_ensemble_divergence
+        from ai_forge_cli.utils.reward_hacking import compute_rm_ensemble_divergence
 
         with pytest.raises(ValueError, match="at least 2"):
             compute_rm_ensemble_divergence([[1.0, 2.0]])
 
     def test_empty_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_rm_ensemble_divergence
+        from ai_forge_cli.utils.reward_hacking import compute_rm_ensemble_divergence
 
         with pytest.raises(ValueError, match="at least 2"):
             compute_rm_ensemble_divergence([])
 
     def test_uneven_lengths_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_rm_ensemble_divergence
+        from ai_forge_cli.utils.reward_hacking import compute_rm_ensemble_divergence
 
         with pytest.raises(ValueError, match="length"):
             compute_rm_ensemble_divergence([[1.0, 2.0], [1.0, 2.0, 3.0]])
 
     def test_non_finite_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_rm_ensemble_divergence
+        from ai_forge_cli.utils.reward_hacking import compute_rm_ensemble_divergence
 
         with pytest.raises(ValueError, match="finite"):
             compute_rm_ensemble_divergence([[1.0, float("nan")], [0.0, 0.0]])
 
     def test_non_list_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_rm_ensemble_divergence
+        from ai_forge_cli.utils.reward_hacking import compute_rm_ensemble_divergence
 
         with pytest.raises(TypeError):
             compute_rm_ensemble_divergence("not a list")
 
     def test_bool_inner_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_rm_ensemble_divergence
+        from ai_forge_cli.utils.reward_hacking import compute_rm_ensemble_divergence
 
         with pytest.raises(ValueError, match="bool"):
             compute_rm_ensemble_divergence([[1.0, True], [0.0, 0.0]])
 
     def test_too_many_rms_rejected(self):
-        from soup_cli.utils.reward_hacking import compute_rm_ensemble_divergence
+        from ai_forge_cli.utils.reward_hacking import compute_rm_ensemble_divergence
 
         too_many = [[1.0] for _ in range(100)]
         with pytest.raises(ValueError, match="too many"):
@@ -249,33 +249,33 @@ class TestClassifyHackSignal:
     """
 
     def test_ok_threshold(self):
-        from soup_cli.utils.reward_hacking import classify_hack_signal
+        from ai_forge_cli.utils.reward_hacking import classify_hack_signal
 
         assert classify_hack_signal(0.05) == "OK"
         assert classify_hack_signal(0.0) == "OK"
 
     def test_warn_threshold(self):
-        from soup_cli.utils.reward_hacking import classify_hack_signal
+        from ai_forge_cli.utils.reward_hacking import classify_hack_signal
 
         assert classify_hack_signal(0.10) == "WARN"
         assert classify_hack_signal(0.20) == "WARN"
         assert classify_hack_signal(0.29) == "WARN"
 
     def test_hack_threshold(self):
-        from soup_cli.utils.reward_hacking import classify_hack_signal
+        from ai_forge_cli.utils.reward_hacking import classify_hack_signal
 
         assert classify_hack_signal(0.30) == "HACK"
         assert classify_hack_signal(0.50) == "HACK"
         assert classify_hack_signal(1.0) == "HACK"
 
     def test_negative_signal_rejected(self):
-        from soup_cli.utils.reward_hacking import classify_hack_signal
+        from ai_forge_cli.utils.reward_hacking import classify_hack_signal
 
         with pytest.raises(ValueError, match="non-negative"):
             classify_hack_signal(-0.1)
 
     def test_non_finite_rejected(self):
-        from soup_cli.utils.reward_hacking import classify_hack_signal
+        from ai_forge_cli.utils.reward_hacking import classify_hack_signal
 
         with pytest.raises(ValueError, match="finite"):
             classify_hack_signal(float("nan"))
@@ -283,13 +283,13 @@ class TestClassifyHackSignal:
             classify_hack_signal(float("inf"))
 
     def test_bool_rejected(self):
-        from soup_cli.utils.reward_hacking import classify_hack_signal
+        from ai_forge_cli.utils.reward_hacking import classify_hack_signal
 
         with pytest.raises(ValueError, match="bool"):
             classify_hack_signal(True)
 
     def test_non_number_rejected(self):
-        from soup_cli.utils.reward_hacking import classify_hack_signal
+        from ai_forge_cli.utils.reward_hacking import classify_hack_signal
 
         with pytest.raises(ValueError, match="number"):
             classify_hack_signal("0.5")
@@ -297,7 +297,7 @@ class TestClassifyHackSignal:
 
 class TestRewardHackReport:
     def test_basic_construction(self):
-        from soup_cli.utils.reward_hacking import RewardHackReport
+        from ai_forge_cli.utils.reward_hacking import RewardHackReport
 
         report = RewardHackReport(
             detector="info_rm",
@@ -313,7 +313,7 @@ class TestRewardHackReport:
         assert report.step == 100
 
     def test_frozen(self):
-        from soup_cli.utils.reward_hacking import RewardHackReport
+        from ai_forge_cli.utils.reward_hacking import RewardHackReport
 
         report = RewardHackReport(
             detector="info_rm",
@@ -327,7 +327,7 @@ class TestRewardHackReport:
             report.signal = 0.2  # type: ignore[misc]
 
     def test_invalid_detector_rejected(self):
-        from soup_cli.utils.reward_hacking import RewardHackReport
+        from ai_forge_cli.utils.reward_hacking import RewardHackReport
 
         with pytest.raises(ValueError, match="not supported"):
             RewardHackReport(
@@ -340,7 +340,7 @@ class TestRewardHackReport:
             )
 
     def test_invalid_verdict_rejected(self):
-        from soup_cli.utils.reward_hacking import RewardHackReport
+        from ai_forge_cli.utils.reward_hacking import RewardHackReport
 
         with pytest.raises(ValueError, match="verdict"):
             RewardHackReport(
@@ -353,7 +353,7 @@ class TestRewardHackReport:
             )
 
     def test_negative_signal_rejected(self):
-        from soup_cli.utils.reward_hacking import RewardHackReport
+        from ai_forge_cli.utils.reward_hacking import RewardHackReport
 
         with pytest.raises(ValueError):
             RewardHackReport(
@@ -366,7 +366,7 @@ class TestRewardHackReport:
             )
 
     def test_negative_step_rejected(self):
-        from soup_cli.utils.reward_hacking import RewardHackReport
+        from ai_forge_cli.utils.reward_hacking import RewardHackReport
 
         with pytest.raises(ValueError, match="step"):
             RewardHackReport(
@@ -379,7 +379,7 @@ class TestRewardHackReport:
             )
 
     def test_bool_step_rejected(self):
-        from soup_cli.utils.reward_hacking import RewardHackReport
+        from ai_forge_cli.utils.reward_hacking import RewardHackReport
 
         with pytest.raises(ValueError, match="bool"):
             RewardHackReport(
@@ -392,7 +392,7 @@ class TestRewardHackReport:
             )
 
     def test_details_must_be_tuple(self):
-        from soup_cli.utils.reward_hacking import RewardHackReport
+        from ai_forge_cli.utils.reward_hacking import RewardHackReport
 
         with pytest.raises(TypeError, match="tuple"):
             RewardHackReport(
@@ -412,13 +412,13 @@ class TestBuildRewardHackCallbackStub:
     """
 
     def test_invalid_detector_rejected_before_build(self):
-        from soup_cli.utils.reward_hacking import build_reward_hack_callback
+        from ai_forge_cli.utils.reward_hacking import build_reward_hack_callback
 
         with pytest.raises(ValueError, match="not supported"):
             build_reward_hack_callback(detector="evil")
 
     def test_live_returns_callback(self):
-        from soup_cli.utils.reward_hacking import (
+        from ai_forge_cli.utils.reward_hacking import (
             RewardHackCallback,
             build_reward_hack_callback,
         )
@@ -427,7 +427,7 @@ class TestBuildRewardHackCallbackStub:
         assert isinstance(cb, RewardHackCallback)
 
     def test_bool_halt_on_hack_rejected(self):
-        from soup_cli.utils.reward_hacking import build_reward_hack_callback
+        from ai_forge_cli.utils.reward_hacking import build_reward_hack_callback
 
         with pytest.raises(TypeError, match="halt_on_hack"):
             build_reward_hack_callback(detector="info_rm", halt_on_hack="yes")  # type: ignore[arg-type]
@@ -440,20 +440,20 @@ class TestBuildRewardHackCallbackStub:
 
 class TestSchemaTrainingConfig:
     def test_default_none(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig()
         assert tcfg.reward_hack_detector is None
         assert tcfg.reward_hack_halt is False
 
     def test_accept_info_rm(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig(reward_hack_detector="info_rm")
         assert tcfg.reward_hack_detector == "info_rm"
 
     def test_accept_rm_ensemble(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig(reward_hack_detector="rm_ensemble")
         assert tcfg.reward_hack_detector == "rm_ensemble"
@@ -461,7 +461,7 @@ class TestSchemaTrainingConfig:
     def test_unknown_detector_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(reward_hack_detector="evil")
@@ -469,7 +469,7 @@ class TestSchemaTrainingConfig:
     def test_halt_must_be_bool(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         # Pydantic wraps the TypeError raised by the field validator into
         # a ValidationError at construction time.
@@ -495,31 +495,31 @@ training:
 """
 
     def test_grpo_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(self._yaml("grpo"))
         assert cfg.training.reward_hack_detector == "info_rm"
 
     def test_ppo_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(self._yaml("ppo"))
         assert cfg.training.reward_hack_detector == "info_rm"
 
     def test_sft_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="reward_hack"):
             load_config_from_string(self._yaml("sft"))
 
     def test_dpo_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="reward_hack"):
             load_config_from_string(self._yaml("dpo"))
 
     def test_halt_without_detector_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="reward_hack_detector"):
             load_config_from_string(
@@ -535,7 +535,7 @@ training:
             )
 
     def test_mlx_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError):
             load_config_from_string(
@@ -564,7 +564,7 @@ class TestSourceWiring:
 
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "utils"
             / "reward_hacking.py"
         )
@@ -574,9 +574,9 @@ class TestSourceWiring:
         assert "\nfrom torch" not in body
 
     def test_version_bumped(self):
-        import soup_cli
+        import ai_forge_cli
 
         # We do not freeze here — checked via floor.
-        major_minor = tuple(int(x) for x in soup_cli.__version__.split(".")[:2])
+        major_minor = tuple(int(x) for x in ai_forge_cli.__version__.split(".")[:2])
         # 0.70 floor.
         assert major_minor >= (0, 70)

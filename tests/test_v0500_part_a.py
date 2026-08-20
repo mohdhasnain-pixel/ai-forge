@@ -11,10 +11,10 @@ import math
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.config.schema import SoupConfig, TrainingConfig
-from soup_cli.utils import grpo_variants
-from soup_cli.utils.grpo_variants import (
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.schema import SoupConfig, TrainingConfig
+from ai_forge_cli.utils import grpo_variants
+from ai_forge_cli.utils.grpo_variants import (
     SUPPORTED_GRPO_VARIANTS,
     GRPOVariantSpec,
     apply_variant_loss,
@@ -110,7 +110,7 @@ def test_deferred_live_invariant():
     v0.53.11 #123 lifted every entry — ``_DEFERRED_LIVE`` is now empty
     because all 6 variants ship with live math kernels.
     """
-    from soup_cli.utils.grpo_variants import _DEFERRED_LIVE
+    from ai_forge_cli.utils.grpo_variants import _DEFERRED_LIVE
     assert len(SUPPORTED_GRPO_VARIANTS) == 7
     assert _DEFERRED_LIVE == frozenset()
 

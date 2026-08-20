@@ -49,7 +49,7 @@ def fake_cuda(monkeypatch):
 
 class TestExpandableSegmentsStatus:
     def test_windows_says_windows(self, monkeypatch):
-        from soup_cli.utils.layer_stream_runtime import expandable_segments_status
+        from ai_forge_cli.utils.layer_stream_runtime import expandable_segments_status
 
         monkeypatch.setattr(sys, "platform", "win32")
         enabled, why = expandable_segments_status()
@@ -60,7 +60,7 @@ class TestExpandableSegmentsStatus:
         self, fake_cuda, monkeypatch
     ):
         """The Colab case. Must NOT mention Windows, and must name the cause."""
-        from soup_cli.utils.layer_stream_runtime import expandable_segments_status
+        from ai_forge_cli.utils.layer_stream_runtime import expandable_segments_status
 
         monkeypatch.setattr(sys, "platform", "linux")
         monkeypatch.delenv("PYTORCH_CUDA_ALLOC_CONF", raising=False)
@@ -73,7 +73,7 @@ class TestExpandableSegmentsStatus:
         assert "PYTORCH_CUDA_ALLOC_CONF" in why
 
     def test_linux_before_cuda_init_enables_it(self, fake_cuda, monkeypatch):
-        from soup_cli.utils.layer_stream_runtime import expandable_segments_status
+        from ai_forge_cli.utils.layer_stream_runtime import expandable_segments_status
 
         monkeypatch.setattr(sys, "platform", "linux")
         monkeypatch.delenv("PYTORCH_CUDA_ALLOC_CONF", raising=False)
@@ -88,7 +88,7 @@ class TestExpandableSegmentsStatus:
     ):
         """CUDA is up, but the env var was exported before the process started —
         which is the one way to actually get this on a notebook."""
-        from soup_cli.utils.layer_stream_runtime import expandable_segments_status
+        from ai_forge_cli.utils.layer_stream_runtime import expandable_segments_status
 
         monkeypatch.setattr(sys, "platform", "linux")
         monkeypatch.setenv("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
@@ -97,7 +97,7 @@ class TestExpandableSegmentsStatus:
         assert expandable_segments_status() == (True, "")
 
     def test_no_cuda_says_no_cuda(self, fake_cuda, monkeypatch):
-        from soup_cli.utils.layer_stream_runtime import expandable_segments_status
+        from ai_forge_cli.utils.layer_stream_runtime import expandable_segments_status
 
         monkeypatch.setattr(sys, "platform", "linux")
         fake_cuda(available=False)
@@ -107,7 +107,7 @@ class TestExpandableSegmentsStatus:
 
     def test_probe_still_returns_a_bool(self):
         """The old public name is kept — callers outside the panel use it."""
-        from soup_cli.utils.layer_stream_runtime import probe_expandable_segments
+        from ai_forge_cli.utils.layer_stream_runtime import probe_expandable_segments
 
         assert isinstance(probe_expandable_segments(), bool)
 
@@ -116,7 +116,7 @@ class TestThePanelPrintsTheReason:
     def test_setup_no_longer_hardcodes_the_windows_sentence(self):
         from pathlib import Path
 
-        import soup_cli.trainer.stream_setup as mod
+        import ai_forge_cli.trainer.stream_setup as mod
 
         src = Path(mod.__file__).read_text(encoding="utf-8")
         assert "silently ignored on Windows) — not enabled" not in src

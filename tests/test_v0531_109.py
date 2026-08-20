@@ -12,7 +12,7 @@ import pytest
 
 class TestComputeCacheKey:
     def test_basic(self):
-        from soup_cli.utils.deploy_measure import compute_cache_key
+        from ai_forge_cli.utils.deploy_measure import compute_cache_key
 
         key = compute_cache_key(
             base_sha="abc123", profile_name="rtx-4090-24gb",
@@ -22,7 +22,7 @@ class TestComputeCacheKey:
         assert len(key) == 32
 
     def test_deterministic(self):
-        from soup_cli.utils.deploy_measure import compute_cache_key
+        from ai_forge_cli.utils.deploy_measure import compute_cache_key
 
         k1 = compute_cache_key(
             base_sha="x", profile_name="p", tasks_sha="t",
@@ -33,7 +33,7 @@ class TestComputeCacheKey:
         assert k1 == k2
 
     def test_diff_on_each_arg(self):
-        from soup_cli.utils.deploy_measure import compute_cache_key
+        from ai_forge_cli.utils.deploy_measure import compute_cache_key
 
         base = compute_cache_key(base_sha="a", profile_name="b", tasks_sha="c")
         for changed in (
@@ -44,13 +44,13 @@ class TestComputeCacheKey:
             assert changed != base
 
     def test_bool_rejected(self):
-        from soup_cli.utils.deploy_measure import compute_cache_key
+        from ai_forge_cli.utils.deploy_measure import compute_cache_key
 
         with pytest.raises(TypeError):
             compute_cache_key(base_sha=True, profile_name="x", tasks_sha="y")
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.deploy_measure import compute_cache_key
+        from ai_forge_cli.utils.deploy_measure import compute_cache_key
 
         with pytest.raises(ValueError):
             compute_cache_key(
@@ -58,7 +58,7 @@ class TestComputeCacheKey:
             )
 
     def test_empty_rejected(self):
-        from soup_cli.utils.deploy_measure import compute_cache_key
+        from ai_forge_cli.utils.deploy_measure import compute_cache_key
 
         with pytest.raises(ValueError):
             compute_cache_key(base_sha="", profile_name="x", tasks_sha="y")
@@ -69,7 +69,7 @@ class TestComputeCacheKey:
 
 class TestShaOfFile:
     def test_basic(self, tmp_path):
-        from soup_cli.utils.deploy_measure import sha_of_file
+        from ai_forge_cli.utils.deploy_measure import sha_of_file
 
         f = tmp_path / "x.txt"
         f.write_bytes(b"hello world")
@@ -78,13 +78,13 @@ class TestShaOfFile:
         assert len(h) == 64  # full sha256 hex
 
     def test_missing_file(self, tmp_path):
-        from soup_cli.utils.deploy_measure import sha_of_file
+        from ai_forge_cli.utils.deploy_measure import sha_of_file
 
         with pytest.raises(FileNotFoundError):
             sha_of_file(str(tmp_path / "missing"))
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.deploy_measure import sha_of_file
+        from ai_forge_cli.utils.deploy_measure import sha_of_file
 
         with pytest.raises(ValueError):
             sha_of_file("ev\x00il")
@@ -106,7 +106,7 @@ def _write_tasks(tmp_path: Path) -> Path:
 
 class TestMeasureCandidate:
     def test_ok_when_after_matches(self, tmp_path):
-        from soup_cli.utils.deploy_measure import measure_candidate
+        from ai_forge_cli.utils.deploy_measure import measure_candidate
 
         tasks = _write_tasks(tmp_path)
         def gen(p):
@@ -123,7 +123,7 @@ class TestMeasureCandidate:
 
     def test_minor_band_at_3pct_drop(self, tmp_path):
         """L1: explicitly exercise the MINOR verdict band (2% < drop < 5%)."""
-        from soup_cli.utils.deploy_measure import MeasureResult, measure_candidate
+        from ai_forge_cli.utils.deploy_measure import MeasureResult, measure_candidate
 
         # Build a 100-task fixture so we can hit a 3% drop
         big = tmp_path / "tasks_big.jsonl"
@@ -153,7 +153,7 @@ class TestMeasureCandidate:
         assert 0.02 <= -r.delta < 0.05
 
     def test_minor_drop(self, tmp_path):
-        from soup_cli.utils.deploy_measure import measure_candidate
+        from ai_forge_cli.utils.deploy_measure import measure_candidate
 
         tasks = _write_tasks(tmp_path)
         def before(p):
@@ -169,7 +169,7 @@ class TestMeasureCandidate:
         assert r.delta < 0
 
     def test_invalid_candidate(self, tmp_path):
-        from soup_cli.utils.deploy_measure import measure_candidate
+        from ai_forge_cli.utils.deploy_measure import measure_candidate
 
         tasks = _write_tasks(tmp_path)
         with pytest.raises(TypeError):
@@ -181,7 +181,7 @@ class TestMeasureCandidate:
             )
 
     def test_empty_candidate(self, tmp_path):
-        from soup_cli.utils.deploy_measure import measure_candidate
+        from ai_forge_cli.utils.deploy_measure import measure_candidate
 
         tasks = _write_tasks(tmp_path)
         with pytest.raises(ValueError):
@@ -193,7 +193,7 @@ class TestMeasureCandidate:
             )
 
     def test_null_byte_candidate(self, tmp_path):
-        from soup_cli.utils.deploy_measure import measure_candidate
+        from ai_forge_cli.utils.deploy_measure import measure_candidate
 
         tasks = _write_tasks(tmp_path)
         with pytest.raises(ValueError):
@@ -210,12 +210,12 @@ class TestMeasureCandidate:
 
 class TestPickBest:
     def test_empty_returns_none(self):
-        from soup_cli.utils.deploy_measure import pick_best
+        from ai_forge_cli.utils.deploy_measure import pick_best
 
         assert pick_best([]) is None
 
     def test_first_ok_wins(self):
-        from soup_cli.utils.deploy_measure import MeasureResult, pick_best
+        from ai_forge_cli.utils.deploy_measure import MeasureResult, pick_best
 
         rows = [
             MeasureResult("a", 0.8, 0.79, -0.01, "OK"),
@@ -224,7 +224,7 @@ class TestPickBest:
         assert pick_best(rows).candidate == "a"
 
     def test_no_ok_picks_highest_after(self):
-        from soup_cli.utils.deploy_measure import MeasureResult, pick_best
+        from ai_forge_cli.utils.deploy_measure import MeasureResult, pick_best
 
         rows = [
             MeasureResult("a", 0.8, 0.5, -0.3, "MAJOR"),
@@ -239,7 +239,7 @@ class TestPickBest:
 
 class TestCacheRoundtrip:
     def test_save_then_load(self, tmp_path):
-        from soup_cli.utils.deploy_measure import load_cache, save_cache
+        from ai_forge_cli.utils.deploy_measure import load_cache, save_cache
 
         cache_path = tmp_path / "cache.json"
         payload = {"abc123": {"rows": [{"candidate": "gptq",
@@ -250,12 +250,12 @@ class TestCacheRoundtrip:
         assert loaded == payload
 
     def test_load_missing_returns_empty(self, tmp_path):
-        from soup_cli.utils.deploy_measure import load_cache
+        from ai_forge_cli.utils.deploy_measure import load_cache
 
         assert load_cache(str(tmp_path / "missing.json")) == {}
 
     def test_load_malformed_returns_empty(self, tmp_path):
-        from soup_cli.utils.deploy_measure import load_cache
+        from ai_forge_cli.utils.deploy_measure import load_cache
 
         bad = tmp_path / "bad.json"
         bad.write_text("not json {{{", encoding="utf-8")
@@ -267,7 +267,7 @@ class TestCacheRoundtrip:
 
 class TestRunMeasure:
     def test_first_run_misses_then_hits(self, tmp_path):
-        from soup_cli.utils.deploy_measure import run_measure
+        from ai_forge_cli.utils.deploy_measure import run_measure
 
         tasks = _write_tasks(tmp_path)
         cache_path = tmp_path / "cache.json"
@@ -318,7 +318,7 @@ class TestRunMeasure:
         assert [r.candidate for r in results2] == ["awq", "gptq"]
 
     def test_candidates_empty_rejected(self, tmp_path):
-        from soup_cli.utils.deploy_measure import run_measure
+        from ai_forge_cli.utils.deploy_measure import run_measure
 
         tasks = _write_tasks(tmp_path)
         with pytest.raises(ValueError):
@@ -332,7 +332,7 @@ class TestRunMeasure:
             )
 
     def test_candidates_string_rejected(self, tmp_path):
-        from soup_cli.utils.deploy_measure import run_measure
+        from ai_forge_cli.utils.deploy_measure import run_measure
 
         tasks = _write_tasks(tmp_path)
         with pytest.raises(TypeError):
@@ -354,7 +354,7 @@ class TestDeployAutopilotMeasureCLI:
         import typer
         from typer.testing import CliRunner
 
-        from soup_cli.commands.deploy import autopilot
+        from ai_forge_cli.commands.deploy import autopilot
 
         app = typer.Typer()
         app.command()(autopilot)
@@ -381,7 +381,7 @@ class TestDeployAutopilotMeasureCLI:
         import typer
         from typer.testing import CliRunner
 
-        from soup_cli.commands.deploy import autopilot
+        from ai_forge_cli.commands.deploy import autopilot
 
         monkeypatch.chdir(tmp_path)
         app = typer.Typer()
@@ -400,8 +400,8 @@ class TestDeployAutopilotMeasureCLI:
         import typer
         from typer.testing import CliRunner
 
-        from soup_cli.commands.deploy import autopilot
-        from soup_cli.utils import deploy_measure as _dm
+        from ai_forge_cli.commands.deploy import autopilot
+        from ai_forge_cli.utils import deploy_measure as _dm
 
         monkeypatch.chdir(tmp_path)
         tasks = _write_tasks(tmp_path)
@@ -452,7 +452,7 @@ class TestDeployAutopilotMeasureCLI:
 
 class TestMaxCandidatesCap:
     def test_too_many_candidates_rejected(self, tmp_path):
-        from soup_cli.utils.deploy_measure import run_measure
+        from ai_forge_cli.utils.deploy_measure import run_measure
 
         tasks = _write_tasks(tmp_path)
         with pytest.raises(ValueError, match="too many candidates"):
@@ -474,7 +474,7 @@ class TestCacheSymlinkRejection:
         os.name == "nt", reason="symlink rejection POSIX-only"
     )
     def test_load_cache_rejects_symlink_target(self, tmp_path):
-        from soup_cli.utils.deploy_measure import load_cache
+        from ai_forge_cli.utils.deploy_measure import load_cache
 
         real = tmp_path / "real_cache.json"
         real.write_text('{"k": {"rows": []}}', encoding="utf-8")
@@ -487,7 +487,7 @@ class TestCacheSymlinkRejection:
         os.name == "nt", reason="symlink rejection POSIX-only"
     )
     def test_save_cache_refuses_symlink_target(self, tmp_path):
-        from soup_cli.utils.deploy_measure import save_cache
+        from ai_forge_cli.utils.deploy_measure import save_cache
 
         real = tmp_path / "real_target.json"
         real.write_text("{}", encoding="utf-8")
@@ -509,7 +509,7 @@ class TestRenderMeasureTableEscape:
 
         from rich.console import Console
 
-        from soup_cli.utils.deploy_measure import (
+        from ai_forge_cli.utils.deploy_measure import (
             MeasureResult,
             render_measure_table,
         )

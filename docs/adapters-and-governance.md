@@ -89,7 +89,7 @@ soup adapters bisect \
 
 CMA-ES is pure-Python (no `cma` dependency); the eval is operator-supplied via a closure so any scoring code works. PR rendering escapes Markdown table cells, so crafted metric names cannot inject table rows or links. The lockfile composes with v0.64 `soup env lock` — drift in any of `{base_model, base_model_sha, dataset_sha, env_hash, closure_sha}` exits 3 (`soup_version` and `created_at` are advisory-only). Bisect uses `shlex.split` + `shlex.quote(ckpt)` in argv-list mode (no `shell=True`), so checkpoint ids cannot inject shell metacharacters.
 
-VeRA / VB-LoRA bank storage (`soup_cli.utils.vector_bank`) and MoLE per-token routing (`task='moe_lora_routing'`) ship as schema-only in v0.67.0 — live multi-tenant serving and gating-kernel training land in v0.67.1.
+VeRA / VB-LoRA bank storage (`ai_forge_cli.utils.vector_bank`) and MoLE per-token routing (`task='moe_lora_routing'`) ship as schema-only in v0.67.0 — live multi-tenant serving and gating-kernel training land in v0.67.1.
 
 
 ## Data Flywheel (`soup loop`)
@@ -382,7 +382,7 @@ License chain uses SPDX identifiers.
 Pass a measurement JSON to record energy and carbon in the BOM:
 
 ```bash
-# 1. Train and persist the measured energy (needs `pip install soup-cli[carbon]`):
+# 1. Train and persist the measured energy (needs `pip install ai-forge[carbon]`):
 soup train --config soup.yaml --track-energy --energy-out energy.json
 
 # 2. Attach it to the BOM:
@@ -407,13 +407,13 @@ soup attest emit \
   --stage train \
   --subject adapter-v1 \
   --sha aaaa...64hex \
-  --builder soup-cli@0.59.0 \
+  --builder ai-forge@0.59.0 \
   --output att.json
 ```
 
 Stages are a closed allowlist: `extract` / `train` / `eval` / `export` / `publish`.
 Subject SHA must be 64-hex (sha256). The default `--sign unsigned` backend ships now;
-the **`ed25519` backend is live** (`pip install soup-cli[sign]`):
+the **`ed25519` backend is live** (`pip install ai-forge[sign]`):
 
 ```bash
 soup attest emit --stage train --subject adapter-v1 --sha aaaa...64hex \
@@ -436,7 +436,7 @@ Render an EU AI Act Annex XI (technical documentation, Sections 1+2) or Annex XI
 
 ```bash
 soup train --config soup.yaml --annex-xi annex.md           # markdown
-soup train --config soup.yaml --annex-xi annex.pdf           # PDF (pip install soup-cli[pdf])
+soup train --config soup.yaml --annex-xi annex.pdf           # PDF (pip install ai-forge[pdf])
 soup train --config soup.yaml --track-energy --annex-xi annex.md  # + measured kWh/CO2
 ```
 
@@ -455,7 +455,7 @@ so a malicious model name can't inject a forged heading into downstream renderer
 the kWh figure itself is country-independent). Add `--energy-out <path>` to persist the
 measurement as JSON for `soup bom emit --energy <path>` (the hand-off into an ML-BOM —
 see [Attaching energy + CO₂](#attaching-energy--co2---energy)). Requires `pip install
-soup-cli[carbon]`; without it, `--track-energy` is a graceful no-op.
+ai-forge[carbon]`; without it, `--track-energy` is a graceful no-op.
 
 
 ## Audit Log (`soup audit-log`)
@@ -507,7 +507,7 @@ Deterministic Merkle-root manifest over every file in the adapter dir
 (including nested `tokenizer/` / `processor/` subdirs). Tamper any file
 and `verify` fails. The `unsigned` backend gives offline tamper detection
 (the Merkle-root hash is the trust anchor). The **`ed25519` backend is live**
-(`pip install soup-cli[sign]`): it adds a real detached signature over the
+(`pip install ai-forge[sign]`): it adds a real detached signature over the
 Merkle root for *authentication* — proof the signer holds the private key.
 
 ```bash

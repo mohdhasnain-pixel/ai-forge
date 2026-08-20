@@ -16,7 +16,7 @@ from typer.testing import CliRunner
 
 class TestIterativeDPOPublicSurface:
     def test_module_imports(self):
-        from soup_cli.utils import iterative_dpo
+        from ai_forge_cli.utils import iterative_dpo
 
         assert hasattr(iterative_dpo, "IterativeDPOPlan")
         assert hasattr(iterative_dpo, "IterativeDPORound")
@@ -28,41 +28,41 @@ class TestIterativeDPOPublicSurface:
 
 class TestValidateRounds:
     def test_happy(self):
-        from soup_cli.utils.iterative_dpo import validate_rounds
+        from ai_forge_cli.utils.iterative_dpo import validate_rounds
 
         assert validate_rounds(5) == 5
 
     def test_min_boundary(self):
-        from soup_cli.utils.iterative_dpo import validate_rounds
+        from ai_forge_cli.utils.iterative_dpo import validate_rounds
 
         assert validate_rounds(1) == 1
 
     def test_max_boundary(self):
-        from soup_cli.utils.iterative_dpo import validate_rounds
+        from ai_forge_cli.utils.iterative_dpo import validate_rounds
 
         # 100 rounds is plenty.
         assert validate_rounds(100) == 100
 
     def test_zero_rejected(self):
-        from soup_cli.utils.iterative_dpo import validate_rounds
+        from ai_forge_cli.utils.iterative_dpo import validate_rounds
 
         with pytest.raises(ValueError, match=">= 1"):
             validate_rounds(0)
 
     def test_above_cap_rejected(self):
-        from soup_cli.utils.iterative_dpo import validate_rounds
+        from ai_forge_cli.utils.iterative_dpo import validate_rounds
 
         with pytest.raises(ValueError, match="100"):
             validate_rounds(101)
 
     def test_bool_rejected(self):
-        from soup_cli.utils.iterative_dpo import validate_rounds
+        from ai_forge_cli.utils.iterative_dpo import validate_rounds
 
         with pytest.raises(ValueError, match="bool"):
             validate_rounds(True)
 
     def test_non_int_rejected(self):
-        from soup_cli.utils.iterative_dpo import validate_rounds
+        from ai_forge_cli.utils.iterative_dpo import validate_rounds
 
         with pytest.raises(ValueError, match="int"):
             validate_rounds(5.5)
@@ -70,34 +70,34 @@ class TestValidateRounds:
 
 class TestValidatePairsPerRound:
     def test_happy(self):
-        from soup_cli.utils.iterative_dpo import validate_pairs_per_round
+        from ai_forge_cli.utils.iterative_dpo import validate_pairs_per_round
 
         assert validate_pairs_per_round(500) == 500
 
     def test_min_boundary(self):
-        from soup_cli.utils.iterative_dpo import validate_pairs_per_round
+        from ai_forge_cli.utils.iterative_dpo import validate_pairs_per_round
 
         assert validate_pairs_per_round(10) == 10
 
     def test_max_boundary(self):
-        from soup_cli.utils.iterative_dpo import validate_pairs_per_round
+        from ai_forge_cli.utils.iterative_dpo import validate_pairs_per_round
 
         assert validate_pairs_per_round(1_000_000) == 1_000_000
 
     def test_below_min_rejected(self):
-        from soup_cli.utils.iterative_dpo import validate_pairs_per_round
+        from ai_forge_cli.utils.iterative_dpo import validate_pairs_per_round
 
         with pytest.raises(ValueError, match=">= 10"):
             validate_pairs_per_round(9)
 
     def test_above_cap_rejected(self):
-        from soup_cli.utils.iterative_dpo import validate_pairs_per_round
+        from ai_forge_cli.utils.iterative_dpo import validate_pairs_per_round
 
         with pytest.raises(ValueError, match="1000000"):
             validate_pairs_per_round(1_000_001)
 
     def test_bool_rejected(self):
-        from soup_cli.utils.iterative_dpo import validate_pairs_per_round
+        from ai_forge_cli.utils.iterative_dpo import validate_pairs_per_round
 
         with pytest.raises(ValueError, match="bool"):
             validate_pairs_per_round(True)
@@ -105,7 +105,7 @@ class TestValidatePairsPerRound:
 
 class TestIterativeDPORound:
     def test_basic(self):
-        from soup_cli.utils.iterative_dpo import IterativeDPORound
+        from ai_forge_cli.utils.iterative_dpo import IterativeDPORound
 
         rnd = IterativeDPORound(
             round_index=1,
@@ -118,7 +118,7 @@ class TestIterativeDPORound:
         assert rnd.pairs_count == 512
 
     def test_frozen(self):
-        from soup_cli.utils.iterative_dpo import IterativeDPORound
+        from ai_forge_cli.utils.iterative_dpo import IterativeDPORound
 
         rnd = IterativeDPORound(
             round_index=1,
@@ -131,7 +131,7 @@ class TestIterativeDPORound:
             rnd.round_index = 2  # type: ignore[misc]
 
     def test_negative_round_rejected(self):
-        from soup_cli.utils.iterative_dpo import IterativeDPORound
+        from ai_forge_cli.utils.iterative_dpo import IterativeDPORound
 
         with pytest.raises(ValueError, match="round_index"):
             IterativeDPORound(
@@ -143,7 +143,7 @@ class TestIterativeDPORound:
             )
 
     def test_bool_round_rejected(self):
-        from soup_cli.utils.iterative_dpo import IterativeDPORound
+        from ai_forge_cli.utils.iterative_dpo import IterativeDPORound
 
         with pytest.raises(ValueError, match="bool"):
             IterativeDPORound(
@@ -155,7 +155,7 @@ class TestIterativeDPORound:
             )
 
     def test_null_byte_path_rejected(self):
-        from soup_cli.utils.iterative_dpo import IterativeDPORound
+        from ai_forge_cli.utils.iterative_dpo import IterativeDPORound
 
         with pytest.raises(ValueError, match="null byte"):
             IterativeDPORound(
@@ -167,7 +167,7 @@ class TestIterativeDPORound:
             )
 
     def test_negative_pairs_rejected(self):
-        from soup_cli.utils.iterative_dpo import IterativeDPORound
+        from ai_forge_cli.utils.iterative_dpo import IterativeDPORound
 
         with pytest.raises(ValueError, match="pairs_count"):
             IterativeDPORound(
@@ -181,7 +181,7 @@ class TestIterativeDPORound:
 
 class TestIterativeDPOPlan:
     def test_basic(self):
-        from soup_cli.utils.iterative_dpo import (
+        from ai_forge_cli.utils.iterative_dpo import (
             IterativeDPOPlan,
             IterativeDPORound,
         )
@@ -209,7 +209,7 @@ class TestIterativeDPOPlan:
         assert len(plan.rounds) == 2
 
     def test_frozen(self):
-        from soup_cli.utils.iterative_dpo import (
+        from ai_forge_cli.utils.iterative_dpo import (
             IterativeDPOPlan,
             IterativeDPORound,
         )
@@ -231,7 +231,7 @@ class TestIterativeDPOPlan:
             plan.base_model = "evil"  # type: ignore[misc]
 
     def test_rounds_must_be_tuple(self):
-        from soup_cli.utils.iterative_dpo import (
+        from ai_forge_cli.utils.iterative_dpo import (
             IterativeDPOPlan,
             IterativeDPORound,
         )
@@ -253,7 +253,7 @@ class TestIterativeDPOPlan:
             )
 
     def test_zero_rounds_rejected(self):
-        from soup_cli.utils.iterative_dpo import IterativeDPOPlan
+        from ai_forge_cli.utils.iterative_dpo import IterativeDPOPlan
 
         with pytest.raises(ValueError, match="rounds"):
             IterativeDPOPlan(
@@ -263,7 +263,7 @@ class TestIterativeDPOPlan:
             )
 
     def test_non_consecutive_round_indices_rejected(self):
-        from soup_cli.utils.iterative_dpo import (
+        from ai_forge_cli.utils.iterative_dpo import (
             IterativeDPOPlan,
             IterativeDPORound,
         )
@@ -291,7 +291,7 @@ class TestIterativeDPOPlan:
             )
 
     def test_null_byte_base_rejected(self):
-        from soup_cli.utils.iterative_dpo import (
+        from ai_forge_cli.utils.iterative_dpo import (
             IterativeDPOPlan,
             IterativeDPORound,
         )
@@ -314,7 +314,7 @@ class TestIterativeDPOPlan:
 
 class TestBuildIterativeDPOPlan:
     def test_happy(self, tmp_path, monkeypatch):
-        from soup_cli.utils.iterative_dpo import build_iterative_dpo_plan
+        from ai_forge_cli.utils.iterative_dpo import build_iterative_dpo_plan
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "prompts.jsonl").write_text(
@@ -334,7 +334,7 @@ class TestBuildIterativeDPOPlan:
         assert plan.rounds[0].adapter_path != plan.rounds[1].adapter_path
 
     def test_rounds_validation(self, tmp_path, monkeypatch):
-        from soup_cli.utils.iterative_dpo import build_iterative_dpo_plan
+        from ai_forge_cli.utils.iterative_dpo import build_iterative_dpo_plan
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "prompts.jsonl").write_text("{}\n", encoding="utf-8")
@@ -353,7 +353,7 @@ class TestRunIterativeDPODeferred:
     """Live in v0.71.11 #239 — runs the sample → score → pair → train loop."""
 
     def test_non_plan_rejected(self):
-        from soup_cli.utils.iterative_dpo import run_iterative_dpo
+        from ai_forge_cli.utils.iterative_dpo import run_iterative_dpo
 
         with pytest.raises(TypeError, match="IterativeDPOPlan"):
             run_iterative_dpo({"rounds": 1})  # type: ignore[arg-type]
@@ -361,7 +361,7 @@ class TestRunIterativeDPODeferred:
     def test_live_runs_with_fakes(self, tmp_path, monkeypatch):
         import json
 
-        from soup_cli.utils.iterative_dpo import (
+        from ai_forge_cli.utils.iterative_dpo import (
             IterativeDPOResult,
             build_iterative_dpo_plan,
             run_iterative_dpo,
@@ -403,7 +403,7 @@ class TestRunIterativeDPODeferred:
 
 class TestIterativeDPOCli:
     def test_help(self):
-        from soup_cli.commands.iterative_dpo import app
+        from ai_forge_cli.commands.iterative_dpo import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["--help"])
@@ -411,7 +411,7 @@ class TestIterativeDPOCli:
         assert "iterative" in result.output.lower() or "dpo" in result.output.lower()
 
     def test_plan_only_happy(self, tmp_path, monkeypatch):
-        from soup_cli.commands.iterative_dpo import app
+        from ai_forge_cli.commands.iterative_dpo import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "prompts.jsonl").write_text("{}\n", encoding="utf-8")
@@ -437,7 +437,7 @@ class TestIterativeDPOCli:
         assert result.exit_code == 0, (result.output, repr(result.exception))
 
     def test_invalid_rounds_exits_2(self, tmp_path, monkeypatch):
-        from soup_cli.commands.iterative_dpo import app
+        from ai_forge_cli.commands.iterative_dpo import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "prompts.jsonl").write_text("{}\n", encoding="utf-8")
@@ -464,7 +464,7 @@ class TestIterativeDPOCli:
 
     def test_live_runner_bad_model_exits_1(self, tmp_path, monkeypatch):
         """Without --plan-only, the live runner runs; a bad model exits 1."""
-        from soup_cli.commands.iterative_dpo import app
+        from ai_forge_cli.commands.iterative_dpo import app
 
         monkeypatch.chdir(tmp_path)
         # Empty prompt rows → no prompts → default sample_fn tries to load
@@ -497,7 +497,7 @@ class TestSourceWiring:
 
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "utils"
             / "iterative_dpo.py"
         )
@@ -511,7 +511,7 @@ class TestSourceWiring:
 
         cli_src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "cli.py"
         )
         body = cli_src.read_text(encoding="utf-8")

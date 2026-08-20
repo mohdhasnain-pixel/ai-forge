@@ -23,7 +23,7 @@ class TestBuildMiiApp:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.utils.mii import build_mii_app
+        from ai_forge_cli.utils.mii import build_mii_app
 
         fake_pipeline = MagicMock()
         app = build_mii_app(fake_pipeline, model_name="test-mii-model")
@@ -38,7 +38,7 @@ class TestBuildMiiApp:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.utils.mii import build_mii_app
+        from ai_forge_cli.utils.mii import build_mii_app
 
         # Fake MII response objects expose .generated_text
         fake_response = MagicMock()
@@ -63,7 +63,7 @@ class TestBuildMiiApp:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.utils.mii import build_mii_app
+        from ai_forge_cli.utils.mii import build_mii_app
 
         app = build_mii_app(MagicMock(), model_name="test")
         client = TestClient(app)
@@ -80,7 +80,7 @@ class TestBuildMiiApp:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.utils.mii import build_mii_app
+        from ai_forge_cli.utils.mii import build_mii_app
 
         app = build_mii_app(MagicMock(), model_name="test")
         client = TestClient(app)
@@ -105,7 +105,7 @@ class TestBuildMiiApp:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.utils.mii import build_mii_app
+        from ai_forge_cli.utils.mii import build_mii_app
 
         def _bad_pipeline(prompts, **_kwargs):
             raise RuntimeError("MII inference crashed")
@@ -123,7 +123,7 @@ class TestBuildMiiApp:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.utils.mii import build_mii_app
+        from ai_forge_cli.utils.mii import build_mii_app
 
         app = build_mii_app(lambda prompts, **k: [], model_name="test")
         client = TestClient(app)
@@ -144,7 +144,7 @@ class TestAutoReexec:
     def test_train_has_no_reexec_flag(self):
         import inspect
 
-        from soup_cli.commands import train as train_cmd
+        from ai_forge_cli.commands import train as train_cmd
 
         sig = inspect.signature(train_cmd.train)
         assert "no_reexec" in sig.parameters
@@ -154,8 +154,8 @@ class TestAutoReexec:
         We force the topology detection to report 2 GPUs via monkeypatch."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.utils import topology as topo_mod
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import topology as topo_mod
 
         monkeypatch.chdir(tmp_path)
         # Minimal valid config so train gets past load
@@ -199,10 +199,10 @@ class TestAutoReexec:
         os.execvp with an argv starting with 'accelerate'."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import train as train_cmd
-        from soup_cli.utils import launcher as launcher_mod
-        from soup_cli.utils import topology as topo_mod
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import train as train_cmd
+        from ai_forge_cli.utils import launcher as launcher_mod
+        from ai_forge_cli.utils import topology as topo_mod
 
         # Strip env-var contamination from prior tests / parent shell so
         # is_in_distributed deterministically returns False.
@@ -230,7 +230,7 @@ class TestAutoReexec:
             topo_mod, "resolve_num_gpus", lambda spec: 2,
         )
         # Patch the *imported* names: train.py does
-        # ``from soup_cli.utils.topology import ...`` so the reference is on
+        # ``from ai_forge_cli.utils.topology import ...`` so the reference is on
         # the train module, not the topology module.
         monkeypatch.setattr(train_cmd, "detect_topology",
                             lambda: {"gpu_count": 2, "interconnect": "PCIe"},

@@ -1,6 +1,6 @@
 import pytest
 
-from soup_cli.utils.warmup import MAX_WARMUP, MIN_WARMUP, compute_warmup_steps
+from ai_forge_cli.utils.warmup import MAX_WARMUP, MIN_WARMUP, compute_warmup_steps
 
 # --- Happy path ---
 

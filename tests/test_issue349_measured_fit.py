@@ -43,8 +43,8 @@ reserved would refuse the headline config of the feature it is protecting.
 
 import pytest
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.utils.layer_stream import decide_measured_fit, decide_stream_fit
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.utils.layer_stream import decide_measured_fit, decide_stream_fit
 
 GB = 1_000_000_000
 
@@ -131,7 +131,7 @@ class TestTheProbeFailsSafeRatherThanFailingOpen:
         measure_logits_loss_bytes_per_element already keeps."""
         import torch
 
-        from soup_cli.utils.layer_stream_runtime import measure_step_peak_bytes
+        from ai_forge_cli.utils.layer_stream_runtime import measure_step_peak_bytes
 
         if torch.cuda.is_available():
             pytest.skip("asserts the no-CUDA fallback; this box has CUDA")
@@ -141,7 +141,7 @@ class TestTheProbeFailsSafeRatherThanFailingOpen:
         """An OOM is a measurement RESULT ("does not fit"), not an instrument
         failure ("cannot tell"). Collapsing them into None would turn a refusal
         into a silent fallback to the prediction that just accepted the run."""
-        from soup_cli.utils.layer_stream_runtime import StepPeak
+        from ai_forge_cli.utils.layer_stream_runtime import StepPeak
 
         peak = StepPeak(
             peak_bytes=0, reserved_bytes=0, seconds=1.0, rows=1, seq_len=4096, oom=True
@@ -155,10 +155,10 @@ class TestTheProbeIsActuallyWiredIntoSetup:
     @staticmethod
     def _wrapper(monkeypatch, peak):
         """A StreamingSetupMixin whose probe returns `peak`, with a close spy."""
-        from soup_cli.trainer import stream_setup
+        from ai_forge_cli.trainer import stream_setup
 
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream_runtime.measure_step_peak_bytes",
+            "ai_forge_cli.utils.layer_stream_runtime.measure_step_peak_bytes",
             lambda *a, **k: peak,
         )
 
@@ -176,7 +176,7 @@ class TestTheProbeIsActuallyWiredIntoSetup:
 
     @staticmethod
     def _plan(predicted, available):
-        from soup_cli.trainer.stream_setup import _ProbePlan
+        from ai_forge_cli.trainer.stream_setup import _ProbePlan
 
         return _ProbePlan(
             rows=1,
@@ -187,7 +187,7 @@ class TestTheProbeIsActuallyWiredIntoSetup:
         )
 
     def _peak(self, alloc, *, oom=False):
-        from soup_cli.utils.layer_stream_runtime import StepPeak
+        from ai_forge_cli.utils.layer_stream_runtime import StepPeak
 
         return StepPeak(
             peak_bytes=alloc,
@@ -225,7 +225,7 @@ class TestTheProbeIsActuallyWiredIntoSetup:
         which can leave the context poisoned — so "the arithmetic was happy" is
         not a reason to keep driving the device. A fall-back here would be a
         silent pass on a prediction that never got checked."""
-        from soup_cli.utils.layer_stream_runtime import StepPeak
+        from ai_forge_cli.utils.layer_stream_runtime import StepPeak
 
         broke = StepPeak(
             peak_bytes=0,
@@ -265,7 +265,7 @@ class TestTheProbeIsActuallyWiredIntoSetup:
 
         wrapper = self._wrapper(monkeypatch, None)
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream_runtime.measure_step_peak_bytes", _boom
+            "ai_forge_cli.utils.layer_stream_runtime.measure_step_peak_bytes", _boom
         )
         with pytest.raises(ValueError, match="must all be >= 1"):
             wrapper._run_stream_vram_probe(object(), self._plan(GB, 4 * GB))
@@ -293,7 +293,7 @@ class TestTheDeferralHasACeiling:
         the code path under test identical on this box and on a GPU-less runner,
         where skipping would leave the ceiling covered on neither.
         """
-        from soup_cli.trainer.stream_setup import StreamingSetupMixin
+        from ai_forge_cli.trainer.stream_setup import StreamingSetupMixin
 
         if on_cuda:
             import torch
@@ -302,7 +302,7 @@ class TestTheDeferralHasACeiling:
                 torch.cuda, "mem_get_info", lambda *_a, **_k: (int(free_gb * GB), 0)
             )
             monkeypatch.setattr(
-                "soup_cli.utils.layer_stream_runtime.measure_gemm_tflops",
+                "ai_forge_cli.utils.layer_stream_runtime.measure_gemm_tflops",
                 lambda *_a, **_k: None,
             )
 
@@ -414,7 +414,7 @@ class TestTheFormulaStillProducesTheNumbersThisIssueWasFiledOn:
     def test_the_formula_reproduces_its_published_prediction(
         self, seq, predicted_gb, measured_gb
     ):
-        from soup_cli.utils.layer_stream import estimate_stream_peak_vram
+        from ai_forge_cli.utils.layer_stream import estimate_stream_peak_vram
 
         got = estimate_stream_peak_vram(seq_len=seq, **self._GEOM) / GB
         assert got == pytest.approx(predicted_gb, abs=0.02), (
@@ -426,7 +426,7 @@ class TestTheFormulaStillProducesTheNumbersThisIssueWasFiledOn:
         """Guards the direction, not just the digits: if a future formula stopped
         under-predicting here, `stream_vram_probe`'s justification changes and
         this should be the thing that says so."""
-        from soup_cli.utils.layer_stream import estimate_stream_peak_vram
+        from ai_forge_cli.utils.layer_stream import estimate_stream_peak_vram
 
         assert estimate_stream_peak_vram(seq_len=6144, **self._GEOM) < 5.830 * GB
         assert estimate_stream_peak_vram(seq_len=4352, **self._GEOM) > 3.036 * GB
@@ -472,7 +472,7 @@ class TestTheProbeItselfOnRealHardware:
         """A probe returning a constant would satisfy every stubbed test above
         and measure nothing, so the discriminating property is that the number
         MOVES with the shape it was asked about."""
-        from soup_cli.utils.layer_stream_runtime import measure_step_peak_bytes
+        from ai_forge_cli.utils.layer_stream_runtime import measure_step_peak_bytes
 
         model = self._toy()
         small = measure_step_peak_bytes(model, rows=1, seq_len=16, vocab_size=64)
@@ -488,7 +488,7 @@ class TestTheProbeItselfOnRealHardware:
         """The probe backprops through random token ids. A gradient surviving
         into the first optimizer step would train on noise, once, silently, and
         only when the flag is on."""
-        from soup_cli.utils.layer_stream_runtime import measure_step_peak_bytes
+        from ai_forge_cli.utils.layer_stream_runtime import measure_step_peak_bytes
 
         model = self._toy()
         assert measure_step_peak_bytes(model, rows=1, seq_len=16, vocab_size=64)
@@ -496,7 +496,7 @@ class TestTheProbeItselfOnRealHardware:
 
     @requires_cuda
     def test_a_nonsense_shape_is_rejected_rather_than_measured(self):
-        from soup_cli.utils.layer_stream_runtime import measure_step_peak_bytes
+        from ai_forge_cli.utils.layer_stream_runtime import measure_step_peak_bytes
 
         with pytest.raises(ValueError, match="must all be >= 1"):
             measure_step_peak_bytes(self._toy(), rows=0, seq_len=16, vocab_size=64)
@@ -508,7 +508,7 @@ class TestTheProbeItselfOnRealHardware:
         prevent would happen with nothing to find it by."""
         import torch
 
-        from soup_cli.utils.layer_stream_runtime import measure_step_peak_bytes
+        from ai_forge_cli.utils.layer_stream_runtime import measure_step_peak_bytes
 
         real = self._toy()
 
@@ -536,7 +536,7 @@ class TestTheProbeItselfOnRealHardware:
     def test_a_model_that_raises_reports_failed_not_none(self):
         """`failed` and `None` mean different things to the caller: one refuses,
         the other falls back to the prediction."""
-        from soup_cli.utils.layer_stream_runtime import measure_step_peak_bytes
+        from ai_forge_cli.utils.layer_stream_runtime import measure_step_peak_bytes
 
         class _Broken:
             def __call__(self, **_kw):

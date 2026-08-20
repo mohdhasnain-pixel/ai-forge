@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from typer.testing import CliRunner
 
-from soup_cli.commands.data import app
+from ai_forge_cli.commands.data import app
 
 runner = CliRunner()
 
@@ -19,7 +19,7 @@ runner = CliRunner()
 class TestDataSearch:
     """Tests for `soup data search` subcommand."""
 
-    @patch("soup_cli.commands.data.list_datasets")
+    @patch("ai_forge_cli.commands.data.list_datasets")
     def test_search_basic(self, mock_list):
         """Basic search returns results table."""
         mock_ds = MagicMock()
@@ -33,7 +33,7 @@ class TestDataSearch:
         assert result.exit_code == 0
         assert "teknium/OpenHermes-2.5" in result.output
 
-    @patch("soup_cli.commands.data.list_datasets")
+    @patch("ai_forge_cli.commands.data.list_datasets")
     def test_search_no_results(self, mock_list):
         """Search with no results shows message."""
         mock_list.return_value = []
@@ -42,7 +42,7 @@ class TestDataSearch:
         assert result.exit_code == 0
         assert "No datasets found" in result.output
 
-    @patch("soup_cli.commands.data.list_datasets")
+    @patch("ai_forge_cli.commands.data.list_datasets")
     def test_search_limit(self, mock_list):
         """--limit controls number of results."""
         datasets = []
@@ -58,7 +58,7 @@ class TestDataSearch:
         result = runner.invoke(app, ["search", "dataset", "--limit", "3"])
         assert result.exit_code == 0
 
-    @patch("soup_cli.commands.data.list_datasets")
+    @patch("ai_forge_cli.commands.data.list_datasets")
     def test_search_sort_downloads(self, mock_list):
         """--sort downloads sorts by download count."""
         mock_list.return_value = []
@@ -71,7 +71,7 @@ class TestDataSearch:
         call_kwargs = mock_list.call_args
         assert call_kwargs[1].get("sort") == "downloads"
 
-    @patch("soup_cli.commands.data.list_datasets")
+    @patch("ai_forge_cli.commands.data.list_datasets")
     def test_search_sort_likes(self, mock_list):
         """--sort likes sorts by likes."""
         mock_list.return_value = []
@@ -81,13 +81,13 @@ class TestDataSearch:
         call_kwargs = mock_list.call_args
         assert call_kwargs[1].get("sort") == "likes"
 
-    @patch("soup_cli.commands.data.list_datasets")
+    @patch("ai_forge_cli.commands.data.list_datasets")
     def test_search_sort_invalid(self, mock_list):
         """Invalid --sort value is rejected."""
         result = runner.invoke(app, ["search", "code", "--sort", "invalid"])
         assert result.exit_code != 0
 
-    @patch("soup_cli.commands.data.list_datasets")
+    @patch("ai_forge_cli.commands.data.list_datasets")
     def test_search_huggingface_hub_not_installed(self, mock_list):
         """Graceful error when huggingface_hub is missing."""
         mock_list.side_effect = ImportError("No module named 'huggingface_hub'")
@@ -105,7 +105,7 @@ class TestDataSearch:
 class TestDataPreview:
     """Tests for `soup data preview` subcommand."""
 
-    @patch("soup_cli.commands.data._hf_dataset_info")
+    @patch("ai_forge_cli.commands.data._hf_dataset_info")
     def test_preview_basic(self, mock_info):
         """Preview shows dataset info table."""
         mock_info.return_value = {
@@ -123,7 +123,7 @@ class TestDataPreview:
         assert result.exit_code == 0
         assert "teknium/OpenHermes-2.5" in result.output
 
-    @patch("soup_cli.commands.data._hf_dataset_info")
+    @patch("ai_forge_cli.commands.data._hf_dataset_info")
     def test_preview_not_found(self, mock_info):
         """Preview of nonexistent dataset shows error."""
         mock_info.side_effect = ValueError("Dataset not found")
@@ -132,7 +132,7 @@ class TestDataPreview:
         assert result.exit_code == 1
         assert "not found" in result.output.lower() or "error" in result.output.lower()
 
-    @patch("soup_cli.commands.data._hf_dataset_info")
+    @patch("ai_forge_cli.commands.data._hf_dataset_info")
     def test_preview_shows_splits(self, mock_info):
         """Preview shows split information."""
         mock_info.return_value = {
@@ -150,7 +150,7 @@ class TestDataPreview:
         assert result.exit_code == 0
         assert "train" in result.output
 
-    @patch("soup_cli.commands.data._hf_dataset_info")
+    @patch("ai_forge_cli.commands.data._hf_dataset_info")
     def test_preview_shows_features(self, mock_info):
         """Preview shows feature columns."""
         mock_info.return_value = {
@@ -176,7 +176,7 @@ class TestDataPreview:
 class TestDataDownload:
     """Tests for `soup data download` subcommand."""
 
-    @patch("soup_cli.commands.data._hf_download_dataset")
+    @patch("ai_forge_cli.commands.data._hf_download_dataset")
     def test_download_basic(self, mock_download, tmp_path, monkeypatch):
         """Basic download writes JSONL output."""
         monkeypatch.chdir(tmp_path)
@@ -194,7 +194,7 @@ class TestDataDownload:
         lines = output_file.read_text(encoding="utf-8").strip().split("\n")
         assert len(lines) == 2
 
-    @patch("soup_cli.commands.data._hf_download_dataset")
+    @patch("ai_forge_cli.commands.data._hf_download_dataset")
     def test_download_with_split(self, mock_download, tmp_path, monkeypatch):
         """--split flag is passed to download function."""
         monkeypatch.chdir(tmp_path)
@@ -210,7 +210,7 @@ class TestDataDownload:
         call_kwargs = mock_download.call_args
         assert call_kwargs[1].get("split") == "train[:100]"
 
-    @patch("soup_cli.commands.data._hf_download_dataset")
+    @patch("ai_forge_cli.commands.data._hf_download_dataset")
     def test_download_with_format_conversion(self, mock_download, tmp_path, monkeypatch):
         """--format converts downloaded data."""
         monkeypatch.chdir(tmp_path)
@@ -231,7 +231,7 @@ class TestDataDownload:
         assert result.exit_code == 0
         assert output_file.exists()
 
-    @patch("soup_cli.commands.data._hf_download_dataset")
+    @patch("ai_forge_cli.commands.data._hf_download_dataset")
     def test_download_empty_dataset(self, mock_download, tmp_path, monkeypatch):
         """Empty download result shows error."""
         monkeypatch.chdir(tmp_path)
@@ -244,7 +244,7 @@ class TestDataDownload:
         assert result.exit_code == 1
         assert "empty" in result.output.lower() or "no data" in result.output.lower()
 
-    @patch("soup_cli.commands.data._hf_download_dataset")
+    @patch("ai_forge_cli.commands.data._hf_download_dataset")
     def test_download_error_handling(self, mock_download, tmp_path):
         """Download failure shows friendly error."""
         mock_download.side_effect = ValueError("Dataset not found on HuggingFace Hub")
@@ -255,7 +255,7 @@ class TestDataDownload:
         )
         assert result.exit_code == 1
 
-    @patch("soup_cli.commands.data._hf_download_dataset")
+    @patch("ai_forge_cli.commands.data._hf_download_dataset")
     def test_download_output_path_traversal(self, mock_download, tmp_path):
         """Output path must stay under cwd."""
         mock_download.return_value = [{"text": "hello"}]
@@ -267,7 +267,7 @@ class TestDataDownload:
         assert result.exit_code == 1
         assert "current working directory" in result.output.lower()
 
-    @patch("soup_cli.commands.data._hf_download_dataset")
+    @patch("ai_forge_cli.commands.data._hf_download_dataset")
     def test_download_default_output(self, mock_download, tmp_path, monkeypatch):
         """Default output file uses dataset name."""
         monkeypatch.chdir(tmp_path)
@@ -281,7 +281,7 @@ class TestDataDownload:
         expected = tmp_path / "my-dataset.jsonl"
         assert expected.exists()
 
-    @patch("soup_cli.commands.data._hf_download_dataset")
+    @patch("ai_forge_cli.commands.data._hf_download_dataset")
     def test_download_samples_limit(self, mock_download, tmp_path, monkeypatch):
         """--samples limits number of downloaded rows."""
         monkeypatch.chdir(tmp_path)
@@ -308,7 +308,7 @@ class TestHelperFunctions:
 
     def test_format_size_bytes(self):
         """_format_size_bytes formats various sizes correctly."""
-        from soup_cli.commands.data import _format_size_bytes
+        from ai_forge_cli.commands.data import _format_size_bytes
 
         assert _format_size_bytes(0) == "0 B"
         assert _format_size_bytes(500) == "500 B"
@@ -318,13 +318,13 @@ class TestHelperFunctions:
 
     def test_format_size_bytes_none(self):
         """_format_size_bytes handles None."""
-        from soup_cli.commands.data import _format_size_bytes
+        from ai_forge_cli.commands.data import _format_size_bytes
 
         assert _format_size_bytes(None) == "unknown"
 
     def test_format_count(self):
         """_format_count formats large numbers."""
-        from soup_cli.commands.data import _format_count
+        from ai_forge_cli.commands.data import _format_count
 
         assert _format_count(500) == "500"
         assert "K" in _format_count(1500)
@@ -348,7 +348,7 @@ class TestSecurityEdgeCases:
         assert result.exit_code == 1
         assert "1,000,000" in result.output
 
-    @patch("soup_cli.commands.data._hf_dataset_info")
+    @patch("ai_forge_cli.commands.data._hf_dataset_info")
     def test_preview_huggingface_hub_not_installed(self, mock_info):
         """Preview gracefully handles missing huggingface_hub."""
         mock_info.side_effect = ImportError("No module named 'huggingface_hub'")

@@ -5,8 +5,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.commands.export import (
+from ai_forge_cli.cli import app
+from ai_forge_cli.commands.export import (
     GGUF_QUANT_TYPES,
     SUPPORTED_FORMATS,
     _detect_base_model,

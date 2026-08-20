@@ -4,8 +4,8 @@ import json
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.commands.quickstart import DEMO_CONFIG, DEMO_DATA
+from ai_forge_cli.cli import app
+from ai_forge_cli.commands.quickstart import DEMO_CONFIG, DEMO_DATA
 
 runner = CliRunner()
 

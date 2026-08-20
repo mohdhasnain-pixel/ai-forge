@@ -27,7 +27,7 @@ runner = CliRunner()
 
 class TestParseJudgeURL:
     def test_ollama_scheme(self):
-        from soup_cli.eval.gate import _parse_judge_url
+        from ai_forge_cli.eval.gate import _parse_judge_url
 
         provider, model, base = _parse_judge_url("ollama://llama3.1")
         assert provider == "ollama"
@@ -35,7 +35,7 @@ class TestParseJudgeURL:
         assert base is None
 
     def test_https_openai(self):
-        from soup_cli.eval.gate import _parse_judge_url
+        from ai_forge_cli.eval.gate import _parse_judge_url
 
         provider, model, base = _parse_judge_url(
             "https://api.openai.com/gpt-4o-mini"
@@ -45,7 +45,7 @@ class TestParseJudgeURL:
         assert base == "https://api.openai.com"
 
     def test_http_localhost_server(self):
-        from soup_cli.eval.gate import _parse_judge_url
+        from ai_forge_cli.eval.gate import _parse_judge_url
 
         provider, model, base = _parse_judge_url(
             "http://localhost:8000/Qwen2.5"
@@ -54,7 +54,7 @@ class TestParseJudgeURL:
         assert model == "Qwen2.5"
         assert base == "http://localhost:8000"
     def test_rejects_localhost_prefix_bypass(self):
-        from soup_cli.eval.gate import _parse_judge_url
+        from ai_forge_cli.eval.gate import _parse_judge_url
 
         with pytest.raises(ValueError, match="unsupported scheme"):
             _parse_judge_url("http://localhost.attacker.com/model")
@@ -62,7 +62,7 @@ class TestParseJudgeURL:
         with pytest.raises(ValueError, match="unsupported scheme"):
             _parse_judge_url("http://127.0.0.1.evil/model")
     def test_rejects_unsupported_scheme(self):
-        from soup_cli.eval.gate import _parse_judge_url
+        from ai_forge_cli.eval.gate import _parse_judge_url
 
         with pytest.raises(ValueError, match="unsupported scheme"):
             _parse_judge_url("ftp://example.com/model")
@@ -77,7 +77,7 @@ class TestRunGateErrorPropagation:
     def test_judge_task_failure_surfaces_score_none(self, tmp_path, monkeypatch):
         """Exception from judge backend must produce score=None, error=str(exc),
         passed=False — never a silent score=1.0."""
-        from soup_cli.eval.gate import EvalSuite, GateTask, run_gate
+        from ai_forge_cli.eval.gate import EvalSuite, GateTask, run_gate
 
         monkeypatch.chdir(tmp_path)
         prompts = tmp_path / "prompts.jsonl"
@@ -92,7 +92,7 @@ class TestRunGateErrorPropagation:
         )])
 
         # Inject a JudgeEvaluator that explodes on construction.
-        with patch("soup_cli.eval.judge.JudgeEvaluator") as mock_judge:
+        with patch("ai_forge_cli.eval.judge.JudgeEvaluator") as mock_judge:
             mock_judge.side_effect = OSError("connection refused")
             result = run_gate(
                 suite, generate_fn=lambda _p: "stub",
@@ -107,7 +107,7 @@ class TestRunGateErrorPropagation:
         assert result.passed is False
 
     def test_custom_task_unknown_file_error(self, tmp_path, monkeypatch):
-        from soup_cli.eval.gate import EvalSuite, GateTask, run_gate
+        from ai_forge_cli.eval.gate import EvalSuite, GateTask, run_gate
 
         monkeypatch.chdir(tmp_path)
         suite = EvalSuite(suite="t", tasks=[GateTask(
@@ -122,7 +122,7 @@ class TestRunGateErrorPropagation:
         assert row.passed is False
 
     def test_benchmark_task_runs_builtin_benchmark(self):
-        from soup_cli.eval.gate import EvalSuite, GateTask, run_gate
+        from ai_forge_cli.eval.gate import EvalSuite, GateTask, run_gate
 
         suite = EvalSuite(suite="t", tasks=[GateTask(
             type="benchmark", name="bench", threshold=0.2,
@@ -134,7 +134,7 @@ class TestRunGateErrorPropagation:
         # A model that always answers "B" scores exactly the fraction of
         # MINI_MMLU items whose answer is "B" (v0.71.38 expanded the suite, so
         # this is computed from the fixture, not hard-coded to the old 2/5).
-        from soup_cli.eval.forgetting import MINI_MMLU
+        from ai_forge_cli.eval.forgetting import MINI_MMLU
 
         expected = sum(1 for it in MINI_MMLU if it["answer"] == "B") / len(MINI_MMLU)
         assert row.score == pytest.approx(expected)
@@ -142,7 +142,7 @@ class TestRunGateErrorPropagation:
         assert row.passed is True
 
     def test_benchmark_task_unknown_name_lists_options(self):
-        from soup_cli.eval.gate import EvalSuite, GateTask, run_gate
+        from ai_forge_cli.eval.gate import EvalSuite, GateTask, run_gate
 
         suite = EvalSuite(suite="t", tasks=[GateTask(
             type="benchmark", name="bench", threshold=0.3,
@@ -158,7 +158,7 @@ class TestRunGateErrorPropagation:
 
 class TestGateTaskResultSchema:
     def test_error_field_default_none(self):
-        from soup_cli.eval.gate import GateTaskResult
+        from ai_forge_cli.eval.gate import GateTaskResult
 
         row = GateTaskResult(
             name="x", score=0.7, threshold=0.5,
@@ -167,7 +167,7 @@ class TestGateTaskResultSchema:
         assert row.error is None
 
     def test_score_optional(self):
-        from soup_cli.eval.gate import GateTaskResult
+        from ai_forge_cli.eval.gate import GateTaskResult
 
         row = GateTaskResult(
             name="x", score=None, threshold=0.5,
@@ -185,7 +185,7 @@ class TestGateTaskResultSchema:
 
 class TestMakeModelGenerator:
     def test_max_new_tokens_bounds(self):
-        from soup_cli.eval.quant_check import make_model_generator
+        from ai_forge_cli.eval.quant_check import make_model_generator
 
         with pytest.raises(ValueError, match="max_new_tokens"):
             make_model_generator("/tmp/x", max_new_tokens=0)
@@ -193,7 +193,7 @@ class TestMakeModelGenerator:
             make_model_generator("/tmp/x", max_new_tokens=99_999)
 
     def test_returns_callable_with_mocked_transformers(self):
-        from soup_cli.eval import quant_check
+        from ai_forge_cli.eval import quant_check
 
         fake_tokenizer = MagicMock()
         fake_tokenizer.eos_token_id = 0
@@ -220,7 +220,7 @@ class TestMakeModelGenerator:
         assert out == "out"
 
     def test_empty_prompt_returns_empty(self):
-        from soup_cli.eval import quant_check
+        from ai_forge_cli.eval import quant_check
 
         fake_tok = MagicMock()
         fake_tok.eos_token_id = 0
@@ -240,7 +240,7 @@ class TestMakeModelGenerator:
 
 class TestRegistryAttachHelpers:
     def test_write_eval_json_containment(self, tmp_path, monkeypatch):
-        from soup_cli.registry.attach import write_eval_json
+        from ai_forge_cli.registry.attach import write_eval_json
 
         monkeypatch.chdir(tmp_path)
         out = write_eval_json(
@@ -251,7 +251,7 @@ class TestRegistryAttachHelpers:
         assert data["score"] == 0.7
 
     def test_write_eval_json_rejects_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.registry.attach import write_eval_json
+        from ai_forge_cli.registry.attach import write_eval_json
 
         monkeypatch.chdir(tmp_path)
         outside = str(tmp_path.parent / "evil.json")
@@ -259,7 +259,7 @@ class TestRegistryAttachHelpers:
             write_eval_json(outside, payload={})
 
     def test_attach_artifact_unknown_entry(self, tmp_path, monkeypatch):
-        from soup_cli.registry.attach import attach_artifact
+        from ai_forge_cli.registry.attach import attach_artifact
 
         monkeypatch.chdir(tmp_path)
         # Use an isolated registry DB
@@ -272,7 +272,7 @@ class TestRegistryAttachHelpers:
             attach_artifact("nonexistent-id", path=str(target), kind="eval_results")
 
     def test_attach_artifact_missing_file(self, tmp_path, monkeypatch):
-        from soup_cli.registry.attach import attach_artifact
+        from ai_forge_cli.registry.attach import attach_artifact
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
@@ -282,7 +282,7 @@ class TestRegistryAttachHelpers:
 
     def test_attach_artifact_outside_cwd_rejected(self, tmp_path, monkeypatch):
         """enforce_cwd=True (default) must reject paths outside cwd."""
-        from soup_cli.registry.attach import attach_artifact
+        from ai_forge_cli.registry.attach import attach_artifact
 
         monkeypatch.chdir(tmp_path)
         # Isolated DB so the entry-not-found path doesn't shadow the
@@ -307,7 +307,7 @@ class TestRegistryAttachHelpers:
 
 class TestRegistryArtifactKindsExtended:
     def test_eval_results_kind_accepted(self):
-        from soup_cli.registry.store import _VALID_KINDS
+        from ai_forge_cli.registry.store import _VALID_KINDS
 
         assert "eval_results" in _VALID_KINDS
         assert "tensorrt" in _VALID_KINDS
@@ -315,7 +315,7 @@ class TestRegistryArtifactKindsExtended:
 
 class TestLookupEntryByOutputDir:
     def test_lookup_returns_none_when_no_match(self, tmp_path, monkeypatch):
-        from soup_cli.registry.attach import lookup_entry_by_output_dir
+        from ai_forge_cli.registry.attach import lookup_entry_by_output_dir
 
         monkeypatch.chdir(tmp_path)
         db = tmp_path / "reg.db"
@@ -334,7 +334,7 @@ class TestEvalCustomAttachCLI:
     def test_attach_to_unknown_entry_errors(self, tmp_path, monkeypatch):
         """--attach-to-registry pointing at a missing entry produces a clean
         error and exits non-zero rather than silently passing."""
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         # Isolated registry DB so we don't pollute the user's ~/.soup
@@ -348,7 +348,7 @@ class TestEvalCustomAttachCLI:
         (tmp_path / "model").mkdir()
 
         with patch(
-            "soup_cli.eval.custom._create_default_generator",
+            "ai_forge_cli.eval.custom._create_default_generator",
             return_value=lambda _p: "x",
         ):
             result = runner.invoke(

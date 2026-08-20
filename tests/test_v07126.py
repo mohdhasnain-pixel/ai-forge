@@ -106,48 +106,48 @@ class TestMitigationSchemaField:
     """``reward_hack_mitigation`` Literal field + task/backend/detector gate."""
 
     def test_default_is_off(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         assert TrainingConfig().reward_hack_mitigation == "off"
 
     def test_log_only_grpo_parses(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_yaml("grpo"))
         assert cfg.training.reward_hack_mitigation == "log_only"
 
     def test_ppo_parses(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_yaml("ppo"))
         assert cfg.training.reward_hack_mitigation == "log_only"
 
     def test_bogus_mode_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises((ValidationError, ValueError)):
             load_config_from_string(_yaml("grpo", mitigation="bogus"))
 
     def test_sft_rejected_names_field(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="reward_hack_mitigation"):
             load_config_from_string(_yaml("sft"))
 
     def test_mlx_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="mlx"):
             load_config_from_string(_yaml("grpo", backend="mlx"))
 
     def test_requires_detector(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="reward_hack_detector"):
             load_config_from_string(_yaml("grpo", detector=None))
 
     def test_off_without_detector_ok(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_yaml("grpo", detector=None, mitigation="off"))
         assert cfg.training.reward_hack_mitigation == "off"
@@ -155,14 +155,14 @@ class TestMitigationSchemaField:
     def test_yaml_bool_false_coerces_to_off(self):
         # YAML 1.1 coerces unquoted `off` / `no` to bool False. DWIM: map
         # a False (the user wrote `off`) back to the "off" mode.
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         assert TrainingConfig(reward_hack_mitigation=False).reward_hack_mitigation == "off"
 
     def test_yaml_bool_true_rejected_with_hint(self):
         # `on` / `yes` / `true` coerce to True, which is ambiguous — reject
         # with a message telling the user to quote the mode.
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises((ValidationError, ValueError), match="quote"):
             TrainingConfig(reward_hack_mitigation=True)
@@ -178,7 +178,7 @@ class TestMitigationLogWriter:
 
     def test_records_one_line_per_call(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import MitigationLogWriter
+        from ai_forge_cli.utils.reward_hack_control import MitigationLogWriter
 
         w = MitigationLogWriter("logs/mit.jsonl")
         w.record(step=1, snapshot={"drop_pct": 0.2, "verdict": "WARN"})
@@ -193,28 +193,28 @@ class TestMitigationLogWriter:
         sub = tmp_path / "run"
         sub.mkdir()
         monkeypatch.chdir(sub)
-        from soup_cli.utils.reward_hack_control import MitigationLogWriter
+        from ai_forge_cli.utils.reward_hack_control import MitigationLogWriter
 
         with pytest.raises(ValueError, match="cwd"):
             MitigationLogWriter(str(tmp_path / "evil.jsonl"))
 
     def test_cap_mb_bool_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import MitigationLogWriter
+        from ai_forge_cli.utils.reward_hack_control import MitigationLogWriter
 
         with pytest.raises((ValueError, TypeError)):
             MitigationLogWriter("m.jsonl", cap_mb=True)
 
     def test_cap_mb_zero_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import MitigationLogWriter
+        from ai_forge_cli.utils.reward_hack_control import MitigationLogWriter
 
         with pytest.raises(ValueError):
             MitigationLogWriter("m.jsonl", cap_mb=0)
 
     def test_rotation_creates_backup(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import MitigationLogWriter
+        from ai_forge_cli.utils.reward_hack_control import MitigationLogWriter
 
         w = MitigationLogWriter("m.jsonl")
         # Shrink the cap directly so rotation triggers without writing 1 MB.
@@ -225,7 +225,7 @@ class TestMitigationLogWriter:
 
     def test_redacts_secrets(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import MitigationLogWriter
+        from ai_forge_cli.utils.reward_hack_control import MitigationLogWriter
 
         w = MitigationLogWriter("m.jsonl")
         w.record(step=1, snapshot={"note": "leaked hf_abcdefgh12345 here"})
@@ -236,7 +236,7 @@ class TestMitigationLogWriter:
     @pytest.mark.skipif(os.name == "nt", reason="symlink needs privilege on Windows")
     def test_rotation_refuses_symlink_backup(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import MitigationLogWriter
+        from ai_forge_cli.utils.reward_hack_control import MitigationLogWriter
 
         target = tmp_path / "secret.txt"
         target.write_text("keep me")
@@ -254,7 +254,7 @@ class TestMitigationLogWriter:
         record (#343): the writer recreates the directory, the entry lands, and
         the loss is surfaced once via a warning naming the path."""
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import MitigationLogWriter
+        from ai_forge_cli.utils.reward_hack_control import MitigationLogWriter
 
         w = MitigationLogWriter("logs/mit.jsonl")
         w.record(step=1, snapshot={"x": 1})
@@ -291,7 +291,7 @@ class TestControllerState:
     """Frozen controller state with bool-before-int + finite validation."""
 
     def test_defaults(self):
-        from soup_cli.utils.reward_hack_control import ControllerState
+        from ai_forge_cli.utils.reward_hack_control import ControllerState
 
         s = ControllerState()
         assert s.step == 0 and s.beta == 0.0 and s.kl_coef == 0.0
@@ -300,32 +300,32 @@ class TestControllerState:
     def test_frozen(self):
         from dataclasses import FrozenInstanceError
 
-        from soup_cli.utils.reward_hack_control import ControllerState
+        from ai_forge_cli.utils.reward_hack_control import ControllerState
 
         s = ControllerState()
         with pytest.raises(FrozenInstanceError):
             s.step = 5  # type: ignore[misc]
 
     def test_bool_step_rejected(self):
-        from soup_cli.utils.reward_hack_control import ControllerState
+        from ai_forge_cli.utils.reward_hack_control import ControllerState
 
         with pytest.raises((ValueError, TypeError), match="step"):
             ControllerState(step=True)
 
     def test_negative_counter_rejected(self):
-        from soup_cli.utils.reward_hack_control import ControllerState
+        from ai_forge_cli.utils.reward_hack_control import ControllerState
 
         with pytest.raises(ValueError, match="dwell_count"):
             ControllerState(dwell_count=-1)
 
     def test_nonfinite_beta_rejected(self):
-        from soup_cli.utils.reward_hack_control import ControllerState
+        from ai_forge_cli.utils.reward_hack_control import ControllerState
 
         with pytest.raises(ValueError, match="finite"):
             ControllerState(beta=float("inf"))
 
     def test_negative_beta_rejected(self):
-        from soup_cli.utils.reward_hack_control import ControllerState
+        from ai_forge_cli.utils.reward_hack_control import ControllerState
 
         with pytest.raises(ValueError, match="beta"):
             ControllerState(beta=-0.1)
@@ -335,7 +335,7 @@ class TestCombineSignals:
     """Multi-signal vote: clamp each finite value to [0,1], then mean."""
 
     def test_mean(self):
-        from soup_cli.utils.reward_hack_control import combine_signals
+        from ai_forge_cli.utils.reward_hack_control import combine_signals
 
         got = combine_signals(
             {"info_rm": 0.4, "length_trend": 0.2}, ["info_rm", "length_trend"]
@@ -343,27 +343,27 @@ class TestCombineSignals:
         assert got == pytest.approx(0.3)
 
     def test_missing_signal_skipped(self):
-        from soup_cli.utils.reward_hack_control import combine_signals
+        from ai_forge_cli.utils.reward_hack_control import combine_signals
 
         assert combine_signals({"info_rm": 0.4}, ["info_rm", "length_trend"]) == pytest.approx(0.4)
 
     def test_empty_is_zero(self):
-        from soup_cli.utils.reward_hack_control import combine_signals
+        from ai_forge_cli.utils.reward_hack_control import combine_signals
 
         assert combine_signals({}, []) == 0.0
 
     def test_nonfinite_dropped(self):
-        from soup_cli.utils.reward_hack_control import combine_signals
+        from ai_forge_cli.utils.reward_hack_control import combine_signals
 
         assert combine_signals({"info_rm": float("nan")}, ["info_rm"]) == 0.0
 
     def test_clamped_high(self):
-        from soup_cli.utils.reward_hack_control import combine_signals
+        from ai_forge_cli.utils.reward_hack_control import combine_signals
 
         assert combine_signals({"info_rm": 5.0}, ["info_rm"]) == 1.0
 
     def test_clamped_low(self):
-        from soup_cli.utils.reward_hack_control import combine_signals
+        from ai_forge_cli.utils.reward_hack_control import combine_signals
 
         assert combine_signals({"info_rm": -2.0}, ["info_rm"]) == 0.0
 
@@ -372,12 +372,12 @@ class TestSmoothSignal:
     """EMA / median / none smoothing of a scalar signal over a window."""
 
     def test_none_returns_new(self):
-        from soup_cli.utils.reward_hack_control import smooth_signal
+        from ai_forge_cli.utils.reward_hack_control import smooth_signal
 
         assert smooth_signal(0.7, [0.1, 0.2], method="none") == 0.7
 
     def test_ema(self):
-        from soup_cli.utils.reward_hack_control import smooth_signal
+        from ai_forge_cli.utils.reward_hack_control import smooth_signal
 
         # Windowed EMA folds alpha over the whole retained window (oldest first)
         # then the new sample, so smoothing_window has effect:
@@ -388,18 +388,18 @@ class TestSmoothSignal:
         assert smooth_signal(0.4, [0.2], method="ema") == pytest.approx(0.3)
 
     def test_ema_empty_window_returns_new(self):
-        from soup_cli.utils.reward_hack_control import smooth_signal
+        from ai_forge_cli.utils.reward_hack_control import smooth_signal
 
         assert smooth_signal(0.4, [], method="ema") == 0.4
 
     def test_median(self):
-        from soup_cli.utils.reward_hack_control import smooth_signal
+        from ai_forge_cli.utils.reward_hack_control import smooth_signal
 
         # median of [0.1, 0.2, 0.9] = 0.2
         assert smooth_signal(0.9, [0.1, 0.2], method="median") == pytest.approx(0.2)
 
     def test_bad_method_rejected(self):
-        from soup_cli.utils.reward_hack_control import smooth_signal
+        from ai_forge_cli.utils.reward_hack_control import smooth_signal
 
         with pytest.raises(ValueError, match="method"):
             smooth_signal(0.4, [], method="bogus")
@@ -414,42 +414,42 @@ class TestTelemetryHelpers:
     """Pure completion/reward statistics for the log_only telemetry line."""
 
     def test_mean_token_len(self):
-        from soup_cli.utils.reward_hack_control import mean_token_len
+        from ai_forge_cli.utils.reward_hack_control import mean_token_len
 
         assert mean_token_len(["a b c", "d e"]) == pytest.approx(2.5)
 
     def test_mean_token_len_empty(self):
-        from soup_cli.utils.reward_hack_control import mean_token_len
+        from ai_forge_cli.utils.reward_hack_control import mean_token_len
 
         assert mean_token_len([]) == 0.0
         assert mean_token_len(["", "  "]) == 0.0
 
     def test_reward_mean_std(self):
-        from soup_cli.utils.reward_hack_control import reward_mean_std
+        from ai_forge_cli.utils.reward_hack_control import reward_mean_std
 
         mean, std = reward_mean_std([1.0, 3.0])
         assert mean == pytest.approx(2.0) and std == pytest.approx(1.0)
 
     def test_reward_mean_std_empty(self):
-        from soup_cli.utils.reward_hack_control import reward_mean_std
+        from ai_forge_cli.utils.reward_hack_control import reward_mean_std
 
         assert reward_mean_std([]) == (0.0, 0.0)
 
     def test_reward_mean_std_drops_nonfinite(self):
-        from soup_cli.utils.reward_hack_control import reward_mean_std
+        from ai_forge_cli.utils.reward_hack_control import reward_mean_std
 
         mean, std = reward_mean_std([1.0, float("nan"), 3.0])
         assert mean == pytest.approx(2.0) and std == pytest.approx(1.0)
 
     def test_mean_repetition_detects_repeats(self):
-        from soup_cli.utils.reward_hack_control import mean_repetition
+        from ai_forge_cli.utils.reward_hack_control import mean_repetition
 
         repetitive = mean_repetition(["a a a a a a"])
         diverse = mean_repetition(["a b c d e f"])
         assert 0.0 <= diverse < repetitive <= 1.0
 
     def test_mean_repetition_empty(self):
-        from soup_cli.utils.reward_hack_control import mean_repetition
+        from ai_forge_cli.utils.reward_hack_control import mean_repetition
 
         assert mean_repetition([]) == 0.0
 
@@ -458,14 +458,14 @@ class TestRewardHackLastDropPct:
     """RewardHackCallback exposes the numeric drop_pct for the controller."""
 
     def test_last_drop_pct_baseline_zero(self):
-        from soup_cli.utils.reward_hacking import RewardHackCallback
+        from ai_forge_cli.utils.reward_hacking import RewardHackCallback
 
         cb = RewardHackCallback(detector="info_rm", halt_on_hack=False)
         cb.observe_signal(2.0, step=1)  # establishes baseline health
         assert cb.last_drop_pct() == pytest.approx(0.0)
 
     def test_last_drop_pct_tracks_drop(self):
-        from soup_cli.utils.reward_hacking import RewardHackCallback
+        from ai_forge_cli.utils.reward_hacking import RewardHackCallback
 
         cb = RewardHackCallback(detector="info_rm", halt_on_hack=False)
         cb.observe_signal(2.0, step=1)
@@ -537,7 +537,7 @@ class TestMitigationCallbackLogOnly:
 
     def test_constructs(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             MitigationLogWriter,
             RewardHackMitigationCallback,
         )
@@ -552,7 +552,7 @@ class TestMitigationCallbackLogOnly:
 
     def test_bad_mode_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             MitigationLogWriter,
             RewardHackMitigationCallback,
         )
@@ -566,7 +566,7 @@ class TestMitigationCallbackLogOnly:
 
     def test_bad_signal_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             MitigationLogWriter,
             RewardHackMitigationCallback,
         )
@@ -581,7 +581,7 @@ class TestMitigationCallbackLogOnly:
 
     def test_log_only_records_and_never_mutates_beta(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             MitigationLogWriter,
             RewardHackMitigationCallback,
         )
@@ -620,7 +620,7 @@ class TestMitigationCallbackLogOnly:
 
     def test_no_buffer_is_noop(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             MitigationLogWriter,
             RewardHackMitigationCallback,
         )
@@ -651,8 +651,8 @@ class TestAttachMitigationWiring:
     """rl_callbacks_need_buffer + attach_rl_callbacks build the mitigation cb."""
 
     def test_need_buffer_true_for_mitigation(self):
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils.peft_wiring import rl_callbacks_need_buffer
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils.peft_wiring import rl_callbacks_need_buffer
 
         tcfg = TrainingConfig(
             reward_hack_mitigation="log_only", reward_hack_detector="info_rm"
@@ -660,16 +660,16 @@ class TestAttachMitigationWiring:
         assert rl_callbacks_need_buffer(tcfg) is True
 
     def test_need_buffer_false_when_off(self):
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils.peft_wiring import rl_callbacks_need_buffer
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils.peft_wiring import rl_callbacks_need_buffer
 
         assert rl_callbacks_need_buffer(TrainingConfig()) is False
 
     def test_attach_builds_mitigation_callback(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils.peft_wiring import attach_rl_callbacks
-        from soup_cli.utils.reward_hack_control import RewardHackMitigationCallback
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils.peft_wiring import attach_rl_callbacks
+        from ai_forge_cli.utils.reward_hack_control import RewardHackMitigationCallback
 
         tcfg = TrainingConfig(
             reward_hack_mitigation="log_only", reward_hack_detector="info_rm"
@@ -686,10 +686,10 @@ class TestAttachMitigationWiring:
 
     def test_mitigation_replaces_plain_detector(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils.peft_wiring import attach_rl_callbacks
-        from soup_cli.utils.reward_hack_control import RewardHackMitigationCallback
-        from soup_cli.utils.reward_hacking import RewardHackCallback
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils.peft_wiring import attach_rl_callbacks
+        from ai_forge_cli.utils.reward_hack_control import RewardHackMitigationCallback
+        from ai_forge_cli.utils.reward_hacking import RewardHackCallback
 
         tcfg = TrainingConfig(
             reward_hack_mitigation="log_only", reward_hack_detector="info_rm"
@@ -710,10 +710,10 @@ class TestAttachMitigationWiring:
 
     def test_off_keeps_plain_detector(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils.peft_wiring import attach_rl_callbacks
-        from soup_cli.utils.reward_hack_control import RewardHackMitigationCallback
-        from soup_cli.utils.reward_hacking import RewardHackCallback
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils.peft_wiring import attach_rl_callbacks
+        from ai_forge_cli.utils.reward_hack_control import RewardHackMitigationCallback
+        from ai_forge_cli.utils.reward_hacking import RewardHackCallback
 
         tcfg = TrainingConfig(reward_hack_detector="info_rm", reward_hack_mitigation="off")
         added: list = []
@@ -737,7 +737,7 @@ class TestStage1Schema:
     """Bang-bang controller tunables + bounds + mutual-exclusion."""
 
     def _cfg(self, extra: str, *, mitigation: str = "kl_control"):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         return load_config_from_string(_yaml("grpo", mitigation=mitigation, extra=extra))
 
@@ -748,7 +748,7 @@ class TestStage1Schema:
         assert cfg.training.reward_hack_beta_ceil == 2.0
 
     def test_defaults(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         t = TrainingConfig()
         assert t.reward_hack_beta_floor == 0.02 and t.reward_hack_beta_ceil == 1.0
@@ -790,7 +790,7 @@ class TestStage1Schema:
 
     def test_tunable_without_mode_rejected(self):
         # footgun: setting a control tunable while mitigation is off.
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="reward_hack_mitigation"):
             load_config_from_string(
@@ -806,7 +806,7 @@ class TestStage1Schema:
 
 
 def _bang_policy(**kw):
-    from soup_cli.utils.reward_hack_control import BangBangPolicy
+    from ai_forge_cli.utils.reward_hack_control import BangBangPolicy
 
     defaults = dict(
         beta_floor=0.02,
@@ -822,7 +822,7 @@ def _bang_policy(**kw):
 
 
 def _run_bang(policy, votes, beta0=None):
-    from soup_cli.utils.reward_hack_control import ControllerState, bang_bang_step
+    from ai_forge_cli.utils.reward_hack_control import ControllerState, bang_bang_step
 
     state = ControllerState(beta=beta0 if beta0 is not None else policy.beta_floor)
     actions = []
@@ -836,7 +836,7 @@ class TestBangBang:
     """Reversible bang-bang controller with dwell + release hysteresis."""
 
     def test_policy_floor_lt_ceil(self):
-        from soup_cli.utils.reward_hack_control import BangBangPolicy
+        from ai_forge_cli.utils.reward_hack_control import BangBangPolicy
 
         with pytest.raises(ValueError, match="floor"):
             BangBangPolicy(
@@ -890,14 +890,14 @@ class TestBangBang:
     def test_action_is_frozen(self):
         from dataclasses import FrozenInstanceError
 
-        from soup_cli.utils.reward_hack_control import ControllerState, bang_bang_step
+        from ai_forge_cli.utils.reward_hack_control import ControllerState, bang_bang_step
 
         _, action = bang_bang_step(_bang_policy(), ControllerState(beta=0.02), vote=0.5)
         with pytest.raises(FrozenInstanceError):
             action.new_beta = 1.0  # type: ignore[misc]
 
     def test_action_verdict_and_reason(self):
-        from soup_cli.utils.reward_hack_control import ControllerState, bang_bang_step
+        from ai_forge_cli.utils.reward_hack_control import ControllerState, bang_bang_step
 
         _, action = bang_bang_step(
             _bang_policy(dwell_steps=1), ControllerState(beta=0.02), vote=0.9
@@ -911,7 +911,7 @@ class TestBangBang:
 
 
 def _kl_policy(**kw):
-    from soup_cli.utils.reward_hack_control import BangBangPolicy
+    from ai_forge_cli.utils.reward_hack_control import BangBangPolicy
 
     defaults = dict(
         beta_floor=0.02,
@@ -927,7 +927,7 @@ def _kl_policy(**kw):
 
 
 def _kl_callback(tmp_path, buffer, *, task="grpo", signals=("info_rm",), policy=None):
-    from soup_cli.utils.reward_hack_control import (
+    from ai_forge_cli.utils.reward_hack_control import (
         MitigationLogWriter,
         RewardHackMitigationCallback,
     )
@@ -948,7 +948,7 @@ class TestKlControlCallback:
 
     def test_kl_control_requires_policy(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             MitigationLogWriter,
             RewardHackMitigationCallback,
         )
@@ -1098,9 +1098,9 @@ class TestAttachKlControl:
 
     def test_attach_kl_control_builds_policy(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils.peft_wiring import attach_rl_callbacks
-        from soup_cli.utils.reward_hack_control import RewardHackMitigationCallback
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils.peft_wiring import attach_rl_callbacks
+        from ai_forge_cli.utils.reward_hack_control import RewardHackMitigationCallback
 
         tcfg = TrainingConfig(
             reward_hack_mitigation="kl_control",
@@ -1130,7 +1130,7 @@ class TestPpoBufferParity:
     def test_ppo_setup_wires_buffer_and_mitigation(self):
         import inspect
 
-        from soup_cli.trainer import ppo
+        from ai_forge_cli.trainer import ppo
 
         src = inspect.getsource(ppo)
         assert "RLSignalBuffer" in src
@@ -1145,7 +1145,7 @@ class TestRewardHackMitigationCli:
     def _runner(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         return CliRunner(), app
 
@@ -1179,7 +1179,7 @@ class TestRewardHackMitigationCli:
     def test_reexec_passthrough_present(self):
         import inspect
 
-        from soup_cli.commands import train as train_mod
+        from ai_forge_cli.commands import train as train_mod
 
         src = inspect.getsource(train_mod)
         assert "--reward-hack-mitigation" in src
@@ -1229,7 +1229,7 @@ class TestRewardHackMitigationCli:
     def test_detector_reexec_passthrough_present(self):
         import inspect
 
-        from soup_cli.commands import train as train_mod
+        from ai_forge_cli.commands import train as train_mod
 
         src = inspect.getsource(train_mod)
         assert "--reward-hack-detector" in src
@@ -1245,7 +1245,7 @@ class TestStage2Schema:
     """PID-Lagrangian + rollback tunables + bounds + cross-validators."""
 
     def _cfg(self, extra: str = "", *, mitigation: str = "pid_lagrangian"):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         return load_config_from_string(_yaml("grpo", mitigation=mitigation, extra=extra))
 
@@ -1256,7 +1256,7 @@ class TestStage2Schema:
         assert cfg.training.reward_hack_signal_target == 0.2
 
     def test_defaults(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         t = TrainingConfig()
         assert t.reward_hack_pid_kp == 0.5 and t.reward_hack_pid_ki == 0.1
@@ -1279,7 +1279,7 @@ class TestStage2Schema:
             self._cfg("reward_hack_pid_kp: 0.9", mitigation="kl_control")
 
     def test_pid_param_under_off_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="reward_hack_mitigation"):
             load_config_from_string(
@@ -1306,7 +1306,7 @@ class TestStage2Schema:
 
 
 def _pid_policy(**kw):
-    from soup_cli.utils.reward_hack_control import PIDLagrangianPolicy
+    from ai_forge_cli.utils.reward_hack_control import PIDLagrangianPolicy
 
     defaults = dict(
         kp=1.0,
@@ -1322,7 +1322,7 @@ def _pid_policy(**kw):
 
 
 def _run_pid(policy, signals, beta0=None):
-    from soup_cli.utils.reward_hack_control import ControllerState, pid_step
+    from ai_forge_cli.utils.reward_hack_control import ControllerState, pid_step
 
     state = ControllerState(beta=beta0 if beta0 is not None else policy.beta_floor)
     states = []
@@ -1409,7 +1409,7 @@ class TestRestoreCheckpoint:
     """restore_checkpoint reloads adapter + optimizer state (RL rollback)."""
 
     def _cb(self, tmp_path):
-        from soup_cli.utils.rl_checkpoint import (
+        from ai_forge_cli.utils.rl_checkpoint import (
             RLCheckpointConfig,
             build_rl_checkpoint_callback,
         )
@@ -1498,7 +1498,7 @@ class _FakeCkptCb:
 
 def _pid_callback(tmp_path, buffer, *, rollback=False, rollback_patience=2,
                   max_recovery_attempts=1, ckpt_cb=None):
-    from soup_cli.utils.reward_hack_control import (
+    from ai_forge_cli.utils.reward_hack_control import (
         MitigationLogWriter,
         PIDLagrangianPolicy,
         RewardHackMitigationCallback,
@@ -1527,7 +1527,7 @@ class TestPidCallback:
 
     def test_pid_requires_policy(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             MitigationLogWriter,
             RewardHackMitigationCallback,
         )
@@ -1601,10 +1601,10 @@ class TestAttachPidControl:
 
     def test_attach_pid_builds_policy_and_ckpt_ref(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils.peft_wiring import attach_rl_callbacks
-        from soup_cli.utils.reward_hack_control import RewardHackMitigationCallback
-        from soup_cli.utils.rl_checkpoint import RLCheckpointCallback
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils.peft_wiring import attach_rl_callbacks
+        from ai_forge_cli.utils.reward_hack_control import RewardHackMitigationCallback
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointCallback
 
         tcfg = TrainingConfig(
             reward_hack_mitigation="pid_lagrangian",
@@ -1639,7 +1639,7 @@ class TestStage3Schema:
     """Anti-gaming tunables: smoothing, conservative-on-disagreement, shaping."""
 
     def _cfg(self, extra: str = "", *, mitigation: str = "kl_control"):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         return load_config_from_string(_yaml("grpo", mitigation=mitigation, extra=extra))
 
@@ -1649,7 +1649,7 @@ class TestStage3Schema:
         assert cfg.training.reward_hack_smoothing_window == 16
 
     def test_defaults(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         t = TrainingConfig()
         assert t.reward_hack_signal_smoothing == "none"
@@ -1689,7 +1689,7 @@ class TestStage3Schema:
             self._cfg("reward_hack_shaping_strength: 2.0\nreward_hack_reward_shaping: true")
 
     def test_stage3_tunable_under_off_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="reward_hack_mitigation"):
             load_config_from_string(
@@ -1711,30 +1711,30 @@ class TestConservativeAndDrift:
     """conservative-on-disagreement + reward-distribution-drift guard (pure)."""
 
     def test_conservative_agreement_uses_mean(self):
-        from soup_cli.utils.reward_hack_control import combine_conservative
+        from ai_forge_cli.utils.reward_hack_control import combine_conservative
 
         assert combine_conservative([0.4, 0.42], disagree_tol=0.2) == pytest.approx(0.41)
 
     def test_conservative_disagreement_uses_max(self):
-        from soup_cli.utils.reward_hack_control import combine_conservative
+        from ai_forge_cli.utils.reward_hack_control import combine_conservative
 
         # detectors disagree beyond tol → stay cautious (keep KL high).
         assert combine_conservative([0.1, 0.9], disagree_tol=0.2) == 0.9
 
     def test_conservative_empty_zero(self):
-        from soup_cli.utils.reward_hack_control import combine_conservative
+        from ai_forge_cli.utils.reward_hack_control import combine_conservative
 
         assert combine_conservative([], disagree_tol=0.2) == 0.0
 
     def test_drift_flags_bimodal_collapse(self):
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             detect_reward_distribution_drift,
         )
 
         assert detect_reward_distribution_drift([0, 0, 0, 0, 1, 1, 1, 1]) is True
 
     def test_drift_ignores_spread(self):
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             detect_reward_distribution_drift,
         )
 
@@ -1744,14 +1744,14 @@ class TestConservativeAndDrift:
         )
 
     def test_drift_ignores_constant(self):
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             detect_reward_distribution_drift,
         )
 
         assert detect_reward_distribution_drift([0.5] * 8) is False
 
     def test_drift_too_few(self):
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             detect_reward_distribution_drift,
         )
 
@@ -1771,7 +1771,7 @@ class TestRewardShaping:
     """Bounded reward-shaping shim over the wrap_reward_funcs seam."""
 
     def test_length_penalises_long(self):
-        from soup_cli.utils.reward_hack_control import shape_reward_fn
+        from ai_forge_cli.utils.reward_hack_control import shape_reward_fn
 
         shaped = shape_reward_fn(_inner_reward, kind="length", strength=0.5)
         out = shaped(["p", "p"], ["short", "w " * 40])
@@ -1779,13 +1779,13 @@ class TestRewardShaping:
         assert all(o >= 1.0 - 0.5 - 1e-9 for o in out)  # penalty ≤ strength
 
     def test_strength_zero_is_verbatim(self):
-        from soup_cli.utils.reward_hack_control import shape_reward_fn
+        from ai_forge_cli.utils.reward_hack_control import shape_reward_fn
 
         shaped = shape_reward_fn(_inner_reward, kind="length", strength=0.0)
         assert shaped(["p"], ["w " * 40]) == [1.0]
 
     def test_inner_called_once(self):
-        from soup_cli.utils.reward_hack_control import shape_reward_fn
+        from ai_forge_cli.utils.reward_hack_control import shape_reward_fn
 
         calls = []
 
@@ -1797,33 +1797,33 @@ class TestRewardShaping:
         assert len(calls) == 1
 
     def test_sentinel_penalty(self):
-        from soup_cli.utils.reward_hack_control import shape_reward_fn
+        from ai_forge_cli.utils.reward_hack_control import shape_reward_fn
 
         shaped = shape_reward_fn(_inner_reward, kind="sentinel", strength=0.3)
         assert shaped(["p"], ["say GOLD"])[0] == pytest.approx(0.7)
         assert shaped(["p"], ["nope"])[0] == pytest.approx(1.0)
 
     def test_preserves_name(self):
-        from soup_cli.utils.reward_hack_control import shape_reward_fn
+        from ai_forge_cli.utils.reward_hack_control import shape_reward_fn
 
         shaped = shape_reward_fn(_inner_reward, kind="length", strength=0.5)
         assert shaped.__name__ == "_inner_reward"
 
     def test_bad_kind_rejected(self):
-        from soup_cli.utils.reward_hack_control import shape_reward_fn
+        from ai_forge_cli.utils.reward_hack_control import shape_reward_fn
 
         with pytest.raises(ValueError, match="kind"):
             shape_reward_fn(_inner_reward, kind="bogus", strength=0.5)
 
     def test_bad_strength_rejected(self):
-        from soup_cli.utils.reward_hack_control import shape_reward_fn
+        from ai_forge_cli.utils.reward_hack_control import shape_reward_fn
 
         with pytest.raises(ValueError, match="strength"):
             shape_reward_fn(_inner_reward, kind="length", strength=2.0)
 
     def test_apply_reward_shaping_from_tcfg(self):
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils.reward_hack_control import apply_reward_shaping
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils.reward_hack_control import apply_reward_shaping
 
         tcfg = TrainingConfig(
             reward_hack_reward_shaping=True,
@@ -1834,8 +1834,8 @@ class TestRewardShaping:
         assert wrapped(["p"], ["w " * 40])[0] < 1.0
 
     def test_apply_reward_shaping_noop_when_disabled(self):
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils.reward_hack_control import apply_reward_shaping
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils.reward_hack_control import apply_reward_shaping
 
         tcfg = TrainingConfig(reward_hack_reward_shaping=False)
         assert apply_reward_shaping(_inner_reward, tcfg) is _inner_reward
@@ -1850,7 +1850,7 @@ class TestExplainGiveup:
     """Plain-English give-up explanation (mirrors why.py)."""
 
     def test_names_signal_and_attempts(self):
-        from soup_cli.utils.reward_hack_control import ControllerState, explain_giveup
+        from ai_forge_cli.utils.reward_hack_control import ControllerState, explain_giveup
 
         state = ControllerState(recovery_attempts=2, last_signal=0.8)
         text = explain_giveup(
@@ -1861,7 +1861,7 @@ class TestExplainGiveup:
         assert "gave up" in text.lower()
 
     def test_handles_empty_history(self):
-        from soup_cli.utils.reward_hack_control import ControllerState, explain_giveup
+        from ai_forge_cli.utils.reward_hack_control import ControllerState, explain_giveup
 
         text = explain_giveup(
             ControllerState(), signal_name="rm_ensemble", action_history=[]
@@ -1878,7 +1878,7 @@ class TestStage3CallbackWiring:
     """Callback honours smoothing / conservative / drift-guard + logs give-up."""
 
     def _cb(self, tmp_path, buffer, *, conservative=False, smoothing="none"):
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             MitigationLogWriter,
             RewardHackMitigationCallback,
         )
@@ -1954,14 +1954,14 @@ class TestRewardShapingWiring:
     def test_grpo_applies_shaping(self):
         import inspect
 
-        from soup_cli.trainer import grpo
+        from ai_forge_cli.trainer import grpo
 
         assert "apply_reward_shaping" in inspect.getsource(grpo)
 
     def test_ppo_applies_shaping(self):
         import inspect
 
-        from soup_cli.trainer import ppo
+        from ai_forge_cli.trainer import ppo
 
         assert "apply_reward_shaping" in inspect.getsource(ppo)
 
@@ -1988,7 +1988,7 @@ class TestControllerFuzz:
     make it flap, or defeat anti-windup."""
 
     def test_bang_bang_bounded_and_no_unbounded_jump(self):
-        from soup_cli.utils.reward_hack_control import ControllerState, bang_bang_step
+        from ai_forge_cli.utils.reward_hack_control import ControllerState, bang_bang_step
 
         policy = _bang_policy()
         for trace in _fuzz_traces():
@@ -2008,7 +2008,7 @@ class TestControllerFuzz:
 
     def test_bang_bang_converges_on_sustained_signal(self):
         # convergence property: sustained above-band input eventually trips.
-        from soup_cli.utils.reward_hack_control import ControllerState, bang_bang_step
+        from ai_forge_cli.utils.reward_hack_control import ControllerState, bang_bang_step
 
         policy = _bang_policy(dwell_steps=3)
         state = ControllerState(beta=0.02)
@@ -2017,7 +2017,7 @@ class TestControllerFuzz:
         assert state.tripped and state.beta > 0.02
 
     def test_bang_bang_no_flap_on_alternation(self):
-        from soup_cli.utils.reward_hack_control import ControllerState, bang_bang_step
+        from ai_forge_cli.utils.reward_hack_control import ControllerState, bang_bang_step
 
         policy = _bang_policy(dwell_steps=2, release_patience=2)
         state = ControllerState(beta=policy.beta_floor)
@@ -2026,7 +2026,7 @@ class TestControllerFuzz:
         assert state.beta == pytest.approx(policy.beta_floor) and not state.tripped
 
     def test_pid_bounded_and_anti_windup_holds(self):
-        from soup_cli.utils.reward_hack_control import ControllerState, pid_step
+        from ai_forge_cli.utils.reward_hack_control import ControllerState, pid_step
 
         policy = _pid_policy(ki=1.0, integral_clamp=0.5, beta_ceil=5.0)
         for trace in _fuzz_traces():
@@ -2049,7 +2049,7 @@ class TestReviewFixesPython:
     """Regression tests for the python-review findings."""
 
     def _cfg(self, extra, *, mitigation="kl_control", detector="info_rm", task="grpo"):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         return load_config_from_string(
             _yaml(task, mitigation=mitigation, detector=detector, extra=extra)
@@ -2068,7 +2068,7 @@ class TestReviewFixesPython:
 
     def test_integral_clamp_is_a_field(self):
         # CRITICAL #2 — integral_clamp must be its own tunable, not beta_ceil.
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         assert TrainingConfig().reward_hack_integral_clamp == 1.0
         cfg = self._cfg(
@@ -2078,9 +2078,9 @@ class TestReviewFixesPython:
 
     def test_integral_clamp_wired_into_pid_policy(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils.peft_wiring import attach_rl_callbacks
-        from soup_cli.utils.reward_hack_control import RewardHackMitigationCallback
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils.peft_wiring import attach_rl_callbacks
+        from ai_forge_cli.utils.reward_hack_control import RewardHackMitigationCallback
 
         tcfg = TrainingConfig(
             reward_hack_mitigation="pid_lagrangian",
@@ -2110,7 +2110,7 @@ class TestReviewFixesPython:
 
     def test_shape_reward_fn_rejects_non_callable(self):
         # MEDIUM #10 — non-callable inner must fail fast, not at train time.
-        from soup_cli.utils.reward_hack_control import shape_reward_fn
+        from ai_forge_cli.utils.reward_hack_control import shape_reward_fn
 
         with pytest.raises((TypeError, ValueError), match="callable"):
             shape_reward_fn("not a fn", kind="length", strength=0.5)
@@ -2125,7 +2125,7 @@ class TestReviewFixesCode:
         import os
 
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.rl_checkpoint import (
+        from ai_forge_cli.utils.rl_checkpoint import (
             RLCheckpointConfig,
             build_rl_checkpoint_callback,
         )
@@ -2146,7 +2146,7 @@ class TestReviewFixesCode:
 
     def test_bang_release_requires_patience_per_relaxation(self):
         # HIGH #4 — each geometric relaxation must re-accumulate release_patience.
-        from soup_cli.utils.reward_hack_control import ControllerState, bang_bang_step
+        from ai_forge_cli.utils.reward_hack_control import ControllerState, bang_bang_step
 
         policy = _bang_policy(dwell_steps=1, release_patience=2, kl_gain=1.5, beta_ceil=1.0)
         state = ControllerState(beta=0.02)
@@ -2165,7 +2165,7 @@ class TestReviewFixesCode:
 
     def test_rollback_requires_nonzero_recovery_attempts(self):
         # MEDIUM #5 — rollback=True with max_recovery_attempts=0 is a footgun.
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="max_recovery_attempts"):
             load_config_from_string(
@@ -2225,7 +2225,7 @@ class TestReviewFixesSecurity:
         import torch
 
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.rl_checkpoint import (
+        from ai_forge_cli.utils.rl_checkpoint import (
             RLCheckpointConfig,
             build_rl_checkpoint_callback,
         )
@@ -2246,7 +2246,7 @@ class TestReviewFixesSecurity:
 
     def test_bool_rejected_on_int_fields(self):
         # MEDIUM #2 — bool-before-int policy on the new integer fields.
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         for field in (
             "reward_hack_dwell_steps",
@@ -2259,7 +2259,7 @@ class TestReviewFixesSecurity:
                 TrainingConfig(**{field: True})
 
     def test_bool_rejected_on_float_fields(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         # pid_kp has ge=0 so True→1.0 would pass the bound without a bool guard.
         with pytest.raises((ValueError, TypeError), match="bool"):
@@ -2267,7 +2267,7 @@ class TestReviewFixesSecurity:
 
     def test_signals_length_capped(self):
         # MEDIUM #3 — unbounded signals list is a per-step DoS.
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises((ValueError, TypeError)):
             TrainingConfig(reward_hack_signals=["info_rm"] * 100)
@@ -2275,7 +2275,7 @@ class TestReviewFixesSecurity:
     def test_callback_rejects_empty_signals(self, tmp_path, monkeypatch):
         # LOW #4 — an empty signals tuple silently disables the controller.
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import (
+        from ai_forge_cli.utils.reward_hack_control import (
             MitigationLogWriter,
             RewardHackMitigationCallback,
         )
@@ -2295,7 +2295,7 @@ class TestReviewFixesTdd:
     def test_bang_bang_deadband_hold_while_tripped(self):
         # GAP 1 (HIGH) — the dead-band 'hold' branch while tripped must keep β
         # and reset both counters, without relaxing.
-        from soup_cli.utils.reward_hack_control import ControllerState, bang_bang_step
+        from ai_forge_cli.utils.reward_hack_control import ControllerState, bang_bang_step
 
         policy = _bang_policy(dwell_steps=2, release_patience=2, trip_band=0.3, release_band=0.1)
         state = ControllerState(beta=0.02)
@@ -2309,7 +2309,7 @@ class TestReviewFixesTdd:
 
     def test_shape_reward_verbatim_on_shim_error(self, monkeypatch):
         # GAP 2 (HIGH) — a shim error must return the verbatim inner reward.
-        import soup_cli.utils.reward_hack_control as rhc
+        import ai_forge_cli.utils.reward_hack_control as rhc
 
         def boom(*a, **k):
             raise RuntimeError("boom")
@@ -2320,7 +2320,7 @@ class TestReviewFixesTdd:
 
     def test_conservative_disagreement_boundary(self):
         # GAP 3 (MEDIUM) — max-min == tol is NOT > tol → mean (not max).
-        from soup_cli.utils.reward_hack_control import combine_conservative
+        from ai_forge_cli.utils.reward_hack_control import combine_conservative
 
         assert combine_conservative([0.1, 0.3], disagree_tol=0.2) == pytest.approx(0.2)
         assert combine_conservative([0.1, 0.301], disagree_tol=0.2) == pytest.approx(0.301)
@@ -2378,13 +2378,13 @@ class TestReviewFixesTdd:
         assert states[0].prev_error == pytest.approx(0.5)
 
     def test_drift_negative_gap(self):
-        from soup_cli.utils.reward_hack_control import detect_reward_distribution_drift
+        from ai_forge_cli.utils.reward_hack_control import detect_reward_distribution_drift
 
         # gap <= 0 (sorted halves can't reverse, but constant-ish → gap 0) → False
         assert detect_reward_distribution_drift([1, 1, 1, 1, 1, 1]) is False
 
     def test_smoothing_window_lower_boundary_ok(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             _yaml("grpo", mitigation="kl_control", extra="reward_hack_smoothing_window: 2")
@@ -2393,7 +2393,7 @@ class TestReviewFixesTdd:
 
     def test_log_cap_boundaries(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import MitigationLogWriter
+        from ai_forge_cli.utils.reward_hack_control import MitigationLogWriter
 
         assert MitigationLogWriter("a.jsonl", cap_mb=1).cap_bytes == 1024 * 1024
         assert MitigationLogWriter("b.jsonl", cap_mb=10_000).cap_bytes == 10_000 * 1024 * 1024
@@ -2404,7 +2404,7 @@ class TestReviewFixesTdd:
         import threading
 
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import MitigationLogWriter
+        from ai_forge_cli.utils.reward_hack_control import MitigationLogWriter
 
         writer = MitigationLogWriter("cc.jsonl")
 
@@ -2424,7 +2424,7 @@ class TestReviewFixesTdd:
 
     def test_record_action_caps_at_max(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.reward_hack_control import _MAX_ACTION_HISTORY
+        from ai_forge_cli.utils.reward_hack_control import _MAX_ACTION_HISTORY
 
         cb = _kl_callback(tmp_path, None)
         for i in range(_MAX_ACTION_HISTORY + 100):
@@ -2435,7 +2435,7 @@ class TestReviewFixesTdd:
     def test_no_top_level_heavy_import_in_source(self):
         import inspect
 
-        from soup_cli.utils import reward_hack_control
+        from ai_forge_cli.utils import reward_hack_control
 
         src = inspect.getsource(reward_hack_control)
         for line in src.splitlines():

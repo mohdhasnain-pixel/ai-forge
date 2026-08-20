@@ -24,7 +24,7 @@ from types import SimpleNamespace
 import pytest
 from typer.testing import CliRunner
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "soup_cli"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli"
 
 runner = CliRunner()
 
@@ -162,18 +162,18 @@ def _greedy_sampler(probs):
 
 class TestSupportsKvCache:
     def test_explicit_params_true(self):
-        from soup_cli.utils.minillm import _supports_kv_cache
+        from ai_forge_cli.utils.minillm import _supports_kv_cache
 
         assert _supports_kv_cache(_make_cache_fake_lm())
 
     def test_var_keyword_only_false(self):
         """``**kw`` does NOT count — a swallowed kwarg is not cache support."""
-        from soup_cli.utils.minillm import _supports_kv_cache
+        from ai_forge_cli.utils.minillm import _supports_kv_cache
 
         assert not _supports_kv_cache(_make_legacy_fake_lm())
 
     def test_no_params_false(self):
-        from soup_cli.utils.minillm import _supports_kv_cache
+        from ai_forge_cli.utils.minillm import _supports_kv_cache
 
         def plain(input_ids=None, attention_mask=None):
             return None
@@ -181,7 +181,7 @@ class TestSupportsKvCache:
         assert not _supports_kv_cache(SimpleNamespace(forward=plain))
 
     def test_non_model_false(self):
-        from soup_cli.utils.minillm import _supports_kv_cache
+        from ai_forge_cli.utils.minillm import _supports_kv_cache
 
         assert not _supports_kv_cache(object())
 
@@ -189,7 +189,7 @@ class TestSupportsKvCache:
         """A ``*args, **kwargs`` wrapper (PeftModel-style LoRA student — the
         common live distill case) is probed through ``get_base_model()`` so the
         base's explicit cache params are seen and KV-cache activates (#263)."""
-        from soup_cli.utils.minillm import _supports_kv_cache
+        from ai_forge_cli.utils.minillm import _supports_kv_cache
 
         inner = _make_cache_fake_lm()
 
@@ -205,7 +205,7 @@ class TestSupportsKvCache:
     def test_peft_wrapper_get_base_model_raising_is_safe(self):
         """If ``get_base_model()`` raises, the probe swallows it and falls back
         to inspecting the wrapper itself (never raises)."""
-        from soup_cli.utils.minillm import _supports_kv_cache
+        from ai_forge_cli.utils.minillm import _supports_kv_cache
 
         class _Bad:
             def forward(self, *args, **kwargs):
@@ -221,7 +221,7 @@ class TestSupportsKvCache:
 class TestOnPolicyKvCache:
     def _rollout(self, student, teacher, *, use_cache, steps=4):
         torch = _torch_or_skip()
-        from soup_cli.utils.minillm import (
+        from ai_forge_cli.utils.minillm import (
             MiniLLMConfig,
             minillm_on_policy_rollout,
         )
@@ -302,7 +302,7 @@ class TestOnPolicyKvCache:
 
     def test_on_policy_term_threads_use_cache(self, monkeypatch):
         _torch_or_skip()
-        from soup_cli.utils import minillm as m
+        from ai_forge_cli.utils import minillm as m
 
         captured = {}
 
@@ -493,19 +493,19 @@ def _make_scripted_gate(script, hidden: int = 4, n: int = 2):
 
 class TestModelSupportsCache:
     def test_explicit_params_true(self):
-        from soup_cli.utils.mole_routing import _model_supports_cache
+        from ai_forge_cli.utils.mole_routing import _model_supports_cache
 
         assert _model_supports_cache(_make_cached_mole_model())
 
     def test_legacy_fake_false(self):
-        from soup_cli.utils.mole_routing import _model_supports_cache
+        from ai_forge_cli.utils.mole_routing import _model_supports_cache
 
         assert not _model_supports_cache(_make_legacy_mole_model())
 
     def test_peft_wrapper_probes_base_model(self):
         """A ``*args, **kwargs`` wrapper (PeftModel-style) is probed through
         ``get_base_model()`` so real PEFT models get the cached path."""
-        from soup_cli.utils.mole_routing import _model_supports_cache
+        from ai_forge_cli.utils.mole_routing import _model_supports_cache
 
         inner = _make_cached_mole_model()
 
@@ -519,7 +519,7 @@ class TestModelSupportsCache:
         assert _model_supports_cache(_Wrapper())
 
     def test_non_model_false(self):
-        from soup_cli.utils.mole_routing import _model_supports_cache
+        from ai_forge_cli.utils.mole_routing import _model_supports_cache
 
         assert not _model_supports_cache(object())
 
@@ -527,7 +527,7 @@ class TestModelSupportsCache:
 class TestMoleKvCache:
     def _generate(self, model, gate, *, steps=3):
         torch = _torch_or_skip()
-        from soup_cli.utils.mole_routing import LoadedMole
+        from ai_forge_cli.utils.mole_routing import LoadedMole
 
         mole = LoadedMole(model, object(), gate, ["task_0", "task_1"])
         ids = torch.tensor([[1, 2]])
@@ -631,7 +631,7 @@ class TestMoleKvCache:
     def test_state_is_per_call(self):
         """Two sequential generate() calls don't share cache state."""
         torch = _torch_or_skip()
-        from soup_cli.utils.mole_routing import LoadedMole
+        from ai_forge_cli.utils.mole_routing import LoadedMole
 
         model = _make_cached_mole_model()
         mole = LoadedMole(model, object(), _make_uniform_gate(), ["task_0", "task_1"])
@@ -657,30 +657,30 @@ class TestValidateMeasureCandidate:
          "hqq:4bit", "hqq:8bit", "hqq:1bit"],
     )
     def test_known_candidates_accepted(self, candidate):
-        from soup_cli.utils.deploy_measure import validate_measure_candidate
+        from ai_forge_cli.utils.deploy_measure import validate_measure_candidate
 
         assert validate_measure_candidate(candidate) == candidate
 
     def test_case_insensitive(self):
-        from soup_cli.utils.deploy_measure import validate_measure_candidate
+        from ai_forge_cli.utils.deploy_measure import validate_measure_candidate
 
         assert validate_measure_candidate("GPTQ") == "gptq"
 
     @pytest.mark.parametrize("candidate", ["evil", "", "hqq:5bit", "4 bit"])
     def test_unknown_rejected(self, candidate):
-        from soup_cli.utils.deploy_measure import validate_measure_candidate
+        from ai_forge_cli.utils.deploy_measure import validate_measure_candidate
 
         with pytest.raises(ValueError):
             validate_measure_candidate(candidate)
 
     def test_bool_rejected(self):
-        from soup_cli.utils.deploy_measure import validate_measure_candidate
+        from ai_forge_cli.utils.deploy_measure import validate_measure_candidate
 
         with pytest.raises(TypeError):
             validate_measure_candidate(True)
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.deploy_measure import validate_measure_candidate
+        from ai_forge_cli.utils.deploy_measure import validate_measure_candidate
 
         with pytest.raises(ValueError):
             validate_measure_candidate("4bit\x00")
@@ -689,7 +689,7 @@ class TestValidateMeasureCandidate:
 class TestMeasureGeneratorFactories:
     def _patch_loader(self, monkeypatch):
         """Stub the model loader + generator builder; record invocations."""
-        from soup_cli.utils import deploy_measure as dm
+        from ai_forge_cli.utils import deploy_measure as dm
 
         loads: list[dict] = []
 
@@ -702,13 +702,13 @@ class TestMeasureGeneratorFactories:
             return lambda prompt: f"gen:{prompt}"
 
         monkeypatch.setattr(dm, "_load_measure_model", fake_load)
-        import soup_cli.utils.live_eval as live_eval
+        import ai_forge_cli.utils.live_eval as live_eval
 
         monkeypatch.setattr(live_eval, "make_generator", fake_make_generator)
         return loads
 
     def test_before_generator_is_lazy(self, monkeypatch):
-        from soup_cli.utils.deploy_measure import build_before_generator
+        from ai_forge_cli.utils.deploy_measure import build_before_generator
 
         loads = self._patch_loader(monkeypatch)
         gen = build_before_generator("org/tiny")
@@ -719,7 +719,7 @@ class TestMeasureGeneratorFactories:
         assert len(loads) == 1  # loaded once, reused
 
     def test_after_factory_threads_candidate_quant(self, monkeypatch):
-        from soup_cli.utils.deploy_measure import build_after_generator_factory
+        from ai_forge_cli.utils.deploy_measure import build_after_generator_factory
 
         loads = self._patch_loader(monkeypatch)
         factory = build_after_generator_factory("org/tiny")
@@ -729,7 +729,7 @@ class TestMeasureGeneratorFactories:
         assert loads == [{"base": "org/tiny", "quantization": "4bit"}]
 
     def test_after_factory_rejects_unknown_candidate_eagerly(self, monkeypatch):
-        from soup_cli.utils.deploy_measure import build_after_generator_factory
+        from ai_forge_cli.utils.deploy_measure import build_after_generator_factory
 
         self._patch_loader(monkeypatch)
         factory = build_after_generator_factory("org/tiny")
@@ -737,7 +737,7 @@ class TestMeasureGeneratorFactories:
             factory("evil")
 
     def test_builders_validate_base(self):
-        from soup_cli.utils.deploy_measure import (
+        from ai_forge_cli.utils.deploy_measure import (
             build_after_generator_factory,
             build_before_generator,
         )
@@ -749,7 +749,7 @@ class TestMeasureGeneratorFactories:
                 builder("a\x00b")
 
     def test_builders_validate_max_new_tokens(self):
-        from soup_cli.utils.deploy_measure import build_before_generator
+        from ai_forge_cli.utils.deploy_measure import build_before_generator
 
         with pytest.raises(ValueError):
             build_before_generator("org/tiny", max_new_tokens=0)
@@ -758,7 +758,7 @@ class TestMeasureGeneratorFactories:
 
     def test_builders_base_len_boundary(self, monkeypatch):
         """``_MAX_BASE_LEN`` is 512: exactly 512 accepted, 513 rejected."""
-        from soup_cli.utils.deploy_measure import (
+        from ai_forge_cli.utils.deploy_measure import (
             build_after_generator_factory,
             build_before_generator,
         )
@@ -775,11 +775,11 @@ class TestMeasureGeneratorFactories:
     def test_load_measure_model_builds_quant_config(self, monkeypatch):
         """_load_measure_model routes the candidate through the Quant Menu
         loader (capture tcfg.quantization) without loading a real model."""
-        import soup_cli.utils.deploy_measure as dm
+        import ai_forge_cli.utils.deploy_measure as dm
 
         captured = {}
 
-        import soup_cli.utils.quant_menu as quant_menu
+        import ai_forge_cli.utils.quant_menu as quant_menu
 
         def fake_build(*, tcfg, base, console=None):
             captured["quantization"] = tcfg.quantization
@@ -843,8 +843,8 @@ class TestDeployMeasureLiveFailure:
         kernel, OOM) surfaces as a friendly exit 1 with no traceback leak."""
         import typer
 
-        from soup_cli.commands.deploy import autopilot
-        from soup_cli.utils import deploy_measure as _dm
+        from ai_forge_cli.commands.deploy import autopilot
+        from ai_forge_cli.utils import deploy_measure as _dm
 
         monkeypatch.chdir(tmp_path)
         tasks = _write_measure_tasks(tmp_path)
@@ -913,7 +913,7 @@ def _write_wav(path: Path, *, sr: int = 24_000, seconds: float = 0.05,
 
 class TestInterleaveOrpheusCodes:
     def test_known_interleave(self):
-        from soup_cli.utils.tts_codec import interleave_orpheus_codes
+        from ai_forge_cli.utils.tts_codec import interleave_orpheus_codes
 
         # 1 frame: c0=[5], c1=[7, 8], c2=[1, 2, 3, 4]
         out = interleave_orpheus_codes([5], [7, 8], [1, 2, 3, 4])
@@ -930,13 +930,13 @@ class TestInterleaveOrpheusCodes:
         ]
 
     def test_two_frames_length(self):
-        from soup_cli.utils.tts_codec import interleave_orpheus_codes
+        from ai_forge_cli.utils.tts_codec import interleave_orpheus_codes
 
         out = interleave_orpheus_codes([0, 1], [0, 1, 2, 3], list(range(8)))
         assert len(out) == 14  # 7 slots per frame
 
     def test_length_mismatch_rejected(self):
-        from soup_cli.utils.tts_codec import interleave_orpheus_codes
+        from ai_forge_cli.utils.tts_codec import interleave_orpheus_codes
 
         with pytest.raises(ValueError, match="medium"):
             interleave_orpheus_codes([0], [0], [0, 1, 2, 3])
@@ -944,13 +944,13 @@ class TestInterleaveOrpheusCodes:
             interleave_orpheus_codes([0], [0, 1], [0, 1, 2])
 
     def test_empty_rejected(self):
-        from soup_cli.utils.tts_codec import interleave_orpheus_codes
+        from ai_forge_cli.utils.tts_codec import interleave_orpheus_codes
 
         with pytest.raises(ValueError):
             interleave_orpheus_codes([], [], [])
 
     def test_out_of_range_code_rejected(self):
-        from soup_cli.utils.tts_codec import interleave_orpheus_codes
+        from ai_forge_cli.utils.tts_codec import interleave_orpheus_codes
 
         with pytest.raises(ValueError, match="4096"):
             interleave_orpheus_codes([4096], [0, 1], [0, 1, 2, 3])
@@ -958,14 +958,14 @@ class TestInterleaveOrpheusCodes:
             interleave_orpheus_codes([-1], [0, 1], [0, 1, 2, 3])
 
     def test_bool_code_rejected(self):
-        from soup_cli.utils.tts_codec import interleave_orpheus_codes
+        from ai_forge_cli.utils.tts_codec import interleave_orpheus_codes
 
         with pytest.raises(TypeError):
             interleave_orpheus_codes([True], [0, 1], [0, 1, 2, 3])
 
     def test_max_boundary_code_accepted(self):
         """4095 (one below the 4096 codebook size) is in-bucket and accepted."""
-        from soup_cli.utils.tts_codec import interleave_orpheus_codes
+        from ai_forge_cli.utils.tts_codec import interleave_orpheus_codes
 
         out = interleave_orpheus_codes([4095], [4095, 4095], [4095, 4095, 4095, 4095])
         assert len(out) == 7
@@ -975,7 +975,7 @@ class TestInterleaveOrpheusCodes:
 
 class TestOrpheusTokenString:
     def test_token_string_format(self):
-        from soup_cli.utils.tts_codec import orpheus_tokens_to_string
+        from ai_forge_cli.utils.tts_codec import orpheus_tokens_to_string
 
         assert (
             orpheus_tokens_to_string([15, 4106])
@@ -983,19 +983,19 @@ class TestOrpheusTokenString:
         )
 
     def test_empty_rejected(self):
-        from soup_cli.utils.tts_codec import orpheus_tokens_to_string
+        from ai_forge_cli.utils.tts_codec import orpheus_tokens_to_string
 
         with pytest.raises(ValueError):
             orpheus_tokens_to_string([])
 
     def test_bool_index_rejected(self):
-        from soup_cli.utils.tts_codec import orpheus_tokens_to_string
+        from ai_forge_cli.utils.tts_codec import orpheus_tokens_to_string
 
         with pytest.raises(TypeError):
             orpheus_tokens_to_string([True])
 
     def test_float_index_rejected(self):
-        from soup_cli.utils.tts_codec import orpheus_tokens_to_string
+        from ai_forge_cli.utils.tts_codec import orpheus_tokens_to_string
 
         with pytest.raises(TypeError):
             orpheus_tokens_to_string([1.5])
@@ -1005,7 +1005,7 @@ class TestLoadAudioMono:
     def test_loads_mono_24k(self, tmp_path):
         np = pytest.importorskip("numpy")
         pytest.importorskip("soundfile")
-        from soup_cli.utils.tts_codec import load_audio_mono
+        from ai_forge_cli.utils.tts_codec import load_audio_mono
 
         wav = tmp_path / "a.wav"
         _write_wav(wav, sr=24_000, seconds=0.05)
@@ -1016,7 +1016,7 @@ class TestLoadAudioMono:
 
     def test_resamples_other_rates(self, tmp_path):
         pytest.importorskip("soundfile")
-        from soup_cli.utils.tts_codec import load_audio_mono
+        from ai_forge_cli.utils.tts_codec import load_audio_mono
 
         wav = tmp_path / "b.wav"
         _write_wav(wav, sr=8_000, seconds=0.05)
@@ -1026,7 +1026,7 @@ class TestLoadAudioMono:
 
     def test_stereo_mixdown(self, tmp_path):
         pytest.importorskip("soundfile")
-        from soup_cli.utils.tts_codec import load_audio_mono
+        from ai_forge_cli.utils.tts_codec import load_audio_mono
 
         wav = tmp_path / "c.wav"
         _write_wav(wav, sr=24_000, seconds=0.05, channels=2)
@@ -1035,25 +1035,25 @@ class TestLoadAudioMono:
 
     def test_missing_file_rejected(self, tmp_path):
         pytest.importorskip("soundfile")
-        from soup_cli.utils.tts_codec import load_audio_mono
+        from ai_forge_cli.utils.tts_codec import load_audio_mono
 
         with pytest.raises(FileNotFoundError):
             load_audio_mono(str(tmp_path / "nope.wav"))
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.tts_codec import load_audio_mono
+        from ai_forge_cli.utils.tts_codec import load_audio_mono
 
         with pytest.raises(ValueError):
             load_audio_mono("a\x00b.wav")
 
     def test_non_string_path_rejected(self):
-        from soup_cli.utils.tts_codec import load_audio_mono
+        from ai_forge_cli.utils.tts_codec import load_audio_mono
 
         with pytest.raises((ValueError, TypeError)):
             load_audio_mono(123)
 
     def test_empty_path_rejected(self):
-        from soup_cli.utils.tts_codec import load_audio_mono
+        from ai_forge_cli.utils.tts_codec import load_audio_mono
 
         with pytest.raises(ValueError):
             load_audio_mono("")
@@ -1066,7 +1066,7 @@ class TestLoadAudioMono:
         import os
 
         pytest.importorskip("soundfile")
-        from soup_cli.utils.tts_codec import load_audio_mono
+        from ai_forge_cli.utils.tts_codec import load_audio_mono
 
         real = tmp_path / "real.wav"
         _write_wav(real, sr=24_000, seconds=0.05)
@@ -1080,7 +1080,7 @@ class TestLoadAudioMono:
 
     def test_byte_size_cap(self, tmp_path, monkeypatch):
         pytest.importorskip("soundfile")
-        import soup_cli.utils.tts_codec as tc
+        import ai_forge_cli.utils.tts_codec as tc
 
         monkeypatch.setattr(tc, "_MAX_AUDIO_BYTES", 16)
         wav = tmp_path / "big.wav"
@@ -1090,7 +1090,7 @@ class TestLoadAudioMono:
 
     def test_duration_cap(self, tmp_path, monkeypatch):
         pytest.importorskip("soundfile")
-        import soup_cli.utils.tts_codec as tc
+        import ai_forge_cli.utils.tts_codec as tc
 
         monkeypatch.setattr(tc, "_MAX_AUDIO_SECONDS", 0.01)
         wav = tmp_path / "long.wav"
@@ -1120,7 +1120,7 @@ class TestEncodeAudioOrpheus:
     def test_encodes_with_injected_model(self, tmp_path):
         _torch_or_skip()
         pytest.importorskip("soundfile")
-        from soup_cli.utils.tts_codec import encode_audio_orpheus
+        from ai_forge_cli.utils.tts_codec import encode_audio_orpheus
 
         wav = tmp_path / "a.wav"
         _write_wav(wav)
@@ -1134,7 +1134,7 @@ class TestEncodeAudioOrpheus:
         pytest.importorskip("soundfile")
         import sys
 
-        import soup_cli.utils.tts_codec as tc
+        import ai_forge_cli.utils.tts_codec as tc
 
         monkeypatch.setitem(sys.modules, "snac", None)
         monkeypatch.setattr(tc, "_SNAC_CACHE", {})
@@ -1146,26 +1146,26 @@ class TestEncodeAudioOrpheus:
 
 class TestTtsEncoderDispatch:
     def test_orpheus_returns_callable(self):
-        from soup_cli.utils.tts_codec import tts_encoder_for_family
+        from ai_forge_cli.utils.tts_codec import tts_encoder_for_family
 
         enc = tts_encoder_for_family("orpheus")
         assert callable(enc)
 
     @pytest.mark.parametrize("family", ["sesame_csm", "llasa", "spark", "oute"])
     def test_other_families_tracked_in_265(self, family):
-        from soup_cli.utils.tts_codec import tts_encoder_for_family
+        from ai_forge_cli.utils.tts_codec import tts_encoder_for_family
 
         with pytest.raises(RuntimeError, match="#265"):
             tts_encoder_for_family(family)
 
     def test_unknown_family_rejected(self):
-        from soup_cli.utils.tts_codec import tts_encoder_for_family
+        from ai_forge_cli.utils.tts_codec import tts_encoder_for_family
 
         with pytest.raises(ValueError):
             tts_encoder_for_family("klingon")
 
     def test_live_codec_families_constant(self):
-        from soup_cli.utils.tts_codec import LIVE_CODEC_FAMILIES
+        from ai_forge_cli.utils.tts_codec import LIVE_CODEC_FAMILIES
 
         assert LIVE_CODEC_FAMILIES == frozenset({"orpheus"})
 
@@ -1175,7 +1175,7 @@ class TestEncodeTtsRow:
         return "<custom_token_10>"
 
     def test_appends_assistant_turn(self):
-        from soup_cli.utils.tts_codec import encode_tts_row
+        from ai_forge_cli.utils.tts_codec import encode_tts_row
 
         row = {
             "audio": "a.wav",
@@ -1189,7 +1189,7 @@ class TestEncodeTtsRow:
         }
 
     def test_replaces_existing_assistant_turn(self):
-        from soup_cli.utils.tts_codec import encode_tts_row
+        from ai_forge_cli.utils.tts_codec import encode_tts_row
 
         original_assistant = {"role": "assistant", "content": "placeholder"}
         row = {
@@ -1208,7 +1208,7 @@ class TestEncodeTtsRow:
         assert out["messages"][-1] is not original_assistant
 
     def test_caller_row_not_mutated(self):
-        from soup_cli.utils.tts_codec import encode_tts_row
+        from ai_forge_cli.utils.tts_codec import encode_tts_row
 
         messages = [{"role": "user", "content": "Say hi"}]
         row = {"audio": "a.wav", "messages": messages}
@@ -1218,13 +1218,13 @@ class TestEncodeTtsRow:
         assert "audio" in row
 
     def test_missing_audio_rejected(self):
-        from soup_cli.utils.tts_codec import encode_tts_row
+        from ai_forge_cli.utils.tts_codec import encode_tts_row
 
         with pytest.raises(ValueError, match="audio"):
             encode_tts_row({"messages": []}, self._encoder)
 
     def test_missing_messages_rejected(self):
-        from soup_cli.utils.tts_codec import encode_tts_row
+        from ai_forge_cli.utils.tts_codec import encode_tts_row
 
         with pytest.raises(ValueError, match="messages"):
             encode_tts_row({"audio": "a.wav"}, self._encoder)
@@ -1232,7 +1232,7 @@ class TestEncodeTtsRow:
 
 class TestEncodeTtsDataset:
     def test_maps_train_and_val(self):
-        from soup_cli.utils.tts_codec import encode_tts_dataset
+        from ai_forge_cli.utils.tts_codec import encode_tts_dataset
 
         rows = [
             {"audio": "a.wav", "messages": [{"role": "user", "content": "x"}]},
@@ -1247,13 +1247,13 @@ class TestEncodeTtsDataset:
         assert "audio" in ds["train"][0]
 
     def test_family_validated(self):
-        from soup_cli.utils.tts_codec import encode_tts_dataset
+        from ai_forge_cli.utils.tts_codec import encode_tts_dataset
 
         with pytest.raises(ValueError):
             encode_tts_dataset({"train": []}, "klingon", encoder=lambda p: "x")
 
     def test_non_dict_rejected(self):
-        from soup_cli.utils.tts_codec import encode_tts_dataset
+        from ai_forge_cli.utils.tts_codec import encode_tts_dataset
 
         with pytest.raises(TypeError):
             encode_tts_dataset([], "orpheus", encoder=lambda p: "x")
@@ -1265,9 +1265,9 @@ class TestTtsTrainerLiveCodecWiring:
         rows then falls through to the pre-encoded SFT path (no gate raise)."""
         _torch_or_skip()
         pytest.importorskip("snac")
-        from soup_cli.trainer.sft import SFTTrainerWrapper
-        from soup_cli.trainer.tts import TTSTrainerWrapper
-        from soup_cli.utils import tts_codec
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.tts import TTSTrainerWrapper
+        from ai_forge_cli.utils import tts_codec
 
         monkeypatch.setattr(
             tts_codec,
@@ -1325,9 +1325,9 @@ class TestTtsTrainerLiveCodecWiring:
 
 class TestPatchInvariants:
     def test_version_bumped(self):
-        import soup_cli
+        import ai_forge_cli
 
-        parts = tuple(int(p) for p in soup_cli.__version__.split(".")[:3])
+        parts = tuple(int(p) for p in ai_forge_cli.__version__.split(".")[:3])
         assert parts >= (0, 71, 22)
 
     def test_no_top_level_heavy_imports_in_minillm(self):

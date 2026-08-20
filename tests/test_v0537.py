@@ -27,11 +27,11 @@ import pytest
 
 class TestMarkdownHeadingSplit:
     def test_empty_string_returns_empty_list(self):
-        from soup_cli.utils.data_pipeline import split_markdown_by_headings
+        from ai_forge_cli.utils.data_pipeline import split_markdown_by_headings
         assert split_markdown_by_headings("") == []
 
     def test_preamble_only_returns_single_row_with_none_section(self):
-        from soup_cli.utils.data_pipeline import split_markdown_by_headings
+        from ai_forge_cli.utils.data_pipeline import split_markdown_by_headings
         rows = split_markdown_by_headings("first paragraph\nsecond line")
         assert len(rows) == 1
         assert rows[0]["section"] is None
@@ -39,7 +39,7 @@ class TestMarkdownHeadingSplit:
         assert "first paragraph" in rows[0]["text"]
 
     def test_three_headings_yield_three_sections(self):
-        from soup_cli.utils.data_pipeline import split_markdown_by_headings
+        from ai_forge_cli.utils.data_pipeline import split_markdown_by_headings
         md = (
             "# Intro\nIntro body\n## Sub\nSub body\n### Deep\nDeep body\n"
         )
@@ -53,7 +53,7 @@ class TestMarkdownHeadingSplit:
         assert rows[2]["level"] == 3
 
     def test_preamble_plus_headings_yield_preamble_row(self):
-        from soup_cli.utils.data_pipeline import split_markdown_by_headings
+        from ai_forge_cli.utils.data_pipeline import split_markdown_by_headings
         md = "preamble text\n# Heading\nbody"
         rows = split_markdown_by_headings(md)
         assert len(rows) == 2
@@ -64,25 +64,25 @@ class TestMarkdownHeadingSplit:
         assert rows[1]["level"] == 1
 
     def test_atx_levels_1_through_6_accepted(self):
-        from soup_cli.utils.data_pipeline import split_markdown_by_headings
+        from ai_forge_cli.utils.data_pipeline import split_markdown_by_headings
         md = "\n".join(f"{'#' * n} L{n}\nbody{n}" for n in range(1, 7))
         rows = split_markdown_by_headings(md)
         assert [r["level"] for r in rows] == [1, 2, 3, 4, 5, 6]
 
     def test_seven_hashes_not_a_heading(self):
-        from soup_cli.utils.data_pipeline import split_markdown_by_headings
+        from ai_forge_cli.utils.data_pipeline import split_markdown_by_headings
         rows = split_markdown_by_headings("####### not a heading\nbody")
         assert len(rows) == 1
         assert rows[0]["section"] is None
 
     def test_hash_without_space_not_a_heading(self):
-        from soup_cli.utils.data_pipeline import split_markdown_by_headings
+        from ai_forge_cli.utils.data_pipeline import split_markdown_by_headings
         rows = split_markdown_by_headings("#NoSpace\nbody")
         assert len(rows) == 1
         assert rows[0]["section"] is None
 
     def test_non_string_input_raises_typeerror(self):
-        from soup_cli.utils.data_pipeline import split_markdown_by_headings
+        from ai_forge_cli.utils.data_pipeline import split_markdown_by_headings
         with pytest.raises(TypeError):
             split_markdown_by_headings(123)
         with pytest.raises(TypeError):
@@ -91,7 +91,7 @@ class TestMarkdownHeadingSplit:
     def test_ingest_cli_emits_one_row_per_heading(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         md_path = tmp_path / "doc.md"
@@ -115,7 +115,7 @@ class TestMarkdownHeadingSplit:
     def test_ingest_cli_preamble_creates_extra_row(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         md_path = tmp_path / "doc.md"
@@ -145,7 +145,7 @@ class TestDecontaminateBenchmarkFile:
     def test_loads_operator_corpus_and_filters(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         # The decontaminate row text overlaps the benchmark text by n-grams.
@@ -191,7 +191,7 @@ class TestDecontaminateBenchmarkFile:
     def test_missing_benchmarks_and_file_exits(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         rows_path = tmp_path / "input.jsonl"
@@ -206,7 +206,7 @@ class TestDecontaminateBenchmarkFile:
     def test_bad_benchmark_file_path_rejected(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         rows_path = tmp_path / "input.jsonl"
@@ -226,7 +226,7 @@ class TestDecontaminateBenchmarkFile:
     def test_benchmarks_flag_still_accepted_with_label(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         rows_path = tmp_path / "input.jsonl"
@@ -250,42 +250,42 @@ class TestDecontaminateBenchmarkFile:
 
 class TestPromptStrategyRuntime:
     def test_resolve_finds_callable(self):
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         # json.dumps takes a positional arg
         spec = "json:dumps"
         fn = resolve_prompt_strategy(spec)
         assert callable(fn)
 
     def test_resolve_missing_module_raises(self):
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         with pytest.raises(ValueError, match="could not be imported"):
             resolve_prompt_strategy("definitely_not_a_module_xyz:fn")
 
     def test_resolve_missing_attribute_raises(self):
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         with pytest.raises(ValueError, match="no attribute"):
             resolve_prompt_strategy("json:not_a_real_attr_zzz")
 
     def test_resolve_non_callable_raises(self):
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         # sys.maxsize is an int, not callable
         with pytest.raises(ValueError, match="not callable"):
             resolve_prompt_strategy("sys:maxsize")
 
     def test_resolve_bad_shape_raises(self):
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         with pytest.raises(ValueError):
             resolve_prompt_strategy("no_colon")
         with pytest.raises(ValueError):
             resolve_prompt_strategy("")
 
     def test_resolve_non_string_raises(self):
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         with pytest.raises(ValueError):
             resolve_prompt_strategy(123)  # type: ignore[arg-type]
 
     def test_apply_with_none_returns_row(self):
-        from soup_cli.utils.data_pipeline import apply_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import apply_prompt_strategy
         row = {"a": 1}
         assert apply_prompt_strategy(None, row) is row
 
@@ -301,7 +301,7 @@ class TestPromptStrategyRuntime:
         )
         monkeypatch.syspath_prepend(str(tmp_path))
         # Clear lru_cache so spec resolves with new module
-        from soup_cli.utils.data_pipeline import (
+        from ai_forge_cli.utils.data_pipeline import (
             apply_prompt_strategy,
             resolve_prompt_strategy,
         )
@@ -319,7 +319,7 @@ class TestPromptStrategyRuntime:
             encoding="utf-8",
         )
         monkeypatch.syspath_prepend(str(tmp_path))
-        from soup_cli.utils.data_pipeline import (
+        from ai_forge_cli.utils.data_pipeline import (
             apply_prompt_strategy,
             resolve_prompt_strategy,
         )
@@ -338,7 +338,7 @@ class TestPromptStrategyRuntime:
             encoding="utf-8",
         )
         monkeypatch.syspath_prepend(str(tmp_path))
-        from soup_cli.utils.data_pipeline import (
+        from ai_forge_cli.utils.data_pipeline import (
             apply_prompt_strategy,
             resolve_prompt_strategy,
         )
@@ -358,11 +358,11 @@ class TestPromptStrategyRuntime:
             encoding="utf-8",
         )
         monkeypatch.syspath_prepend(str(tmp_path))
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         resolve_prompt_strategy.cache_clear()
 
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.sft_format import build_format_row
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.sft_format import build_format_row
 
         data_cfg = DataConfig(
             train="dummy.jsonl",
@@ -388,14 +388,14 @@ class TestPreprocessTokenize:
     def test_help_advertises_live_loop(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "preprocess", "--help"])
         assert result.exit_code == 0
 
     def test_load_pretokenized_dataset_rejects_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.utils.data_pipeline import load_pretokenized_dataset
+        from ai_forge_cli.utils.data_pipeline import load_pretokenized_dataset
 
         monkeypatch.chdir(tmp_path)
         # An absolute outside-cwd path
@@ -403,24 +403,24 @@ class TestPreprocessTokenize:
             load_pretokenized_dataset("/etc/some_dir")
 
     def test_load_pretokenized_dataset_rejects_null_byte(self, tmp_path, monkeypatch):
-        from soup_cli.utils.data_pipeline import load_pretokenized_dataset
+        from ai_forge_cli.utils.data_pipeline import load_pretokenized_dataset
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="null byte"):
             load_pretokenized_dataset("foo\x00bar")
 
     def test_load_pretokenized_dataset_rejects_empty(self):
-        from soup_cli.utils.data_pipeline import load_pretokenized_dataset
+        from ai_forge_cli.utils.data_pipeline import load_pretokenized_dataset
         with pytest.raises(ValueError, match="non-empty"):
             load_pretokenized_dataset("")
 
     def test_load_pretokenized_dataset_rejects_non_string(self):
-        from soup_cli.utils.data_pipeline import load_pretokenized_dataset
+        from ai_forge_cli.utils.data_pipeline import load_pretokenized_dataset
         with pytest.raises(TypeError, match="string"):
             load_pretokenized_dataset(123)  # type: ignore[arg-type]
 
     def test_load_pretokenized_dataset_rejects_missing_path(self, tmp_path, monkeypatch):
-        from soup_cli.utils.data_pipeline import load_pretokenized_dataset
+        from ai_forge_cli.utils.data_pipeline import load_pretokenized_dataset
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="not found"):
@@ -428,7 +428,7 @@ class TestPreprocessTokenize:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink rejection")
     def test_load_pretokenized_dataset_rejects_symlink(self, tmp_path, monkeypatch):
-        from soup_cli.utils.data_pipeline import load_pretokenized_dataset
+        from ai_forge_cli.utils.data_pipeline import load_pretokenized_dataset
 
         monkeypatch.chdir(tmp_path)
         real_dir = tmp_path / "real"
@@ -441,7 +441,7 @@ class TestPreprocessTokenize:
     def test_load_pretokenized_dataset_rejects_cache_key_mismatch(
         self, tmp_path, monkeypatch
     ):
-        from soup_cli.utils.data_pipeline import load_pretokenized_dataset
+        from ai_forge_cli.utils.data_pipeline import load_pretokenized_dataset
 
         pytest.importorskip("datasets")
         monkeypatch.chdir(tmp_path)
@@ -461,42 +461,42 @@ class TestPreprocessTokenize:
 
 class TestForgeJudgeProvider:
     def test_make_judge_provider_fn_unknown_rejected(self):
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
         with pytest.raises(ValueError, match="unknown judge provider"):
             make_judge_provider_fn("openai")
 
     def test_make_judge_provider_fn_non_string_rejected(self):
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
         with pytest.raises(TypeError):
             make_judge_provider_fn(123)  # type: ignore[arg-type]
 
     def test_make_judge_provider_fn_bad_model_rejected(self):
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
         with pytest.raises(ValueError, match="model"):
             make_judge_provider_fn("ollama", model="")
         with pytest.raises(ValueError, match="NUL-free"):
             make_judge_provider_fn("ollama", model="x\x00y")
 
     def test_make_judge_provider_fn_bool_timeout_rejected(self):
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
         with pytest.raises(TypeError):
             make_judge_provider_fn("ollama", timeout_seconds=True)
 
     def test_make_judge_provider_fn_bad_timeout_rejected(self):
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
         with pytest.raises(ValueError):
             make_judge_provider_fn("ollama", timeout_seconds=0)
         with pytest.raises(ValueError):
             make_judge_provider_fn("ollama", timeout_seconds=1000)
 
     def test_anthropic_requires_env_var(self, monkeypatch):
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
             make_judge_provider_fn("anthropic")
 
     def test_ollama_rejects_remote_url(self):
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
         with pytest.raises(ValueError):
             make_judge_provider_fn(
                 "ollama", base_url="http://10.0.0.1:11434"
@@ -506,7 +506,7 @@ class TestForgeJudgeProvider:
         # Monkeypatch httpx.post in the module
         import httpx
 
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -521,7 +521,7 @@ class TestForgeJudgeProvider:
     def test_ollama_judge_swallows_http_error(self, monkeypatch):
         import httpx
 
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
 
         def _boom(*a, **k):
             raise httpx.ConnectError("nope")
@@ -532,20 +532,20 @@ class TestForgeJudgeProvider:
         assert reply["text"] == ""
 
     def test_vllm_judge_validates_url(self):
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
         with pytest.raises(ValueError):
             make_judge_provider_fn(
                 "vllm", base_url="ftp://localhost:8000"
             )
 
     def test_forge_provider_constants(self):
-        from soup_cli.utils.data_forge import JUDGE_PROVIDERS
+        from ai_forge_cli.utils.data_forge import JUDGE_PROVIDERS
         assert JUDGE_PROVIDERS == frozenset({"ollama", "anthropic", "vllm"})
 
     def test_forge_cli_rejects_unknown_provider(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         docs = tmp_path / "docs"
@@ -586,8 +586,8 @@ class TestQALogEntry:
 
 class TestRunRecipeLive:
     def test_stub_gone(self, tmp_path, monkeypatch):
-        from soup_cli.utils.recipe_dag import parse_recipe
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import parse_recipe
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         monkeypatch.chdir(tmp_path)
         dag = parse_recipe(
@@ -604,8 +604,8 @@ class TestRunRecipeLive:
             run_recipe(dag, output_dir=str(tmp_path / "out"))
 
     def test_seed_node_loads_jsonl(self, tmp_path, monkeypatch):
-        from soup_cli.utils.recipe_dag import parse_recipe
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import parse_recipe
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         monkeypatch.chdir(tmp_path)
         seed_path = tmp_path / "seed.jsonl"
@@ -634,8 +634,8 @@ class TestRunRecipeLive:
         assert len(lines) == 2
 
     def test_validator_node_regex_filter(self, tmp_path, monkeypatch):
-        from soup_cli.utils.recipe_dag import parse_recipe
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import parse_recipe
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         monkeypatch.chdir(tmp_path)
         seed_path = tmp_path / "seed.jsonl"
@@ -660,8 +660,8 @@ class TestRunRecipeLive:
         assert result["node_row_counts"]["sink"] == 1
 
     def test_llm_text_offline_stub(self, tmp_path, monkeypatch):
-        from soup_cli.utils.recipe_dag import parse_recipe
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import parse_recipe
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         monkeypatch.chdir(tmp_path)
         seed_path = tmp_path / "seed.jsonl"
@@ -689,8 +689,8 @@ class TestRunRecipeLive:
         assert "llm" in first
 
     def test_judge_node_offline_default_keeps_all(self, tmp_path, monkeypatch):
-        from soup_cli.utils.recipe_dag import parse_recipe
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import parse_recipe
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         monkeypatch.chdir(tmp_path)
         seed_path = tmp_path / "seed.jsonl"
@@ -713,8 +713,8 @@ class TestRunRecipeLive:
         assert result["node_row_counts"]["j"] == 2
 
     def test_checkpoint_written_on_completion(self, tmp_path, monkeypatch):
-        from soup_cli.utils.recipe_dag import parse_recipe
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import parse_recipe
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         monkeypatch.chdir(tmp_path)
         seed_path = tmp_path / "seed.jsonl"
@@ -736,14 +736,14 @@ class TestRunRecipeLive:
         assert "seed1" in state["completed_nodes"]
 
     def test_rejects_non_recipedag(self, tmp_path, monkeypatch):
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_run import run_recipe
         monkeypatch.chdir(tmp_path)
         with pytest.raises(TypeError):
             run_recipe("not a dag", output_dir="x")  # type: ignore[arg-type]
 
     def test_output_dir_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.recipe_dag import parse_recipe
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import parse_recipe
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         monkeypatch.chdir(tmp_path)
         dag = parse_recipe({
@@ -754,8 +754,8 @@ class TestRunRecipeLive:
             run_recipe(dag, output_dir="/etc/foo")
 
     def test_validator_requires_regex_or_schema(self, tmp_path, monkeypatch):
-        from soup_cli.utils.recipe_dag import parse_recipe
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import parse_recipe
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         monkeypatch.chdir(tmp_path)
         seed_path = tmp_path / "seed.jsonl"
@@ -772,8 +772,8 @@ class TestRunRecipeLive:
             run_recipe(dag, output_dir=str(out_dir))
 
     def test_code_node_requires_code_field(self, tmp_path, monkeypatch):
-        from soup_cli.utils.recipe_dag import parse_recipe
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import parse_recipe
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         monkeypatch.chdir(tmp_path)
         seed_path = tmp_path / "seed.jsonl"
@@ -792,7 +792,7 @@ class TestRunRecipeLive:
     def test_recipe_cli_executes_dag(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         seed_path = tmp_path / "seed.jsonl"
@@ -826,7 +826,7 @@ class TestRunRecipeLive:
 
 class TestInstantiateTrainerPlugins:
     def test_cce_plugin_returns_advisory_callback(self):
-        from soup_cli.utils.trainer_plugins import instantiate_trainer_plugins
+        from ai_forge_cli.utils.trainer_plugins import instantiate_trainer_plugins
 
         out = instantiate_trainer_plugins(["cce_plugin"])
         assert len(out) == 1
@@ -835,29 +835,29 @@ class TestInstantiateTrainerPlugins:
         assert cb.plugin_name == "cce_plugin"
 
     def test_unknown_name_rejected_before_instantiation(self):
-        from soup_cli.utils.trainer_plugins import instantiate_trainer_plugins
+        from ai_forge_cli.utils.trainer_plugins import instantiate_trainer_plugins
         with pytest.raises(ValueError):
             instantiate_trainer_plugins(["definitely_unknown_plugin"])
 
     def test_non_sequence_rejected(self):
-        from soup_cli.utils.trainer_plugins import instantiate_trainer_plugins
+        from ai_forge_cli.utils.trainer_plugins import instantiate_trainer_plugins
         with pytest.raises(TypeError):
             instantiate_trainer_plugins("grokfast")  # bare string
 
     def test_empty_list_returns_empty_tuple(self):
-        from soup_cli.utils.trainer_plugins import instantiate_trainer_plugins
+        from ai_forge_cli.utils.trainer_plugins import instantiate_trainer_plugins
         out = instantiate_trainer_plugins([])
         assert out == ()
 
     def test_no_longer_raises_notimplementederror_for_cce(self):
-        from soup_cli.utils.trainer_plugins import instantiate_trainer_plugins
+        from ai_forge_cli.utils.trainer_plugins import instantiate_trainer_plugins
         # cce_plugin has no required upstream dep; should NOT raise.
         out = instantiate_trainer_plugins(["cce_plugin"])
         assert out  # non-empty
 
     def test_missing_upstream_pkg_raises_importerror(self):
         """grokfast / spectrum etc. may not be installed in CI."""
-        from soup_cli.utils.trainer_plugins import instantiate_trainer_plugins
+        from ai_forge_cli.utils.trainer_plugins import instantiate_trainer_plugins
         # If the package is installed, this test asserts no ImportError.
         # If absent (the common case), ImportError fires with friendly hint.
         try:
@@ -879,7 +879,7 @@ def _create_test_app():
     except ImportError:
         pytest.skip("FastAPI not installed")
 
-    from soup_cli.commands.serve import _create_app
+    from ai_forge_cli.commands.serve import _create_app
 
     return _create_app(
         model_obj=MagicMock(),
@@ -996,8 +996,8 @@ class TestToolEndpointsLive:
     def test_web_search_with_allowlist_calls_backend(self):
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
-        from soup_cli.utils.server_tools import WebSearchConfig
+        from ai_forge_cli.commands.serve import _create_app
+        from ai_forge_cli.utils.server_tools import WebSearchConfig
 
         try:
             import fastapi  # noqa: F401
@@ -1057,7 +1057,7 @@ class TestAnthropicMessagesStreaming:
         # Patch _generate_response so we get deterministic output without
         # actually invoking a model.
         with patch(
-            "soup_cli.commands.serve._generate_response",
+            "ai_forge_cli.commands.serve._generate_response",
             return_value=("hello world", 3, 2),
         ):
             app = _create_test_app()
@@ -1083,7 +1083,7 @@ class TestAnthropicMessagesStreaming:
         from fastapi.testclient import TestClient
 
         with patch(
-            "soup_cli.commands.serve._generate_response",
+            "ai_forge_cli.commands.serve._generate_response",
             return_value=("response", 1, 1),
         ):
             app = _create_test_app()
@@ -1108,7 +1108,7 @@ class TestAnthropicMessagesStreaming:
         from fastapi.testclient import TestClient
 
         with patch(
-            "soup_cli.commands.serve._generate_response",
+            "ai_forge_cli.commands.serve._generate_response",
             return_value=("x", 1, 1),
         ):
             app = _create_test_app()
@@ -1132,7 +1132,7 @@ class TestVllmAnthropicMessages:
 
         src = (
             Path(__file__).parent.parent
-            / "src" / "soup_cli" / "utils" / "vllm.py"
+            / "src" / "ai_forge_cli" / "utils" / "vllm.py"
         ).read_text(encoding="utf-8")
         # Verify the route + helper landed.
         assert "/v1/messages" in src
@@ -1140,7 +1140,7 @@ class TestVllmAnthropicMessages:
         assert "validate_anthropic_payload" in src
 
     def test_vllm_stream_helper_emits_anthropic_events(self):
-        from soup_cli.utils.vllm import _stream_anthropic_messages_vllm
+        from ai_forge_cli.utils.vllm import _stream_anthropic_messages_vllm
 
         frames = list(
             _stream_anthropic_messages_vllm(
@@ -1159,7 +1159,7 @@ class TestVllmAnthropicMessages:
         assert "text_delta" in joined
 
     def test_anthropic_streaming_helper_handles_empty_text(self):
-        from soup_cli.utils.vllm import _stream_anthropic_messages_vllm
+        from ai_forge_cli.utils.vllm import _stream_anthropic_messages_vllm
 
         frames = list(
             _stream_anthropic_messages_vllm(
@@ -1178,7 +1178,7 @@ class TestVllmAnthropicMessages:
 
 class TestServeStreamHelper:
     def test_transformers_stream_helper_emits_anthropic_events(self):
-        from soup_cli.commands.serve import _stream_anthropic_messages
+        from ai_forge_cli.commands.serve import _stream_anthropic_messages
 
         frames = list(
             _stream_anthropic_messages(
@@ -1203,7 +1203,7 @@ class TestServeStreamHelper:
 
 class TestPublicSurface:
     def test_data_pipeline_exports(self):
-        from soup_cli.utils import data_pipeline
+        from ai_forge_cli.utils import data_pipeline
         for name in (
             "split_markdown_by_headings",
             "resolve_prompt_strategy",
@@ -1214,16 +1214,16 @@ class TestPublicSurface:
             assert hasattr(data_pipeline, name), name
 
     def test_data_forge_exports(self):
-        from soup_cli.utils import data_forge
+        from ai_forge_cli.utils import data_forge
         for name in ("make_judge_provider_fn", "JUDGE_PROVIDERS"):
             assert hasattr(data_forge, name), name
 
     def test_recipe_run_exports(self):
-        from soup_cli.utils import recipe_run
+        from ai_forge_cli.utils import recipe_run
         assert hasattr(recipe_run, "run_recipe")
 
     def test_trainer_plugins_exports(self):
-        from soup_cli.utils import trainer_plugins
+        from ai_forge_cli.utils import trainer_plugins
         assert hasattr(trainer_plugins, "instantiate_trainer_plugins")
 
 
@@ -1244,35 +1244,35 @@ class TestReviewFixesRecipeRun:
         target.write_text('{"x": 1}\n', encoding="utf-8")
         link = tmp_path / "link.jsonl"
         _os.symlink(str(target), str(link))
-        from soup_cli.utils.recipe_dag import RecipeNode
-        from soup_cli.utils.recipe_run import _node_seed
+        from ai_forge_cli.utils.recipe_dag import RecipeNode
+        from ai_forge_cli.utils.recipe_run import _node_seed
         node = RecipeNode(name="s", kind="seed", config={"path": "link.jsonl"})
         with pytest.raises(ValueError, match="symlink"):
             _node_seed(node, ())
 
     def test_redact_exc_message_strips_posix_paths(self):
-        from soup_cli.utils.recipe_run import _redact_exc_message
+        from ai_forge_cli.utils.recipe_run import _redact_exc_message
         exc = FileNotFoundError("/etc/passwd: no such file")
         redacted = _redact_exc_message(exc)
         assert "/etc/passwd" not in redacted
         assert "FileNotFoundError" in redacted
 
     def test_redact_exc_message_truncates_long(self):
-        from soup_cli.utils.recipe_run import _redact_exc_message
+        from ai_forge_cli.utils.recipe_run import _redact_exc_message
         exc = ValueError("x" * 1000)
         redacted = _redact_exc_message(exc, limit=64)
         assert len(redacted) <= 64
 
     def test_redact_exc_message_handles_windows_paths(self):
-        from soup_cli.utils.recipe_run import _redact_exc_message
+        from ai_forge_cli.utils.recipe_run import _redact_exc_message
         exc = OSError(r"C:\Users\alice\secret.txt missing")
         redacted = _redact_exc_message(exc)
         assert "alice" not in redacted
 
     def test_node_code_row_injection_blocked_by_double_encode(self, tmp_path, monkeypatch):
         """v0.53.7 M-C: tricky row content cannot escape the Python literal."""
-        from soup_cli.utils.recipe_dag import RecipeNode
-        from soup_cli.utils.recipe_run import _node_code
+        from ai_forge_cli.utils.recipe_dag import RecipeNode
+        from ai_forge_cli.utils.recipe_run import _node_code
         monkeypatch.chdir(tmp_path)
         evil = {"text": 'foo"); print("HIJACK"); ("'}
         node = RecipeNode(
@@ -1290,8 +1290,8 @@ class TestReviewFixesRecipeRun:
     def test_run_recipe_resume_rehydrates_predecessor_outputs(self, tmp_path, monkeypatch):
         """v0.53.7 M-F: resume rehydrates from sidecar (was ``[]`` in v0.53.6)."""
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.recipe_dag import RecipeDAG, RecipeNode
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import RecipeDAG, RecipeNode
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         seed = tmp_path / "seed.jsonl"
         seed.write_text('{"x": 1}\n{"x": 2}\n', encoding="utf-8")
@@ -1318,8 +1318,8 @@ class TestReviewFixesRecipeRun:
         monkeypatch.chdir(tmp_path)
         import json as _json
 
-        from soup_cli.utils.recipe_dag import RecipeDAG, RecipeNode
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import RecipeDAG, RecipeNode
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         outdir = tmp_path / "out"
         # seed node with a missing path raises ValueError BEFORE reaching
@@ -1342,8 +1342,8 @@ class TestReviewFixesRecipeRun:
     def test_node_code_happy_path(self, tmp_path, monkeypatch):
         """v0.53.7 H-K: live code-node execution through sandbox."""
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.recipe_dag import RecipeDAG, RecipeNode
-        from soup_cli.utils.recipe_run import run_recipe
+        from ai_forge_cli.utils.recipe_dag import RecipeDAG, RecipeNode
+        from ai_forge_cli.utils.recipe_run import run_recipe
 
         seed = tmp_path / "seed.jsonl"
         seed.write_text('{"x": 5}\n', encoding="utf-8")
@@ -1372,7 +1372,7 @@ class TestReviewFixesRecipeRun:
     def test_save_checkpoint_atomic_via_mkstemp(self, tmp_path, monkeypatch):
         """v0.53.7 H-C/M-E: mkstemp + os.replace pattern."""
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.recipe_run import _save_checkpoint
+        from ai_forge_cli.utils.recipe_run import _save_checkpoint
         outdir = tmp_path / "out"
         outdir.mkdir()
         _save_checkpoint(str(outdir), {"status": "running"})
@@ -1385,16 +1385,16 @@ class TestReviewFixesPromptStrategy:
     """v0.53.7 M-P + L-B + H-E coverage."""
 
     def setup_method(self):
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         resolve_prompt_strategy.cache_clear()
 
     def test_resolve_null_byte_rejected(self):
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         with pytest.raises(ValueError):
             resolve_prompt_strategy("mod\x00name:fn")
 
     def test_resolve_oversize_rejected(self):
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         oversize = "a" * 1000 + ":fn"
         with pytest.raises(ValueError):
             resolve_prompt_strategy(oversize)
@@ -1407,7 +1407,7 @@ class TestReviewFixesPromptStrategy:
             "def fn(a, b, c):\n    return {'ok': True}\n",
             encoding="utf-8",
         )
-        from soup_cli.utils.data_pipeline import resolve_prompt_strategy
+        from ai_forge_cli.utils.data_pipeline import resolve_prompt_strategy
         resolve_prompt_strategy.cache_clear()
         with pytest.raises(ValueError, match="positional"):
             resolve_prompt_strategy("tfm_bad_sig:fn")
@@ -1417,17 +1417,17 @@ class TestReviewFixesForge:
     """v0.53.7 M-M temperature bool + M-L typing."""
 
     def test_make_judge_provider_fn_bool_temperature_rejected(self):
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
         with pytest.raises(TypeError, match="temperature"):
             make_judge_provider_fn("ollama", temperature=True)
 
     def test_make_judge_provider_fn_temperature_out_of_range(self):
-        from soup_cli.utils.data_forge import make_judge_provider_fn
+        from ai_forge_cli.utils.data_forge import make_judge_provider_fn
         with pytest.raises(ValueError, match=r"\[0, 2\]"):
             make_judge_provider_fn("ollama", temperature=5.0)
 
     def test_judge_providers_typed_frozenset_of_str(self):
-        from soup_cli.utils.data_forge import JUDGE_PROVIDERS
+        from ai_forge_cli.utils.data_forge import JUDGE_PROVIDERS
         assert isinstance(JUDGE_PROVIDERS, frozenset)
         assert all(isinstance(p, str) for p in JUDGE_PROVIDERS)
 
@@ -1449,7 +1449,7 @@ class TestReviewFixesVllmAnthropicLive:
             import vllm  # noqa: F401
         except ImportError:
             pytest.skip("vLLM not installed")
-        from soup_cli.utils.vllm import create_vllm_app
+        from ai_forge_cli.utils.vllm import create_vllm_app
 
         engine = MagicMock()
         app = create_vllm_app(
@@ -1501,7 +1501,7 @@ class TestReviewFixesDataScore:
             target_outside.write_text('{"text": "x"}\n', encoding="utf-8")
             link = tmp_path / "link.jsonl"
             _os.symlink(str(target_outside), str(link))
-            from soup_cli.utils.data_score import load_jsonl_rows
+            from ai_forge_cli.utils.data_score import load_jsonl_rows
             with pytest.raises(ValueError, match="symlink|under cwd"):
                 load_jsonl_rows("link.jsonl")
         finally:
@@ -1513,7 +1513,7 @@ class TestReviewFixesDataScore:
         outside = tmp_path.parent / "evil_bench.jsonl"
         try:
             outside.write_text('{"x": 1}\n', encoding="utf-8")
-            from soup_cli.utils.data_score import load_jsonl_rows
+            from ai_forge_cli.utils.data_score import load_jsonl_rows
             with pytest.raises(ValueError, match="under cwd"):
                 load_jsonl_rows(str(outside))
         finally:
@@ -1522,8 +1522,8 @@ class TestReviewFixesDataScore:
 
     def test_extract_row_text_publicly_exposed(self):
         """v0.53.7 M-J: public alias is the documented import."""
-        from soup_cli.utils import data_score
-        from soup_cli.utils.data_score import extract_row_text
+        from ai_forge_cli.utils import data_score
+        from ai_forge_cli.utils.data_score import extract_row_text
         assert callable(extract_row_text)
         assert "extract_row_text" in data_score.__all__
 
@@ -1533,7 +1533,7 @@ class TestReviewFixesTrainerPlugins:
 
     def test_validate_trainer_plugin_list_rejects_duplicates(self):
         """L-I: duplicate names are explicitly rejected (not silently deduped)."""
-        from soup_cli.utils.trainer_plugins import validate_trainer_plugin_list
+        from ai_forge_cli.utils.trainer_plugins import validate_trainer_plugin_list
         with pytest.raises(ValueError, match="duplicate"):
             validate_trainer_plugin_list(["grokfast", "grokfast"])
 
@@ -1541,7 +1541,7 @@ class TestReviewFixesTrainerPlugins:
         """L-A: missing API surface returns None, not the bare module."""
         import types
 
-        from soup_cli.utils import trainer_plugins
+        from ai_forge_cli.utils import trainer_plugins
 
         dummy = types.ModuleType("grokfast")
         monkeypatch.setitem(sys.modules, "grokfast", dummy)
@@ -1555,7 +1555,7 @@ class TestReviewFixesSSEHeaders:
     """v0.53.7 L-C + M-A: SSE no-store + header-injection sanitisation."""
 
     def test_sanitise_sse_field_strips_crlf_nul(self):
-        from soup_cli.commands.serve import _sanitise_sse_field
+        from ai_forge_cli.commands.serve import _sanitise_sse_field
         assert _sanitise_sse_field("hello\r\nworld", max_len=200) == "helloworld"
         assert _sanitise_sse_field("a\x00b", max_len=200) == "ab"
         assert _sanitise_sse_field("x" * 500, max_len=10) == "x" * 10
@@ -1568,7 +1568,7 @@ class TestReviewFixesSSEHeaders:
         ``\\n\\n`` boundary, so the SSE consumer treats the whole frame as
         one event with garbled-but-safe ``id`` content.
         """
-        from soup_cli.commands.serve import _stream_anthropic_messages
+        from ai_forge_cli.commands.serve import _stream_anthropic_messages
         evil_id = "msg-1\nevent: hijack\ndata: {}\n"
         frames = list(_stream_anthropic_messages(
             msg_id=evil_id, model="m", text="hi",
@@ -1597,7 +1597,7 @@ class TestReviewFixesC1BashStub:
             pytest.skip("FastAPI not installed")
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -1622,7 +1622,7 @@ class TestReviewFixesAuthToken:
             pytest.skip("FastAPI not installed")
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -1658,7 +1658,7 @@ class TestReviewFixesAuthToken:
             pytest.skip("FastAPI not installed")
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -1676,7 +1676,7 @@ class TestReviewFixesPreprocessAtomic:
     """v0.53.7 M-H + L-J source-grep guard."""
 
     def test_preprocess_save_uses_atomic_pattern(self):
-        src = Path(__file__).parent.parent / "src" / "soup_cli" / "commands" / "data.py"
+        src = Path(__file__).parent.parent / "src" / "ai_forge_cli" / "commands" / "data.py"
         body = src.read_text(encoding="utf-8")
         assert ".tmp_" in body
         assert "os.replace" in body
@@ -1694,7 +1694,7 @@ class TestReviewFixesVllmAnthropicCors:
             import vllm  # noqa: F401
         except ImportError:
             pytest.skip("vLLM not installed")
-        from soup_cli.utils.vllm import create_vllm_app
+        from ai_forge_cli.utils.vllm import create_vllm_app
 
         engine = MagicMock()
         app = create_vllm_app(
@@ -1787,8 +1787,8 @@ class TestSftPretrainPreTokenizedShortCircuit:
     def test_sft_short_circuits_to_arrow_dataset(self, tmp_path, monkeypatch):
         """Happy path: SFT trainer loads pre-tokenized Arrow shards directly
         and skips ``Dataset.from_list(...).map(format_row)`` entirely."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils.data_pipeline import make_preprocess_cache_key
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils.data_pipeline import make_preprocess_cache_key
 
         monkeypatch.chdir(tmp_path)
         # The cfg.data.train path doesn't need to exist for the short-circuit
@@ -1812,7 +1812,7 @@ class TestSftPretrainPreTokenizedShortCircuit:
 
         # Exercise the helper directly — bypasses the full ``setup()`` (which
         # would also load a 1B model). The helper is the unit under test.
-        from soup_cli.trainer.sft import _maybe_load_pretokenized
+        from ai_forge_cli.trainer.sft import _maybe_load_pretokenized
 
         captured = MagicMock()
         result = _maybe_load_pretokenized(cfg.data, cfg.base, captured)
@@ -1830,8 +1830,8 @@ class TestSftPretrainPreTokenizedShortCircuit:
     def test_pretrain_short_circuits_to_arrow_dataset(self, tmp_path, monkeypatch):
         """Same as SFT but for the Pretrain wrapper — verifies pretrain.py
         also short-circuits, not just sft.py."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils.data_pipeline import make_preprocess_cache_key
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils.data_pipeline import make_preprocess_cache_key
 
         monkeypatch.chdir(tmp_path)
         train_jsonl = "train.txt"
@@ -1854,7 +1854,7 @@ class TestSftPretrainPreTokenizedShortCircuit:
 
         # The pretrain wrapper imports the helper from sft.py — verify that
         # import resolves and the function behaves identically.
-        from soup_cli.trainer.sft import _maybe_load_pretokenized as helper
+        from ai_forge_cli.trainer.sft import _maybe_load_pretokenized as helper
 
         captured = MagicMock()
         result = helper(cfg.data, cfg.base, captured)
@@ -1867,7 +1867,7 @@ class TestSftPretrainPreTokenizedShortCircuit:
         ``max_length`` without re-running ``soup data preprocess``) must
         raise with the keyword ``cache hash mismatch`` so users know what
         to do."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         monkeypatch.chdir(tmp_path)
         self._write_arrow_dir(tmp_path, cache_key="STALE_KEY_FROM_OLD_RUN")
@@ -1875,7 +1875,7 @@ class TestSftPretrainPreTokenizedShortCircuit:
         yaml = self._build_cfg_yaml("train.jsonl", "tokenized")
         cfg = load_config_from_string(yaml)
 
-        from soup_cli.trainer.sft import _maybe_load_pretokenized
+        from ai_forge_cli.trainer.sft import _maybe_load_pretokenized
 
         with pytest.raises(ValueError, match="cache hash mismatch"):
             _maybe_load_pretokenized(cfg.data, cfg.base, MagicMock())
@@ -1885,7 +1885,7 @@ class TestSftPretrainPreTokenizedShortCircuit:
     ):
         """When metadata.json is absent, the trainer falls back to "trusted"
         mode with a yellow advisory and still loads the Arrow shards."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         monkeypatch.chdir(tmp_path)
         # Ellipsis sentinel → skip writing metadata.json entirely.
@@ -1894,7 +1894,7 @@ class TestSftPretrainPreTokenizedShortCircuit:
         yaml = self._build_cfg_yaml("train.jsonl", "tokenized")
         cfg = load_config_from_string(yaml)
 
-        from soup_cli.trainer.sft import _maybe_load_pretokenized
+        from ai_forge_cli.trainer.sft import _maybe_load_pretokenized
 
         captured = MagicMock()
         result = _maybe_load_pretokenized(cfg.data, cfg.base, captured)

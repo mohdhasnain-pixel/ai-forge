@@ -1,4 +1,4 @@
-"""Runtime regression coverage for the standalone ``soup-cli[mlx]`` path (#394)."""
+"""Runtime regression coverage for the standalone ``ai-forge[mlx]`` path (#394)."""
 
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ class BlockTrainingStack(importlib.abc.MetaPathFinder):
 sys.meta_path.insert(0, BlockTrainingStack())
 
 from typer.testing import CliRunner
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 with patch('pathlib.Path.home', return_value=Path({str(tmp_path)!r})):
     result = CliRunner().invoke(
@@ -89,7 +89,7 @@ payload = {{
     'exit_code': result.exit_code,
     'exception': str(result.exception) if result.exception else '',
     'blocked': blocked,
-    'sft_loaded': 'soup_cli.trainer.sft' in sys.modules,
+    'sft_loaded': 'ai_forge_cli.trainer.sft' in sys.modules,
 }}
 print('SOUP394|' + json.dumps(payload, sort_keys=True))
 """

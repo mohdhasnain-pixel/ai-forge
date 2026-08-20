@@ -24,7 +24,7 @@ import pytest
 
 class TestApplyV028SpeedMemory:
     def test_no_features_returns_all_false(self):
-        from soup_cli.utils.v028_features import apply_v028_speed_memory
+        from ai_forge_cli.utils.v028_features import apply_v028_speed_memory
 
         tcfg = SimpleNamespace(
             use_cut_ce=False, quantization_aware=False,
@@ -38,14 +38,14 @@ class TestApplyV028SpeedMemory:
         }
 
     def test_cut_ce_failure_logs_yellow(self, monkeypatch, capsys):
-        from soup_cli.utils import v028_features as vf
+        from ai_forge_cli.utils import v028_features as vf
 
         # Force apply_cut_ce import to raise
         def _boom(_name):
             raise RuntimeError("no cut_cross_entropy")
 
         monkeypatch.setattr(
-            "soup_cli.utils.cut_ce.apply_cut_ce", _boom, raising=False,
+            "ai_forge_cli.utils.cut_ce.apply_cut_ce", _boom, raising=False,
         )
         from rich.console import Console
         console = Console()
@@ -62,7 +62,7 @@ class TestApplyV028SpeedMemory:
     def test_supports_v028_features_extends_to_all_transformer_trainers(self):
         """v0.35.0 #60 expanded support from {sft, dpo, pretrain} to every
         transformer-backend trainer."""
-        from soup_cli.utils.v028_features import supports_v028_features
+        from ai_forge_cli.utils.v028_features import supports_v028_features
 
         for task in (
             "sft", "dpo", "pretrain", "grpo", "kto", "orpo",
@@ -73,7 +73,7 @@ class TestApplyV028SpeedMemory:
         assert supports_v028_features("nonexistent") is False
 
     def test_warn_unsupported_returns_none_for_supported(self):
-        from soup_cli.utils.v028_features import warn_unsupported_features
+        from ai_forge_cli.utils.v028_features import warn_unsupported_features
 
         tcfg = SimpleNamespace(
             use_cut_ce=True, quantization_aware="fp8",
@@ -86,7 +86,7 @@ class TestApplyV028SpeedMemory:
             assert warn_unsupported_features(tcfg, task) is None
 
     def test_warn_unsupported_lists_offenders_for_unknown_task(self):
-        from soup_cli.utils.v028_features import warn_unsupported_features
+        from ai_forge_cli.utils.v028_features import warn_unsupported_features
 
         tcfg = SimpleNamespace(
             use_cut_ce=True, quantization_aware="fp8",
@@ -102,7 +102,7 @@ class TestSchemaGateExpanded:
     def _config(self, task: str, **training_extra):
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         body = {
             "base": "test/model",
@@ -144,14 +144,14 @@ class TestSchemaGateExpanded:
 
 class TestInstallSelectiveHooks:
     def test_unknown_granularity_rejected(self):
-        from soup_cli.utils.gradient_ckpt import install_selective_hooks
+        from ai_forge_cli.utils.gradient_ckpt import install_selective_hooks
 
         with pytest.raises(ValueError, match="must be one of"):
             install_selective_hooks(MagicMock(), "weird")
 
     def test_full_wraps_every_block(self):
         """A 4-block fake model with 'medium' wraps 2 blocks (every other)."""
-        from soup_cli.utils.gradient_ckpt import install_selective_hooks
+        from ai_forge_cli.utils.gradient_ckpt import install_selective_hooks
 
         class FakeBlock:
             def __init__(self, idx):
@@ -192,7 +192,7 @@ class TestInstallSelectiveHooks:
         assert hooked_full == 4
 
     def test_medium_wraps_every_other_block(self):
-        from soup_cli.utils.gradient_ckpt import install_selective_hooks
+        from ai_forge_cli.utils.gradient_ckpt import install_selective_hooks
 
         class FakeBlock:
             def forward(self, *args, **kwargs):
@@ -214,7 +214,7 @@ class TestInstallSelectiveHooks:
         assert hooked == 3
 
     def test_selective_wraps_attention_only(self):
-        from soup_cli.utils.gradient_ckpt import install_selective_hooks
+        from ai_forge_cli.utils.gradient_ckpt import install_selective_hooks
 
         class _Attn:
             def forward(self, *args, **kwargs):
@@ -259,13 +259,13 @@ class TestInstallSelectiveHooks:
 
 class TestCrossDocCollator:
     def test_requires_base_collator(self):
-        from soup_cli.data.collators import CrossDocCollator
+        from ai_forge_cli.data.collators import CrossDocCollator
 
         with pytest.raises(ValueError, match="base_collator"):
             CrossDocCollator(base_collator=None)
 
     def test_passes_through_when_no_doc_lengths(self):
-        from soup_cli.data.collators import CrossDocCollator
+        from ai_forge_cli.data.collators import CrossDocCollator
 
         base = MagicMock(return_value={"input_ids": MagicMock()})
         collator = CrossDocCollator(base_collator=base)
@@ -275,7 +275,7 @@ class TestCrossDocCollator:
         assert "cross_doc_attn_mask" not in result
 
     def test_strips_doc_lengths_before_base_call(self):
-        from soup_cli.data.collators import CrossDocCollator
+        from ai_forge_cli.data.collators import CrossDocCollator
 
         captured: list[dict] = []
 
@@ -291,7 +291,7 @@ class TestCrossDocCollator:
     def test_mismatched_doc_lengths_falls_back_to_causal(self):
         """If sum(doc_lengths) > seq_length the collator must NOT crash —
         it falls back to a plain lower-triangular mask."""
-        from soup_cli.data.collators import CrossDocCollator
+        from ai_forge_cli.data.collators import CrossDocCollator
 
         seq_len = 4
 
@@ -311,7 +311,7 @@ class TestCrossDocCollator:
     def test_does_not_mutate_input_dict(self):
         """Regression: collator pops doc_lengths in v0.33.0 wave; HF Dataset
         rows are cached, so mutation breaks subsequent batches."""
-        from soup_cli.data.collators import CrossDocCollator
+        from ai_forge_cli.data.collators import CrossDocCollator
 
         def _base(features):
             return {"input_ids": object()}
@@ -327,7 +327,7 @@ class TestCrossDocCollator:
         appears on the batch with the right shape."""
         import numpy as np
 
-        from soup_cli.data.collators import CrossDocCollator
+        from ai_forge_cli.data.collators import CrossDocCollator
 
         # 2 documents, each 2 tokens long, packed into seq_length=4
         seq_len = 4

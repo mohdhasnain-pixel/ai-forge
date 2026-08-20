@@ -3,7 +3,7 @@
 import pytest
 import yaml
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── PPO Config Tests ──────────────────────────────────────────────────────
 
@@ -219,7 +219,7 @@ class TestPreparePPODataset:
     """Test PPO dataset preparation."""
 
     def test_from_prompt_string(self):
-        from soup_cli.trainer.ppo import _prepare_ppo_dataset
+        from ai_forge_cli.trainer.ppo import _prepare_ppo_dataset
 
         data = [{"prompt": "What is 2+2?", "answer": "4"}]
         result = _prepare_ppo_dataset(data)
@@ -228,7 +228,7 @@ class TestPreparePPODataset:
         assert result[0]["answer"] == "4"
 
     def test_from_messages(self):
-        from soup_cli.trainer.ppo import _prepare_ppo_dataset
+        from ai_forge_cli.trainer.ppo import _prepare_ppo_dataset
 
         data = [
             {
@@ -246,7 +246,7 @@ class TestPreparePPODataset:
         assert "Hello" in result[0]["prompt_text"]
 
     def test_from_prompt_message_list(self):
-        from soup_cli.trainer.ppo import _prepare_ppo_dataset
+        from ai_forge_cli.trainer.ppo import _prepare_ppo_dataset
 
         data = [
             {
@@ -259,7 +259,7 @@ class TestPreparePPODataset:
         assert result[0]["answer"] == "4"
 
     def test_from_alpaca_format(self):
-        from soup_cli.trainer.ppo import _prepare_ppo_dataset
+        from ai_forge_cli.trainer.ppo import _prepare_ppo_dataset
 
         data = [{"instruction": "Translate hello", "input": "", "output": "hola"}]
         result = _prepare_ppo_dataset(data)
@@ -267,7 +267,7 @@ class TestPreparePPODataset:
         assert result[0]["answer"] == "hola"
 
     def test_multiple_rows(self):
-        from soup_cli.trainer.ppo import _prepare_ppo_dataset
+        from ai_forge_cli.trainer.ppo import _prepare_ppo_dataset
 
         data = [
             {"prompt": "Q1", "answer": "A1"},
@@ -278,7 +278,7 @@ class TestPreparePPODataset:
         assert len(result) == 3
 
     def test_prompt_without_answer(self):
-        from soup_cli.trainer.ppo import _prepare_ppo_dataset
+        from ai_forge_cli.trainer.ppo import _prepare_ppo_dataset
 
         data = [{"prompt": "Tell me a joke"}]
         result = _prepare_ppo_dataset(data)
@@ -293,7 +293,7 @@ class TestPrepareRewardDataset:
     """Test reward model dataset preparation."""
 
     def test_from_dpo_format(self):
-        from soup_cli.trainer.reward_model import _prepare_reward_dataset
+        from ai_forge_cli.trainer.reward_model import _prepare_reward_dataset
 
         data = [{"prompt": "What is AI?", "chosen": "AI is...", "rejected": "I dunno"}]
         result = _prepare_reward_dataset(data)
@@ -304,7 +304,7 @@ class TestPrepareRewardDataset:
         assert "I dunno" in result[0]["rejected"]
 
     def test_chosen_rejected_message_lists(self):
-        from soup_cli.trainer.reward_model import _prepare_reward_dataset
+        from ai_forge_cli.trainer.reward_model import _prepare_reward_dataset
 
         data = [
             {
@@ -318,7 +318,7 @@ class TestPrepareRewardDataset:
         assert "Go away" in result[0]["rejected"]
 
     def test_without_prompt(self):
-        from soup_cli.trainer.reward_model import _prepare_reward_dataset
+        from ai_forge_cli.trainer.reward_model import _prepare_reward_dataset
 
         data = [{"chosen": "Good answer", "rejected": "Bad answer"}]
         result = _prepare_reward_dataset(data)
@@ -326,7 +326,7 @@ class TestPrepareRewardDataset:
         assert result[0]["rejected"] == "Bad answer"
 
     def test_multiple_rows(self):
-        from soup_cli.trainer.reward_model import _prepare_reward_dataset
+        from ai_forge_cli.trainer.reward_model import _prepare_reward_dataset
 
         data = [
             {"prompt": "Q1", "chosen": "Good1", "rejected": "Bad1"},
@@ -336,7 +336,7 @@ class TestPrepareRewardDataset:
         assert len(result) == 2
 
     def test_prompt_as_message_list(self):
-        from soup_cli.trainer.reward_model import _prepare_reward_dataset
+        from ai_forge_cli.trainer.reward_model import _prepare_reward_dataset
 
         data = [
             {
@@ -382,13 +382,13 @@ class TestPPOTrainRouting:
 
     def test_ppo_import_exists(self):
         """PPOTrainerWrapper should be importable."""
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         assert PPOTrainerWrapper is not None
 
     def test_ppo_wrapper_init(self):
         """PPOTrainerWrapper should initialize without error."""
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -403,7 +403,7 @@ class TestPPOTrainRouting:
 
     def test_ppo_wrapper_with_reward_config(self):
         """PPOTrainerWrapper should accept reward model config."""
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -416,7 +416,7 @@ class TestPPOTrainRouting:
 
     def test_ppo_wrapper_deepspeed(self):
         """PPOTrainerWrapper should accept deepspeed config."""
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -432,13 +432,13 @@ class TestRewardModelTrainRouting:
 
     def test_reward_model_import_exists(self):
         """RewardModelTrainerWrapper should be importable."""
-        from soup_cli.trainer.reward_model import RewardModelTrainerWrapper
+        from ai_forge_cli.trainer.reward_model import RewardModelTrainerWrapper
 
         assert RewardModelTrainerWrapper is not None
 
     def test_reward_model_wrapper_init(self):
         """RewardModelTrainerWrapper should initialize without error."""
-        from soup_cli.trainer.reward_model import RewardModelTrainerWrapper
+        from ai_forge_cli.trainer.reward_model import RewardModelTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -459,28 +459,28 @@ class TestPPOSweepParams:
     """Test PPO parameter shortcuts in sweep."""
 
     def test_ppo_epochs_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"ppo_epochs": 4}}
         _set_nested_param(config, "ppo_epochs", 8)
         assert config["training"]["ppo_epochs"] == 8
 
     def test_ppo_clip_ratio_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"ppo_clip_ratio": 0.2}}
         _set_nested_param(config, "ppo_clip_ratio", 0.1)
         assert config["training"]["ppo_clip_ratio"] == 0.1
 
     def test_ppo_kl_penalty_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"ppo_kl_penalty": 0.05}}
         _set_nested_param(config, "ppo_kl_penalty", 0.1)
         assert config["training"]["ppo_kl_penalty"] == 0.1
 
     def test_reward_model_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"reward_model": None}}
         _set_nested_param(config, "reward_model", "./my_rm")
@@ -504,7 +504,7 @@ class TestInitRLHF:
         """soup init --template rlhf should create a valid config."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         output_file = tmp_path / "soup_ppo.yaml"
@@ -518,7 +518,7 @@ class TestInitRLHF:
         """soup init --help should mention rlhf template."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["init", "--help"])
@@ -544,7 +544,7 @@ class TestTrainCliRegistration:
         """soup train --help should show --config option."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["train", "--help"])

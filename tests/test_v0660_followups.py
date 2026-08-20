@@ -21,7 +21,7 @@ import pytest
 
 
 def test_sleeper_verdict_bool_raises_type_error():
-    from soup_cli.utils.sleeper_probe import SleeperProbeResult
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeResult
 
     with pytest.raises(TypeError, match="verdict must be str"):
         SleeperProbeResult(
@@ -31,7 +31,7 @@ def test_sleeper_verdict_bool_raises_type_error():
 
 
 def test_sleeper_verdict_non_string_raises_type_error():
-    from soup_cli.utils.sleeper_probe import SleeperProbeResult
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeResult
 
     with pytest.raises(TypeError, match="verdict must be str"):
         SleeperProbeResult(
@@ -41,7 +41,7 @@ def test_sleeper_verdict_non_string_raises_type_error():
 
 
 def test_interference_cell_verdict_bool_raises_type_error():
-    from soup_cli.utils.interference import InterferenceCell
+    from ai_forge_cli.utils.interference import InterferenceCell
 
     with pytest.raises(TypeError, match="verdict must be str"):
         InterferenceCell(adapter_a="a", adapter_b="b", score=0.0, verdict=True)
@@ -53,7 +53,7 @@ def test_interference_cell_verdict_bool_raises_type_error():
 
 
 def test_sae_feature_change_raises_frozen_instance_error():
-    from soup_cli.utils.sae_diff import SaeFeatureChange
+    from ai_forge_cli.utils.sae_diff import SaeFeatureChange
 
     c = SaeFeatureChange(feature_id=0, delta=0.0, pre_mean=0.0, post_mean=0.0)
     with pytest.raises(FrozenInstanceError):
@@ -63,7 +63,7 @@ def test_sae_feature_change_raises_frozen_instance_error():
 
 
 def test_sae_diff_report_raises_frozen_instance_error():
-    from soup_cli.utils.sae_diff import SaeFeatureDiffReport
+    from ai_forge_cli.utils.sae_diff import SaeFeatureDiffReport
 
     r = SaeFeatureDiffReport(
         num_features=0, num_tokens=0, l2_drift=0.0, changes=tuple()
@@ -73,7 +73,7 @@ def test_sae_diff_report_raises_frozen_instance_error():
 
 
 def test_row_influence_raises_frozen_instance_error():
-    from soup_cli.utils.blame import RowInfluence
+    from ai_forge_cli.utils.blame import RowInfluence
 
     r = RowInfluence(row_id=0, score=0.0, shard_id=0)
     with pytest.raises(FrozenInstanceError):
@@ -81,7 +81,7 @@ def test_row_influence_raises_frozen_instance_error():
 
 
 def test_blame_result_raises_frozen_instance_error():
-    from soup_cli.utils.blame import BlameResult
+    from ai_forge_cli.utils.blame import BlameResult
 
     r = BlameResult(
         adapter_dir="x", dataset_path="y", layer="l",
@@ -92,7 +92,7 @@ def test_blame_result_raises_frozen_instance_error():
 
 
 def test_sleeper_probe_spec_raises_frozen_instance_error():
-    from soup_cli.utils.sleeper_probe import SleeperProbeSpec
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeSpec
 
     s = SleeperProbeSpec(base="b", hidden_dim=4, threshold=0.5, description="d")
     with pytest.raises(FrozenInstanceError):
@@ -100,7 +100,7 @@ def test_sleeper_probe_spec_raises_frozen_instance_error():
 
 
 def test_sleeper_probe_result_raises_frozen_instance_error():
-    from soup_cli.utils.sleeper_probe import SleeperProbeResult
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeResult
 
     r = SleeperProbeResult(
         base="b", num_tokens=0, defection_rate=0.0, max_score=0.0, verdict="OK"
@@ -110,7 +110,7 @@ def test_sleeper_probe_result_raises_frozen_instance_error():
 
 
 def test_interference_cell_raises_frozen_instance_error():
-    from soup_cli.utils.interference import InterferenceCell
+    from ai_forge_cli.utils.interference import InterferenceCell
 
     c = InterferenceCell(adapter_a="a", adapter_b="b", score=0.0, verdict="OK")
     with pytest.raises(FrozenInstanceError):
@@ -118,7 +118,7 @@ def test_interference_cell_raises_frozen_instance_error():
 
 
 def test_interference_matrix_raises_frozen_instance_error():
-    from soup_cli.utils.interference import InterferenceMatrix
+    from ai_forge_cli.utils.interference import InterferenceMatrix
 
     m = InterferenceMatrix(
         adapters=("a", "b"), cells=tuple(), worst_pair=None, worst_score=0.0
@@ -128,7 +128,7 @@ def test_interference_matrix_raises_frozen_instance_error():
 
 
 def test_probe_entry_raises_frozen_instance_error():
-    from soup_cli.utils.probe_pack import ProbeEntry
+    from ai_forge_cli.utils.probe_pack import ProbeEntry
 
     e = ProbeEntry(name="x", kind="sleeper", hidden_dim=4, description="d")
     with pytest.raises(FrozenInstanceError):
@@ -136,7 +136,7 @@ def test_probe_entry_raises_frozen_instance_error():
 
 
 def test_probe_pack_raises_frozen_instance_error():
-    from soup_cli.utils.probe_pack import ProbeEntry, ProbePack
+    from ai_forge_cli.utils.probe_pack import ProbeEntry, ProbePack
 
     p = ProbePack(
         base="b",
@@ -156,7 +156,7 @@ def test_probe_pack_raises_frozen_instance_error():
 
 def test_interference_render_markdown_escapes_adapter_name():
     """A crafted adapter name with Rich markup must be escaped."""
-    from soup_cli.utils.interference import (
+    from ai_forge_cli.utils.interference import (
         InterferenceCell,
         InterferenceMatrix,
         render_matrix_markdown,
@@ -185,7 +185,7 @@ def test_interference_render_markdown_escapes_adapter_name():
 def test_blame_render_markdown_escapes_layer():
     """The `layer` field is rendered verbatim (no basename) so it's the
     canonical Rich-markup-injection vector to test on this surface."""
-    from soup_cli.utils.blame import BlameResult, render_blame_markdown
+    from ai_forge_cli.utils.blame import BlameResult, render_blame_markdown
 
     r = BlameResult(
         adapter_dir="adp",
@@ -201,7 +201,7 @@ def test_blame_render_markdown_escapes_layer():
 
 
 def test_probe_pack_render_markdown_escapes_description():
-    from soup_cli.utils.probe_pack import (
+    from ai_forge_cli.utils.probe_pack import (
         ProbeEntry,
         ProbePack,
         render_pack_markdown,
@@ -231,7 +231,7 @@ def test_probe_pack_render_markdown_escapes_description():
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink test")
 def test_count_dataset_rows_rejects_symlink_via_o_nofollow(tmp_path, monkeypatch):
     """O_NOFOLLOW path open rejects symlink targets (TOCTOU defence)."""
-    from soup_cli.utils.blame import plan_blame
+    from ai_forge_cli.utils.blame import plan_blame
 
     monkeypatch.chdir(tmp_path)
     # Create a real adapter dir
@@ -254,7 +254,7 @@ def test_count_dataset_rows_rejects_symlink_via_o_nofollow(tmp_path, monkeypatch
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink test")
 def test_load_sae_weights_rejects_symlink_via_o_nofollow(tmp_path, monkeypatch):
-    from soup_cli.utils.sae_diff import load_sae_weights
+    from ai_forge_cli.utils.sae_diff import load_sae_weights
 
     monkeypatch.chdir(tmp_path)
     real = tmp_path / "real.safetensors"
@@ -272,7 +272,7 @@ def test_load_sae_weights_rejects_symlink_via_o_nofollow(tmp_path, monkeypatch):
 
 def test_count_dataset_rows_raises_on_oversize(tmp_path, monkeypatch):
     """Synthetic dataset with >10M rows must raise (not silently truncate)."""
-    from soup_cli.utils import blame
+    from ai_forge_cli.utils import blame
 
     monkeypatch.chdir(tmp_path)
     adapter = tmp_path / "adp"
@@ -318,14 +318,14 @@ def test_count_dataset_rows_raises_on_oversize(tmp_path, monkeypatch):
 
 def test_sleeper_probe_seed_is_64_bit():
     """Source-grep regression: _probe_weights uses digest[:16] (64 bits)."""
-    from soup_cli.utils import sleeper_probe
+    from ai_forge_cli.utils import sleeper_probe
 
     source = inspect.getsource(sleeper_probe._probe_weights)
     assert "digest[:16]" in source, "M2 fix: seed must be 16 hex chars"
 
 
 def test_blame_synthetic_probe_seed_is_64_bit():
-    from soup_cli.utils import blame
+    from ai_forge_cli.utils import blame
 
     source = inspect.getsource(blame._default_synthetic_probe)
     assert "[:16]" in source, "M2 fix: blame seed must be 16 hex chars"
@@ -337,7 +337,7 @@ def test_blame_synthetic_probe_seed_is_64_bit():
 
 
 def test_probe_entry_oversize_description_rejected():
-    from soup_cli.utils.probe_pack import ProbeEntry
+    from ai_forge_cli.utils.probe_pack import ProbeEntry
 
     with pytest.raises(ValueError, match="4096"):
         ProbeEntry(
@@ -348,7 +348,7 @@ def test_probe_entry_oversize_description_rejected():
 
 def test_probe_entry_at_max_description_accepted():
     """Boundary test — exactly 4096 chars must accept."""
-    from soup_cli.utils.probe_pack import ProbeEntry
+    from ai_forge_cli.utils.probe_pack import ProbeEntry
 
     e = ProbeEntry(
         name="x", kind="sleeper", hidden_dim=4,
@@ -358,7 +358,7 @@ def test_probe_entry_at_max_description_accepted():
 
 
 def test_probe_entry_null_byte_description_rejected():
-    from soup_cli.utils.probe_pack import ProbeEntry
+    from ai_forge_cli.utils.probe_pack import ProbeEntry
 
     with pytest.raises(ValueError, match="null"):
         ProbeEntry(
@@ -373,7 +373,7 @@ def test_probe_entry_null_byte_description_rejected():
 
 def test_default_synthetic_probe_caps_at_100k(tmp_path, monkeypatch):
     """Without probe_fn, runner caps at _DEFAULT_SYNTH_PROBE_CAP (100k)."""
-    from soup_cli.utils.blame import (
+    from ai_forge_cli.utils.blame import (
         BlamePlan,
         BlameShardWork,
         run_blame,
@@ -400,7 +400,7 @@ def test_default_synthetic_probe_caps_at_100k(tmp_path, monkeypatch):
 
 
 def test_sleeper_lower_index_immutable():
-    from soup_cli.utils.sleeper_probe import _LOWER_INDEX
+    from ai_forge_cli.utils.sleeper_probe import _LOWER_INDEX
 
     assert isinstance(_LOWER_INDEX, MappingProxyType)
     with pytest.raises(TypeError):
@@ -417,7 +417,7 @@ def test_probe_interference_rejects_string_loss(tmp_path, monkeypatch):
 
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app as soup_app
+    from ai_forge_cli.cli import app as soup_app
 
     runner_ = CliRunner()
     monkeypatch.chdir(tmp_path)
@@ -437,7 +437,7 @@ def test_probe_interference_rejects_bool_loss(tmp_path, monkeypatch):
 
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app as soup_app
+    from ai_forge_cli.cli import app as soup_app
 
     runner_ = CliRunner()
     monkeypatch.chdir(tmp_path)
@@ -459,27 +459,27 @@ def test_probe_interference_rejects_bool_loss(tmp_path, monkeypatch):
 
 
 def test_classify_sleeper_score_boundary_minus_epsilon_ok():
-    from soup_cli.utils.sleeper_probe import classify_sleeper_score
+    from ai_forge_cli.utils.sleeper_probe import classify_sleeper_score
 
     # Just below 1%
     assert classify_sleeper_score(0.01 - 1e-9) == "OK"
 
 
 def test_classify_sleeper_score_boundary_minus_epsilon_minor():
-    from soup_cli.utils.sleeper_probe import classify_sleeper_score
+    from ai_forge_cli.utils.sleeper_probe import classify_sleeper_score
 
     # Just below 5%
     assert classify_sleeper_score(0.05 - 1e-9) == "MINOR"
 
 
 def test_classify_interference_boundary_minus_epsilon_ok():
-    from soup_cli.utils.interference import classify_interference
+    from ai_forge_cli.utils.interference import classify_interference
 
     assert classify_interference(0.05 - 1e-9) == "OK"
 
 
 def test_classify_interference_boundary_minus_epsilon_minor():
-    from soup_cli.utils.interference import classify_interference
+    from ai_forge_cli.utils.interference import classify_interference
 
     assert classify_interference(0.20 - 1e-9) == "MINOR"
 
@@ -491,7 +491,7 @@ def test_classify_interference_boundary_minus_epsilon_minor():
 
 def test_no_path_resolve_used_in_v0_66_modules():
     """Project rule: use os.path.realpath, not Path.resolve()."""
-    from soup_cli.utils import blame, interference, probe_pack, sae_diff, sleeper_probe
+    from ai_forge_cli.utils import blame, interference, probe_pack, sae_diff, sleeper_probe
 
     for mod in (sae_diff, blame, sleeper_probe, interference, probe_pack):
         src = inspect.getsource(mod)
@@ -502,7 +502,7 @@ def test_no_path_resolve_used_in_v0_66_modules():
 
 def test_no_top_level_torch_in_v0_66_modules():
     """Heavy deps must be lazy-imported inside function bodies."""
-    from soup_cli.utils import blame, interference, probe_pack, sae_diff, sleeper_probe
+    from ai_forge_cli.utils import blame, interference, probe_pack, sae_diff, sleeper_probe
 
     for mod in (sae_diff, blame, sleeper_probe, interference, probe_pack):
         src = inspect.getsource(mod)
@@ -523,7 +523,7 @@ def test_no_top_level_torch_in_v0_66_modules():
 
 
 def test_compute_feature_diff_rejects_negative_top_k():
-    from soup_cli.utils.sae_diff import compute_feature_diff
+    from ai_forge_cli.utils.sae_diff import compute_feature_diff
 
     pre = np.zeros((1, 5), dtype=np.float32)
     with pytest.raises(ValueError, match="≥1"):

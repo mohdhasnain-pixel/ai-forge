@@ -13,7 +13,7 @@ class TestReadPrompts:
 
     def test_read_jsonl_prompts(self, tmp_path):
         """Should read prompts from JSONL with 'prompt' field."""
-        from soup_cli.commands.infer import _read_prompts
+        from ai_forge_cli.commands.infer import _read_prompts
 
         path = tmp_path / "prompts.jsonl"
         lines = [
@@ -31,7 +31,7 @@ class TestReadPrompts:
 
     def test_read_plain_text_prompts(self, tmp_path):
         """Should read plain text lines as prompts."""
-        from soup_cli.commands.infer import _read_prompts
+        from ai_forge_cli.commands.infer import _read_prompts
 
         path = tmp_path / "prompts.txt"
         path.write_text("What is AI?\nExplain gravity.\nHello world.\n")
@@ -42,7 +42,7 @@ class TestReadPrompts:
 
     def test_read_skips_empty_lines(self, tmp_path):
         """Should skip empty lines."""
-        from soup_cli.commands.infer import _read_prompts
+        from ai_forge_cli.commands.infer import _read_prompts
 
         path = tmp_path / "prompts.txt"
         path.write_text("Line one\n\n\nLine two\n\n")
@@ -52,7 +52,7 @@ class TestReadPrompts:
 
     def test_read_empty_file(self, tmp_path):
         """Should return empty list for empty file."""
-        from soup_cli.commands.infer import _read_prompts
+        from ai_forge_cli.commands.infer import _read_prompts
 
         path = tmp_path / "empty.jsonl"
         path.write_text("")
@@ -62,7 +62,7 @@ class TestReadPrompts:
 
     def test_read_mixed_jsonl_and_text(self, tmp_path):
         """Should handle mixed JSONL and plain text lines."""
-        from soup_cli.commands.infer import _read_prompts
+        from ai_forge_cli.commands.infer import _read_prompts
 
         path = tmp_path / "mixed.txt"
         lines = [
@@ -78,7 +78,7 @@ class TestReadPrompts:
 
     def test_read_jsonl_without_prompt_field(self, tmp_path):
         """JSONL without 'prompt' field should be treated as plain text."""
-        from soup_cli.commands.infer import _read_prompts
+        from ai_forge_cli.commands.infer import _read_prompts
 
         path = tmp_path / "noprompt.jsonl"
         lines = [
@@ -102,7 +102,7 @@ class TestInferCLI:
         """Should fail if input file doesn't exist."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, [
@@ -118,7 +118,7 @@ class TestInferCLI:
         """Should fail if model path doesn't exist."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         prompts_file = tmp_path / "prompts.jsonl"
         prompts_file.write_text(json.dumps({"prompt": "test"}) + "\n")
@@ -137,7 +137,7 @@ class TestInferCLI:
         """Should fail if input file has no prompts."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         prompts_file = tmp_path / "empty.jsonl"
         prompts_file.write_text("")
@@ -154,7 +154,7 @@ class TestInferCLI:
 
     def test_infer_command_registered(self):
         """Infer command should be registered in the app."""
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         command_names = [
             cmd.name or (cmd.callback.__name__ if cmd.callback else None)
@@ -166,7 +166,7 @@ class TestInferCLI:
         """Infer command should show help text."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["infer", "--help"])
@@ -177,7 +177,7 @@ class TestInferCLI:
         """Should fail if required options are missing."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["infer"])
@@ -187,7 +187,7 @@ class TestInferCLI:
         """--max-tokens above 16384 should be rejected by CLI."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         prompts_file = tmp_path / "prompts.jsonl"
         prompts_file.write_text(json.dumps({"prompt": "test"}) + "\n")
@@ -206,7 +206,7 @@ class TestInferCLI:
         """--max-tokens 0 should be rejected by CLI."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         prompts_file = tmp_path / "prompts.jsonl"
         prompts_file.write_text(json.dumps({"prompt": "test"}) + "\n")
@@ -231,7 +231,7 @@ class TestLoadModel:
     def test_adapter_without_base_model_exits(self, tmp_path):
         """Should exit if adapter found but no base model detectable."""
 
-        from soup_cli.commands.infer import _load_model
+        from ai_forge_cli.commands.infer import _load_model
 
         # Create adapter_config.json without base_model_name_or_path
         adapter_config = tmp_path / "adapter_config.json"
@@ -244,7 +244,7 @@ class TestLoadModel:
 
     def test_adapter_with_corrupt_json_exits(self, tmp_path):
         """Should exit if adapter_config.json is corrupt and no --base given."""
-        from soup_cli.commands.infer import _load_model
+        from ai_forge_cli.commands.infer import _load_model
 
         adapter_config = tmp_path / "adapter_config.json"
         adapter_config.write_text("not valid json {{{")
@@ -308,7 +308,7 @@ class TestGenerate:
 
     def test_generate_with_chat_template(self):
         """Should use apply_chat_template when available."""
-        from soup_cli.commands.infer import _generate
+        from ai_forge_cli.commands.infer import _generate
 
         model, tokenizer = self._make_mock_model_and_tokenizer(has_chat_template=True)
         messages = [{"role": "user", "content": "Hello"}]
@@ -321,7 +321,7 @@ class TestGenerate:
 
     def test_generate_without_chat_template(self):
         """Should use fallback formatter when no chat_template."""
-        from soup_cli.commands.infer import _generate
+        from ai_forge_cli.commands.infer import _generate
 
         model, tokenizer = self._make_mock_model_and_tokenizer(has_chat_template=False)
         messages = [
@@ -340,7 +340,7 @@ class TestGenerate:
 
     def test_generate_greedy_temperature_zero(self):
         """Should set do_sample=False when temperature=0."""
-        from soup_cli.commands.infer import _generate
+        from ai_forge_cli.commands.infer import _generate
 
         model, tokenizer = self._make_mock_model_and_tokenizer()
         messages = [{"role": "user", "content": "Hello"}]
@@ -355,7 +355,7 @@ class TestGenerate:
 
     def test_generate_sampling_temperature_positive(self):
         """Should set do_sample=True and include temperature when > 0."""
-        from soup_cli.commands.infer import _generate
+        from ai_forge_cli.commands.infer import _generate
 
         model, tokenizer = self._make_mock_model_and_tokenizer()
         messages = [{"role": "user", "content": "Hello"}]
@@ -369,7 +369,7 @@ class TestGenerate:
 
     def test_generate_returns_tuple(self):
         """_generate should return (text, token_count) tuple."""
-        from soup_cli.commands.infer import _generate
+        from ai_forge_cli.commands.infer import _generate
 
         model, tokenizer = self._make_mock_model_and_tokenizer()
         messages = [{"role": "user", "content": "Hello"}]
@@ -384,7 +384,7 @@ class TestGenerate:
         """Token count should come from tensor shape, not re-encoding."""
         import torch
 
-        from soup_cli.commands.infer import _generate
+        from ai_forge_cli.commands.infer import _generate
 
         model, tokenizer = self._make_mock_model_and_tokenizer()
         # Return 7 tokens total, 3 are input => 4 new tokens
@@ -396,7 +396,7 @@ class TestGenerate:
 
     def test_generate_fallback_formats_roles(self):
         """Fallback formatter should include all role types."""
-        from soup_cli.commands.infer import _generate
+        from ai_forge_cli.commands.infer import _generate
 
         model, tokenizer = self._make_mock_model_and_tokenizer(has_chat_template=False)
         messages = [
@@ -420,17 +420,17 @@ class TestInferImports:
     """Test that infer module is importable."""
 
     def test_import_infer_module(self):
-        from soup_cli.commands.infer import infer
+        from ai_forge_cli.commands.infer import infer
         assert infer is not None
 
     def test_import_read_prompts(self):
-        from soup_cli.commands.infer import _read_prompts
+        from ai_forge_cli.commands.infer import _read_prompts
         assert callable(_read_prompts)
 
     def test_import_load_model(self):
-        from soup_cli.commands.infer import _load_model
+        from ai_forge_cli.commands.infer import _load_model
         assert callable(_load_model)
 
     def test_import_generate(self):
-        from soup_cli.commands.infer import _generate
+        from ai_forge_cli.commands.infer import _generate
         assert callable(_generate)

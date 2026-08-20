@@ -8,7 +8,7 @@ import pytest
 
 def _auth_headers():
     """Return auth headers with the current UI token."""
-    from soup_cli.ui.app import get_auth_token
+    from ai_forge_cli.ui.app import get_auth_token
     return {"Authorization": f"Bearer {get_auth_token()}"}
 
 
@@ -22,7 +22,7 @@ class TestTrainLogsSSE:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         app = create_app()
         routes = [route.path for route in app.routes]
@@ -35,8 +35,8 @@ class TestTrainLogsSSE:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         # Simulate a running process with output
         mock_proc = MagicMock()
@@ -66,8 +66,8 @@ class TestTrainLogsSSE:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         ui_mod._train_process = None
 
@@ -87,8 +87,8 @@ class TestTrainLogsSSE:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         mock_proc = MagicMock()
         lines = [b"Line 1\n", b"Line 2\n", b"Line 3\n"]
@@ -119,8 +119,8 @@ class TestTrainLogsSSE:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         ui_mod._train_process = None
 
@@ -140,7 +140,7 @@ class TestLiveMetricsSSE:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         app = create_app()
         routes = [route.path for route in app.routes]
@@ -153,8 +153,8 @@ class TestLiveMetricsSSE:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         # Simulate running training
         mock_proc = MagicMock()
@@ -177,13 +177,13 @@ class TestLiveMetricsSSE:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         db_path = tmp_path / "test.db"
 
         # Pre-populate a run with metrics
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         tracker = ExperimentTracker(db_path=db_path)
         run_id = tracker.start_run(
@@ -222,8 +222,8 @@ class TestLiveMetricsSSE:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         mock_proc = MagicMock()
         mock_proc.poll.return_value = 0
@@ -244,8 +244,8 @@ class TestLiveMetricsSSE:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         ui_mod._train_process = None
 
@@ -272,7 +272,7 @@ class TestTrainProgress:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         app = create_app()
         routes = [route.path for route in app.routes]
@@ -285,8 +285,8 @@ class TestTrainProgress:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         ui_mod._train_process = None
 
@@ -303,12 +303,12 @@ class TestTrainProgress:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         db_path = tmp_path / "test.db"
 
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         tracker = ExperimentTracker(db_path=db_path)
         run_id = tracker.start_run(
@@ -342,12 +342,12 @@ class TestTrainProgress:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         db_path = tmp_path / "test.db"
 
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         tracker = ExperimentTracker(db_path=db_path)
         run_id = tracker.start_run(
@@ -380,8 +380,8 @@ class TestTrainProgress:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         ui_mod._train_process = None
 
@@ -400,8 +400,8 @@ class TestSSEGracefulClose:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         mock_proc = MagicMock()
         mock_proc.stdout = iter([b"Starting\n"])
@@ -429,8 +429,8 @@ class TestSSEGracefulClose:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_mod
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_mod
+        from ai_forge_cli.ui.app import create_app
 
         ui_mod._train_process = None
 

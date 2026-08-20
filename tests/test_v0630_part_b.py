@@ -12,7 +12,7 @@ runner = CliRunner()
 
 
 def test_module_imports():
-    from soup_cli.utils import prune_prompt
+    from ai_forge_cli.utils import prune_prompt
 
     assert hasattr(prune_prompt, "detect_common_prefix")
     assert hasattr(prune_prompt, "PrunePromptReport")
@@ -27,14 +27,14 @@ def test_module_imports():
 
 @pytest.mark.parametrize("value", [0.5, 0.95, 1.0, 0.0])
 def test_validate_min_frequency_happy(value):
-    from soup_cli.utils.prune_prompt import validate_min_frequency
+    from ai_forge_cli.utils.prune_prompt import validate_min_frequency
 
     assert validate_min_frequency(value) == float(value)
 
 
 @pytest.mark.parametrize("bad", [True, False, None, "0.95", -0.1, 1.5, float("nan"), float("inf")])
 def test_validate_min_frequency_rejects(bad):
-    from soup_cli.utils.prune_prompt import validate_min_frequency
+    from ai_forge_cli.utils.prune_prompt import validate_min_frequency
 
     with pytest.raises((TypeError, ValueError)):
         validate_min_frequency(bad)
@@ -46,7 +46,7 @@ def test_validate_min_frequency_rejects(bad):
 
 
 def test_detect_common_prefix_happy():
-    from soup_cli.utils.prune_prompt import detect_common_prefix
+    from ai_forge_cli.utils.prune_prompt import detect_common_prefix
 
     rows = [
         "You are a helpful assistant.\nUser: hi",
@@ -59,7 +59,7 @@ def test_detect_common_prefix_happy():
 
 def test_detect_common_prefix_below_threshold():
     """When fewer than min_frequency share the candidate prefix, return ''."""
-    from soup_cli.utils.prune_prompt import detect_common_prefix
+    from ai_forge_cli.utils.prune_prompt import detect_common_prefix
 
     rows = [
         "You are a helpful assistant.\nQ: a",
@@ -72,7 +72,7 @@ def test_detect_common_prefix_below_threshold():
 
 def test_detect_common_prefix_partial_majority():
     """At min_frequency=0.66, the 2/3 majority counts."""
-    from soup_cli.utils.prune_prompt import detect_common_prefix
+    from ai_forge_cli.utils.prune_prompt import detect_common_prefix
 
     rows = [
         "Same opener line one.\nQ: a",
@@ -85,14 +85,14 @@ def test_detect_common_prefix_partial_majority():
 
 
 def test_detect_common_prefix_empty():
-    from soup_cli.utils.prune_prompt import detect_common_prefix
+    from ai_forge_cli.utils.prune_prompt import detect_common_prefix
 
     assert detect_common_prefix([], min_frequency=0.95) == ""
 
 
 def test_detect_common_prefix_single_row():
     """Single-row input — the whole row IS the common prefix."""
-    from soup_cli.utils.prune_prompt import detect_common_prefix
+    from ai_forge_cli.utils.prune_prompt import detect_common_prefix
 
     rows = ["hello world"]
     # With min_freq=1.0 it's trivially the whole row
@@ -101,14 +101,14 @@ def test_detect_common_prefix_single_row():
 
 
 def test_detect_common_prefix_rejects_non_string_row():
-    from soup_cli.utils.prune_prompt import detect_common_prefix
+    from ai_forge_cli.utils.prune_prompt import detect_common_prefix
 
     with pytest.raises(TypeError):
         detect_common_prefix(["good", 42, "bad"], min_frequency=0.95)
 
 
 def test_detect_common_prefix_rejects_non_iterable():
-    from soup_cli.utils.prune_prompt import detect_common_prefix
+    from ai_forge_cli.utils.prune_prompt import detect_common_prefix
 
     with pytest.raises(TypeError):
         detect_common_prefix("not a sequence-of-strings", min_frequency=0.95)
@@ -116,7 +116,7 @@ def test_detect_common_prefix_rejects_non_iterable():
 
 def test_detect_common_prefix_caps_input():
     """Massive input must not OOM — internal cap on rows scanned."""
-    from soup_cli.utils import prune_prompt
+    from ai_forge_cli.utils import prune_prompt
 
     # Set cap small to validate behaviour, not memory.
     rows = ["hello world"] * 50
@@ -125,7 +125,7 @@ def test_detect_common_prefix_caps_input():
 
 
 def test_detect_common_prefix_no_common_chars():
-    from soup_cli.utils.prune_prompt import detect_common_prefix
+    from ai_forge_cli.utils.prune_prompt import detect_common_prefix
 
     rows = ["alpha", "beta", "gamma"]
     assert detect_common_prefix(rows, min_frequency=0.95) == ""
@@ -133,7 +133,7 @@ def test_detect_common_prefix_no_common_chars():
 
 def test_detect_common_prefix_huge_prompt_cap():
     """Each individual row is capped to prevent runaway prefix scan."""
-    from soup_cli.utils.prune_prompt import detect_common_prefix
+    from ai_forge_cli.utils.prune_prompt import detect_common_prefix
 
     huge = "x" * 10_000_000
     # Single huge row, single-row sentinel returns truncated row
@@ -148,7 +148,7 @@ def test_detect_common_prefix_huge_prompt_cap():
 
 
 def test_prune_prompt_report_frozen():
-    from soup_cli.utils.prune_prompt import PrunePromptReport
+    from ai_forge_cli.utils.prune_prompt import PrunePromptReport
 
     report = PrunePromptReport(
         prefix="You are a helpful assistant.\n",
@@ -162,7 +162,7 @@ def test_prune_prompt_report_frozen():
 
 
 def test_prune_prompt_report_validation():
-    from soup_cli.utils.prune_prompt import PrunePromptReport
+    from ai_forge_cli.utils.prune_prompt import PrunePromptReport
 
     # rows_total must be >= rows_pruned
     with pytest.raises(ValueError):
@@ -181,7 +181,7 @@ def test_prune_prompt_report_validation():
 
 
 def test_prune_traces_strips_prefix(tmp_path, monkeypatch):
-    from soup_cli.utils.prune_prompt import prune_traces
+    from ai_forge_cli.utils.prune_prompt import prune_traces
 
     monkeypatch.chdir(tmp_path)
     input_path = tmp_path / "in.jsonl"
@@ -212,7 +212,7 @@ def test_prune_traces_strips_prefix(tmp_path, monkeypatch):
 
 
 def test_prune_traces_passthrough_when_no_prefix(tmp_path, monkeypatch):
-    from soup_cli.utils.prune_prompt import prune_traces
+    from ai_forge_cli.utils.prune_prompt import prune_traces
 
     monkeypatch.chdir(tmp_path)
     input_path = tmp_path / "in.jsonl"
@@ -236,7 +236,7 @@ def test_prune_traces_passthrough_when_no_prefix(tmp_path, monkeypatch):
 
 
 def test_prune_traces_rejects_outside_cwd(tmp_path, monkeypatch):
-    from soup_cli.utils.prune_prompt import prune_traces
+    from ai_forge_cli.utils.prune_prompt import prune_traces
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "stray.jsonl"
@@ -251,14 +251,14 @@ def test_prune_traces_rejects_outside_cwd(tmp_path, monkeypatch):
 
 
 def test_prune_traces_rejects_null_byte():
-    from soup_cli.utils.prune_prompt import prune_traces
+    from ai_forge_cli.utils.prune_prompt import prune_traces
 
     with pytest.raises(ValueError):
         prune_traces("bad\x00path.jsonl", output_path="out.jsonl", min_frequency=0.95)
 
 
 def test_prune_traces_missing_input(tmp_path, monkeypatch):
-    from soup_cli.utils.prune_prompt import prune_traces
+    from ai_forge_cli.utils.prune_prompt import prune_traces
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(FileNotFoundError):
@@ -267,7 +267,7 @@ def test_prune_traces_missing_input(tmp_path, monkeypatch):
 
 
 def test_prune_traces_invalid_min_frequency():
-    from soup_cli.utils.prune_prompt import prune_traces
+    from ai_forge_cli.utils.prune_prompt import prune_traces
 
     with pytest.raises((TypeError, ValueError)):
         prune_traces("in.jsonl", output_path="out.jsonl", min_frequency=True)
@@ -279,7 +279,7 @@ def test_prune_traces_invalid_min_frequency():
 
 
 def test_cli_prune_prompt_help():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["prune-prompt", "--help"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -287,7 +287,7 @@ def test_cli_prune_prompt_help():
 
 
 def test_cli_prune_prompt_happy(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     inp = tmp_path / "in.jsonl"
@@ -306,7 +306,7 @@ def test_cli_prune_prompt_happy(tmp_path, monkeypatch):
 
 
 def test_cli_prune_prompt_outside_cwd_rejected(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "x.jsonl"

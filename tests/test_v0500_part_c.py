@@ -5,10 +5,10 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.config.schema import TrainingConfig
-from soup_cli.utils import agent_rollout
-from soup_cli.utils.agent_rollout import (
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.schema import TrainingConfig
+from ai_forge_cli.utils import agent_rollout
+from ai_forge_cli.utils.agent_rollout import (
     SUPPORTED_ROLLOUT_BACKENDS,
     RolloutBackendSpec,
     get_rollout_backend_spec,

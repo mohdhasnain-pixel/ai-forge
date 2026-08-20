@@ -11,9 +11,9 @@ from __future__ import annotations
 import pytest
 import yaml
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.config.schema import SoupConfig
-from soup_cli.recipes.catalog import RECIPES, get_recipe, list_recipes, search_recipes
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.schema import SoupConfig
+from ai_forge_cli.recipes.catalog import RECIPES, get_recipe, list_recipes, search_recipes
 
 # ---------------------------------------------------------------------------
 # Step A — 17 new SFT recipes (every base verified to resolve on Hugging Face)

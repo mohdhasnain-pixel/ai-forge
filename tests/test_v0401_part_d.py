@@ -18,8 +18,8 @@ from typer.testing import CliRunner
 
 
 def test_init_template_help_lists_all_templates():
-    from soup_cli.commands.init import _template_help_string
-    from soup_cli.templates import list_templates
+    from ai_forge_cli.commands.init import _template_help_string
+    from ai_forge_cli.templates import list_templates
 
     help_text = _template_help_string()
     for template_name in list_templates():
@@ -30,7 +30,7 @@ def test_init_template_help_lists_all_templates():
 
 def test_init_template_help_includes_bco():
     """v0.40.0 added BCO; H4 must show it without a manual help-text edit."""
-    from soup_cli.commands.init import _template_help_string
+    from ai_forge_cli.commands.init import _template_help_string
 
     assert "bco" in _template_help_string()
 
@@ -39,7 +39,7 @@ def test_init_template_help_includes_bco():
 
 
 def test_init_force_flag_overwrites_without_prompt(tmp_path):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     runner = CliRunner()
     target = tmp_path / "soup.yaml"
@@ -64,7 +64,7 @@ def test_init_force_flag_overwrites_without_prompt(tmp_path):
 
 
 def test_migrate_jsonl_input_yields_friendly_error(tmp_path: Path):
-    from soup_cli.commands.migrate import _looks_like_jsonl
+    from ai_forge_cli.commands.migrate import _looks_like_jsonl
 
     jsonl = tmp_path / "data.jsonl"
     jsonl.write_text('{"prompt": "hi"}\n{"prompt": "world"}\n', encoding="utf-8")
@@ -72,7 +72,7 @@ def test_migrate_jsonl_input_yields_friendly_error(tmp_path: Path):
 
 
 def test_migrate_yaml_does_not_look_like_jsonl(tmp_path: Path):
-    from soup_cli.commands.migrate import _looks_like_jsonl
+    from ai_forge_cli.commands.migrate import _looks_like_jsonl
 
     yml = tmp_path / "config.yaml"
     yml.write_text("base: foo\ntask: sft\n", encoding="utf-8")
@@ -80,7 +80,7 @@ def test_migrate_yaml_does_not_look_like_jsonl(tmp_path: Path):
 
 
 def test_migrate_skips_blank_lines_when_sniffing(tmp_path: Path):
-    from soup_cli.commands.migrate import _looks_like_jsonl
+    from ai_forge_cli.commands.migrate import _looks_like_jsonl
 
     f = tmp_path / "blanks.jsonl"
     f.write_text('\n\n  \n{"key": 1}\n', encoding="utf-8")
@@ -91,7 +91,7 @@ def test_migrate_skips_blank_lines_when_sniffing(tmp_path: Path):
 
 
 def test_history_dataset_registry_helper_handles_missing():
-    from soup_cli.commands.history import _name_exists_in_dataset_registry
+    from ai_forge_cli.commands.history import _name_exists_in_dataset_registry
 
     # Should never raise even if registry module / file is missing.
     assert isinstance(
@@ -106,7 +106,7 @@ def test_eval_custom_output_arg_described_as_independent():
     """The --output help string must mention it's honored without attach."""
     import inspect
 
-    from soup_cli.commands.eval import custom
+    from ai_forge_cli.commands.eval import custom
 
     src = inspect.getsource(custom)
     assert "Honored independently" in src or "G10" in src
@@ -116,7 +116,7 @@ def test_eval_custom_no_longer_shadows_output_with_response():
     """Source-level guard against the loop-variable shadow regression."""
     import inspect
 
-    from soup_cli.commands.eval import custom
+    from ai_forge_cli.commands.eval import custom
 
     src = inspect.getsource(custom)
     # Old buggy line: ``output = generate_fn(eval_task.prompt)``.

@@ -247,7 +247,7 @@ _MIN_BATCH = {"kto": 2}
 def _stream_cfg(weights, out_dir, task="dpo", **training):
     import yaml
 
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     tcfg = {
         # KTO is refused below batch 2 (its KL term is degenerate at 1), so the
@@ -284,11 +284,11 @@ def _stream_cfg(weights, out_dir, task="dpo", **training):
 
 
 def _wrapper_for(task):
-    from soup_cli.trainer.dpo import DPOTrainerWrapper
-    from soup_cli.trainer.kto import KTOTrainerWrapper
-    from soup_cli.trainer.orpo import ORPOTrainerWrapper
-    from soup_cli.trainer.sft import SFTTrainerWrapper
-    from soup_cli.trainer.simpo import SimPOTrainerWrapper
+    from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
+    from ai_forge_cli.trainer.kto import KTOTrainerWrapper
+    from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
+    from ai_forge_cli.trainer.sft import SFTTrainerWrapper
+    from ai_forge_cli.trainer.simpo import SimPOTrainerWrapper
 
     return {
         "sft": SFTTrainerWrapper,
@@ -402,7 +402,7 @@ class TestNoSecondModelInstance:
     def test_exactly_one_weight_store_is_constructed(self, tmp_path, monkeypatch, task):
         """Counts RamSource constructions across the whole `setup()`. Two would
         mean two copies of the base in host RAM."""
-        from soup_cli.utils import layer_stream_runtime as lsr
+        from ai_forge_cli.utils import layer_stream_runtime as lsr
 
         calls = {"n": 0}
         real = lsr.RamSource
@@ -614,11 +614,11 @@ class TestVramPreflightAccountsForPairedRows:
         "task,expected", [("sft", 1), ("dpo", 2), ("orpo", 2), ("simpo", 2), ("kto", 1)]
     )
     def test_rows_per_example_is_declared_per_task(self, task, expected):
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
-        from soup_cli.trainer.kto import KTOTrainerWrapper
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
-        from soup_cli.trainer.sft import SFTTrainerWrapper
-        from soup_cli.trainer.simpo import SimPOTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.simpo import SimPOTrainerWrapper
 
         cls = {
             "sft": SFTTrainerWrapper,
@@ -635,10 +635,10 @@ class TestVramPreflightAccountsForPairedRows:
         miss a wrapper that reads the wrong one. The predicted peak for a paired
         loss at batch 1 must be the prediction for 2 rows, because that IS the
         tensor TRL builds."""
-        from soup_cli.utils.layer_stream import estimate_stream_peak_vram
+        from ai_forge_cli.utils.layer_stream import estimate_stream_peak_vram
 
         captured = []
-        import soup_cli.trainer.stream_setup as setup_mod
+        import ai_forge_cli.trainer.stream_setup as setup_mod
 
         real = (
             setup_mod.estimate_stream_peak_vram
@@ -650,7 +650,7 @@ class TestVramPreflightAccountsForPairedRows:
             captured.append(kwargs["batch_size"])
             return real(**kwargs)
 
-        monkeypatch.setattr("soup_cli.utils.layer_stream.estimate_stream_peak_vram", spy)
+        monkeypatch.setattr("ai_forge_cli.utils.layer_stream.estimate_stream_peak_vram", spy)
         _build_streamed_wrapper(tmp_path, monkeypatch, task=task)
         assert captured, "the VRAM pre-flight never ran"
         assert captured[0] == 2, (
@@ -695,7 +695,7 @@ class TestStreamRuntimeIsReleased:
         cls = _wrapper_for(task)
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             yaml.safe_dump(
@@ -722,12 +722,12 @@ class TestStreamingSetupIsSharedNotCopied:
     places to be fixed."""
 
     def test_every_streaming_wrapper_uses_the_one_mixin(self):
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
-        from soup_cli.trainer.kto import KTOTrainerWrapper
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
-        from soup_cli.trainer.sft import SFTTrainerWrapper
-        from soup_cli.trainer.simpo import SimPOTrainerWrapper
-        from soup_cli.trainer.stream_setup import StreamingSetupMixin
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.simpo import SimPOTrainerWrapper
+        from ai_forge_cli.trainer.stream_setup import StreamingSetupMixin
 
         for cls in (
             SFTTrainerWrapper,
@@ -748,7 +748,7 @@ class TestStreamingSetupIsSharedNotCopied:
         import ast
         import pathlib
 
-        import soup_cli.trainer.stream_setup as mod
+        import ai_forge_cli.trainer.stream_setup as mod
 
         tree = ast.parse(pathlib.Path(mod.__file__).read_text(encoding="utf-8"))
         for node in tree.body:
@@ -769,7 +769,7 @@ class TestRowMultiplierIsLoadBearing:
     the two are 71.3% apart."""
 
     def test_the_two_answers_are_far_apart_at_a_realistic_vocab(self):
-        from soup_cli.utils.layer_stream import estimate_stream_peak_vram
+        from ai_forge_cli.utils.layer_stream import estimate_stream_peak_vram
 
         def predict(rows):
             return estimate_stream_peak_vram(
@@ -794,9 +794,9 @@ class TestRowMultiplierIsLoadBearing:
     def test_a_paired_loss_budgets_strictly_more_than_an_unpaired_one(self):
         """Behavioural consequence: the same batch_size costs more under a
         concatenating loss, because it IS a bigger tensor."""
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
-        from soup_cli.trainer.kto import KTOTrainerWrapper
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         assert (
             DPOTrainerWrapper._STREAM_ROWS_PER_EXAMPLE > SFTTrainerWrapper._STREAM_ROWS_PER_EXAMPLE
@@ -811,7 +811,7 @@ class TestRowMultiplierIsLoadBearing:
         """KTO's multiplier is 1, but it requires batch_size >= 2, so the budget
         must still see 2 rows. Asserting the multiplier alone would miss that."""
         captured = []
-        from soup_cli.utils import layer_stream as ls
+        from ai_forge_cli.utils import layer_stream as ls
 
         real = ls.estimate_stream_peak_vram
 
@@ -969,7 +969,7 @@ class TestKtoBatchIsRefusedEarly:
         widening the gate here could reject configs that parse today."""
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             yaml.safe_dump(
@@ -1004,7 +1004,7 @@ class TestKtoBatchIsRefusedEarly:
         model = AutoModelForCausalLM.from_pretrained(weights, torch_dtype=torch.float32)
         tokenizer = AutoTokenizer.from_pretrained(weights)
         dataset = Dataset.from_list(_kto_rows(4))
-        from soup_cli.trainer._trl_compat import prompt_length_kwargs
+        from ai_forge_cli.trainer._trl_compat import prompt_length_kwargs
 
         args = KTOConfig(
             output_dir=str(tmp_path / "o"),

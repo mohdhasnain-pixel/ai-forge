@@ -1,6 +1,6 @@
 """v0.67.0 Part C — MoLE per-token adapter routing.
 
-Tests for ``soup_cli/utils/mole_routing.py``:
+Tests for ``ai_forge_cli/utils/mole_routing.py``:
 
 - Frozen ``MoleGatingConfig`` dataclass
 - ``validate_mole_compat`` (task / backend / adapter-count gate)
@@ -23,7 +23,7 @@ import pytest
 
 class TestPublicSurface:
     def test_module_importable(self) -> None:
-        from soup_cli.utils import mole_routing
+        from ai_forge_cli.utils import mole_routing
 
         assert hasattr(mole_routing, "MoleGatingConfig")
         assert hasattr(mole_routing, "validate_mole_compat")
@@ -32,7 +32,7 @@ class TestPublicSurface:
         assert hasattr(mole_routing, "MAX_TASK_ADAPTERS")
 
     def test_constants_immutable(self) -> None:
-        from soup_cli.utils import mole_routing
+        from ai_forge_cli.utils import mole_routing
 
         assert mole_routing.MIN_TASK_ADAPTERS >= 2
         assert mole_routing.MAX_TASK_ADAPTERS <= 64
@@ -45,7 +45,7 @@ class TestPublicSurface:
 
 class TestMoleGatingConfig:
     def test_construct(self) -> None:
-        from soup_cli.utils.mole_routing import MoleGatingConfig
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig
 
         cfg = MoleGatingConfig(
             num_task_adapters=4,
@@ -57,7 +57,7 @@ class TestMoleGatingConfig:
         assert cfg.top_k == 2
 
     def test_frozen(self) -> None:
-        from soup_cli.utils.mole_routing import MoleGatingConfig
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig
 
         cfg = MoleGatingConfig(
             num_task_adapters=4,
@@ -69,7 +69,7 @@ class TestMoleGatingConfig:
             cfg.top_k = 99  # type: ignore[misc]
 
     def test_num_task_adapters_below_floor(self) -> None:
-        from soup_cli.utils.mole_routing import MoleGatingConfig
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig
 
         with pytest.raises(ValueError):
             MoleGatingConfig(
@@ -77,7 +77,7 @@ class TestMoleGatingConfig:
             )
 
     def test_num_task_adapters_above_cap(self) -> None:
-        from soup_cli.utils.mole_routing import (
+        from ai_forge_cli.utils.mole_routing import (
             MAX_TASK_ADAPTERS,
             MoleGatingConfig,
         )
@@ -91,7 +91,7 @@ class TestMoleGatingConfig:
             )
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.mole_routing import MoleGatingConfig
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig
 
         with pytest.raises(TypeError):
             MoleGatingConfig(
@@ -102,7 +102,7 @@ class TestMoleGatingConfig:
             )
 
     def test_hidden_dim_must_be_positive(self) -> None:
-        from soup_cli.utils.mole_routing import MoleGatingConfig
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig
 
         with pytest.raises(ValueError):
             MoleGatingConfig(
@@ -113,7 +113,7 @@ class TestMoleGatingConfig:
             )
 
     def test_temperature_non_finite_rejected(self) -> None:
-        from soup_cli.utils.mole_routing import MoleGatingConfig
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig
 
         with pytest.raises(ValueError):
             MoleGatingConfig(
@@ -124,7 +124,7 @@ class TestMoleGatingConfig:
             )
 
     def test_temperature_non_positive_rejected(self) -> None:
-        from soup_cli.utils.mole_routing import MoleGatingConfig
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig
 
         with pytest.raises(ValueError):
             MoleGatingConfig(
@@ -135,7 +135,7 @@ class TestMoleGatingConfig:
             )
 
     def test_top_k_above_num_adapters_rejected(self) -> None:
-        from soup_cli.utils.mole_routing import MoleGatingConfig
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig
 
         with pytest.raises(ValueError):
             MoleGatingConfig(
@@ -146,7 +146,7 @@ class TestMoleGatingConfig:
             )
 
     def test_top_k_below_one_rejected(self) -> None:
-        from soup_cli.utils.mole_routing import MoleGatingConfig
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig
 
         with pytest.raises(ValueError):
             MoleGatingConfig(
@@ -164,7 +164,7 @@ class TestMoleGatingConfig:
 
 class TestValidateMoleCompat:
     def test_happy_path(self) -> None:
-        from soup_cli.utils.mole_routing import validate_mole_compat
+        from ai_forge_cli.utils.mole_routing import validate_mole_compat
 
         validate_mole_compat(
             task="moe_lora_routing",
@@ -173,7 +173,7 @@ class TestValidateMoleCompat:
         )
 
     def test_wrong_task_rejected(self) -> None:
-        from soup_cli.utils.mole_routing import validate_mole_compat
+        from ai_forge_cli.utils.mole_routing import validate_mole_compat
 
         with pytest.raises(ValueError) as exc_info:
             validate_mole_compat(
@@ -184,7 +184,7 @@ class TestValidateMoleCompat:
         assert "moe_lora_routing" in str(exc_info.value)
 
     def test_mlx_rejected(self) -> None:
-        from soup_cli.utils.mole_routing import validate_mole_compat
+        from ai_forge_cli.utils.mole_routing import validate_mole_compat
 
         with pytest.raises(ValueError) as exc_info:
             validate_mole_compat(
@@ -195,7 +195,7 @@ class TestValidateMoleCompat:
         assert "mlx" in str(exc_info.value).lower()
 
     def test_too_few_adapters(self) -> None:
-        from soup_cli.utils.mole_routing import validate_mole_compat
+        from ai_forge_cli.utils.mole_routing import validate_mole_compat
 
         with pytest.raises(ValueError):
             validate_mole_compat(
@@ -205,7 +205,7 @@ class TestValidateMoleCompat:
             )
 
     def test_bool_args_rejected(self) -> None:
-        from soup_cli.utils.mole_routing import validate_mole_compat
+        from ai_forge_cli.utils.mole_routing import validate_mole_compat
 
         with pytest.raises(TypeError):
             validate_mole_compat(
@@ -221,7 +221,7 @@ class TestValidateMoleCompat:
             )
 
     def test_null_byte_args_rejected(self) -> None:
-        from soup_cli.utils.mole_routing import validate_mole_compat
+        from ai_forge_cli.utils.mole_routing import validate_mole_compat
 
         with pytest.raises(ValueError):
             validate_mole_compat(
@@ -242,7 +242,7 @@ class TestBuildGatingKernel:
         # now returns a live torch nn.Module (per-token top-k softmax router).
         import torch
 
-        from soup_cli.utils.mole_routing import MoleGatingConfig, build_gating_kernel
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig, build_gating_kernel
 
         cfg = MoleGatingConfig(
             num_task_adapters=4, hidden_dim=8, temperature=1.0, top_k=2
@@ -253,7 +253,7 @@ class TestBuildGatingKernel:
         assert torch.allclose(weights.sum(-1), torch.ones(2, 3), atol=1e-5)
 
     def test_non_config_rejected(self) -> None:
-        from soup_cli.utils.mole_routing import build_gating_kernel
+        from ai_forge_cli.utils.mole_routing import build_gating_kernel
 
         with pytest.raises(TypeError):
             build_gating_kernel("not-a-config")  # type: ignore[arg-type]
@@ -266,7 +266,7 @@ class TestBuildGatingKernel:
 
 class TestSchemaIntegration:
     def test_task_accepted_in_literal(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         # v0.71.12 #222 — task='moe_lora_routing' now requires
         # training.mole_task_adapters (>= 2 task-LoRA paths to route over).
@@ -285,7 +285,7 @@ training:
         assert cfg.task == "moe_lora_routing"
 
     def test_task_rejected_on_mlx(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml = """
 base: m
@@ -311,7 +311,7 @@ class TestSourceWiring:
         from pathlib import Path
 
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "utils" / "mole_routing.py").read_text(
+        src = (root / "src" / "ai_forge_cli" / "utils" / "mole_routing.py").read_text(
             encoding="utf-8"
         )
         head_lines = [

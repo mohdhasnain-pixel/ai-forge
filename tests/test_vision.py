@@ -9,8 +9,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
-from soup_cli.data.formats import (
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.data.formats import (
     detect_format,
     format_to_messages,
     is_vision_format,
@@ -301,7 +301,7 @@ class TestVisionDataLoader:
         v0.71.33: the validator now stores the resolved path (mirrors
         _validate_audio_files) after a containment check.
         """
-        from soup_cli.data.loader import _validate_vision_images
+        from ai_forge_cli.data.loader import _validate_vision_images
 
         data = [{"messages": [{"role": "user", "content": "Hi"}], "image": "photo.jpg"}]
         image_dir = Path("/data/images")
@@ -311,7 +311,7 @@ class TestVisionDataLoader:
 
     def test_validate_vision_images_skips_missing(self):
         """Rows without image field should be skipped."""
-        from soup_cli.data.loader import _validate_vision_images
+        from ai_forge_cli.data.loader import _validate_vision_images
 
         data = [
             {"messages": [{"role": "user", "content": "Hi"}], "image": "photo.jpg"},
@@ -323,7 +323,7 @@ class TestVisionDataLoader:
 
     def test_validate_vision_images_skips_empty_image(self):
         """Rows with empty image string should be skipped."""
-        from soup_cli.data.loader import _validate_vision_images
+        from ai_forge_cli.data.loader import _validate_vision_images
 
         data = [{"messages": [{"role": "user", "content": "Hi"}], "image": ""}]
         image_dir = Path("/data")
@@ -332,7 +332,7 @@ class TestVisionDataLoader:
 
     def test_validate_vision_images_absolute_inside_kept(self, tmp_path):
         """An absolute image path INSIDE image_dir is kept (resolved)."""
-        from soup_cli.data.loader import _validate_vision_images
+        from ai_forge_cli.data.loader import _validate_vision_images
 
         img_dir = tmp_path / "imgs"
         img_dir.mkdir()
@@ -346,7 +346,7 @@ class TestVisionDataLoader:
     def test_validate_vision_images_rejects_out_of_dir(self, tmp_path):
         """v0.71.33 security fix: an absolute path OUTSIDE image_dir is dropped
         (previously it was handed straight to PIL.Image.open — arbitrary read)."""
-        from soup_cli.data.loader import _validate_vision_images
+        from ai_forge_cli.data.loader import _validate_vision_images
 
         img_dir = tmp_path / "imgs"
         img_dir.mkdir()
@@ -356,8 +356,8 @@ class TestVisionDataLoader:
 
     def test_load_dataset_with_vision_format(self):
         """load_dataset should handle llava format data files."""
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.loader import load_dataset
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.loader import load_dataset
 
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".jsonl", delete=False, encoding="utf-8"
@@ -391,7 +391,7 @@ class TestSFTVisionIntegration:
 
     def test_sft_wrapper_init_with_vision(self):
         """SFTTrainerWrapper should accept vision modality config."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="meta-llama/Llama-3.2-11B-Vision-Instruct",
@@ -403,7 +403,7 @@ class TestSFTVisionIntegration:
 
     def test_sft_setup_vision_calls_automodel(self):
         """_setup_vision_transformers should use AutoModelForVision2Seq."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="test-vision-model",
@@ -418,7 +418,7 @@ class TestSFTVisionIntegration:
         mock_processor = MagicMock()
 
         with patch(
-            "soup_cli.trainer.sft.SFTTrainerWrapper._setup_vision_transformers"
+            "ai_forge_cli.trainer.sft.SFTTrainerWrapper._setup_vision_transformers"
         ) as mock_setup:
             mock_setup.side_effect = lambda c, t: setattr(wrapper, "model", mock_model) or setattr(
                 wrapper, "tokenizer", mock_processor
@@ -428,7 +428,7 @@ class TestSFTVisionIntegration:
 
     def test_sft_vision_config_selects_vision_path(self):
         """Vision modality config should be detected correctly in wrapper."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="test-vision-model",
@@ -442,7 +442,7 @@ class TestSFTVisionIntegration:
 
     def test_sft_vision_has_setup_methods(self):
         """SFTTrainerWrapper should have vision-specific methods."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="test-vision-model",
@@ -514,7 +514,7 @@ class TestInitVisionTemplate:
         """soup init --template vision should create a valid config."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -539,7 +539,7 @@ class TestDataInspectVision:
 
         from rich.console import Console
 
-        from soup_cli.commands.data import _show_vision_stats
+        from ai_forge_cli.commands.data import _show_vision_stats
 
         data = [
             {"image": "photo1.jpg", "conversations": []},
@@ -548,7 +548,7 @@ class TestDataInspectVision:
         ]
 
         output = StringIO()
-        with patch("soup_cli.commands.data.console", Console(file=output)):
+        with patch("ai_forge_cli.commands.data.console", Console(file=output)):
             _show_vision_stats(data)
 
         text = output.getvalue()
@@ -561,12 +561,12 @@ class TestDataInspectVision:
 
         from rich.console import Console
 
-        from soup_cli.commands.data import _show_vision_stats
+        from ai_forge_cli.commands.data import _show_vision_stats
 
         data = [{"instruction": "Hi", "output": "Hello"}]
 
         output = StringIO()
-        with patch("soup_cli.commands.data.console", Console(file=output)):
+        with patch("ai_forge_cli.commands.data.console", Console(file=output)):
             _show_vision_stats(data)
 
         text = output.getvalue()
@@ -574,7 +574,7 @@ class TestDataInspectVision:
 
     def test_show_vision_stats_empty_data(self):
         """_show_vision_stats should handle empty data gracefully."""
-        from soup_cli.commands.data import _show_vision_stats
+        from ai_forge_cli.commands.data import _show_vision_stats
 
         # Should not raise
         _show_vision_stats([])
@@ -585,7 +585,7 @@ class TestDataInspectVision:
 
         from rich.console import Console
 
-        from soup_cli.commands.data import _show_vision_stats
+        from ai_forge_cli.commands.data import _show_vision_stats
 
         data = [
             {"image": "a.jpg", "conversations": []},
@@ -594,7 +594,7 @@ class TestDataInspectVision:
         ]
 
         output = StringIO()
-        with patch("soup_cli.commands.data.console", Console(file=output)):
+        with patch("ai_forge_cli.commands.data.console", Console(file=output)):
             _show_vision_stats(data)
 
         text = output.getvalue()
@@ -610,7 +610,7 @@ class TestDoctorVision:
 
     def test_pillow_in_deps_list(self):
         """Pillow should be listed in doctor dependencies."""
-        from soup_cli.commands.doctor import DEPS
+        from ai_forge_cli.commands.doctor import DEPS
 
         pkg_names = [pkg_name for _, pkg_name, _, _ in DEPS]
         assert "Pillow" in pkg_names or "pillow" in [n.lower() for n in pkg_names]
@@ -624,7 +624,7 @@ class TestModalitySweepParam:
 
     def test_modality_shortcut(self):
         """modality should be settable via sweep param."""
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"modality": "text"}
         _set_nested_param(config, "modality", "vision")

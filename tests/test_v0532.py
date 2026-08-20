@@ -29,7 +29,7 @@ import pytest
 
 class TestReasoningEffortPrefix:
     def test_inserts_system_message_when_none(self) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         messages = [{"role": "user", "content": "hi"}]
         out = apply_reasoning_effort_prefix(messages, "high")
@@ -39,7 +39,7 @@ class TestReasoningEffortPrefix:
         assert out[1] == {"role": "user", "content": "hi"}
 
     def test_prepends_to_existing_system_message(self) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         messages = [
             {"role": "system", "content": "You are helpful."},
@@ -54,7 +54,7 @@ class TestReasoningEffortPrefix:
         assert out[1] == {"role": "user", "content": "hi"}
 
     def test_does_not_mutate_input(self) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         original = [{"role": "user", "content": "hi"}]
         snapshot = [dict(m) for m in original]
@@ -63,44 +63,44 @@ class TestReasoningEffortPrefix:
 
     @pytest.mark.parametrize("level", ["low", "medium", "high"])
     def test_accepts_canonical_levels(self, level: str) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         out = apply_reasoning_effort_prefix([{"role": "user", "content": "x"}], level)
         assert f"<|reasoning_effort|>{level}<|/reasoning_effort|>" in out[0]["content"]
 
     def test_case_insensitive_level(self) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         out = apply_reasoning_effort_prefix([{"role": "user", "content": "x"}], "HIGH")
         # Canonical lower-case is emitted
         assert "<|reasoning_effort|>high<|/reasoning_effort|>" in out[0]["content"]
 
     def test_rejects_unknown_level(self) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         with pytest.raises(ValueError, match="not supported"):
             apply_reasoning_effort_prefix([{"role": "user", "content": "x"}], "extreme")
 
     def test_rejects_bool_level(self) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         with pytest.raises(TypeError, match="must not be bool"):
             apply_reasoning_effort_prefix([{"role": "user", "content": "x"}], True)  # type: ignore[arg-type]
 
     def test_rejects_non_list_messages(self) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         with pytest.raises(TypeError, match="messages must be a list"):
             apply_reasoning_effort_prefix("hi", "low")  # type: ignore[arg-type]
 
     def test_rejects_empty_messages(self) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         with pytest.raises(ValueError, match="empty"):
             apply_reasoning_effort_prefix([], "low")
 
     def test_rejects_non_dict_message(self) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         with pytest.raises(TypeError, match="must be dict"):
             apply_reasoning_effort_prefix(["not a dict"], "low")  # type: ignore[list-item]
@@ -196,7 +196,7 @@ class _EotBoundaryTokenizer:
 class TestTrainOnEot:
     def test_include_eot_default_false_masks_eot(self) -> None:
         """Existing behaviour — EOT *outside* the assistant mask is IGNORE."""
-        from soup_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX, build_assistant_only_labels
 
         tok = _EotBoundaryTokenizer()
         messages = [
@@ -212,7 +212,7 @@ class TestTrainOnEot:
         assert labels[-1] == IGNORE_INDEX
 
     def test_include_eot_true_extends_label_to_eos(self) -> None:
-        from soup_cli.data.loss_mask import (
+        from ai_forge_cli.data.loss_mask import (
             IGNORE_INDEX,
             build_assistant_only_labels,
         )
@@ -237,7 +237,7 @@ class TestTrainOnEot:
         assert with_eot["labels"][-1] == 9
 
     def test_include_eot_must_be_bool(self) -> None:
-        from soup_cli.data.loss_mask import build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import build_assistant_only_labels
 
         with pytest.raises(TypeError, match="include_eot must be bool"):
             build_assistant_only_labels(
@@ -265,7 +265,7 @@ def _torch_or_skip():
 class TestEbftLossLive:
     def test_structured_returns_finite_scalar(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
         logits = torch.randn(2, 4, 8, requires_grad=True)
         labels = torch.tensor([[0, 1, 2, -100], [3, 4, -100, -100]])
@@ -278,7 +278,7 @@ class TestEbftLossLive:
 
     def test_strided_returns_finite_scalar(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
         logits = torch.randn(2, 4, 8)
         labels = torch.tensor([[0, 1, 2, 3], [4, 5, 6, 7]])
@@ -291,7 +291,7 @@ class TestEbftLossLive:
     def test_temperature_scales_loss(self) -> None:
         """Lower temperature sharpens the energy distribution → different loss."""
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
         torch.manual_seed(0)
         logits = torch.randn(1, 3, 5)
@@ -302,7 +302,7 @@ class TestEbftLossLive:
 
     def test_unknown_variant_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
         with pytest.raises(ValueError, match="not supported"):
             apply_ebft_loss(
@@ -314,7 +314,7 @@ class TestEbftLossLive:
 
     def test_temperature_validated(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
         with pytest.raises(ValueError):
             apply_ebft_loss(
@@ -326,7 +326,7 @@ class TestEbftLossLive:
 
     def test_all_ignore_labels_returns_zero(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
         logits = torch.randn(2, 3, 4)
         labels = torch.full((2, 3), -100, dtype=torch.long)
@@ -335,7 +335,7 @@ class TestEbftLossLive:
 
     def test_shape_mismatch_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
         with pytest.raises(ValueError, match="shape"):
             apply_ebft_loss(
@@ -354,7 +354,7 @@ class TestEbftLossLive:
 class TestGdpoLossLive:
     def test_standard_returns_finite_scalar(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         pol_chosen = torch.tensor([-2.0, -1.5, -3.0], requires_grad=True)
         pol_rejected = torch.tensor([-3.5, -2.5, -4.0], requires_grad=True)
@@ -375,7 +375,7 @@ class TestGdpoLossLive:
 
     def test_length_normalized_uses_lengths(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         pol_chosen = torch.tensor([-10.0, -8.0])
         pol_rejected = torch.tensor([-12.0, -10.0])
@@ -393,7 +393,7 @@ class TestGdpoLossLive:
 
     def test_margin_includes_margin_term(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         pol_chosen = torch.tensor([-2.0])
         pol_rejected = torch.tensor([-3.0])
@@ -422,7 +422,7 @@ class TestGdpoLossLive:
 
     def test_unknown_variant_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         t = torch.zeros(2)
         with pytest.raises(ValueError, match="not supported"):
@@ -435,7 +435,7 @@ class TestGdpoLossLive:
 
     def test_standard_requires_reference(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         t = torch.zeros(2)
         with pytest.raises(ValueError, match="reference"):
@@ -448,7 +448,7 @@ class TestGdpoLossLive:
 
     def test_length_normalized_requires_lengths(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         t = torch.zeros(2)
         with pytest.raises(ValueError, match="chosen_lens"):
@@ -461,7 +461,7 @@ class TestGdpoLossLive:
 
     def test_beta_validated(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         t = torch.zeros(2)
         with pytest.raises(ValueError, match="beta"):
@@ -476,7 +476,7 @@ class TestGdpoLossLive:
 
     def test_beta_rejects_bool(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         t = torch.zeros(2)
         with pytest.raises(TypeError, match="bool"):
@@ -491,7 +491,7 @@ class TestGdpoLossLive:
 
     def test_shape_mismatch_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         with pytest.raises(ValueError, match="shape"):
             apply_gdpo_loss(
@@ -511,7 +511,7 @@ class TestGdpoLossLive:
 
 def test_apply_ebft_loss_no_longer_raises_not_implemented() -> None:
     torch = _torch_or_skip()
-    from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+    from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
     # Should succeed (not raise NotImplementedError) — confirms stub lifted.
     apply_ebft_loss(
@@ -524,7 +524,7 @@ def test_apply_ebft_loss_no_longer_raises_not_implemented() -> None:
 
 def test_apply_gdpo_loss_no_longer_raises_not_implemented() -> None:
     torch = _torch_or_skip()
-    from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+    from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
     t = torch.zeros(2)
     apply_gdpo_loss(
@@ -560,7 +560,7 @@ class _StubTrainer:
 
 class TestAttachEbftComputeLoss:
     def test_no_op_when_variant_unset(self) -> None:
-        from soup_cli.utils.ebft_gdpo import attach_ebft_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_ebft_compute_loss
 
         trainer = _StubTrainer()
         tcfg = type("Tcfg", (), {"ebft_variant": None})()
@@ -568,7 +568,7 @@ class TestAttachEbftComputeLoss:
 
     def test_wraps_when_variant_set(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import attach_ebft_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_ebft_compute_loss
 
         trainer = _StubTrainer()
         original = trainer.compute_loss
@@ -587,7 +587,7 @@ class TestAttachEbftComputeLoss:
         assert trainer.call_log[-1] == ("compute_loss", True)
 
     def test_invalid_variant_rejected(self) -> None:
-        from soup_cli.utils.ebft_gdpo import attach_ebft_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_ebft_compute_loss
 
         trainer = _StubTrainer()
         tcfg = type("Tcfg", (), {"ebft_variant": "bogus"})()
@@ -607,14 +607,14 @@ class _StubDpoTrainer:
 
 class TestAttachGdpoComputeLoss:
     def test_no_op_when_variant_unset(self) -> None:
-        from soup_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
 
         trainer = _StubDpoTrainer()
         tcfg = type("Tcfg", (), {"gdpo_variant": None})()
         assert attach_gdpo_compute_loss(trainer, tcfg) is False
 
     def test_no_op_when_trainer_lacks_dpo_loss(self) -> None:
-        from soup_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
 
         trainer = object()
         tcfg = type("Tcfg", (), {"gdpo_variant": "standard"})()
@@ -622,7 +622,7 @@ class TestAttachGdpoComputeLoss:
 
     def test_wraps_and_returns_trl_shape(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
 
         trainer = _StubDpoTrainer()
         tcfg = type(
@@ -653,7 +653,7 @@ class TestDistillDivergenceKernel:
     @pytest.mark.parametrize("divergence", ["forward_kl", "reverse_kl", "js"])
     def test_divergence_returns_finite_scalar(self, divergence: str) -> None:
         torch = _torch_or_skip()
-        from soup_cli.trainer.distill import _compute_distill_term
+        from ai_forge_cli.trainer.distill import _compute_distill_term
 
         student = torch.randn(2, 4, 8, requires_grad=True)
         teacher = torch.randn(2, 4, 8)
@@ -665,7 +665,7 @@ class TestDistillDivergenceKernel:
 
     def test_unknown_divergence_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.trainer.distill import _compute_distill_term
+        from ai_forge_cli.trainer.distill import _compute_distill_term
 
         with pytest.raises(ValueError, match="Unknown divergence"):
             _compute_distill_term(
@@ -674,7 +674,7 @@ class TestDistillDivergenceKernel:
 
     def test_identical_logits_zero_kl(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.trainer.distill import _compute_distill_term
+        from ai_forge_cli.trainer.distill import _compute_distill_term
 
         logits = torch.randn(1, 3, 5)
         out = _compute_distill_term(logits, logits.clone(), "forward_kl", 1.0)
@@ -683,11 +683,11 @@ class TestDistillDivergenceKernel:
 
 class TestDistillWrapper:
     def test_imports_cleanly(self) -> None:
-        from soup_cli.trainer.distill import DistillTrainerWrapper  # noqa: F401
+        from ai_forge_cli.trainer.distill import DistillTrainerWrapper  # noqa: F401
 
     def test_train_before_setup_raises(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.distill import DistillTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.distill import DistillTrainerWrapper
 
         cfg = load_config_from_string(
             """
@@ -706,8 +706,8 @@ class TestDistillWrapper:
             wrapper.train()
 
     def test_build_distill_trainer_factory_lifted(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils.distill import build_distill_trainer
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils.distill import build_distill_trainer
 
         cfg = load_config_from_string(
             """
@@ -721,7 +721,7 @@ class TestDistillWrapper:
         )
         # Lifted from NotImplementedError in v0.53.2 — returns wrapper.
         wrapper = build_distill_trainer(cfg, device="cpu")
-        from soup_cli.trainer.distill import DistillTrainerWrapper
+        from ai_forge_cli.trainer.distill import DistillTrainerWrapper
 
         assert isinstance(wrapper, DistillTrainerWrapper)
 
@@ -733,12 +733,12 @@ class TestDistillWrapper:
 
 class TestClassifierWrapperHelpers:
     def test_row_to_text_with_text_field(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_text
+        from ai_forge_cli.trainer.classifier import _row_to_text
 
         assert _row_to_text({"text": "hello"}) == "hello"
 
     def test_row_to_text_joins_messages(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_text
+        from ai_forge_cli.trainer.classifier import _row_to_text
 
         out = _row_to_text(
             {
@@ -751,54 +751,54 @@ class TestClassifierWrapperHelpers:
         assert "a" in out and "b" in out
 
     def test_row_to_text_missing_field_raises(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_text
+        from ai_forge_cli.trainer.classifier import _row_to_text
 
         with pytest.raises(ValueError, match="missing 'text'"):
             _row_to_text({"label": 0})
 
     def test_row_to_pair_text_ab(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_pair
+        from ai_forge_cli.trainer.classifier import _row_to_pair
 
         a, b = _row_to_pair({"text_a": "x", "text_b": "y"})
         assert (a, b) == ("x", "y")
 
     def test_row_to_pair_question_answer(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_pair
+        from ai_forge_cli.trainer.classifier import _row_to_pair
 
         a, b = _row_to_pair({"question": "q", "answer": "a"})
         assert (a, b) == ("q", "a")
 
     def test_row_to_pair_missing_raises(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_pair
+        from ai_forge_cli.trainer.classifier import _row_to_pair
 
         with pytest.raises(ValueError, match="text_a"):
             _row_to_pair({"text": "single"})
 
     @pytest.mark.parametrize("idx", [0, 1, 2])
     def test_label_index_int_in_range(self, idx: int) -> None:
-        from soup_cli.trainer.classifier import _label_index
+        from ai_forge_cli.trainer.classifier import _label_index
 
         assert _label_index(idx, None, num_labels=3) == idx
 
     def test_label_index_int_out_of_range_rejected(self) -> None:
-        from soup_cli.trainer.classifier import _label_index
+        from ai_forge_cli.trainer.classifier import _label_index
 
         with pytest.raises(ValueError, match="out of range"):
             _label_index(5, None, num_labels=3)
 
     def test_label_index_string_via_label_names(self) -> None:
-        from soup_cli.trainer.classifier import _label_index
+        from ai_forge_cli.trainer.classifier import _label_index
 
         assert _label_index("pos", ["neg", "pos"], num_labels=2) == 1
 
     def test_label_index_string_without_names_rejected(self) -> None:
-        from soup_cli.trainer.classifier import _label_index
+        from ai_forge_cli.trainer.classifier import _label_index
 
         with pytest.raises(ValueError, match="label_names is unset"):
             _label_index("pos", None, num_labels=2)
 
     def test_label_index_bool_rejected(self) -> None:
-        from soup_cli.trainer.classifier import _label_index
+        from ai_forge_cli.trainer.classifier import _label_index
 
         # Project policy (v0.30.0 Candidate / v0.39.0 ReLoRAPolicy / v0.41.0
         # Part B): bool-as-int violations raise TypeError.
@@ -806,7 +806,7 @@ class TestClassifierWrapperHelpers:
             _label_index(True, None, num_labels=2)
 
     def test_normalise_label_multi_label_from_list(self) -> None:
-        from soup_cli.trainer.classifier import _normalise_label
+        from ai_forge_cli.trainer.classifier import _normalise_label
 
         vec = _normalise_label(
             [0, 2], label_names=None, num_labels=3, multi_label=True
@@ -816,11 +816,11 @@ class TestClassifierWrapperHelpers:
 
 class TestClassifierWrapper:
     def test_imports_cleanly(self) -> None:
-        from soup_cli.trainer.classifier import ClassifierTrainerWrapper  # noqa: F401
+        from ai_forge_cli.trainer.classifier import ClassifierTrainerWrapper  # noqa: F401
 
     def test_train_before_setup_raises(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.classifier import ClassifierTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.classifier import ClassifierTrainerWrapper
 
         cfg = load_config_from_string(
             """
@@ -837,8 +837,8 @@ class TestClassifierWrapper:
             wrapper.train()
 
     def test_build_classifier_trainer_factory_lifted(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils.classifier import build_classifier_trainer
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils.classifier import build_classifier_trainer
 
         cfg = load_config_from_string(
             """
@@ -851,7 +851,7 @@ class TestClassifierWrapper:
             """
         )
         wrapper = build_classifier_trainer(cfg, device="cpu")
-        from soup_cli.trainer.classifier import ClassifierTrainerWrapper
+        from ai_forge_cli.trainer.classifier import ClassifierTrainerWrapper
 
         assert isinstance(wrapper, ClassifierTrainerWrapper)
 
@@ -871,7 +871,7 @@ class TestTrainRouting:
     """
 
     def test_distill_routed(self) -> None:
-        from soup_cli.commands import train as train_cmd
+        from ai_forge_cli.commands import train as train_cmd
 
         src = __import__("inspect").getsource(train_cmd)
         assert 'cfg.task == "distill"' in src
@@ -879,7 +879,7 @@ class TestTrainRouting:
         assert "DistillTrainerWrapper(cfg, **trainer_kwargs)" in src
 
     def test_classifier_family_routed(self) -> None:
-        from soup_cli.commands import train as train_cmd
+        from ai_forge_cli.commands import train as train_cmd
 
         src = __import__("inspect").getsource(train_cmd)
         # Tuple membership in the if-branch is the load-bearing pattern.
@@ -924,7 +924,7 @@ def _make_data_cfg(
 
 class TestFormatRowReasoningEffort:
     def test_no_reasoning_effort_passthrough(self) -> None:
-        from soup_cli.data.sft_format import build_format_row
+        from ai_forge_cli.data.sft_format import build_format_row
 
         format_row = build_format_row(
             tokenizer=_EotBoundaryTokenizer(),
@@ -942,7 +942,7 @@ class TestFormatRowReasoningEffort:
         assert set(out) >= {"input_ids", "labels", "attention_mask"}
 
     def test_reasoning_effort_injected_via_format_row(self) -> None:
-        from soup_cli.data.sft_format import build_format_row
+        from ai_forge_cli.data.sft_format import build_format_row
 
         captured_messages: list = []
 
@@ -969,7 +969,7 @@ class TestFormatRowReasoningEffort:
         assert "<|reasoning_effort|>high<|/reasoning_effort|>" in first[0]["content"]
 
     def test_does_not_mutate_original_row(self) -> None:
-        from soup_cli.data.sft_format import build_format_row
+        from ai_forge_cli.data.sft_format import build_format_row
 
         format_row = build_format_row(
             tokenizer=_EotBoundaryTokenizer(),
@@ -989,8 +989,8 @@ class TestFormatRowReasoningEffort:
 
 class TestFormatRowTrainOnEot:
     def test_train_on_eot_extends_loss_mask(self) -> None:
-        from soup_cli.data.loss_mask import IGNORE_INDEX
-        from soup_cli.data.sft_format import build_format_row
+        from ai_forge_cli.data.loss_mask import IGNORE_INDEX
+        from ai_forge_cli.data.sft_format import build_format_row
 
         tok = _EotBoundaryTokenizer()
         row = {
@@ -1022,7 +1022,7 @@ class TestFormatRowTrainOnEot:
 
 
 def test_distill_task_loads_with_teacher() -> None:
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     cfg = load_config_from_string(
         """
@@ -1041,7 +1041,7 @@ def test_distill_task_loads_with_teacher() -> None:
 
 
 def test_classifier_task_requires_num_labels() -> None:
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     # ``load_config_from_string`` re-raises pydantic validation as ValueError.
     with pytest.raises(ValueError, match="num_labels"):
@@ -1065,7 +1065,7 @@ class TestEbftAttachLabelsNone:
 
     def test_labels_missing_returns_ce_only(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import attach_ebft_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_ebft_compute_loss
 
         trainer = _StubTrainer()
         tcfg = type(
@@ -1081,7 +1081,7 @@ class TestEbftAttachLabelsNone:
 
 class TestEbftAttachIdempotent:
     def test_double_wrap_is_no_op(self) -> None:
-        from soup_cli.utils.ebft_gdpo import attach_ebft_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_ebft_compute_loss
 
         trainer = _StubTrainer()
         tcfg = type(
@@ -1098,7 +1098,7 @@ class TestEbftAttachIdempotent:
 
 class TestGdpoAttachIdempotent:
     def test_double_wrap_is_no_op(self) -> None:
-        from soup_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
 
         trainer = _StubDpoTrainer()
         tcfg = type(
@@ -1118,7 +1118,7 @@ class TestGdpoAttachLengthNormalizedForwardsLens:
 
     def test_length_normalized_via_kwargs(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
 
         trainer = _StubDpoTrainer()
         tcfg = type(
@@ -1148,7 +1148,7 @@ class TestGdpoAttachLengthNormalizedForwardsLens:
 
     def test_length_normalized_via_positional(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
+        from ai_forge_cli.utils.ebft_gdpo import attach_gdpo_compute_loss
 
         trainer = _StubDpoTrainer()
         tcfg = type(
@@ -1181,7 +1181,7 @@ class TestExtendMaskIdempotency:
     """tdd-review C2 — _extend_mask_to_eot must be idempotent."""
 
     def test_second_pass_no_op(self) -> None:
-        from soup_cli.data.loss_mask import _extend_mask_to_eot
+        from ai_forge_cli.data.loss_mask import _extend_mask_to_eot
 
         ids = [10, 11, 9, 20, 21, 9]
         mask = [1, 1, 0, 0, 0, 0]
@@ -1190,7 +1190,7 @@ class TestExtendMaskIdempotency:
         assert once == twice
 
     def test_leading_eos_not_marked(self) -> None:
-        from soup_cli.data.loss_mask import _extend_mask_to_eot
+        from ai_forge_cli.data.loss_mask import _extend_mask_to_eot
 
         ids = [9, 10, 11, 9]
         mask = [0, 1, 1, 0]
@@ -1199,7 +1199,7 @@ class TestExtendMaskIdempotency:
         assert out[3] == 1  # trailing EOS absorbed
 
     def test_two_assistant_spans_both_get_eos(self) -> None:
-        from soup_cli.data.loss_mask import _extend_mask_to_eot
+        from ai_forge_cli.data.loss_mask import _extend_mask_to_eot
 
         ids = [1, 2, 9, 9, 3, 4, 9]
         mask = [0, 1, 0, 0, 0, 1, 0]
@@ -1213,7 +1213,7 @@ class TestResolveEosTokenId:
     """python-review MEDIUM — handle list/str/None/bool eos_token_id."""
 
     def test_int(self) -> None:
-        from soup_cli.data.loss_mask import _resolve_eos_token_id
+        from ai_forge_cli.data.loss_mask import _resolve_eos_token_id
 
         class T:
             eos_token_id = 9
@@ -1221,7 +1221,7 @@ class TestResolveEosTokenId:
         assert _resolve_eos_token_id(T()) == 9
 
     def test_list_picks_first_int(self) -> None:
-        from soup_cli.data.loss_mask import _resolve_eos_token_id
+        from ai_forge_cli.data.loss_mask import _resolve_eos_token_id
 
         class T:
             eos_token_id = [128001, 128009]  # Llama 3 style
@@ -1229,7 +1229,7 @@ class TestResolveEosTokenId:
         assert _resolve_eos_token_id(T()) == 128001
 
     def test_str_returns_none(self) -> None:
-        from soup_cli.data.loss_mask import _resolve_eos_token_id
+        from ai_forge_cli.data.loss_mask import _resolve_eos_token_id
 
         class T:
             eos_token_id = "9"
@@ -1237,7 +1237,7 @@ class TestResolveEosTokenId:
         assert _resolve_eos_token_id(T()) is None
 
     def test_none_returns_none(self) -> None:
-        from soup_cli.data.loss_mask import _resolve_eos_token_id
+        from ai_forge_cli.data.loss_mask import _resolve_eos_token_id
 
         class T:
             pass
@@ -1245,7 +1245,7 @@ class TestResolveEosTokenId:
         assert _resolve_eos_token_id(T()) is None
 
     def test_bool_returns_none(self) -> None:
-        from soup_cli.data.loss_mask import _resolve_eos_token_id
+        from ai_forge_cli.data.loss_mask import _resolve_eos_token_id
 
         class T:
             eos_token_id = True
@@ -1258,7 +1258,7 @@ class TestComputeDistillTermValidation:
 
     def test_zero_temperature_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.trainer.distill import _compute_distill_term
+        from ai_forge_cli.trainer.distill import _compute_distill_term
 
         with pytest.raises(ValueError, match="positive"):
             _compute_distill_term(
@@ -1270,7 +1270,7 @@ class TestComputeDistillTermValidation:
 
     def test_negative_temperature_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.trainer.distill import _compute_distill_term
+        from ai_forge_cli.trainer.distill import _compute_distill_term
 
         with pytest.raises(ValueError, match="positive"):
             _compute_distill_term(
@@ -1282,7 +1282,7 @@ class TestComputeDistillTermValidation:
 
     def test_nan_temperature_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.trainer.distill import _compute_distill_term
+        from ai_forge_cli.trainer.distill import _compute_distill_term
 
         with pytest.raises(ValueError, match="finite"):
             _compute_distill_term(
@@ -1294,7 +1294,7 @@ class TestComputeDistillTermValidation:
 
     def test_bool_temperature_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.trainer.distill import _compute_distill_term
+        from ai_forge_cli.trainer.distill import _compute_distill_term
 
         with pytest.raises(TypeError, match="bool"):
             _compute_distill_term(
@@ -1309,7 +1309,7 @@ class TestReasoningEffortNullByte:
     """tdd-review H3 — null-byte in level rejected."""
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
+        from ai_forge_cli.utils.reasoning_effort import apply_reasoning_effort_prefix
 
         with pytest.raises(ValueError, match="null"):
             apply_reasoning_effort_prefix(
@@ -1322,7 +1322,7 @@ class TestEbftStrideValidation:
 
     def test_stride_bool_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
         with pytest.raises(TypeError, match="stride"):
             apply_ebft_loss(
@@ -1335,7 +1335,7 @@ class TestEbftStrideValidation:
 
     def test_stride_zero_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
         with pytest.raises(ValueError, match="stride"):
             apply_ebft_loss(
@@ -1348,7 +1348,7 @@ class TestEbftStrideValidation:
 
     def test_stride_negative_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss
 
         with pytest.raises(ValueError, match="stride"):
             apply_ebft_loss(
@@ -1365,7 +1365,7 @@ class TestGdpoMarginValidation:
 
     def test_margin_bool_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         t = torch.zeros(2)
         with pytest.raises(TypeError, match="margin"):
@@ -1381,7 +1381,7 @@ class TestGdpoMarginValidation:
 
     def test_margin_nan_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         t = torch.zeros(2)
         with pytest.raises(ValueError, match="finite"):
@@ -1401,7 +1401,7 @@ class TestGdpoRefShapeMismatch:
 
     def test_ref_shape_mismatch_rejected(self) -> None:
         torch = _torch_or_skip()
-        from soup_cli.utils.ebft_gdpo import apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_gdpo_loss
 
         with pytest.raises(ValueError, match="shape"):
             apply_gdpo_loss(
@@ -1418,7 +1418,7 @@ class TestRowToTextRejectsNonStrContent:
     """security-review M3 — non-str content raises rather than silent skip."""
 
     def test_non_str_content_raises(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_text
+        from ai_forge_cli.trainer.classifier import _row_to_text
 
         with pytest.raises(TypeError, match="must be str"):
             _row_to_text(
@@ -1430,7 +1430,7 @@ class TestRowToTextRejectsNonStrContent:
             )
 
     def test_non_dict_message_silently_skipped(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_text
+        from ai_forge_cli.trainer.classifier import _row_to_text
 
         out = _row_to_text(
             {"messages": ["not-a-dict", {"role": "user", "content": "real"}]}
@@ -1442,19 +1442,19 @@ class TestRowToPairRejectsNonStr:
     """security-review M4 — unchecked str() coercion fix."""
 
     def test_non_str_text_a_rejected(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_pair
+        from ai_forge_cli.trainer.classifier import _row_to_pair
 
         with pytest.raises(TypeError, match="text_a"):
             _row_to_pair({"text_a": {"d": "ict"}, "text_b": "y"})
 
     def test_non_str_text_b_rejected(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_pair
+        from ai_forge_cli.trainer.classifier import _row_to_pair
 
         with pytest.raises(TypeError, match="text_b"):
             _row_to_pair({"text_a": "x", "text_b": [1, 2]})
 
     def test_non_str_question_rejected(self) -> None:
-        from soup_cli.trainer.classifier import _row_to_pair
+        from ai_forge_cli.trainer.classifier import _row_to_pair
 
         with pytest.raises(TypeError, match="question"):
             _row_to_pair({"question": 42, "answer": "ok"})
@@ -1464,7 +1464,7 @@ class TestLabelIndexFurtherCoverage:
     """tdd-review M5 / M6 / M9."""
 
     def test_single_label_list_raises(self) -> None:
-        from soup_cli.trainer.classifier import _normalise_label
+        from ai_forge_cli.trainer.classifier import _normalise_label
 
         with pytest.raises(TypeError):
             _normalise_label(
@@ -1472,14 +1472,14 @@ class TestLabelIndexFurtherCoverage:
             )
 
     def test_string_not_in_label_names(self) -> None:
-        from soup_cli.trainer.classifier import _label_index
+        from ai_forge_cli.trainer.classifier import _label_index
 
         with pytest.raises(ValueError, match="not in training.label_names"):
             _label_index("unknown", ["pos", "neg"], num_labels=2)
 
     @pytest.mark.parametrize("bad", [None, 1.5, object()])
     def test_unsupported_type_rejected(self, bad: object) -> None:
-        from soup_cli.trainer.classifier import _label_index
+        from ai_forge_cli.trainer.classifier import _label_index
 
         with pytest.raises(TypeError, match="must be int"):
             _label_index(bad, None, num_labels=3)
@@ -1489,7 +1489,7 @@ class TestMultiLabelListCap:
     """security-review H2 — uncapped multi-label list DoS defense."""
 
     def test_oversize_list_rejected(self) -> None:
-        from soup_cli.trainer.classifier import _normalise_label
+        from ai_forge_cli.trainer.classifier import _normalise_label
 
         # _MAX_MULTI_LABEL_ENTRIES is 1024.
         big = [0] * 2000
@@ -1503,8 +1503,8 @@ class TestFactoryUnknownKwarg:
     """tdd-review L1 — factories must reject unknown kwargs loudly."""
 
     def test_build_distill_trainer_unknown_kwarg(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils.distill import build_distill_trainer
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils.distill import build_distill_trainer
 
         cfg = load_config_from_string(
             """
@@ -1520,8 +1520,8 @@ class TestFactoryUnknownKwarg:
             build_distill_trainer(cfg, device="cpu", nonexistent=True)
 
     def test_build_classifier_trainer_unknown_kwarg(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils.classifier import build_classifier_trainer
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils.classifier import build_classifier_trainer
 
         cfg = load_config_from_string(
             """
@@ -1547,7 +1547,7 @@ class TestDistillSourceLevelGuards:
         (the deprecated class name still appears in an explanatory comment)."""
         import inspect
 
-        from soup_cli.trainer import distill as distill_mod
+        from ai_forge_cli.trainer import distill as distill_mod
 
         src = inspect.getsource(distill_mod)
         # The actual import line must reference the Seq2Seq collator.
@@ -1562,7 +1562,7 @@ class TestDistillSourceLevelGuards:
         teacher_logits back onto the student's device."""
         import inspect
 
-        from soup_cli.trainer import distill as distill_mod
+        from ai_forge_cli.trainer import distill as distill_mod
 
         src = inspect.getsource(distill_mod)
         assert "teacher_device = next(teacher_ref.parameters()).device" in src
@@ -1582,7 +1582,7 @@ class TestFailureModeSmoke:
     """
 
     def test_classifier_missing_num_labels(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="num_labels"):
             load_config_from_string(
@@ -1590,7 +1590,7 @@ class TestFailureModeSmoke:
             )
 
     def test_classifier_label_names_length_mismatch(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="num_labels"):
             load_config_from_string(
@@ -1600,7 +1600,7 @@ class TestFailureModeSmoke:
             )
 
     def test_classifier_fields_outside_classifier_task(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="num_labels|classifier"):
             load_config_from_string(
@@ -1609,7 +1609,7 @@ class TestFailureModeSmoke:
             )
 
     def test_distill_missing_teacher(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="teacher_model"):
             load_config_from_string(
@@ -1617,7 +1617,7 @@ class TestFailureModeSmoke:
             )
 
     def test_distill_fields_outside_distill_task(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         # teacher_model set on a non-distill task → rejected with named field.
         with pytest.raises(ValueError, match="teacher_model|distill"):
@@ -1627,7 +1627,7 @@ class TestFailureModeSmoke:
             )
 
     def test_reasoning_effort_on_non_sft_family_task(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         # reasoning_effort is SFT-family-only; reject on grpo.
         with pytest.raises(ValueError, match="reasoning_effort"):
@@ -1637,7 +1637,7 @@ class TestFailureModeSmoke:
             )
 
     def test_train_on_eot_on_non_sft_family_task(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="train_on_eot"):
             load_config_from_string(
@@ -1646,7 +1646,7 @@ class TestFailureModeSmoke:
             )
 
     def test_ebft_temperature_without_variant(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="ebft_variant"):
             load_config_from_string(
@@ -1655,7 +1655,7 @@ class TestFailureModeSmoke:
             )
 
     def test_gdpo_variant_on_sft_rejected(self) -> None:
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="gdpo_variant"):
             load_config_from_string(

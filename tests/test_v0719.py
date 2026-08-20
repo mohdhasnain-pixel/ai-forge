@@ -30,20 +30,20 @@ torch = pytest.importorskip("torch")
 
 class TestEditGovernorStore:
     def test_path_validation_null_byte(self, tmp_path, monkeypatch):
-        from soup_cli.utils.edit_governor import EditGovernorStore
+        from ai_forge_cli.utils.edit_governor import EditGovernorStore
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError):
             EditGovernorStore("evil\x00.db")
 
     def test_path_validation_outside_cwd(self):
-        from soup_cli.utils.edit_governor import EditGovernorStore
+        from ai_forge_cli.utils.edit_governor import EditGovernorStore
 
         with pytest.raises(ValueError, match="HOME"):
             EditGovernorStore("/etc/evil_governor.db")
 
     def test_save_load_roundtrip(self, tmp_path, monkeypatch):
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             EditGovernor,
             EditGovernorStore,
             load_governor,
@@ -66,7 +66,7 @@ class TestEditGovernorStore:
         assert abs(restored.last_norm_delta - 0.4) < 1e-9
 
     def test_load_fresh_when_absent(self, tmp_path, monkeypatch):
-        from soup_cli.utils.edit_governor import EditGovernorStore, load_governor
+        from ai_forge_cli.utils.edit_governor import EditGovernorStore, load_governor
 
         monkeypatch.chdir(tmp_path)
         with EditGovernorStore(str(tmp_path / "gov.db")) as store:
@@ -75,14 +75,14 @@ class TestEditGovernorStore:
         assert gov.base_model == "unseen/model"
 
     def test_get_state_none_for_unknown(self, tmp_path, monkeypatch):
-        from soup_cli.utils.edit_governor import EditGovernorStore
+        from ai_forge_cli.utils.edit_governor import EditGovernorStore
 
         monkeypatch.chdir(tmp_path)
         with EditGovernorStore(str(tmp_path / "g.db")) as store:
             assert store.get_state("nope") is None
 
     def test_save_state_rejects_non_governor(self, tmp_path, monkeypatch):
-        from soup_cli.utils.edit_governor import EditGovernorStore
+        from ai_forge_cli.utils.edit_governor import EditGovernorStore
 
         monkeypatch.chdir(tmp_path)
         with EditGovernorStore(str(tmp_path / "g.db")) as store:
@@ -90,7 +90,7 @@ class TestEditGovernorStore:
                 store.save_state("not-a-governor")
 
     def test_persisted_blowup_blocks_next(self, tmp_path, monkeypatch):
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             EditGovernor,
             EditGovernorStore,
             GovernedEditError,
@@ -112,7 +112,7 @@ class TestEditGovernorStore:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink")
     def test_symlink_db_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.edit_governor import EditGovernorStore
+        from ai_forge_cli.utils.edit_governor import EditGovernorStore
 
         monkeypatch.chdir(tmp_path)
         target = tmp_path / "real.db"
@@ -125,7 +125,7 @@ class TestEditGovernorStore:
 
 class TestDefaultGovernorDbPath:
     def test_default_under_home(self, monkeypatch):
-        from soup_cli.utils.edit_governor import default_governor_db_path
+        from ai_forge_cli.utils.edit_governor import default_governor_db_path
 
         monkeypatch.delenv("SOUP_EDIT_GOVERNOR_DB", raising=False)
         path = default_governor_db_path()
@@ -133,14 +133,14 @@ class TestDefaultGovernorDbPath:
         assert ".soup" in path
 
     def test_env_override_in_tmp(self, tmp_path, monkeypatch):
-        from soup_cli.utils.edit_governor import default_governor_db_path
+        from ai_forge_cli.utils.edit_governor import default_governor_db_path
 
         target = str(tmp_path / "custom.db")
         monkeypatch.setenv("SOUP_EDIT_GOVERNOR_DB", target)
         assert default_governor_db_path() == target
 
     def test_env_override_out_of_bounds_falls_back(self, monkeypatch):
-        from soup_cli.utils.edit_governor import default_governor_db_path
+        from ai_forge_cli.utils.edit_governor import default_governor_db_path
 
         monkeypatch.setenv("SOUP_EDIT_GOVERNOR_DB", "/etc/cron.d/x.db")
         path = default_governor_db_path()
@@ -153,7 +153,7 @@ class TestDefaultGovernorDbPath:
         # control) rejects it directly — the "validated is None -> fall back"
         # branch in default_governor_db_path is covered cross-platform by
         # test_env_override_out_of_bounds_falls_back.
-        from soup_cli.utils.edit_governor import _validate_governor_db_override
+        from ai_forge_cli.utils.edit_governor import _validate_governor_db_override
 
         assert _validate_governor_db_override("x\x00.db") is None
 
@@ -165,8 +165,8 @@ class TestDefaultGovernorDbPath:
 
 class TestApplyEditGovernor:
     def _patch_kernel(self, monkeypatch, *, norm_delta=0.3):
-        import soup_cli.utils.edit_kernels as ek
-        import soup_cli.utils.live_eval as live_eval
+        import ai_forge_cli.utils.edit_kernels as ek
+        import ai_forge_cli.utils.live_eval as live_eval
 
         loaded = {"called": 0}
 
@@ -185,8 +185,8 @@ class TestApplyEditGovernor:
         return loaded
 
     def test_governor_records_after_edit(self, monkeypatch):
-        from soup_cli.utils.edit_governor import EditGovernor
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        from ai_forge_cli.utils.edit_governor import EditGovernor
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         self._patch_kernel(monkeypatch, norm_delta=0.42)
         gov = EditGovernor(base_model="b")
@@ -197,8 +197,8 @@ class TestApplyEditGovernor:
         assert abs(gov.last_norm_delta - 0.42) < 1e-9
 
     def test_governor_refuses_before_load(self, monkeypatch):
-        from soup_cli.utils.edit_governor import EditGovernor, GovernedEditError
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        from ai_forge_cli.utils.edit_governor import EditGovernor, GovernedEditError
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         loaded = self._patch_kernel(monkeypatch)
         gov = EditGovernor(base_model="b", max_sequential_edits=1)
@@ -210,7 +210,7 @@ class TestApplyEditGovernor:
         assert loaded["called"] == 0
 
     def test_no_governor_skips(self, monkeypatch):
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         self._patch_kernel(monkeypatch)
         plan = build_edit_plan(base="b", method="rome", subject="s", target="t")
@@ -225,7 +225,7 @@ class TestApplyEditGovernor:
 
 class TestUnlearnKernels:
     def test_sequence_logprob_masks_prompt(self):
-        from soup_cli.utils.unlearn_kernels import sequence_logprob
+        from ai_forge_cli.utils.unlearn_kernels import sequence_logprob
 
         logits = torch.randn(1, 4, 10)
         labels = torch.tensor([[-100, -100, 3, 5]])
@@ -235,14 +235,14 @@ class TestUnlearnKernels:
         assert lp.item() < 0
 
     def test_sequence_lengths(self):
-        from soup_cli.utils.unlearn_kernels import sequence_lengths
+        from ai_forge_cli.utils.unlearn_kernels import sequence_lengths
 
         labels = torch.tensor([[-100, 1, 2, -100]])
         # shift drops position 0; positions 1,2,3 -> labels 1,2,-100 -> 2 supervised
         assert int(sequence_lengths(labels).item()) == 2
 
     def test_npo_loss_finite_and_lower_when_policy_below_ref(self):
-        from soup_cli.utils.unlearn_kernels import npo_loss
+        from ai_forge_cli.utils.unlearn_kernels import npo_loss
 
         policy = torch.tensor([-10.0])
         ref = torch.tensor([-5.0])
@@ -253,19 +253,19 @@ class TestUnlearnKernels:
         assert loss_low.item() < loss_high.item()
 
     def test_npo_loss_bool_beta_rejected(self):
-        from soup_cli.utils.unlearn_kernels import npo_loss
+        from ai_forge_cli.utils.unlearn_kernels import npo_loss
 
         with pytest.raises(TypeError):
             npo_loss(torch.tensor([0.0]), torch.tensor([0.0]), beta=True)
 
     def test_npo_loss_nonpositive_beta_rejected(self):
-        from soup_cli.utils.unlearn_kernels import npo_loss
+        from ai_forge_cli.utils.unlearn_kernels import npo_loss
 
         with pytest.raises(ValueError):
             npo_loss(torch.tensor([0.0]), torch.tensor([0.0]), beta=0.0)
 
     def test_simnpo_loss_finite(self):
-        from soup_cli.utils.unlearn_kernels import simnpo_loss
+        from ai_forge_cli.utils.unlearn_kernels import simnpo_loss
 
         policy = torch.tensor([-8.0])
         lengths = torch.tensor([4])
@@ -273,13 +273,13 @@ class TestUnlearnKernels:
         assert torch.isfinite(loss)
 
     def test_simnpo_gamma_bool_rejected(self):
-        from soup_cli.utils.unlearn_kernels import simnpo_loss
+        from ai_forge_cli.utils.unlearn_kernels import simnpo_loss
 
         with pytest.raises(TypeError):
             simnpo_loss(torch.tensor([-1.0]), torch.tensor([2]), gamma=True)
 
     def test_rmu_loss_finite(self):
-        from soup_cli.utils.unlearn_kernels import rmu_loss
+        from ai_forge_cli.utils.unlearn_kernels import rmu_loss
 
         fa = torch.zeros(8)
         cv = torch.ones(8)
@@ -292,7 +292,7 @@ class TestUnlearnKernels:
     def test_rmu_loss_lower_when_acts_approach_control(self):
         # Review H2 — the RMU forget term must shrink as forget_acts steer
         # toward the control vector (lower loss = better steering).
-        from soup_cli.utils.unlearn_kernels import rmu_loss
+        from ai_forge_cli.utils.unlearn_kernels import rmu_loss
 
         cv = torch.ones(8)
         rf = torch.zeros(8)
@@ -301,47 +301,47 @@ class TestUnlearnKernels:
         assert close.item() < far.item()
 
     def test_rmu_alpha_zero_accepted(self):
-        from soup_cli.utils.unlearn_kernels import rmu_loss
+        from ai_forge_cli.utils.unlearn_kernels import rmu_loss
 
         loss = rmu_loss(torch.zeros(4), torch.ones(4), torch.zeros(4), torch.ones(4), alpha=0.0)
         # alpha=0 drops the retain term entirely → forget term only (mean(1)=1).
         assert abs(loss.item() - 1.0) < 1e-5
 
     def test_rmu_alpha_negative_rejected(self):
-        from soup_cli.utils.unlearn_kernels import rmu_loss
+        from ai_forge_cli.utils.unlearn_kernels import rmu_loss
 
         with pytest.raises(ValueError):
             rmu_loss(torch.zeros(2), torch.zeros(2), torch.zeros(2), torch.zeros(2), alpha=-1.0)
 
     def test_npo_loss_batch_gt_one(self):
-        from soup_cli.utils.unlearn_kernels import npo_loss
+        from ai_forge_cli.utils.unlearn_kernels import npo_loss
 
         loss = npo_loss(torch.tensor([-3.0, -8.0]), torch.tensor([-2.0, -2.0]), beta=0.1)
         assert torch.isfinite(loss)
 
     def test_simnpo_zero_length_clamped(self):
-        from soup_cli.utils.unlearn_kernels import simnpo_loss
+        from ai_forge_cli.utils.unlearn_kernels import simnpo_loss
 
         # lengths=0 must NOT produce inf/nan (kernel clamps to 1).
         loss = simnpo_loss(torch.tensor([-4.0]), torch.tensor([0]), beta=0.1)
         assert torch.isfinite(loss)
 
     def test_simnpo_gamma_inf_rejected(self):
-        from soup_cli.utils.unlearn_kernels import simnpo_loss
+        from ai_forge_cli.utils.unlearn_kernels import simnpo_loss
 
         with pytest.raises(ValueError):
             simnpo_loss(torch.tensor([-1.0]), torch.tensor([2]), gamma=float("inf"))
 
     def test_apply_unlearn_loss_returns_kernel(self):
-        from soup_cli.utils import unlearn_kernels
-        from soup_cli.utils.unlearning import apply_unlearn_loss
+        from ai_forge_cli.utils import unlearn_kernels
+        from ai_forge_cli.utils.unlearning import apply_unlearn_loss
 
         assert apply_unlearn_loss("npo") is unlearn_kernels.npo_loss
         assert apply_unlearn_loss("SIMNPO") is unlearn_kernels.simnpo_loss
         assert apply_unlearn_loss("rmu") is unlearn_kernels.rmu_loss
 
     def test_apply_unlearn_loss_unknown_rejected(self):
-        from soup_cli.utils.unlearning import apply_unlearn_loss
+        from ai_forge_cli.utils.unlearning import apply_unlearn_loss
 
         with pytest.raises(ValueError):
             apply_unlearn_loss("zzz")
@@ -349,7 +349,7 @@ class TestUnlearnKernels:
 
 class TestUnlearnRowLoader:
     def test_extract_messages(self):
-        from soup_cli.trainer.unlearn import _extract_pair
+        from ai_forge_cli.trainer.unlearn import _extract_pair
 
         row = {"messages": [
             {"role": "user", "content": "Q"},
@@ -358,23 +358,23 @@ class TestUnlearnRowLoader:
         assert _extract_pair(row) == ("Q", "A")
 
     def test_extract_prompt_completion(self):
-        from soup_cli.trainer.unlearn import _extract_pair
+        from ai_forge_cli.trainer.unlearn import _extract_pair
 
         assert _extract_pair({"prompt": "p", "completion": "c"}) == ("p", "c")
 
     def test_extract_text(self):
-        from soup_cli.trainer.unlearn import _extract_pair
+        from ai_forge_cli.trainer.unlearn import _extract_pair
 
         assert _extract_pair({"text": "hi"}) == ("", "hi")
 
     def test_extract_malformed_returns_none(self):
-        from soup_cli.trainer.unlearn import _extract_pair
+        from ai_forge_cli.trainer.unlearn import _extract_pair
 
         assert _extract_pair("not-a-dict") is None
         assert _extract_pair({"prompt": "p"}) is None  # no target
 
     def test_load_rows_jsonl(self, tmp_path, monkeypatch):
-        from soup_cli.trainer.unlearn import _load_unlearn_rows
+        from ai_forge_cli.trainer.unlearn import _load_unlearn_rows
 
         monkeypatch.chdir(tmp_path)
         f = tmp_path / "forget.jsonl"
@@ -388,7 +388,7 @@ class TestUnlearnRowLoader:
         assert rows == [("p1", "c1"), ("", "t2")]
 
     def test_load_rows_outside_cwd_rejected(self):
-        from soup_cli.trainer.unlearn import _load_unlearn_rows
+        from ai_forge_cli.trainer.unlearn import _load_unlearn_rows
 
         with pytest.raises(ValueError, match="cwd"):
             _load_unlearn_rows("/etc/passwd")
@@ -396,7 +396,7 @@ class TestUnlearnRowLoader:
 
 class TestUnlearnTrainerWrapper:
     def _cfg(self, method="npo"):
-        from soup_cli.config.schema import SoupConfig
+        from ai_forge_cli.config.schema import SoupConfig
 
         return SoupConfig(
             base="sshleifer/tiny-gpt2",
@@ -406,22 +406,22 @@ class TestUnlearnTrainerWrapper:
         )
 
     def test_train_before_setup_raises(self):
-        from soup_cli.trainer.unlearn import UnlearnTrainerWrapper
+        from ai_forge_cli.trainer.unlearn import UnlearnTrainerWrapper
 
         wrapper = UnlearnTrainerWrapper(self._cfg())
         with pytest.raises(RuntimeError, match="setup"):
             wrapper.train()
 
     def test_method_attribute(self):
-        from soup_cli.trainer.unlearn import UnlearnTrainerWrapper
+        from ai_forge_cli.trainer.unlearn import UnlearnTrainerWrapper
 
         assert UnlearnTrainerWrapper(self._cfg("simnpo")).method == "simnpo"
 
     def test_setup_loads_model(self, monkeypatch):
-        from soup_cli.trainer.unlearn import UnlearnTrainerWrapper
+        from ai_forge_cli.trainer.unlearn import UnlearnTrainerWrapper
 
         wrapper = UnlearnTrainerWrapper(self._cfg())
-        import soup_cli.utils.live_eval as live_eval
+        import ai_forge_cli.utils.live_eval as live_eval
 
         def _boom(*a, **k):
             raise RuntimeError("LOAD")
@@ -465,7 +465,7 @@ def _fake_llama(hidden=8, inter=16, layers=4):
 
 class TestEditKernelHelpers:
     def test_locate_layers(self):
-        from soup_cli.utils.edit_kernels import _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _locate_decoder_layers
 
         model = _fake_llama()
         layers = _locate_decoder_layers(model)
@@ -474,27 +474,27 @@ class TestEditKernelHelpers:
     def test_locate_layers_missing_raises(self):
         import torch.nn as nn
 
-        from soup_cli.utils.edit_kernels import _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _locate_decoder_layers
 
         with pytest.raises(ValueError, match="decoder layers"):
             _locate_decoder_layers(nn.Linear(2, 2))
 
     def test_down_proj(self):
-        from soup_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers
 
         model = _fake_llama()
         down = _down_proj(_locate_decoder_layers(model), 2)
         assert down.weight.shape == (8, 16)
 
     def test_down_proj_out_of_range(self):
-        from soup_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers
+        from ai_forge_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers
 
         layers = _locate_decoder_layers(_fake_llama())
         with pytest.raises(ValueError, match="out of range"):
             _down_proj(layers, 99)
 
     def test_rank1_update_makes_key_map_to_value(self):
-        from soup_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers, _rank1_update
+        from ai_forge_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers, _rank1_update
 
         model = _fake_llama()
         down = _down_proj(_locate_decoder_layers(model), 0)
@@ -507,14 +507,14 @@ class TestEditKernelHelpers:
         assert torch.allclose(after - before, delta, atol=1e-4)
 
     def test_rank1_update_zero_key_rejected(self):
-        from soup_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers, _rank1_update
+        from ai_forge_cli.utils.edit_kernels import _down_proj, _locate_decoder_layers, _rank1_update
 
         down = _down_proj(_locate_decoder_layers(_fake_llama()), 0)
         with pytest.raises(ValueError, match="zero norm"):
             _rank1_update(down, torch.zeros(16), torch.ones(8))
 
     def test_run_edit_kernel_unknown_method(self):
-        from soup_cli.utils.edit_kernels import run_edit_kernel
+        from ai_forge_cli.utils.edit_kernels import run_edit_kernel
 
         with pytest.raises(ValueError, match="does not handle"):
             run_edit_kernel(
@@ -523,7 +523,7 @@ class TestEditKernelHelpers:
             )
 
     def test_edit_kernel_result_frozen(self):
-        from soup_cli.utils.edit_kernels import EditKernelResult
+        from ai_forge_cli.utils.edit_kernels import EditKernelResult
 
         r = EditKernelResult(method="rome", layer=1, norm_delta=0.1, layers_edited=(1,))
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -532,7 +532,7 @@ class TestEditKernelHelpers:
 
 class TestEditResult:
     def test_frozen(self):
-        from soup_cli.utils.knowledge_edit import EditResult
+        from ai_forge_cli.utils.knowledge_edit import EditResult
 
         r = EditResult(
             method="rome", layer=5, norm_delta=0.1, layers_edited=(5,),
@@ -543,9 +543,9 @@ class TestEditResult:
             r.method = "x"  # type: ignore
 
     def test_apply_edit_saves_when_output_dir(self, tmp_path, monkeypatch):
-        import soup_cli.utils.edit_kernels as ek
-        import soup_cli.utils.live_eval as live_eval
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        import ai_forge_cli.utils.edit_kernels as ek
+        import ai_forge_cli.utils.live_eval as live_eval
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         monkeypatch.chdir(tmp_path)
         saved = {}
@@ -575,9 +575,9 @@ class TestEditResult:
         assert saved["model"] == "edited"
 
     def test_save_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        import soup_cli.utils.edit_kernels as ek
-        import soup_cli.utils.live_eval as live_eval
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        import ai_forge_cli.utils.edit_kernels as ek
+        import ai_forge_cli.utils.live_eval as live_eval
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(
@@ -598,8 +598,8 @@ class TestEditResult:
 
 class TestEditDiffLive:
     def test_live_generation_detects_change(self, monkeypatch, tmp_path):
-        import soup_cli.utils.live_eval as live_eval
-        from soup_cli.utils.edit_diff import build_diff_report
+        import ai_forge_cli.utils.live_eval as live_eval
+        from ai_forge_cli.utils.edit_diff import build_diff_report
 
         monkeypatch.chdir(tmp_path)
         probes = tmp_path / "p.jsonl"
@@ -630,7 +630,7 @@ class TestEditDiffLive:
         assert n_changed == 1
 
     def test_placeholder_without_models(self, monkeypatch, tmp_path):
-        from soup_cli.utils.edit_diff import build_diff_report
+        from ai_forge_cli.utils.edit_diff import build_diff_report
 
         monkeypatch.chdir(tmp_path)
         probes = tmp_path / "p.jsonl"
@@ -649,12 +649,12 @@ class TestEditDiffLive:
 
 class TestGraceCodebook:
     def _cfg(self, dim=4, size=10):
-        from soup_cli.utils.grace_codebook import GraceCodebookConfig
+        from ai_forge_cli.utils.grace_codebook import GraceCodebookConfig
 
         return GraceCodebookConfig(size=size, dim=dim)
 
     def test_add_and_lookup_hit(self):
-        from soup_cli.utils.grace_codebook import GraceCodebook
+        from ai_forge_cli.utils.grace_codebook import GraceCodebook
 
         cb = GraceCodebook(self._cfg(), epsilon=0.5)
         cb.add([1.0, 0.0, 0.0, 0.0], [9.0, 9.0, 9.0, 9.0], "fact")
@@ -663,27 +663,27 @@ class TestGraceCodebook:
         assert hit == [9.0, 9.0, 9.0, 9.0]
 
     def test_lookup_miss_outside_epsilon(self):
-        from soup_cli.utils.grace_codebook import GraceCodebook
+        from ai_forge_cli.utils.grace_codebook import GraceCodebook
 
         cb = GraceCodebook(self._cfg(), epsilon=0.1)
         cb.add([1.0, 0.0, 0.0, 0.0], [9.0, 9.0, 9.0, 9.0], "fact")
         assert cb.lookup([5.0, 5.0, 5.0, 5.0]) is None
 
     def test_lookup_empty_returns_none(self):
-        from soup_cli.utils.grace_codebook import GraceCodebook
+        from ai_forge_cli.utils.grace_codebook import GraceCodebook
 
         cb = GraceCodebook(self._cfg())
         assert cb.lookup([0.0, 0.0, 0.0, 0.0]) is None
 
     def test_add_dim_mismatch(self):
-        from soup_cli.utils.grace_codebook import GraceCodebook
+        from ai_forge_cli.utils.grace_codebook import GraceCodebook
 
         cb = GraceCodebook(self._cfg())
         with pytest.raises(ValueError, match="dim"):
             cb.add([1.0, 2.0], [1.0, 2.0, 3.0, 4.0], "x")
 
     def test_add_full_rejected(self):
-        from soup_cli.utils.grace_codebook import GraceCodebook
+        from ai_forge_cli.utils.grace_codebook import GraceCodebook
 
         cb = GraceCodebook(self._cfg(size=1))
         cb.add([1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], "a")
@@ -691,7 +691,7 @@ class TestGraceCodebook:
             cb.add([0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], "b")
 
     def test_epsilon_validation(self):
-        from soup_cli.utils.grace_codebook import GraceCodebook
+        from ai_forge_cli.utils.grace_codebook import GraceCodebook
 
         with pytest.raises(ValueError):
             GraceCodebook(self._cfg(), epsilon=0.0)
@@ -699,7 +699,7 @@ class TestGraceCodebook:
             GraceCodebook(self._cfg(), epsilon=True)
 
     def test_save_load_roundtrip(self, tmp_path, monkeypatch):
-        from soup_cli.utils.grace_codebook import (
+        from ai_forge_cli.utils.grace_codebook import (
             GraceCodebook,
             load_codebook,
             save_codebook,
@@ -718,7 +718,7 @@ class TestGraceCodebook:
         assert restored.lookup([1.0, 0.0, 0.0, 0.0]) == [2.0, 2.0, 2.0, 2.0]
 
     def test_save_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.grace_codebook import GraceCodebook, save_codebook
+        from ai_forge_cli.utils.grace_codebook import GraceCodebook, save_codebook
 
         monkeypatch.chdir(tmp_path)
         cb = GraceCodebook(self._cfg())
@@ -726,7 +726,7 @@ class TestGraceCodebook:
             save_codebook(cb, "/etc/evil")
 
     def test_load_missing_raises(self, tmp_path, monkeypatch):
-        from soup_cli.utils.grace_codebook import load_codebook
+        from ai_forge_cli.utils.grace_codebook import load_codebook
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "empty").mkdir()
@@ -734,7 +734,7 @@ class TestGraceCodebook:
             load_codebook("empty")
 
     def test_apply_grace_codebook_returns_empty(self):
-        from soup_cli.utils.grace_codebook import (
+        from ai_forge_cli.utils.grace_codebook import (
             GraceCodebook,
             apply_grace_codebook,
             build_grace_codebook_config,
@@ -747,7 +747,7 @@ class TestGraceCodebook:
 
 class TestRegistryKinds:
     def test_edit_kinds_registered(self):
-        from soup_cli.registry.store import _VALID_KINDS
+        from ai_forge_cli.registry.store import _VALID_KINDS
 
         assert "edited_model" in _VALID_KINDS
         assert "grace_codebook" in _VALID_KINDS
@@ -762,7 +762,7 @@ class TestCli:
     def test_edit_set_help_has_new_flags(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["edit", "set", "--help"])
@@ -778,7 +778,7 @@ class TestCli:
     def test_edit_diff_help_has_model_flags(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["edit", "diff", "--help"])
@@ -797,14 +797,14 @@ class TestCli:
 
 class TestReviewFollowups:
     def test_validated_output_dir_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.trainer.unlearn import _validated_output_dir
+        from ai_forge_cli.trainer.unlearn import _validated_output_dir
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="cwd"):
             _validated_output_dir("/etc/evil")
 
     def test_validated_output_dir_null_byte(self, tmp_path, monkeypatch):
-        from soup_cli.trainer.unlearn import _validated_output_dir
+        from ai_forge_cli.trainer.unlearn import _validated_output_dir
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="null"):
@@ -812,7 +812,7 @@ class TestReviewFollowups:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink")
     def test_validated_output_dir_symlink(self, tmp_path, monkeypatch):
-        from soup_cli.trainer.unlearn import _validated_output_dir
+        from ai_forge_cli.trainer.unlearn import _validated_output_dir
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "real").mkdir()
@@ -822,7 +822,7 @@ class TestReviewFollowups:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink")
     def test_load_unlearn_rows_symlink_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.trainer.unlearn import _load_unlearn_rows
+        from ai_forge_cli.trainer.unlearn import _load_unlearn_rows
 
         monkeypatch.chdir(tmp_path)
         target = tmp_path / "real.jsonl"
@@ -832,7 +832,7 @@ class TestReviewFollowups:
             _load_unlearn_rows("link.jsonl")
 
     def test_load_unlearn_rows_null_byte(self, tmp_path, monkeypatch):
-        from soup_cli.trainer.unlearn import _load_unlearn_rows
+        from ai_forge_cli.trainer.unlearn import _load_unlearn_rows
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="null"):
@@ -840,9 +840,9 @@ class TestReviewFollowups:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink")
     def test_save_edited_model_symlink_rejected(self, tmp_path, monkeypatch):
-        import soup_cli.utils.edit_kernels as ek
-        import soup_cli.utils.live_eval as live_eval
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        import ai_forge_cli.utils.edit_kernels as ek
+        import ai_forge_cli.utils.live_eval as live_eval
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "real").mkdir()
@@ -864,7 +864,7 @@ class TestReviewFollowups:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink")
     def test_load_codebook_symlink_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.grace_codebook import load_codebook
+        from ai_forge_cli.utils.grace_codebook import load_codebook
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "ckpt").mkdir()
@@ -875,7 +875,7 @@ class TestReviewFollowups:
             load_codebook("ckpt")
 
     def test_alphaedit_projection_deterministic(self):
-        import soup_cli.utils.edit_kernels as ek
+        import ai_forge_cli.utils.edit_kernels as ek
 
         model = _fake_llama()
         down = ek._down_proj(ek._locate_decoder_layers(model), 0)
@@ -885,7 +885,7 @@ class TestReviewFollowups:
         assert torch.allclose(p1, p2)
 
     def test_classify_norm_blowup_boundaries(self):
-        from soup_cli.utils.edit_governor import NormBlowupPolicy, classify_norm_blowup
+        from ai_forge_cli.utils.edit_governor import NormBlowupPolicy, classify_norm_blowup
 
         pol = NormBlowupPolicy(warn_threshold=1.0, blowup_threshold=5.0)
         assert classify_norm_blowup(0.99, pol) == "OK"
@@ -894,10 +894,10 @@ class TestReviewFollowups:
         assert classify_norm_blowup(5.0, pol) == "BLOWUP"  # >= blowup
 
     def test_apply_grace_edit_governed_refusal(self, monkeypatch):
-        import soup_cli.utils.live_eval as live_eval
-        from soup_cli.utils.edit_governor import EditGovernor, GovernedEditError
-        from soup_cli.utils.grace_codebook import apply_grace_edit
-        from soup_cli.utils.knowledge_edit import build_edit_plan
+        import ai_forge_cli.utils.live_eval as live_eval
+        from ai_forge_cli.utils.edit_governor import EditGovernor, GovernedEditError
+        from ai_forge_cli.utils.grace_codebook import apply_grace_edit
+        from ai_forge_cli.utils.knowledge_edit import build_edit_plan
 
         loaded = {"n": 0}
 
@@ -921,18 +921,18 @@ class TestReviewFollowups:
 
 class TestPatchInvariants:
     def test_version_bumped(self):
-        import soup_cli
+        import ai_forge_cli
 
-        parts = soup_cli.__version__.split(".")
+        parts = ai_forge_cli.__version__.split(".")
         assert (int(parts[0]), int(parts[1]), int(parts[2])) >= (0, 71, 9)
 
     @pytest.mark.parametrize(
         "module",
         [
-            "soup_cli.utils.edit_kernels",
-            "soup_cli.utils.unlearn_kernels",
-            "soup_cli.utils.edit_governor",
-            "soup_cli.utils.grace_codebook",
+            "ai_forge_cli.utils.edit_kernels",
+            "ai_forge_cli.utils.unlearn_kernels",
+            "ai_forge_cli.utils.edit_governor",
+            "ai_forge_cli.utils.grace_codebook",
         ],
     )
     def test_no_top_level_torch(self, module):

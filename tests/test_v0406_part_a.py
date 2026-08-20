@@ -39,7 +39,7 @@ ALL_TRANSFORMER_TRAINERS = ["sft", *NON_SFT_TRAINERS]
 
 
 def _trainer_source(name: str) -> str:
-    path = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "trainer" / f"{name}.py"
+    path = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "trainer" / f"{name}.py"
     assert path.is_file(), f"missing trainer source: {path}"
     return path.read_text(encoding="utf-8")
 
@@ -88,7 +88,7 @@ def test_surgical_patches_pre_and_post_lora(trainer: str) -> None:
 
 def test_peft_wiring_helpers_are_importable() -> None:
     """The shared helpers must be importable without instantiating heavy deps."""
-    from soup_cli.utils.peft_wiring import (
+    from ai_forge_cli.utils.peft_wiring import (
         apply_post_lora_patches,
         apply_pre_lora_patches,
         attach_relora_callback,
@@ -103,7 +103,7 @@ def test_apply_pre_lora_patches_skips_non_gemma4() -> None:
     """Non-Gemma4 model name short-circuits without touching the model."""
     from unittest.mock import MagicMock
 
-    from soup_cli.utils.peft_wiring import apply_pre_lora_patches
+    from ai_forge_cli.utils.peft_wiring import apply_pre_lora_patches
 
     sentinel = MagicMock()
     apply_pre_lora_patches(sentinel, "meta-llama/Llama-3.1-8B")
@@ -116,7 +116,7 @@ def test_attach_relora_callback_returns_false_when_disabled() -> None:
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
-    from soup_cli.utils.peft_wiring import attach_relora_callback
+    from ai_forge_cli.utils.peft_wiring import attach_relora_callback
 
     trainer = MagicMock()
     tcfg = SimpleNamespace(relora_steps=None)
@@ -129,8 +129,8 @@ def test_attach_relora_callback_attaches_when_enabled() -> None:
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
-    from soup_cli.utils.peft_wiring import attach_relora_callback
-    from soup_cli.utils.relora import ReLoRACallback
+    from ai_forge_cli.utils.peft_wiring import attach_relora_callback
+    from ai_forge_cli.utils.relora import ReLoRACallback
 
     trainer = MagicMock()
     tcfg = SimpleNamespace(
@@ -154,7 +154,7 @@ def test_attach_relora_callback_forwards_policy_fields() -> None:
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
-    from soup_cli.utils.peft_wiring import attach_relora_callback
+    from ai_forge_cli.utils.peft_wiring import attach_relora_callback
 
     trainer = MagicMock()
     tcfg = SimpleNamespace(
@@ -175,13 +175,13 @@ def test_apply_pre_lora_patches_runs_on_gemma4(monkeypatch) -> None:
     """Gemma4 model name -> patch is invoked exactly once."""
     from unittest.mock import MagicMock
 
-    from soup_cli.utils import peft_wiring
+    from ai_forge_cli.utils import peft_wiring
 
     fake_patcher = MagicMock(return_value=1)
     # Patch the symbol resolved inside the helper's lazy import. We do this
     # via the source module, which `peft_wiring` imports lazily by name.
     monkeypatch.setattr(
-        "soup_cli.utils.peft_patches.apply_gemma4_clippable_patch", fake_patcher
+        "ai_forge_cli.utils.peft_patches.apply_gemma4_clippable_patch", fake_patcher
     )
     model = MagicMock()
     peft_wiring.apply_pre_lora_patches(model, "google/gemma-4-2b-it")
@@ -192,13 +192,13 @@ def test_apply_pre_lora_patches_swallows_exceptions(monkeypatch) -> None:
     """A failed Gemma4 swap must NOT propagate to training."""
     from unittest.mock import MagicMock
 
-    from soup_cli.utils import peft_wiring
+    from ai_forge_cli.utils import peft_wiring
 
     def _boom(_model):
         raise RuntimeError("synthetic patch failure")
 
     monkeypatch.setattr(
-        "soup_cli.utils.peft_patches.apply_gemma4_clippable_patch", _boom
+        "ai_forge_cli.utils.peft_patches.apply_gemma4_clippable_patch", _boom
     )
     # Must not raise.
     peft_wiring.apply_pre_lora_patches(MagicMock(), "google/gemma-4-9b")
@@ -208,11 +208,11 @@ def test_apply_post_lora_patches_invokes_strip(monkeypatch) -> None:
     """Happy path: helper calls `strip_lora_dropout_for_3d_experts` once."""
     from unittest.mock import MagicMock
 
-    from soup_cli.utils import peft_wiring
+    from ai_forge_cli.utils import peft_wiring
 
     fake_strip = MagicMock(return_value=0)
     monkeypatch.setattr(
-        "soup_cli.utils.peft_patches.strip_lora_dropout_for_3d_experts",
+        "ai_forge_cli.utils.peft_patches.strip_lora_dropout_for_3d_experts",
         fake_strip,
     )
     model = MagicMock()
@@ -224,13 +224,13 @@ def test_apply_post_lora_patches_swallows_exceptions(monkeypatch) -> None:
     """A failed dropout strip must NOT propagate to training."""
     from unittest.mock import MagicMock
 
-    from soup_cli.utils import peft_wiring
+    from ai_forge_cli.utils import peft_wiring
 
     def _boom(_model):
         raise RuntimeError("synthetic strip failure")
 
     monkeypatch.setattr(
-        "soup_cli.utils.peft_patches.strip_lora_dropout_for_3d_experts", _boom
+        "ai_forge_cli.utils.peft_patches.strip_lora_dropout_for_3d_experts", _boom
     )
     peft_wiring.apply_post_lora_patches(MagicMock())
 
@@ -242,7 +242,7 @@ def test_attach_relora_callback_rejects_zero_via_policy() -> None:
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
-    from soup_cli.utils.peft_wiring import attach_relora_callback
+    from ai_forge_cli.utils.peft_wiring import attach_relora_callback
 
     trainer = MagicMock()
     tcfg = SimpleNamespace(
@@ -261,7 +261,7 @@ class TestPreferenceTaskGate:
     def test_preference_task_accepts_relora(self) -> None:
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(yaml.safe_dump({
             "base": "meta-llama/Llama-3.1-8B",
@@ -313,7 +313,7 @@ class TestReLoRASchemaGateWidened:
     def test_all_transformer_tasks_accepted(self, task: str) -> None:
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(yaml.safe_dump(self._base_cfg(task)))
         assert cfg.training.relora_steps == 100
@@ -322,7 +322,7 @@ class TestReLoRASchemaGateWidened:
     def test_mlx_backend_still_rejected(self) -> None:
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="mlx"):
             load_config_from_string(yaml.safe_dump(self._base_cfg("sft", "mlx")))

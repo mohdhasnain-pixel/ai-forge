@@ -10,7 +10,7 @@ from types import MappingProxyType
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.utils.deploy_autopilot import (
+from ai_forge_cli.utils.deploy_autopilot import (
     DeployProfile,
     autopilot_artifacts,
     get_profile,
@@ -396,7 +396,7 @@ def test_autopilot_artifacts_unknown_profile_raises():
 
 def test_cli_autopilot_list(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import deploy
+    from ai_forge_cli.commands import deploy
 
     result = runner.invoke(deploy.app, ["autopilot", "--list"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -406,7 +406,7 @@ def test_cli_autopilot_list(tmp_path, monkeypatch):
 
 
 def test_cli_autopilot_help():
-    from soup_cli.commands import deploy
+    from ai_forge_cli.commands import deploy
 
     result = runner.invoke(deploy.app, ["autopilot", "--help"])
     assert result.exit_code == 0, result.output
@@ -415,7 +415,7 @@ def test_cli_autopilot_help():
 
 def test_cli_autopilot_writes_recipe_and_script(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import deploy
+    from ai_forge_cli.commands import deploy
 
     result = runner.invoke(
         deploy.app,
@@ -429,7 +429,7 @@ def test_cli_autopilot_writes_recipe_and_script(tmp_path, monkeypatch):
 
 def test_cli_autopilot_unknown_target_exits_2(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import deploy
+    from ai_forge_cli.commands import deploy
 
     result = runner.invoke(deploy.app, ["autopilot", "--target", "nope"])
     assert result.exit_code == 2, result.output
@@ -477,7 +477,7 @@ def test_write_recipe_path_too_long_rejected(tmp_path, monkeypatch):
 
 def test_cli_autopilot_outside_cwd_script_rejected(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import deploy
+    from ai_forge_cli.commands import deploy
 
     abs_outside = str(tmp_path.parent / "evil.sh")
     result = runner.invoke(
@@ -489,7 +489,7 @@ def test_cli_autopilot_outside_cwd_script_rejected(tmp_path, monkeypatch):
 
 def test_cli_autopilot_outside_cwd_recipe_rejected(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import deploy
+    from ai_forge_cli.commands import deploy
 
     abs_outside = str(tmp_path.parent / "evil.yaml")
     result = runner.invoke(
@@ -505,7 +505,7 @@ def test_cli_autopilot_outside_cwd_recipe_rejected(tmp_path, monkeypatch):
 
 
 def test_make_helper_rejects_invalid_runtime():
-    from soup_cli.utils.deploy_autopilot import _make
+    from ai_forge_cli.utils.deploy_autopilot import _make
 
     with pytest.raises(ValueError, match="runtime"):
         _make("x", "d", runtime="nope", quant="4bit", peft="lora",
@@ -513,7 +513,7 @@ def test_make_helper_rejects_invalid_runtime():
 
 
 def test_make_helper_rejects_invalid_quant():
-    from soup_cli.utils.deploy_autopilot import _make
+    from ai_forge_cli.utils.deploy_autopilot import _make
 
     with pytest.raises(ValueError, match="quant"):
         _make("x", "d", runtime="transformers", quant="nope", peft="lora",
@@ -521,7 +521,7 @@ def test_make_helper_rejects_invalid_quant():
 
 
 def test_make_helper_rejects_invalid_peft():
-    from soup_cli.utils.deploy_autopilot import _make
+    from ai_forge_cli.utils.deploy_autopilot import _make
 
     with pytest.raises(ValueError, match="peft"):
         _make("x", "d", runtime="transformers", quant="4bit", peft="nope",
@@ -529,7 +529,7 @@ def test_make_helper_rejects_invalid_peft():
 
 
 def test_make_helper_rejects_bool_max_length():
-    from soup_cli.utils.deploy_autopilot import _make
+    from ai_forge_cli.utils.deploy_autopilot import _make
 
     with pytest.raises(TypeError, match="bool"):
         _make("x", "d", runtime="transformers", quant="4bit", peft="lora",
@@ -537,7 +537,7 @@ def test_make_helper_rejects_bool_max_length():
 
 
 def test_make_helper_rejects_max_length_out_of_bounds():
-    from soup_cli.utils.deploy_autopilot import _make
+    from ai_forge_cli.utils.deploy_autopilot import _make
 
     with pytest.raises(ValueError, match="64"):
         _make("x", "d", runtime="transformers", quant="4bit", peft="lora",
@@ -545,7 +545,7 @@ def test_make_helper_rejects_max_length_out_of_bounds():
 
 
 def test_make_helper_rejects_bad_name():
-    from soup_cli.utils.deploy_autopilot import _make
+    from ai_forge_cli.utils.deploy_autopilot import _make
 
     with pytest.raises(ValueError, match="kebab"):
         _make("Bad Name", "d", runtime="transformers", quant="4bit", peft="lora",
@@ -553,7 +553,7 @@ def test_make_helper_rejects_bad_name():
 
 
 def test_make_helper_rejects_null_byte_description():
-    from soup_cli.utils.deploy_autopilot import _make
+    from ai_forge_cli.utils.deploy_autopilot import _make
 
     with pytest.raises(ValueError, match="NUL"):
         _make("ok", "evil\x00", runtime="transformers", quant="4bit", peft="lora",
@@ -564,7 +564,7 @@ def test_make_helper_via_known_failure_modes():
     # Internal _make is used by _BUILTIN at import time. If the catalog
     # is loaded then all known profiles passed validation. Just assert the
     # imports succeeded and the count matches.
-    assert "soup_cli.utils.deploy_autopilot" in sys.modules
+    assert "ai_forge_cli.utils.deploy_autopilot" in sys.modules
 
 
 def test_recommended_max_length_in_bounds():

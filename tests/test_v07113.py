@@ -26,7 +26,7 @@ runner = CliRunner()
 
 
 def _seed_db(path: str, n_pairs: int) -> None:
-    from soup_cli.utils.local_rl import init_local_rl_db, record_thumb
+    from ai_forge_cli.utils.local_rl import init_local_rl_db, record_thumb
 
     init_local_rl_db(path)
     for i in range(n_pairs):
@@ -41,7 +41,7 @@ def _seed_db(path: str, n_pairs: int) -> None:
 class TestStateTable:
     def test_init_creates_state_table(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
 
         init_local_rl_db("db.sqlite")
         with sqlite3.connect(str(tmp_path / "db.sqlite")) as conn:
@@ -55,7 +55,7 @@ class TestStateTable:
 
     def test_get_set_state_roundtrip(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             get_state,
             init_local_rl_db,
             set_state,
@@ -70,7 +70,7 @@ class TestStateTable:
 
     def test_get_state_empty_key_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import init_local_rl_db, set_state
+        from ai_forge_cli.utils.local_rl import init_local_rl_db, set_state
 
         init_local_rl_db("db.sqlite")
         with pytest.raises(ValueError):
@@ -78,7 +78,7 @@ class TestStateTable:
 
     def test_set_state_non_str_value_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import init_local_rl_db, set_state
+        from ai_forge_cli.utils.local_rl import init_local_rl_db, set_state
 
         init_local_rl_db("db.sqlite")
         with pytest.raises(TypeError):
@@ -87,7 +87,7 @@ class TestStateTable:
     def test_state_table_auto_migrates_old_db(self, tmp_path, monkeypatch):
         # A pre-v0.71.13 DB without the state table still works.
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import get_state
+        from ai_forge_cli.utils.local_rl import get_state
 
         with sqlite3.connect(str(tmp_path / "old.sqlite")) as conn:
             conn.execute(
@@ -101,14 +101,14 @@ class TestStateTable:
 class TestCountNewThumbs:
     def test_counts_all_when_since_none(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import count_new_thumbs_since
+        from ai_forge_cli.utils.local_rl import count_new_thumbs_since
 
         _seed_db("db.sqlite", 3)  # 6 thumbs
         assert count_new_thumbs_since("db.sqlite", None) == 6
 
     def test_counts_after_ts(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             count_new_thumbs_since,
             init_local_rl_db,
             record_thumb,
@@ -123,7 +123,7 @@ class TestCountNewThumbs:
 
     def test_bool_since_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import count_new_thumbs_since
+        from ai_forge_cli.utils.local_rl import count_new_thumbs_since
 
         _seed_db("db.sqlite", 1)
         with pytest.raises(TypeError):
@@ -132,25 +132,25 @@ class TestCountNewThumbs:
 
 class TestPairsToRows:
     def _pairs(self):
-        from soup_cli.utils.local_rl import DpoPair
+        from ai_forge_cli.utils.local_rl import DpoPair
 
         return (DpoPair(prompt="p", chosen="c", rejected="r"),)
 
     def test_dpo_shape(self):
-        from soup_cli.utils.local_rl import pairs_to_rows
+        from ai_forge_cli.utils.local_rl import pairs_to_rows
 
         rows = pairs_to_rows(self._pairs(), "dpo")
         assert rows == [{"prompt": "p", "chosen": "c", "rejected": "r"}]
 
     def test_orpo_same_as_dpo(self):
-        from soup_cli.utils.local_rl import pairs_to_rows
+        from ai_forge_cli.utils.local_rl import pairs_to_rows
 
         assert pairs_to_rows(self._pairs(), "orpo") == [
             {"prompt": "p", "chosen": "c", "rejected": "r"}
         ]
 
     def test_kto_two_rows_per_pair(self):
-        from soup_cli.utils.local_rl import pairs_to_rows
+        from ai_forge_cli.utils.local_rl import pairs_to_rows
 
         rows = pairs_to_rows(self._pairs(), "kto")
         assert rows == [
@@ -159,13 +159,13 @@ class TestPairsToRows:
         ]
 
     def test_unknown_method_rejected(self):
-        from soup_cli.utils.local_rl import pairs_to_rows
+        from ai_forge_cli.utils.local_rl import pairs_to_rows
 
         with pytest.raises(ValueError):
             pairs_to_rows(self._pairs(), "ppo")
 
     def test_non_pair_rejected(self):
-        from soup_cli.utils.local_rl import pairs_to_rows
+        from ai_forge_cli.utils.local_rl import pairs_to_rows
 
         with pytest.raises(TypeError):
             pairs_to_rows(({"prompt": "p"},), "dpo")
@@ -173,7 +173,7 @@ class TestPairsToRows:
 
 class TestRunNightlyTrain:
     def _cfg(self, db, method="dpo"):
-        from soup_cli.utils.local_rl import LocalRLConfig
+        from ai_forge_cli.utils.local_rl import LocalRLConfig
 
         return LocalRLConfig(
             backend="ollama",
@@ -184,7 +184,7 @@ class TestRunNightlyTrain:
 
     def test_first_run_trains_and_stamps(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             get_state,
             run_nightly_train,
         )
@@ -217,7 +217,7 @@ class TestRunNightlyTrain:
 
     def test_kto_rows_written(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import run_nightly_train
+        from ai_forge_cli.utils.local_rl import run_nightly_train
 
         _seed_db("db.sqlite", 4)
         seen = {}
@@ -237,7 +237,7 @@ class TestRunNightlyTrain:
 
     def test_skip_no_new_thumbs(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import run_nightly_train, set_state
+        from ai_forge_cli.utils.local_rl import run_nightly_train, set_state
 
         _seed_db("db.sqlite", 5)
         # Stamp last_train_at AFTER all thumbs -> no new thumbs.
@@ -255,7 +255,7 @@ class TestRunNightlyTrain:
 
     def test_skip_insufficient_pairs(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import run_nightly_train
+        from ai_forge_cli.utils.local_rl import run_nightly_train
 
         _seed_db("db.sqlite", 2)
         calls = []
@@ -269,14 +269,14 @@ class TestRunNightlyTrain:
         assert calls == []
 
     def test_non_config_rejected(self):
-        from soup_cli.utils.local_rl import run_nightly_train
+        from ai_forge_cli.utils.local_rl import run_nightly_train
 
         with pytest.raises(TypeError):
             run_nightly_train({"backend": "ollama"})
 
     def test_bad_min_pairs_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import run_nightly_train
+        from ai_forge_cli.utils.local_rl import run_nightly_train
 
         _seed_db("db.sqlite", 1)
         with pytest.raises(ValueError):
@@ -286,7 +286,7 @@ class TestRunNightlyTrain:
 
     def test_non_callable_train_fn_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import run_nightly_train
+        from ai_forge_cli.utils.local_rl import run_nightly_train
 
         _seed_db("db.sqlite", 5)
         with pytest.raises(TypeError):
@@ -298,8 +298,8 @@ class TestRunNightlyTrain:
         rendering, so this guards the ``output:`` shape (regression: it was once
         emitted as ``{"dir": ...}`` which the schema rejects as not-a-string)."""
         monkeypatch.chdir(tmp_path)
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils import local_rl as lr
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils import local_rl as lr
 
         captured = {}
 
@@ -332,8 +332,8 @@ class TestRunNightlyTrain:
 class TestScheduler:
     def test_build_train_argv(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import init_local_rl_db
-        from soup_cli.utils.local_rl_scheduler import build_train_argv
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl_scheduler import build_train_argv
 
         init_local_rl_db("db.sqlite")
         argv = build_train_argv(
@@ -350,8 +350,8 @@ class TestScheduler:
 
     def test_systemd_service_has_execstart(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import init_local_rl_db
-        from soup_cli.utils.local_rl_scheduler import render_systemd_service
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl_scheduler import render_systemd_service
 
         init_local_rl_db("db.sqlite")
         out = render_systemd_service(
@@ -365,14 +365,14 @@ class TestScheduler:
         assert "org/model" in out
 
     def test_systemd_timer_oncalendar(self):
-        from soup_cli.utils.local_rl_scheduler import render_systemd_timer
+        from ai_forge_cli.utils.local_rl_scheduler import render_systemd_timer
 
         out = render_systemd_timer(hour=3, minute=0)
         assert "OnCalendar=*-*-* 03:00:00" in out
         assert "WantedBy=timers.target" in out
 
     def test_systemd_timer_bad_hour(self):
-        from soup_cli.utils.local_rl_scheduler import render_systemd_timer
+        from ai_forge_cli.utils.local_rl_scheduler import render_systemd_timer
 
         with pytest.raises(ValueError):
             render_systemd_timer(hour=24, minute=0)
@@ -381,8 +381,8 @@ class TestScheduler:
 
     def test_launchd_plist(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import init_local_rl_db
-        from soup_cli.utils.local_rl_scheduler import render_launchd_plist
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl_scheduler import render_launchd_plist
 
         init_local_rl_db("db.sqlite")
         out = render_launchd_plist(
@@ -400,8 +400,8 @@ class TestScheduler:
 
     def test_write_scheduler_files(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import init_local_rl_db
-        from soup_cli.utils.local_rl_scheduler import (
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl_scheduler import (
             LAUNCHD_PLIST_NAME,
             SYSTEMD_SERVICE_NAME,
             SYSTEMD_TIMER_NAME,
@@ -421,7 +421,7 @@ class TestScheduler:
             assert os.path.isfile(written[name])
 
     def test_systemd_quote_escapes(self):
-        from soup_cli.utils.local_rl_scheduler import _systemd_quote
+        from ai_forge_cli.utils.local_rl_scheduler import _systemd_quote
 
         assert _systemd_quote('a "b" c') == '"a \\"b\\" c"'
         assert _systemd_quote("a\\b") == '"a\\\\b"'
@@ -429,7 +429,7 @@ class TestScheduler:
 
 class TestTrainCli:
     def _import_app(self):
-        from soup_cli.commands.local_rl import app
+        from ai_forge_cli.commands.local_rl import app
 
         return app
 
@@ -437,7 +437,7 @@ class TestTrainCli:
         monkeypatch.chdir(tmp_path)
         _seed_db("db.sqlite", 5)
 
-        import soup_cli.utils.local_rl as lr
+        import ai_forge_cli.utils.local_rl as lr
 
         calls = []
         monkeypatch.setattr(
@@ -467,7 +467,7 @@ class TestTrainCli:
     def test_once_skip_insufficient(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         _seed_db("db.sqlite", 1)
-        import soup_cli.utils.local_rl as lr
+        import ai_forge_cli.utils.local_rl as lr
 
         monkeypatch.setattr(
             lr, "_default_train_fn", lambda **kw: pytest.fail("should not train")
@@ -490,7 +490,7 @@ class TestTrainCli:
 
     def test_no_once_renders_scheduler(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
 
         init_local_rl_db("db.sqlite")
         res = runner.invoke(
@@ -510,7 +510,7 @@ class TestTrainCli:
 
     def test_no_longer_deferred(self):
         # The CLI must NOT surface the v0.68.1 deferred marker any more.
-        import soup_cli.utils.local_rl as lr
+        import ai_forge_cli.utils.local_rl as lr
 
         assert "deferred" not in (lr.run_nightly_train.__doc__ or "").lower()
 
@@ -528,19 +528,19 @@ def _write_traces(path: str, prompts):
 
 class TestExtractPrompt:
     def test_prompt_field(self):
-        from soup_cli.utils.prompt_distill import extract_prompt
+        from ai_forge_cli.utils.prompt_distill import extract_prompt
 
         assert extract_prompt({"prompt": "hi"}) == "hi"
 
     def test_input_instruction_question(self):
-        from soup_cli.utils.prompt_distill import extract_prompt
+        from ai_forge_cli.utils.prompt_distill import extract_prompt
 
         assert extract_prompt({"input": "a"}) == "a"
         assert extract_prompt({"instruction": "b"}) == "b"
         assert extract_prompt({"question": "c"}) == "c"
 
     def test_messages_last_user(self):
-        from soup_cli.utils.prompt_distill import extract_prompt
+        from ai_forge_cli.utils.prompt_distill import extract_prompt
 
         row = {
             "messages": [
@@ -552,7 +552,7 @@ class TestExtractPrompt:
         assert extract_prompt(row) == "second"
 
     def test_no_prompt_returns_none(self):
-        from soup_cli.utils.prompt_distill import extract_prompt
+        from ai_forge_cli.utils.prompt_distill import extract_prompt
 
         assert extract_prompt({"foo": "bar"}) is None
         assert extract_prompt({"prompt": "   "}) is None
@@ -561,7 +561,7 @@ class TestExtractPrompt:
 
 class TestPrepareDistillDataset:
     def _plan(self, tmp_path, strategy):
-        from soup_cli.utils.prompt_distill import build_distill_prompt_plan
+        from ai_forge_cli.utils.prompt_distill import build_distill_prompt_plan
 
         traces = str(tmp_path / "traces.jsonl")
         _write_traces(traces, ["q1", "q2"])
@@ -575,7 +575,7 @@ class TestPrepareDistillDataset:
 
     def test_sft_writes_messages(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_distill import prepare_distill_dataset
+        from ai_forge_cli.utils.prompt_distill import prepare_distill_dataset
 
         plan = self._plan(tmp_path, "sft")
         n = prepare_distill_dataset(
@@ -589,7 +589,7 @@ class TestPrepareDistillDataset:
 
     def test_kl_same_shape_as_sft(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_distill import prepare_distill_dataset
+        from ai_forge_cli.utils.prompt_distill import prepare_distill_dataset
 
         plan = self._plan(tmp_path, "kl")
         n = prepare_distill_dataset(plan, teacher_fn=lambda p: {"text": "T"})
@@ -600,7 +600,7 @@ class TestPrepareDistillDataset:
 
     def test_preference_uses_student(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_distill import prepare_distill_dataset
+        from ai_forge_cli.utils.prompt_distill import prepare_distill_dataset
 
         plan = self._plan(tmp_path, "preference")
         n = prepare_distill_dataset(
@@ -615,7 +615,7 @@ class TestPrepareDistillDataset:
 
     def test_empty_teacher_reply_skipped(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_distill import prepare_distill_dataset
+        from ai_forge_cli.utils.prompt_distill import prepare_distill_dataset
 
         plan = self._plan(tmp_path, "sft")
         n = prepare_distill_dataset(plan, teacher_fn=lambda p: {"text": ""})
@@ -623,7 +623,7 @@ class TestPrepareDistillDataset:
 
     def test_max_rows_cap(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_distill import prepare_distill_dataset
+        from ai_forge_cli.utils.prompt_distill import prepare_distill_dataset
 
         plan = self._plan(tmp_path, "sft")
         n = prepare_distill_dataset(
@@ -633,7 +633,7 @@ class TestPrepareDistillDataset:
 
     def test_bad_max_rows(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_distill import prepare_distill_dataset
+        from ai_forge_cli.utils.prompt_distill import prepare_distill_dataset
 
         plan = self._plan(tmp_path, "sft")
         with pytest.raises(ValueError):
@@ -642,14 +642,14 @@ class TestPrepareDistillDataset:
             prepare_distill_dataset(plan, teacher_fn=lambda p: {"text": "T"}, max_rows=True)
 
     def test_non_plan_rejected(self):
-        from soup_cli.utils.prompt_distill import prepare_distill_dataset
+        from ai_forge_cli.utils.prompt_distill import prepare_distill_dataset
 
         with pytest.raises(TypeError):
             prepare_distill_dataset({"traces_path": "x"})
 
     def test_teacher_exception_skipped(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_distill import prepare_distill_dataset
+        from ai_forge_cli.utils.prompt_distill import prepare_distill_dataset
 
         plan = self._plan(tmp_path, "sft")
 
@@ -663,10 +663,10 @@ class TestPrepareDistillDataset:
 class TestDistillPromptCli:
     def test_cli_live(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.distill_prompt import distill_prompt_cmd
+        from ai_forge_cli.commands.distill_prompt import distill_prompt_cmd
 
         _write_traces(str(tmp_path / "traces.jsonl"), ["a", "b"])
-        import soup_cli.utils.prompt_distill as pd
+        import ai_forge_cli.utils.prompt_distill as pd
 
         monkeypatch.setattr(
             pd,
@@ -694,7 +694,7 @@ class TestDistillPromptCli:
         assert os.path.isfile(str(tmp_path / "out.jsonl"))
 
     def test_cli_no_longer_deferred(self):
-        import soup_cli.utils.prompt_distill as pd
+        import ai_forge_cli.utils.prompt_distill as pd
 
         assert "deferred" not in (
             pd.prepare_distill_dataset.__doc__ or ""
@@ -709,7 +709,7 @@ class TestDistillPromptCli:
 class TestLoadEvalExamples:
     def test_json_list(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_compile import load_eval_examples
+        from ai_forge_cli.utils.prompt_compile import load_eval_examples
 
         (tmp_path / "eval.json").write_text(
             json.dumps([{"q": "1"}, {"q": "2"}, "skip-non-dict"]),
@@ -720,7 +720,7 @@ class TestLoadEvalExamples:
 
     def test_jsonl(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_compile import load_eval_examples
+        from ai_forge_cli.utils.prompt_compile import load_eval_examples
 
         (tmp_path / "eval.jsonl").write_text(
             '{"q": "1"}\n\n{"q": "2"}\nbad-line\n', encoding="utf-8"
@@ -733,7 +733,7 @@ class TestLoadEvalExamples:
         sub.mkdir()
         monkeypatch.chdir(sub)
         (tmp_path / "evil.json").write_text("[]", encoding="utf-8")
-        from soup_cli.utils.prompt_compile import load_eval_examples
+        from ai_forge_cli.utils.prompt_compile import load_eval_examples
 
         with pytest.raises(ValueError):
             load_eval_examples(str(tmp_path / "evil.json"))
@@ -741,7 +741,7 @@ class TestLoadEvalExamples:
 
 class TestRunCompileSeam:
     def _plan(self, tmp_path):
-        from soup_cli.utils.prompt_compile import build_compile_plan
+        from ai_forge_cli.utils.prompt_compile import build_compile_plan
 
         (tmp_path / "prog.py").write_text("program = 1\n", encoding="utf-8")
         (tmp_path / "eval.jsonl").write_text('{"q":"1"}\n', encoding="utf-8")
@@ -755,7 +755,7 @@ class TestRunCompileSeam:
 
     def test_override_seam(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.prompt_compile as pc
+        import ai_forge_cli.utils.prompt_compile as pc
 
         plan = self._plan(tmp_path)
         monkeypatch.setattr(
@@ -771,7 +771,7 @@ class TestRunCompileSeam:
 
     def test_override_must_return_result(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.prompt_compile as pc
+        import ai_forge_cli.utils.prompt_compile as pc
 
         plan = self._plan(tmp_path)
         monkeypatch.setattr(pc, "_OPTIMIZER_RUN_OVERRIDE", lambda p: "nope")
@@ -779,7 +779,7 @@ class TestRunCompileSeam:
             pc.run_compile(plan)
 
     def test_non_plan_rejected(self):
-        from soup_cli.utils.prompt_compile import run_compile
+        from ai_forge_cli.utils.prompt_compile import run_compile
 
         with pytest.raises(TypeError):
             run_compile({"optimizer": "mipro"})
@@ -788,16 +788,16 @@ class TestRunCompileSeam:
         # dspy/textgrad/gepa are genuinely absent in this env -> the real
         # branch raises a friendly ImportError naming the [compile] extra.
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_compile import run_compile
+        from ai_forge_cli.utils.prompt_compile import run_compile
 
         plan = self._plan(tmp_path)  # optimizer=mipro -> dspy branch
         with pytest.raises(ImportError) as exc:
             run_compile(plan)
-        assert "soup-cli[compile]" in str(exc.value)
+        assert "ai-forge[compile]" in str(exc.value)
 
     def test_missing_textgrad_friendly(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_compile import build_compile_plan, run_compile
+        from ai_forge_cli.utils.prompt_compile import build_compile_plan, run_compile
 
         (tmp_path / "prog.py").write_text("program = 1\n", encoding="utf-8")
         (tmp_path / "eval.jsonl").write_text('{"q":"1"}\n', encoding="utf-8")
@@ -814,7 +814,7 @@ class TestRunCompileSeam:
 
     def test_missing_gepa_friendly(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_compile import build_compile_plan, run_compile
+        from ai_forge_cli.utils.prompt_compile import build_compile_plan, run_compile
 
         (tmp_path / "prog.py").write_text("program = 1\n", encoding="utf-8")
         (tmp_path / "eval.jsonl").write_text('{"q":"1"}\n', encoding="utf-8")
@@ -831,7 +831,7 @@ class TestRunCompileSeam:
 
     def test_resolve_program_via_get_program(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.prompt_compile as pc
+        import ai_forge_cli.utils.prompt_compile as pc
 
         (tmp_path / "prog2.py").write_text(
             "def get_program():\n    return 42\n", encoding="utf-8"
@@ -841,7 +841,7 @@ class TestRunCompileSeam:
 
     def test_resolve_program_missing(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.prompt_compile as pc
+        import ai_forge_cli.utils.prompt_compile as pc
 
         (tmp_path / "prog3.py").write_text("x = 1\n", encoding="utf-8")
         mod = pc._load_program_module("prog3.py")
@@ -852,7 +852,7 @@ class TestRunCompileSeam:
 class TestCompileCli:
     def test_plan_only(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.compile_cmd import compile_cmd
+        from ai_forge_cli.commands.compile_cmd import compile_cmd
 
         (tmp_path / "prog.py").write_text("program = 1\n", encoding="utf-8")
         (tmp_path / "eval.jsonl").write_text('{"q":"1"}\n', encoding="utf-8")
@@ -866,11 +866,11 @@ class TestCompileCli:
 
     def test_live_via_seam(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.compile_cmd import compile_cmd
+        from ai_forge_cli.commands.compile_cmd import compile_cmd
 
         (tmp_path / "prog.py").write_text("program = 1\n", encoding="utf-8")
         (tmp_path / "eval.jsonl").write_text('{"q":"1"}\n', encoding="utf-8")
-        import soup_cli.utils.prompt_compile as pc
+        import ai_forge_cli.utils.prompt_compile as pc
 
         monkeypatch.setattr(
             pc,
@@ -891,7 +891,7 @@ class TestCompileCli:
 
     def test_live_missing_dep_exit2(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.compile_cmd import compile_cmd
+        from ai_forge_cli.commands.compile_cmd import compile_cmd
 
         (tmp_path / "prog.py").write_text("program = 1\n", encoding="utf-8")
         (tmp_path / "eval.jsonl").write_text('{"q":"1"}\n', encoding="utf-8")
@@ -905,7 +905,7 @@ class TestCompileCli:
 
     def test_unknown_optimizer_exit2(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.compile_cmd import compile_cmd
+        from ai_forge_cli.commands.compile_cmd import compile_cmd
 
         (tmp_path / "prog.py").write_text("program = 1\n", encoding="utf-8")
         (tmp_path / "eval.jsonl").write_text('{"q":"1"}\n', encoding="utf-8")
@@ -947,7 +947,7 @@ def _write_spec(tmp_path, name="spec.json"):
 
 class TestOptimiseDescription:
     def test_override_returns_str(self, monkeypatch):
-        import soup_cli.utils.compile_tools as ct
+        import ai_forge_cli.utils.compile_tools as ct
 
         monkeypatch.setattr(
             ct, "_TOOL_OPTIMIZER_OVERRIDE", lambda d, e, o: d.upper()
@@ -955,21 +955,21 @@ class TestOptimiseDescription:
         assert ct._optimise_description("hi", [], "textgrad") == "HI"
 
     def test_override_non_str_rejected(self, monkeypatch):
-        import soup_cli.utils.compile_tools as ct
+        import ai_forge_cli.utils.compile_tools as ct
 
         monkeypatch.setattr(ct, "_TOOL_OPTIMIZER_OVERRIDE", lambda d, e, o: 5)
         with pytest.raises(TypeError):
             ct._optimise_description("hi", [], "textgrad")
 
     def test_missing_textgrad_friendly(self):
-        from soup_cli.utils.compile_tools import _optimise_description
+        from ai_forge_cli.utils.compile_tools import _optimise_description
 
         with pytest.raises(ImportError) as exc:
             _optimise_description("hi", [], "textgrad")
-        assert "soup-cli[compile]" in str(exc.value)
+        assert "ai-forge[compile]" in str(exc.value)
 
     def test_missing_gepa_friendly(self):
-        from soup_cli.utils.compile_tools import _optimise_description
+        from ai_forge_cli.utils.compile_tools import _optimise_description
 
         with pytest.raises(ImportError) as exc:
             _optimise_description("hi", [], "gepa")
@@ -978,7 +978,7 @@ class TestOptimiseDescription:
 
 class TestRunToolCompile:
     def _plan(self, tmp_path, output="out.json"):
-        from soup_cli.utils.compile_tools import build_tool_compile_plan
+        from ai_forge_cli.utils.compile_tools import build_tool_compile_plan
 
         _write_spec(tmp_path)
         return build_tool_compile_plan(
@@ -990,7 +990,7 @@ class TestRunToolCompile:
 
     def test_json_output(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.compile_tools as ct
+        import ai_forge_cli.utils.compile_tools as ct
 
         monkeypatch.setattr(
             ct, "_TOOL_OPTIMIZER_OVERRIDE", lambda d, e, o: f"OPT:{d}"
@@ -1005,7 +1005,7 @@ class TestRunToolCompile:
 
     def test_yaml_output(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.compile_tools as ct
+        import ai_forge_cli.utils.compile_tools as ct
 
         monkeypatch.setattr(ct, "_TOOL_OPTIMIZER_OVERRIDE", lambda d, e, o: "X")
         plan = self._plan(tmp_path, output="out.yaml")
@@ -1016,7 +1016,7 @@ class TestRunToolCompile:
         assert out["tools"][0]["description"] == "X"
 
     def test_non_plan_rejected(self):
-        from soup_cli.utils.compile_tools import run_tool_compile
+        from ai_forge_cli.utils.compile_tools import run_tool_compile
 
         with pytest.raises(TypeError):
             run_tool_compile({"spec_path": "x"})
@@ -1024,7 +1024,7 @@ class TestRunToolCompile:
     def test_live_missing_dep(self, tmp_path, monkeypatch):
         # Real branch (no override) -> textgrad absent -> friendly ImportError.
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.compile_tools import run_tool_compile
+        from ai_forge_cli.utils.compile_tools import run_tool_compile
 
         plan = self._plan(tmp_path)
         with pytest.raises(ImportError):
@@ -1034,7 +1034,7 @@ class TestRunToolCompile:
 class TestCompileToolsCli:
     def test_plan_only(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.compile_tools import compile_tools_cmd
+        from ai_forge_cli.commands.compile_tools import compile_tools_cmd
 
         _write_spec(tmp_path)
         app = typer.Typer()
@@ -1046,8 +1046,8 @@ class TestCompileToolsCli:
 
     def test_live_via_seam(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.compile_tools as ct
-        from soup_cli.commands.compile_tools import compile_tools_cmd
+        import ai_forge_cli.utils.compile_tools as ct
+        from ai_forge_cli.commands.compile_tools import compile_tools_cmd
 
         _write_spec(tmp_path)
         monkeypatch.setattr(ct, "_TOOL_OPTIMIZER_OVERRIDE", lambda d, e, o: "OK")
@@ -1061,7 +1061,7 @@ class TestCompileToolsCli:
 
     def test_live_missing_dep_exit2(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.compile_tools import compile_tools_cmd
+        from ai_forge_cli.commands.compile_tools import compile_tools_cmd
 
         _write_spec(tmp_path)
         app = typer.Typer()
@@ -1081,7 +1081,7 @@ class TestReviewFixes:
     def test_db_path_rejects_newline(self, tmp_path, monkeypatch):
         # SEC HIGH: db_path flows into a systemd ExecStart -> reject newlines.
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import validate_db_path
+        from ai_forge_cli.utils.local_rl import validate_db_path
 
         with pytest.raises(ValueError):
             validate_db_path("a\nb.db")
@@ -1090,7 +1090,7 @@ class TestReviewFixes:
 
     def test_model_rejects_newline(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import LocalRLConfig, init_local_rl_db
+        from ai_forge_cli.utils.local_rl import LocalRLConfig, init_local_rl_db
 
         init_local_rl_db("db.sqlite")
         with pytest.raises(ValueError):
@@ -1103,8 +1103,8 @@ class TestReviewFixes:
 
     def test_scheduler_model_rejects_newline(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import init_local_rl_db
-        from soup_cli.utils.local_rl_scheduler import build_train_argv
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl_scheduler import build_train_argv
 
         init_local_rl_db("db.sqlite")
         with pytest.raises(ValueError):
@@ -1116,7 +1116,7 @@ class TestReviewFixes:
             )
 
     def test_systemd_quote_rejects_newline(self):
-        from soup_cli.utils.local_rl_scheduler import _systemd_quote
+        from ai_forge_cli.utils.local_rl_scheduler import _systemd_quote
 
         with pytest.raises(ValueError):
             _systemd_quote("a\nb")
@@ -1127,7 +1127,7 @@ class TestReviewFixes:
         # CORRECTNESS MEDIUM: thumbs recorded DURING the train window keep
         # ts > last_train_at and are counted by the next run (not dropped).
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             LocalRLConfig,
             count_new_thumbs_since,
             get_state,
@@ -1168,8 +1168,8 @@ class TestReviewFixes:
         monkeypatch.chdir(tmp_path)
         import subprocess
 
-        import soup_cli.utils.local_rl as lr
-        from soup_cli.commands.local_rl import app
+        import ai_forge_cli.utils.local_rl as lr
+        from ai_forge_cli.commands.local_rl import app
 
         _seed_db("db.sqlite", 5)
 
@@ -1195,7 +1195,7 @@ class TestReviewFixes:
     def test_load_program_module_revalidates(self, tmp_path, monkeypatch):
         # SEC LOW: _load_program_module re-validates the path before exec.
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.prompt_compile as pc
+        import ai_forge_cli.utils.prompt_compile as pc
 
         (tmp_path / "notpy.txt").write_text("program = 1\n", encoding="utf-8")
         with pytest.raises(ValueError):
@@ -1210,7 +1210,7 @@ class TestReviewFixes:
 class TestCoverageGaps:
     # --- #229 skip-ordering + harvest-dedup -------------------------------
     def _cfg(self, db, method="dpo"):
-        from soup_cli.utils.local_rl import LocalRLConfig
+        from ai_forge_cli.utils.local_rl import LocalRLConfig
 
         return LocalRLConfig(
             backend="ollama", model="org/model", db_path=db, train_method=method
@@ -1220,7 +1220,7 @@ class TestCoverageGaps:
         # last_train_at in the past + fresh thumbs that yield < min_pairs ->
         # status must be insufficient_pairs (NOT no_new_thumbs).
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             init_local_rl_db,
             record_thumb,
             run_nightly_train,
@@ -1240,7 +1240,7 @@ class TestCoverageGaps:
 
     def test_harvest_dedup_one_pair_per_prompt(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             harvest_dpo_pairs,
             init_local_rl_db,
             record_thumb,
@@ -1261,7 +1261,7 @@ class TestCoverageGaps:
 
     def test_count_new_thumbs_exact_ts_excluded(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             count_new_thumbs_since,
             init_local_rl_db,
             record_thumb,
@@ -1276,7 +1276,7 @@ class TestCoverageGaps:
     # --- #225 load_eval_examples + CompileResult -------------------------
     def test_eval_size_cap(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.prompt_compile as pc
+        import ai_forge_cli.utils.prompt_compile as pc
 
         monkeypatch.setattr(pc, "_MAX_EVAL_BYTES", 8)
         (tmp_path / "big.json").write_text("[" + "1," * 50 + "1]", encoding="utf-8")
@@ -1286,14 +1286,14 @@ class TestCoverageGaps:
     def test_eval_json_object_root(self, tmp_path, monkeypatch):
         # A single top-level JSON object is read as one example (not rejected).
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_compile import load_eval_examples
+        from ai_forge_cli.utils.prompt_compile import load_eval_examples
 
         (tmp_path / "obj.json").write_text('{"q": "1"}', encoding="utf-8")
         assert load_eval_examples("obj.json") == [{"q": "1"}]
 
     def test_eval_pretty_json_array(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_compile import load_eval_examples
+        from ai_forge_cli.utils.prompt_compile import load_eval_examples
 
         (tmp_path / "arr.json").write_text(
             "[\n  {\"q\": \"1\"},\n  {\"q\": \"2\"}\n]", encoding="utf-8"
@@ -1301,7 +1301,7 @@ class TestCoverageGaps:
         assert load_eval_examples("arr.json") == [{"q": "1"}, {"q": "2"}]
 
     def test_compile_result_validation(self):
-        from soup_cli.utils.prompt_compile import CompileResult
+        from ai_forge_cli.utils.prompt_compile import CompileResult
 
         with pytest.raises(ValueError):
             CompileResult(
@@ -1318,19 +1318,19 @@ class TestCoverageGaps:
 
     # --- #226 distill edge cases -----------------------------------------
     def test_extract_prompt_query_key(self):
-        from soup_cli.utils.prompt_distill import extract_prompt
+        from ai_forge_cli.utils.prompt_distill import extract_prompt
 
         assert extract_prompt({"query": "z"}) == "z"
 
     def test_extract_prompt_truncation(self):
-        from soup_cli.utils.prompt_distill import _MAX_PROMPT_CHARS, extract_prompt
+        from ai_forge_cli.utils.prompt_distill import _MAX_PROMPT_CHARS, extract_prompt
 
         out = extract_prompt({"prompt": "x" * (_MAX_PROMPT_CHARS + 50)})
         assert len(out) == _MAX_PROMPT_CHARS
 
     def test_preference_empty_student_skipped(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_distill import (
+        from ai_forge_cli.utils.prompt_distill import (
             build_distill_prompt_plan,
             prepare_distill_dataset,
         )
@@ -1352,7 +1352,7 @@ class TestCoverageGaps:
 
     def test_preference_student_exception_skipped(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.prompt_distill import (
+        from ai_forge_cli.utils.prompt_distill import (
             build_distill_prompt_plan,
             prepare_distill_dataset,
         )
@@ -1377,7 +1377,7 @@ class TestCoverageGaps:
     # --- #227 compile-tools ----------------------------------------------
     def test_spec_path_extension_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.compile_tools import validate_spec_path
+        from ai_forge_cli.utils.compile_tools import validate_spec_path
 
         (tmp_path / "spec.txt").write_text("{}", encoding="utf-8")
         with pytest.raises(ValueError, match="extension"):
@@ -1385,7 +1385,7 @@ class TestCoverageGaps:
 
     def test_tool_full_shape(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.compile_tools as ct
+        import ai_forge_cli.utils.compile_tools as ct
 
         monkeypatch.setattr(ct, "_TOOL_OPTIMIZER_OVERRIDE", lambda d, e, o: "D")
         _write_spec(tmp_path)
@@ -1413,7 +1413,7 @@ class TestReachableInternals:
     def test_resolve_metric_callable(self):
         import types
 
-        import soup_cli.utils.prompt_compile as pc
+        import ai_forge_cli.utils.prompt_compile as pc
 
         mod = types.SimpleNamespace(metric=lambda *a, **k: 1.0)
         assert callable(pc._resolve_metric(mod))
@@ -1421,20 +1421,20 @@ class TestReachableInternals:
     def test_resolve_metric_absent_returns_none(self):
         import types
 
-        import soup_cli.utils.prompt_compile as pc
+        import ai_forge_cli.utils.prompt_compile as pc
 
         assert pc._resolve_metric(types.SimpleNamespace()) is None
 
     def test_resolve_metric_non_callable_returns_none(self):
         import types
 
-        import soup_cli.utils.prompt_compile as pc
+        import ai_forge_cli.utils.prompt_compile as pc
 
         assert pc._resolve_metric(types.SimpleNamespace(metric=42)) is None
 
     def test_build_provider_fn_delegates_to_make_judge(self, monkeypatch):
-        import soup_cli.utils.data_forge as df
-        import soup_cli.utils.prompt_distill as pd
+        import ai_forge_cli.utils.data_forge as df
+        import ai_forge_cli.utils.prompt_distill as pd
 
         seen = {}
 
@@ -1460,7 +1460,7 @@ class TestReachableInternals:
         """teacher_fn=None routes through _build_provider_fn (default-provider
         wiring) — covers the no-injected-seam branch of prepare_distill_dataset."""
         monkeypatch.chdir(tmp_path)
-        import soup_cli.utils.prompt_distill as pd
+        import ai_forge_cli.utils.prompt_distill as pd
 
         _write_traces(str(tmp_path / "traces.jsonl"), ["q1", "q2"])
         calls = {"n": 0}
@@ -1492,7 +1492,7 @@ class TestReachableInternals:
 
 class TestPatchInvariants:
     def test_version_bumped(self):
-        import soup_cli
+        import ai_forge_cli
 
-        parts = tuple(int(x) for x in soup_cli.__version__.split(".")[:3])
+        parts = tuple(int(x) for x in ai_forge_cli.__version__.split(".")[:3])
         assert parts >= (0, 71, 13)

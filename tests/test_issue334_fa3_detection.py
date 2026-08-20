@@ -36,7 +36,7 @@ class TestFa3IsNotClaimedFromTheFlashAttnVersion:
         """The load-bearing one: a `flash_attn` claiming 3.0.0 while transformers
         says FA3 is unavailable must NOT select flash_attention_3 — transformers
         would reject the value and the user silently loses the kernel."""
-        from soup_cli.utils import flash_attn as mod
+        from ai_forge_cli.utils import flash_attn as mod
 
         _with_cuda(monkeypatch)
         monkeypatch.setitem(
@@ -48,14 +48,14 @@ class TestFa3IsNotClaimedFromTheFlashAttnVersion:
 
     def test_fa3_is_selected_when_transformers_says_it_is_available(self, monkeypatch):
         """CONTROL. Delegating must not turn into "never FA3"."""
-        from soup_cli.utils import flash_attn as mod
+        from ai_forge_cli.utils import flash_attn as mod
 
         _with_cuda(monkeypatch)
         monkeypatch.setattr(mod, "_transformers_says_fa3", lambda: True)
         assert mod.check_flash_attn_available() == "flash_attention_3"
 
     def test_is_flash_attn_v3_available_agrees_with_transformers(self, monkeypatch):
-        from soup_cli.utils import flash_attn as mod
+        from ai_forge_cli.utils import flash_attn as mod
 
         monkeypatch.setitem(
             sys.modules, "flash_attn", _fake_module("flash_attn", __version__="3.0.0")
@@ -66,7 +66,7 @@ class TestFa3IsNotClaimedFromTheFlashAttnVersion:
     def test_nothing_installed_still_reports_none(self, monkeypatch):
         """CONTROL for the other end: no FlashAttention at all must stay None, not
         become FA2 by accident of the refactor."""
-        from soup_cli.utils import flash_attn as mod
+        from ai_forge_cli.utils import flash_attn as mod
 
         _with_cuda(monkeypatch)
         monkeypatch.setattr(mod, "_transformers_says_fa3", lambda: False)

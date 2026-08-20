@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import SoupConfig, TrainingConfig
+from ai_forge_cli.config.schema import SoupConfig, TrainingConfig
 
 # _tiny_llama_dir lives in test_v07202 and is deliberately not duplicated here,
 # same convention as test_v07300.py.
@@ -53,20 +53,20 @@ class TestCutCEAvailability:
     """Cut Cross-Entropy availability + detection."""
 
     def test_check_cut_ce_available_returns_bool(self):
-        from soup_cli.utils.cut_ce import check_cut_ce_available
+        from ai_forge_cli.utils.cut_ce import check_cut_ce_available
 
         result = check_cut_ce_available()
         assert isinstance(result, bool)
 
     def test_check_cut_ce_not_installed(self):
-        from soup_cli.utils.cut_ce import check_cut_ce_available
+        from ai_forge_cli.utils.cut_ce import check_cut_ce_available
 
         # sys.modules[name]=None makes ``import name`` raise ImportError
         with patch.dict("sys.modules", {"cut_cross_entropy": None}):
             assert check_cut_ce_available() is False
 
     def test_get_cut_ce_version_not_installed(self):
-        from soup_cli.utils.cut_ce import get_cut_ce_version
+        from ai_forge_cli.utils.cut_ce import get_cut_ce_version
 
         # get_cut_ce_version() imports the package itself rather than going
         # through check_cut_ce_available(), so patching that predicate is a
@@ -79,19 +79,19 @@ class TestCutCEApplication:
     """Applying Cut Cross-Entropy to a model."""
 
     def test_apply_cut_ce_not_installed(self):
-        from soup_cli.utils.cut_ce import apply_cut_ce
+        from ai_forge_cli.utils.cut_ce import apply_cut_ce
 
         with patch(
-            "soup_cli.utils.cut_ce.check_cut_ce_available", return_value=False
+            "ai_forge_cli.utils.cut_ce.check_cut_ce_available", return_value=False
         ):
             result = apply_cut_ce("meta-llama/Llama-3.1-8B")
             assert result is False
 
     def test_apply_cut_ce_available_tries_patching(self):
-        from soup_cli.utils.cut_ce import apply_cut_ce
+        from ai_forge_cli.utils.cut_ce import apply_cut_ce
 
         with patch(
-            "soup_cli.utils.cut_ce.check_cut_ce_available", return_value=True
+            "ai_forge_cli.utils.cut_ce.check_cut_ce_available", return_value=True
         ):
             # With cut_cross_entropy not actually installed, patch should return
             # False (can't import real module). Just verifying it doesn't crash.
@@ -107,15 +107,15 @@ class TestCutCEApplication:
         which evicts ``tokenizers`` on exit; re-importing it crashes (PyO3
         extensions can't reinit), hidden in a full-suite run only because
         some other file imports it first."""
-        from soup_cli.utils.cut_ce import apply_cut_ce
+        from ai_forge_cli.utils.cut_ce import apply_cut_ce
 
         fake_cce = MagicMock()
         fake_transformers = MagicMock(cce_patch=fake_cce)
         fake_module = MagicMock(transformers=fake_transformers)
         with patch(
-            "soup_cli.utils.cut_ce.check_cut_ce_available", return_value=True
+            "ai_forge_cli.utils.cut_ce.check_cut_ce_available", return_value=True
         ), patch(
-            "soup_cli.utils.cut_ce._detect_model_type", return_value=""
+            "ai_forge_cli.utils.cut_ce._detect_model_type", return_value=""
         ), patch.dict(
             "sys.modules",
             {
@@ -133,15 +133,15 @@ class TestCutCEApplication:
         with real config resolution deepseek-coder is genuinely Llama-arch and
         the model_type path would (correctly) patch it, see
         TestCutCEDetectsArchitectureFromTheConfig below."""
-        from soup_cli.utils.cut_ce import apply_cut_ce
+        from ai_forge_cli.utils.cut_ce import apply_cut_ce
 
         fake_cce = MagicMock()
         fake_transformers = MagicMock(cce_patch=fake_cce)
         fake_module = MagicMock(transformers=fake_transformers)
         with patch(
-            "soup_cli.utils.cut_ce.check_cut_ce_available", return_value=True
+            "ai_forge_cli.utils.cut_ce.check_cut_ce_available", return_value=True
         ), patch(
-            "soup_cli.utils.cut_ce._detect_model_type", return_value=""
+            "ai_forge_cli.utils.cut_ce._detect_model_type", return_value=""
         ), patch.dict(
             "sys.modules",
             {
@@ -162,7 +162,7 @@ class TestCutCEApplication:
         Gemma-1 name that reached the name-based fallback. It must instead
         report False, the same advisory every other unsupported
         architecture gets."""
-        from soup_cli.utils.cut_ce import apply_cut_ce
+        from ai_forge_cli.utils.cut_ce import apply_cut_ce
 
         def _patch(model_type, *a, **kw):
             if model_type not in ("llama", "phi3", "gemma2", "mistral", "qwen2"):
@@ -172,9 +172,9 @@ class TestCutCEApplication:
         fake_transformers = MagicMock(cce_patch=fake_cce)
         fake_module = MagicMock(transformers=fake_transformers)
         with patch(
-            "soup_cli.utils.cut_ce.check_cut_ce_available", return_value=True
+            "ai_forge_cli.utils.cut_ce.check_cut_ce_available", return_value=True
         ), patch(
-            "soup_cli.utils.cut_ce._detect_model_type", return_value=""
+            "ai_forge_cli.utils.cut_ce._detect_model_type", return_value=""
         ), patch.dict(
             "sys.modules",
             {
@@ -223,7 +223,7 @@ class TestCutCEDetectsArchitectureFromTheConfig:
     ):
         from test_v07202 import _tiny_llama_dir
 
-        from soup_cli.utils import cut_ce as cut_ce_mod
+        from ai_forge_cli.utils import cut_ce as cut_ce_mod
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         assert "llama" not in weights.lower(), (
@@ -242,7 +242,7 @@ class TestCutCEDetectsArchitectureFromTheConfig:
         Phi-2 patcher, so this must report False, not silently reuse phi3's."""
         import json
 
-        from soup_cli.utils import cut_ce as cut_ce_mod
+        from ai_forge_cli.utils import cut_ce as cut_ce_mod
 
         directory = tmp_path / "step-2000"
         directory.mkdir()
@@ -265,7 +265,7 @@ class TestCutCEDetectsArchitectureFromTheConfig:
         name-match fallback."""
         import json
 
-        from soup_cli.utils import cut_ce as cut_ce_mod
+        from ai_forge_cli.utils import cut_ce as cut_ce_mod
 
         directory = tmp_path / "phi-3-mini-finetune"
         directory.mkdir()
@@ -282,7 +282,7 @@ class TestCutCEDetectsArchitectureFromTheConfig:
         to keep reporting False so the caller keeps printing its advisory."""
         import json
 
-        from soup_cli.utils import cut_ce as cut_ce_mod
+        from ai_forge_cli.utils import cut_ce as cut_ce_mod
 
         directory = tmp_path / "gpt2-run"
         directory.mkdir()
@@ -295,7 +295,7 @@ class TestCutCEDetectsArchitectureFromTheConfig:
     def test_config_unavailable_falls_back_to_the_name_based_match(self, monkeypatch):
         """No local config.json and no network: model_type resolution fails
         quietly, and the last-path-component fallback still applies."""
-        from soup_cli.utils import cut_ce as cut_ce_mod
+        from ai_forge_cli.utils import cut_ce as cut_ce_mod
 
         calls = self._fake_cce(monkeypatch, [])
         monkeypatch.setattr(cut_ce_mod, "check_cut_ce_available", lambda: True)
@@ -357,7 +357,7 @@ class TestIssue456CrossPlatformPathComponentExtraction:
     ):
         """CONTROL: A Windows path whose parent contains an architecture keyword
         must not match that keyword in cut_ce when config is unavailable (#456)."""
-        from soup_cli.utils import cut_ce as cut_ce_mod
+        from ai_forge_cli.utils import cut_ce as cut_ce_mod
 
         calls = self._fake_cce(monkeypatch, [])
         monkeypatch.setattr(cut_ce_mod, "check_cut_ce_available", lambda: True)
@@ -377,7 +377,7 @@ class TestIssue456CrossPlatformPathComponentExtraction:
     ):
         """CONTROL: A POSIX path whose parent contains an architecture keyword
         must not match that keyword in cut_ce when config is unavailable (#456)."""
-        from soup_cli.utils import cut_ce as cut_ce_mod
+        from ai_forge_cli.utils import cut_ce as cut_ce_mod
 
         calls = self._fake_cce(monkeypatch, [])
         monkeypatch.setattr(cut_ce_mod, "check_cut_ce_available", lambda: True)
@@ -398,7 +398,7 @@ class TestIssue456CrossPlatformPathComponentExtraction:
         self, monkeypatch
     ):
         """Trailing slashes and backslashes must not cause the last component to become empty."""
-        from soup_cli.utils import cut_ce as cut_ce_mod
+        from ai_forge_cli.utils import cut_ce as cut_ce_mod
 
         calls = self._fake_cce(monkeypatch, [])
         monkeypatch.setattr(cut_ce_mod, "check_cut_ce_available", lambda: True)
@@ -416,7 +416,7 @@ class TestIssue456CrossPlatformPathComponentExtraction:
     ):
         """CONTROL: A Windows path whose parent contains an architecture keyword
         must not match that keyword in liger when config is unavailable (#456)."""
-        from soup_cli.utils import liger as liger_mod
+        from ai_forge_cli.utils import liger as liger_mod
 
         calls = self._fake_liger(monkeypatch, [])
         monkeypatch.setattr(liger_mod, "check_liger_available", lambda: True)
@@ -437,7 +437,7 @@ class TestIssue456CrossPlatformPathComponentExtraction:
     def test_posix_parent_dir_does_not_overmatch_liger(self, monkeypatch):
         """CONTROL: A POSIX path whose parent contains an architecture keyword
         must not match that keyword in liger when config is unavailable (#456)."""
-        from soup_cli.utils import liger as liger_mod
+        from ai_forge_cli.utils import liger as liger_mod
 
         calls = self._fake_liger(monkeypatch, [])
         monkeypatch.setattr(liger_mod, "check_liger_available", lambda: True)
@@ -457,7 +457,7 @@ class TestIssue456CrossPlatformPathComponentExtraction:
         self, monkeypatch
     ):
         """Liger correctly patches when the last component itself matches."""
-        from soup_cli.utils import liger as liger_mod
+        from ai_forge_cli.utils import liger as liger_mod
 
         calls = self._fake_liger(monkeypatch, [])
         monkeypatch.setattr(liger_mod, "check_liger_available", lambda: True)
@@ -471,8 +471,8 @@ class TestIssue456CrossPlatformPathComponentExtraction:
 
     def test_empty_and_root_paths_return_false(self, monkeypatch):
         """Degenerate boundary check: empty strings, None, and root slashes return False."""
-        from soup_cli.utils import cut_ce as cut_ce_mod
-        from soup_cli.utils import liger as liger_mod
+        from ai_forge_cli.utils import cut_ce as cut_ce_mod
+        from ai_forge_cli.utils import liger as liger_mod
 
         monkeypatch.setattr(cut_ce_mod, "check_cut_ce_available", lambda: True)
         monkeypatch.setattr(cut_ce_mod, "_detect_model_type", lambda _: "")
@@ -485,8 +485,8 @@ class TestIssue456CrossPlatformPathComponentExtraction:
 
     def test_repeated_separators_resolve_last_component(self, monkeypatch):
         """Repeated slashes or backslashes must resolve cleanly to the last component."""
-        from soup_cli.utils import cut_ce as cut_ce_mod
-        from soup_cli.utils import liger as liger_mod
+        from ai_forge_cli.utils import cut_ce as cut_ce_mod
+        from ai_forge_cli.utils import liger as liger_mod
 
         calls_cce = self._fake_cce(monkeypatch, [])
         calls_liger = self._fake_liger(monkeypatch, [])
@@ -518,8 +518,8 @@ class TestCutCEUnifiedMessage:
         hardcoded string that happened to match today and drifted tomorrow."""
         import inspect
 
-        import soup_cli.trainer.sft as sft_mod
-        import soup_cli.utils.v028_features as v028_mod
+        import ai_forge_cli.trainer.sft as sft_mod
+        import ai_forge_cli.utils.v028_features as v028_mod
 
         assert "NO_MATCHING_ARCHITECTURE_MESSAGE" in inspect.getsource(sft_mod)
         assert "NO_MATCHING_ARCHITECTURE_MESSAGE" in inspect.getsource(v028_mod)
@@ -529,52 +529,52 @@ class TestCutCEValidation:
     """Cut Cross-Entropy config validation."""
 
     def test_validate_cut_ce_disabled_returns_empty(self):
-        from soup_cli.utils.cut_ce import validate_cut_ce_config
+        from ai_forge_cli.utils.cut_ce import validate_cut_ce_config
 
         errors = validate_cut_ce_config(False, "transformers", "cuda")
         assert errors == []
 
     def test_validate_cut_ce_not_installed(self):
-        from soup_cli.utils.cut_ce import validate_cut_ce_config
+        from ai_forge_cli.utils.cut_ce import validate_cut_ce_config
 
         with patch(
-            "soup_cli.utils.cut_ce.check_cut_ce_available", return_value=False
+            "ai_forge_cli.utils.cut_ce.check_cut_ce_available", return_value=False
         ):
             errors = validate_cut_ce_config(True, "transformers", "cuda")
             assert any("not installed" in err for err in errors)
 
     def test_validate_cut_ce_requires_cuda(self):
-        from soup_cli.utils.cut_ce import validate_cut_ce_config
+        from ai_forge_cli.utils.cut_ce import validate_cut_ce_config
 
         with patch(
-            "soup_cli.utils.cut_ce.check_cut_ce_available", return_value=True
+            "ai_forge_cli.utils.cut_ce.check_cut_ce_available", return_value=True
         ):
             errors = validate_cut_ce_config(True, "transformers", "cpu")
             assert any("CUDA" in err for err in errors)
 
     def test_validate_cut_ce_unsloth_incompatible(self):
-        from soup_cli.utils.cut_ce import validate_cut_ce_config
+        from ai_forge_cli.utils.cut_ce import validate_cut_ce_config
 
         with patch(
-            "soup_cli.utils.cut_ce.check_cut_ce_available", return_value=True
+            "ai_forge_cli.utils.cut_ce.check_cut_ce_available", return_value=True
         ):
             errors = validate_cut_ce_config(True, "unsloth", "cuda")
             assert any("unsloth" in err.lower() for err in errors)
 
     def test_validate_cut_ce_valid(self):
-        from soup_cli.utils.cut_ce import validate_cut_ce_config
+        from ai_forge_cli.utils.cut_ce import validate_cut_ce_config
 
         with patch(
-            "soup_cli.utils.cut_ce.check_cut_ce_available", return_value=True
+            "ai_forge_cli.utils.cut_ce.check_cut_ce_available", return_value=True
         ):
             errors = validate_cut_ce_config(True, "transformers", "cuda")
             assert errors == []
 
     def test_validate_cut_ce_mlx_incompatible(self):
-        from soup_cli.utils.cut_ce import validate_cut_ce_config
+        from ai_forge_cli.utils.cut_ce import validate_cut_ce_config
 
         with patch(
-            "soup_cli.utils.cut_ce.check_cut_ce_available", return_value=True
+            "ai_forge_cli.utils.cut_ce.check_cut_ce_available", return_value=True
         ):
             errors = validate_cut_ce_config(True, "mlx", "mps")
             assert any("mlx" in err.lower() for err in errors)
@@ -629,14 +629,14 @@ class TestFP8Availability:
     """FP8 training dependency checks."""
 
     def test_is_fp8_available_returns_bool(self):
-        from soup_cli.utils.fp8 import is_fp8_available
+        from ai_forge_cli.utils.fp8 import is_fp8_available
 
         result = is_fp8_available()
         assert isinstance(result, bool)
 
     def test_fp8_requires_hopper_gpu_info(self):
         """is_fp8_gpu_supported should check GPU compute capability."""
-        from soup_cli.utils.fp8 import is_fp8_gpu_supported
+        from ai_forge_cli.utils.fp8 import is_fp8_gpu_supported
 
         # Shouldn't crash even without CUDA
         result = is_fp8_gpu_supported()
@@ -648,7 +648,7 @@ class TestFP8Availability:
             "sys.modules",
             {"torchao.float8": None, "transformer_engine": None},
         ):
-            from soup_cli.utils.fp8 import is_fp8_available
+            from ai_forge_cli.utils.fp8 import is_fp8_available
 
             assert is_fp8_available() is False
 
@@ -658,7 +658,7 @@ class TestFP8Availability:
         fake_torch.cuda.is_available.return_value = True
         fake_torch.cuda.get_device_capability.return_value = (8, 0)
         with patch.dict("sys.modules", {"torch": fake_torch}):
-            from soup_cli.utils.fp8 import is_fp8_gpu_supported
+            from ai_forge_cli.utils.fp8 import is_fp8_gpu_supported
 
             assert is_fp8_gpu_supported() is False
 
@@ -668,7 +668,7 @@ class TestFP8Availability:
         fake_torch.cuda.is_available.return_value = True
         fake_torch.cuda.get_device_capability.return_value = (9, 0)
         with patch.dict("sys.modules", {"torch": fake_torch}):
-            from soup_cli.utils.fp8 import is_fp8_gpu_supported
+            from ai_forge_cli.utils.fp8 import is_fp8_gpu_supported
 
             assert is_fp8_gpu_supported() is True
 
@@ -677,33 +677,33 @@ class TestFP8Validation:
     """FP8 training config validation."""
 
     def test_validate_fp8_not_requested_returns_empty(self):
-        from soup_cli.utils.fp8 import validate_fp8_config
+        from ai_forge_cli.utils.fp8 import validate_fp8_config
 
         errors = validate_fp8_config(False, "transformers", "cuda")
         assert errors == []
 
     def test_validate_fp8_bool_returns_empty(self):
         """Bool True means int8 QAT (existing path), not FP8."""
-        from soup_cli.utils.fp8 import validate_fp8_config
+        from ai_forge_cli.utils.fp8 import validate_fp8_config
 
         errors = validate_fp8_config(True, "transformers", "cuda")
         # Bool True is int8 QAT, handled by qat.py, not fp8
         assert errors == []
 
     def test_validate_fp8_cpu_rejected(self):
-        from soup_cli.utils.fp8 import validate_fp8_config
+        from ai_forge_cli.utils.fp8 import validate_fp8_config
 
         errors = validate_fp8_config("fp8", "transformers", "cpu")
         assert any("CUDA" in err for err in errors)
 
     def test_validate_fp8_unsloth_rejected(self):
-        from soup_cli.utils.fp8 import validate_fp8_config
+        from ai_forge_cli.utils.fp8 import validate_fp8_config
 
         errors = validate_fp8_config("fp8", "unsloth", "cuda")
         assert any("unsloth" in err.lower() for err in errors)
 
     def test_validate_fp8_mlx_rejected(self):
-        from soup_cli.utils.fp8 import validate_fp8_config
+        from ai_forge_cli.utils.fp8 import validate_fp8_config
 
         errors = validate_fp8_config("fp8", "mlx", "mps")
         assert any("mlx" in err.lower() or "CUDA" in err for err in errors)
@@ -773,25 +773,25 @@ class TestGradientCheckpointingResolver:
     """Resolve config value + GPU info → kwargs for TrainingArguments."""
 
     def test_resolve_disabled_returns_empty(self):
-        from soup_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
+        from ai_forge_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
 
         kwargs = resolve_gradient_checkpointing(False, gpu_memory_gb=80)
         assert kwargs == {}
 
     def test_resolve_bool_true_returns_full_ckpt(self):
-        from soup_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
+        from ai_forge_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
 
         kwargs = resolve_gradient_checkpointing(True, gpu_memory_gb=80)
         assert kwargs["gradient_checkpointing"] is True
 
     def test_resolve_full_tier(self):
-        from soup_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
+        from ai_forge_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
 
         kwargs = resolve_gradient_checkpointing("full", gpu_memory_gb=80)
         assert kwargs["gradient_checkpointing"] is True
 
     def test_resolve_selective_tier(self):
-        from soup_cli.utils.gradient_ckpt import (
+        from ai_forge_cli.utils.gradient_ckpt import (
             resolve_gradient_checkpointing,
             resolve_granularity,
         )
@@ -804,27 +804,27 @@ class TestGradientCheckpointingResolver:
         assert resolve_granularity("selective", gpu_memory_gb=80) == "selective"
 
     def test_resolve_medium_tier(self):
-        from soup_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
+        from ai_forge_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
 
         kwargs = resolve_gradient_checkpointing("medium", gpu_memory_gb=80)
         assert kwargs["gradient_checkpointing"] is True
 
     def test_resolve_auto_low_memory_selects_full(self):
-        from soup_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
+        from ai_forge_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
 
         kwargs = resolve_gradient_checkpointing("auto", gpu_memory_gb=16)
         # Low VRAM → full checkpointing
         assert kwargs["gradient_checkpointing"] is True
 
     def test_resolve_auto_high_memory_selects_selective(self):
-        from soup_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
+        from ai_forge_cli.utils.gradient_ckpt import resolve_gradient_checkpointing
 
         # 80GB+ → selective only (attention), saving speed
         kwargs = resolve_gradient_checkpointing("auto", gpu_memory_gb=80)
         assert kwargs["gradient_checkpointing"] is True
 
     def test_resolve_auto_very_high_memory_selects_selective(self):
-        from soup_cli.utils.gradient_ckpt import (
+        from ai_forge_cli.utils.gradient_ckpt import (
             resolve_granularity,
         )
 
@@ -832,29 +832,29 @@ class TestGradientCheckpointingResolver:
         assert resolve_granularity("auto", gpu_memory_gb=192) == "selective"
 
     def test_resolve_auto_medium_memory_selects_medium(self):
-        from soup_cli.utils.gradient_ckpt import resolve_granularity
+        from ai_forge_cli.utils.gradient_ckpt import resolve_granularity
 
         # 40GB (A100 40GB): medium (every other block)
         assert resolve_granularity("auto", gpu_memory_gb=40) == "medium"
 
     def test_resolve_auto_no_gpu_info_full(self):
-        from soup_cli.utils.gradient_ckpt import resolve_granularity
+        from ai_forge_cli.utils.gradient_ckpt import resolve_granularity
 
         assert resolve_granularity("auto", gpu_memory_gb=None) == "full"
 
     def test_describe_tier_off(self):
-        from soup_cli.utils.gradient_ckpt import describe_tier
+        from ai_forge_cli.utils.gradient_ckpt import describe_tier
 
         assert describe_tier(False) == "off"
 
     def test_describe_tier_full(self):
-        from soup_cli.utils.gradient_ckpt import describe_tier
+        from ai_forge_cli.utils.gradient_ckpt import describe_tier
 
         assert "full" in describe_tier(True)
         assert "full" in describe_tier("full")
 
     def test_describe_tier_auto(self):
-        from soup_cli.utils.gradient_ckpt import describe_tier
+        from ai_forge_cli.utils.gradient_ckpt import describe_tier
 
         assert "auto" in describe_tier("auto")
         assert "auto" in describe_tier("auto", gpu_memory_gb=16)
@@ -884,20 +884,20 @@ class TestKernelPickerEnumerate:
     """Kernel picker enumerates available kernel combinations."""
 
     def test_enumerate_returns_list(self):
-        from soup_cli.utils.kernel_picker import enumerate_kernel_combos
+        from ai_forge_cli.utils.kernel_picker import enumerate_kernel_combos
 
         combos = enumerate_kernel_combos(backend="transformers", device="cuda")
         assert isinstance(combos, list)
 
     def test_enumerate_baseline_always_present(self):
-        from soup_cli.utils.kernel_picker import enumerate_kernel_combos
+        from ai_forge_cli.utils.kernel_picker import enumerate_kernel_combos
 
         combos = enumerate_kernel_combos(backend="transformers", device="cuda")
         # Baseline (no special kernels) must always be an option
         assert any(c.get("name") == "baseline" for c in combos)
 
     def test_enumerate_cpu_only_baseline(self):
-        from soup_cli.utils.kernel_picker import enumerate_kernel_combos
+        from ai_forge_cli.utils.kernel_picker import enumerate_kernel_combos
 
         combos = enumerate_kernel_combos(backend="transformers", device="cpu")
         # On CPU, only baseline should be available
@@ -905,7 +905,7 @@ class TestKernelPickerEnumerate:
         assert combos[0]["name"] == "baseline"
 
     def test_enumerate_unsloth_skips_liger(self):
-        from soup_cli.utils.kernel_picker import enumerate_kernel_combos
+        from ai_forge_cli.utils.kernel_picker import enumerate_kernel_combos
 
         combos = enumerate_kernel_combos(backend="unsloth", device="cuda")
         # Unsloth has its own fused kernels - no Liger combos
@@ -917,7 +917,7 @@ class TestKernelPickerDecision:
     """Kernel picker decision logic (mocked benchmarks)."""
 
     def test_pick_best_returns_dict(self):
-        from soup_cli.utils.kernel_picker import pick_best_kernel
+        from ai_forge_cli.utils.kernel_picker import pick_best_kernel
 
         # With fake timing results, picks fastest
         candidates = [
@@ -929,21 +929,21 @@ class TestKernelPickerDecision:
         assert best["name"] == "liger+flash"
 
     def test_pick_best_baseline_if_only_one(self):
-        from soup_cli.utils.kernel_picker import pick_best_kernel
+        from ai_forge_cli.utils.kernel_picker import pick_best_kernel
 
         candidates = [{"name": "baseline", "time_ms": 100.0}]
         best = pick_best_kernel(candidates)
         assert best["name"] == "baseline"
 
     def test_pick_best_empty_raises(self):
-        from soup_cli.utils.kernel_picker import pick_best_kernel
+        from ai_forge_cli.utils.kernel_picker import pick_best_kernel
 
         with pytest.raises(ValueError, match="at least one"):
             pick_best_kernel([])
 
     def test_pick_best_tie_returns_first(self):
         """Ties broken by list order (first-wins) — preferred default first."""
-        from soup_cli.utils.kernel_picker import pick_best_kernel
+        from ai_forge_cli.utils.kernel_picker import pick_best_kernel
 
         candidates = [
             {"name": "baseline", "time_ms": 50.0},
@@ -954,7 +954,7 @@ class TestKernelPickerDecision:
 
     def test_pick_best_all_missing_time_raises(self):
         """All-untimed candidates means benchmarking failed — must not promote silently."""
-        from soup_cli.utils.kernel_picker import pick_best_kernel
+        from ai_forge_cli.utils.kernel_picker import pick_best_kernel
 
         candidates = [
             {"name": "baseline"},
@@ -965,7 +965,7 @@ class TestKernelPickerDecision:
             pick_best_kernel(candidates)
 
     def test_pick_best_nan_time_treated_as_missing(self):
-        from soup_cli.utils.kernel_picker import pick_best_kernel
+        from ai_forge_cli.utils.kernel_picker import pick_best_kernel
 
         candidates = [
             {"name": "baseline", "time_ms": float("nan")},
@@ -1011,7 +1011,7 @@ class TestCrossDocAttnMaskBuild:
     """Build cross-doc attention mask from document boundaries."""
 
     def test_build_mask_single_doc(self):
-        from soup_cli.utils.cross_doc_attn import build_cross_doc_mask
+        from ai_forge_cli.utils.cross_doc_attn import build_cross_doc_mask
 
         # Single doc spans the whole sequence — no masking needed
         boundaries = [0, 10]  # doc0 occupies positions 0..9
@@ -1020,7 +1020,7 @@ class TestCrossDocAttnMaskBuild:
         assert mask.shape == (10, 10)
 
     def test_build_mask_two_docs(self):
-        from soup_cli.utils.cross_doc_attn import build_cross_doc_mask
+        from ai_forge_cli.utils.cross_doc_attn import build_cross_doc_mask
 
         # doc0: 0..4, doc1: 5..9
         boundaries = [0, 5, 10]
@@ -1037,44 +1037,44 @@ class TestCrossDocAttnMaskBuild:
         assert mask[0, 1] == 0
 
     def test_build_mask_boundaries_validation(self):
-        from soup_cli.utils.cross_doc_attn import build_cross_doc_mask
+        from ai_forge_cli.utils.cross_doc_attn import build_cross_doc_mask
 
         # Boundaries must start at 0 and end at seq_length
         with pytest.raises(ValueError):
             build_cross_doc_mask([1, 10], seq_length=10)
 
     def test_build_mask_boundaries_monotonic(self):
-        from soup_cli.utils.cross_doc_attn import build_cross_doc_mask
+        from ai_forge_cli.utils.cross_doc_attn import build_cross_doc_mask
 
         with pytest.raises(ValueError, match="increasing"):
             build_cross_doc_mask([0, 5, 3, 10], seq_length=10)
 
     def test_build_mask_empty_boundaries_raises(self):
-        from soup_cli.utils.cross_doc_attn import build_cross_doc_mask
+        from ai_forge_cli.utils.cross_doc_attn import build_cross_doc_mask
 
         with pytest.raises(ValueError, match="non-empty"):
             build_cross_doc_mask([], seq_length=10)
 
     def test_build_mask_wrong_end_raises(self):
-        from soup_cli.utils.cross_doc_attn import build_cross_doc_mask
+        from ai_forge_cli.utils.cross_doc_attn import build_cross_doc_mask
 
         with pytest.raises(ValueError, match="seq_length"):
             build_cross_doc_mask([0, 8], seq_length=10)
 
     def test_compute_doc_boundaries_empty(self):
-        from soup_cli.utils.cross_doc_attn import compute_doc_boundaries
+        from ai_forge_cli.utils.cross_doc_attn import compute_doc_boundaries
 
         with pytest.raises(ValueError):
             compute_doc_boundaries([])
 
     def test_compute_doc_boundaries_non_positive(self):
-        from soup_cli.utils.cross_doc_attn import compute_doc_boundaries
+        from ai_forge_cli.utils.cross_doc_attn import compute_doc_boundaries
 
         with pytest.raises(ValueError):
             compute_doc_boundaries([3, 0, 4])
 
     def test_compute_doc_boundaries_valid(self):
-        from soup_cli.utils.cross_doc_attn import compute_doc_boundaries
+        from ai_forge_cli.utils.cross_doc_attn import compute_doc_boundaries
 
         assert compute_doc_boundaries([3, 2, 4]) == [0, 3, 5, 9]
 
@@ -1119,25 +1119,25 @@ class TestActivationOffloadingValidation:
     """Offloading config validation."""
 
     def test_validate_none_returns_empty(self):
-        from soup_cli.utils.activation_offload import validate_offload_config
+        from ai_forge_cli.utils.activation_offload import validate_offload_config
 
         errors = validate_offload_config(None, "transformers", "cuda")
         assert errors == []
 
     def test_validate_cpu_requires_cuda(self):
-        from soup_cli.utils.activation_offload import validate_offload_config
+        from ai_forge_cli.utils.activation_offload import validate_offload_config
 
         errors = validate_offload_config("cpu", "transformers", "cpu")
         assert any("CUDA" in err for err in errors)
 
     def test_validate_cpu_unsloth_incompatible(self):
-        from soup_cli.utils.activation_offload import validate_offload_config
+        from ai_forge_cli.utils.activation_offload import validate_offload_config
 
         errors = validate_offload_config("cpu", "unsloth", "cuda")
         assert any("unsloth" in err.lower() for err in errors)
 
     def test_validate_disk_valid(self):
-        from soup_cli.utils.activation_offload import validate_offload_config
+        from ai_forge_cli.utils.activation_offload import validate_offload_config
 
         errors = validate_offload_config(
             "disk", "transformers", "cuda", save_dir="./scratch"
@@ -1146,7 +1146,7 @@ class TestActivationOffloadingValidation:
 
     def test_validate_disk_requires_save_dir(self):
         """Disk mode must reject calls without save_dir — fail-fast at validate()."""
-        from soup_cli.utils.activation_offload import validate_offload_config
+        from ai_forge_cli.utils.activation_offload import validate_offload_config
 
         errors = validate_offload_config(
             "disk", "transformers", "cuda", save_dir=None
@@ -1154,7 +1154,7 @@ class TestActivationOffloadingValidation:
         assert any("save_dir" in err for err in errors)
 
     def test_validate_disk_on_cpu_rejected(self):
-        from soup_cli.utils.activation_offload import validate_offload_config
+        from ai_forge_cli.utils.activation_offload import validate_offload_config
 
         errors = validate_offload_config(
             "disk", "transformers", "cpu", save_dir="./scratch"
@@ -1162,7 +1162,7 @@ class TestActivationOffloadingValidation:
         assert any("CUDA" in err for err in errors)
 
     def test_validate_mlx_rejected(self):
-        from soup_cli.utils.activation_offload import validate_offload_config
+        from ai_forge_cli.utils.activation_offload import validate_offload_config
 
         errors = validate_offload_config("cpu", "mlx", "cuda")
         assert any("mlx" in err.lower() for err in errors)
@@ -1172,21 +1172,21 @@ class TestActivationOffloadingHooks:
     """Install / uninstall hooks for offloading."""
 
     def test_context_manager_noop_when_none(self):
-        from soup_cli.utils.activation_offload import offload_context
+        from ai_forge_cli.utils.activation_offload import offload_context
 
         # Should be a no-op when target is None
         with offload_context(None, save_dir=None):
             pass  # nothing to assert - just shouldn't crash
 
     def test_context_manager_cpu(self):
-        from soup_cli.utils.activation_offload import offload_context
+        from ai_forge_cli.utils.activation_offload import offload_context
 
         # Should not crash even without torch
         with offload_context("cpu", save_dir=None):
             pass
 
     def test_offload_context_disk_requires_dir(self, tmp_path):
-        from soup_cli.utils.activation_offload import offload_context
+        from ai_forge_cli.utils.activation_offload import offload_context
 
         # Disk mode should accept a save_dir
         with offload_context("disk", save_dir=str(tmp_path)):
@@ -1194,7 +1194,7 @@ class TestActivationOffloadingHooks:
 
     def test_offload_context_unknown_target_raises(self):
         """Defense-in-depth: unknown target raises even if torch is present."""
-        from soup_cli.utils.activation_offload import offload_context
+        from ai_forge_cli.utils.activation_offload import offload_context
 
         # Only reaches the ValueError branch if torch imports successfully
         try:
@@ -1213,7 +1213,7 @@ class TestActivationOffloadingHooks:
         except ImportError:
             pytest.skip("torch not installed; disk hooks unreachable")
 
-        from soup_cli.utils.activation_offload import offload_context
+        from ai_forge_cli.utils.activation_offload import offload_context
 
         scratch = tmp_path / "offload_scratch"
         with offload_context("disk", save_dir=str(scratch)):

@@ -15,14 +15,14 @@ from typing import List
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.utils.canary_discovery import (
+from ai_forge_cli.utils.canary_discovery import (
     CanarySet,
     canary_set_to_dict,
     discover_canaries,
     load_canary_set,
     write_canary_set,
 )
-from soup_cli.utils.eval_design import (
+from ai_forge_cli.utils.eval_design import (
     SCORER_TYPES,
     EvalDesign,
     EvalDimension,
@@ -31,7 +31,7 @@ from soup_cli.utils.eval_design import (
     load_eval_design,
     write_eval_design,
 )
-from soup_cli.utils.eval_gate_hook import (
+from ai_forge_cli.utils.eval_gate_hook import (
     GateThresholds,
     RegressionVerdict,
     decide_regression,
@@ -39,7 +39,7 @@ from soup_cli.utils.eval_gate_hook import (
     render_pre_push_hook,
     write_pre_push_hook,
 )
-from soup_cli.utils.eval_lock_coverage import (
+from ai_forge_cli.utils.eval_lock_coverage import (
     CoverageReport,
     LockedSuite,
     canonicalise_design_bytes,
@@ -747,7 +747,7 @@ class TestPrePushHookWrite:
 
 class TestRegistryArtifactKinds:
     def test_eval_suite_in_valid_kinds(self):
-        from soup_cli.registry.store import _VALID_KINDS
+        from ai_forge_cli.registry.store import _VALID_KINDS
         assert "eval_suite" in _VALID_KINDS
         assert "canaries" in _VALID_KINDS
 
@@ -761,20 +761,20 @@ class TestCLIPlumbing:
         self.runner = CliRunner()
 
     def test_eval_help_lists_new_commands(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         result = self.runner.invoke(app, ["--help"])
         assert result.exit_code == 0, result.output
         for cmd in ["design", "discover", "lock", "coverage", "gate-install"]:
             assert cmd in result.output, f"missing {cmd!r} in --help"
 
     def test_eval_design_help(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         result = self.runner.invoke(app, ["design", "--help"])
         assert result.exit_code == 0, result.output
         assert "--goal" in _strip_ansi(result.output)
 
     def test_eval_design_end_to_end(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         data = tmp_path / "data.jsonl"
         data.write_text(
@@ -790,7 +790,7 @@ class TestCLIPlumbing:
     def test_eval_design_missing_data_exits_nonzero(
         self, tmp_path, monkeypatch,
     ):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         result = self.runner.invoke(
             app, ["design", "nope.jsonl", "--goal", "x"],
@@ -798,7 +798,7 @@ class TestCLIPlumbing:
         assert result.exit_code != 0
 
     def test_eval_discover_end_to_end(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         data = tmp_path / "d.jsonl"
         data.write_text(
@@ -812,7 +812,7 @@ class TestCLIPlumbing:
         assert os.path.isfile("evals/canaries.json")
 
     def test_eval_lock_end_to_end(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         design = design_evals_from_data([{"output": "x"}], goal="y")
         (tmp_path / "evals").mkdir()
@@ -822,7 +822,7 @@ class TestCLIPlumbing:
         assert os.path.isfile("evals/locked.json")
 
     def test_eval_coverage_end_to_end(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         design = design_evals_from_data([{"output": "x"}], goal="y")
         (tmp_path / "evals").mkdir()
@@ -833,7 +833,7 @@ class TestCLIPlumbing:
         assert result.exit_code == 0, (result.output, repr(result.exception))
 
     def test_eval_coverage_bad_task_exits_nonzero(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         design = design_evals_from_data([{"output": "x"}], goal="y")
         (tmp_path / "evals").mkdir()
@@ -844,7 +844,7 @@ class TestCLIPlumbing:
         assert result.exit_code == 2
 
     def test_gate_install_end_to_end(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         (tmp_path / "evals").mkdir()
         (tmp_path / "evals" / "locked.json").write_text("{}")
@@ -869,7 +869,7 @@ class TestSourceGrep:
     REPO_ROOT = Path(__file__).resolve().parent.parent
 
     def test_eval_py_registers_v0550_module(self):
-        text = (self.REPO_ROOT / "src" / "soup_cli" / "commands" / "eval.py").read_text(
+        text = (self.REPO_ROOT / "src" / "ai_forge_cli" / "commands" / "eval.py").read_text(
             encoding="utf-8",
         )
         assert "_eval_v0550" in text
@@ -878,7 +878,7 @@ class TestSourceGrep:
     def test_v0550_module_uses_lazy_imports(self):
         # The Typer registration module itself must not eagerly import
         # heavy deps. Lazy imports happen inside each command body.
-        text = (self.REPO_ROOT / "src" / "soup_cli" / "commands" / "_eval_v0550.py").read_text(
+        text = (self.REPO_ROOT / "src" / "ai_forge_cli" / "commands" / "_eval_v0550.py").read_text(
             encoding="utf-8",
         )
         # Top-level imports allowed: typer, rich.*. No torch/transformers/peft.
@@ -892,7 +892,7 @@ class TestSourceGrep:
         import re
 
         init_text = (
-            self.REPO_ROOT / "src" / "soup_cli" / "__init__.py"
+            self.REPO_ROOT / "src" / "ai_forge_cli" / "__init__.py"
         ).read_text(encoding="utf-8")
         match = re.search(r'__version__ = "(\d+)\.(\d+)\.(\d+)"', init_text)
         assert match is not None, "version line not found"
@@ -911,13 +911,13 @@ class TestEvalAgainst:
         self.runner = CliRunner()
 
     def test_against_listed_in_help(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         result = self.runner.invoke(app, ["--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
         assert "against" in result.output, "missing 'against' in --help"
 
     def test_against_help(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         result = self.runner.invoke(app, ["against", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
         out = _strip_ansi(result.output)
@@ -927,13 +927,13 @@ class TestEvalAgainst:
 
     def test_against_requires_candidate(self):
         # `--candidate` is a required option; omitting must fail.
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         result = self.runner.invoke(app, ["against", "run-baseline"])
         assert result.exit_code != 0
         assert "candidate" in result.output.lower()
 
     def test_against_unknown_metric_rejected(self, monkeypatch, tmp_path):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         result = self.runner.invoke(
             app,
@@ -951,7 +951,7 @@ class TestEvalAgainst:
     def test_against_deferred_tracker_advisory(self, monkeypatch, tmp_path):
         # The tracker doesn't yet expose `get_metric_series` — the command
         # must catch the AttributeError and emit a v0.55.1-deferred advisory.
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         result = self.runner.invoke(
             app,
@@ -974,7 +974,7 @@ class TestHookTemplate:
         monkeypatch.chdir(tmp_path)
         (tmp_path / "evals").mkdir()
         (tmp_path / "evals" / "locked.json").write_text("{}")
-        from soup_cli.utils.eval_gate_hook import render_pre_push_hook
+        from ai_forge_cli.utils.eval_gate_hook import render_pre_push_hook
         body = render_pre_push_hook(
             baseline_run_id="run-1",
             suite_path="evals/locked.json",

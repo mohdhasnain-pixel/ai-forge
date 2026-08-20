@@ -1,6 +1,6 @@
 """v0.71.7 "Eval live runners" — closes #161, #162, #208, #211, #212, #165.
 
-Live model-loading is mocked at the ``soup_cli.utils.live_eval`` boundary (and
+Live model-loading is mocked at the ``ai_forge_cli.utils.live_eval`` boundary (and
 ``lm_eval`` is faked via ``sys.modules``) so every orchestration path is
 exercised on CPU without a GPU or a model download. The real model load is
 covered by the release-step-6 smoke on SmolLM2-135M.
@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -44,24 +44,24 @@ def _write_jsonl(path: Path, rows: list[dict]) -> None:
 # ===========================================================================
 class TestLiveEvalCore:
     def test_resolve_device_explicit(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         assert live_eval.resolve_device("cpu") == "cpu"
         assert live_eval.resolve_device("cuda") == "cuda"
 
     def test_resolve_device_rejects_empty(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         with pytest.raises(ValueError):
             live_eval.resolve_device("")
 
     def test_resolve_device_auto_returns_str(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         assert live_eval.resolve_device(None) in {"cpu", "cuda"}
 
     def test_apply_prompt_template_no_template(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         class _Tok:
             chat_template = None
@@ -69,7 +69,7 @@ class TestLiveEvalCore:
         assert live_eval._apply_prompt_template(_Tok(), "hi") == "hi"
 
     def test_apply_prompt_template_uses_chat_template(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         class _Tok:
             chat_template = "x"
@@ -80,7 +80,7 @@ class TestLiveEvalCore:
         assert live_eval._apply_prompt_template(_Tok(), "hi") == "TEMPLATED:hi"
 
     def test_make_generator_rejects_bad_max_new_tokens(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         with pytest.raises(ValueError):
             live_eval.make_generator("m", max_new_tokens=0)
@@ -88,13 +88,13 @@ class TestLiveEvalCore:
             live_eval.make_generator("m", max_new_tokens=True)
 
     def test_make_generator_rejects_bad_loaded(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         with pytest.raises(ValueError):
             live_eval.make_generator("m", loaded=("only", "two"))
 
     def test_make_multi_generator_rejects_bad_args(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         with pytest.raises(ValueError):
             live_eval.make_multi_generator("m", max_new_tokens=0)
@@ -106,13 +106,13 @@ class TestLiveEvalCore:
             live_eval.make_multi_generator("m", temperature=True)
 
     def test_load_model_rejects_empty_id(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         with pytest.raises(ValueError):
             live_eval.load_model_and_tokenizer("")
 
     def test_build_pairs_skips_missing_sides(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         rows = [
             {"prompt": "p1", "response": "t1"},
@@ -128,7 +128,7 @@ class TestLiveEvalCore:
         assert pairs == [("p1", "t1")]
 
     def test_lora_probe_rejects_bad_steps(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         with pytest.raises(ValueError):
             live_eval.lora_probe(
@@ -136,7 +136,7 @@ class TestLiveEvalCore:
             )
 
     def test_measure_logit_agreement_rejects_bad_max_pairs(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         with pytest.raises(ValueError):
             live_eval.measure_logit_agreement(
@@ -163,7 +163,7 @@ class _FakeTok:
 
 class TestLiveEvalPrimitives:
     def test_tokenize_pair_masks_prompt(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         ids, labels = live_eval._tokenize_pair(
             _FakeTok(eos=99), "a bb", "ccc dddd", max_length=256
@@ -172,7 +172,7 @@ class TestLiveEvalPrimitives:
         assert labels[0].tolist() == [-100, -100, 3, 4, 99]
 
     def test_tokenize_pair_truncates(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         ids, _ = live_eval._tokenize_pair(
             _FakeTok(eos=99), "a bb ccc", "dddd", max_length=2
@@ -184,7 +184,7 @@ class TestLiveEvalPrimitives:
 
         import torch
 
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         class FakeModel:
             def eval(self):
@@ -204,7 +204,7 @@ class TestLiveEvalPrimitives:
 
         import torch
 
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         class FakeModel:
             def eval(self):
@@ -224,7 +224,7 @@ class TestLiveEvalPrimitives:
 
         import torch
 
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         class FakeLogitModel:
             vocab = 200
@@ -255,7 +255,7 @@ class TestLiveEvalPrimitives:
 
         import torch
 
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         class WrongModel:
             def eval(self):
@@ -278,7 +278,7 @@ class TestLiveEvalPrimitives:
         assert score == pytest.approx(0.0)
 
     def test_lora_probe_rejects_bad_lr_and_max_length(self) -> None:
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         with pytest.raises(ValueError):
             live_eval.lora_probe(
@@ -297,22 +297,22 @@ class TestLiveEvalPrimitives:
 # ===========================================================================
 class TestAdviseLiveProbe:
     def test_baselines_heuristic_when_no_model(self) -> None:
-        from soup_cli.utils.advise import synth_probe_baselines
+        from ai_forge_cli.utils.advise import synth_probe_baselines
 
         rows = [{"prompt": "q", "response": "a short answer"} for _ in range(5)]
         out = synth_probe_baselines(rows)
         assert set(out) == {"zero_shot", "few_shot", "rag"}
 
     def test_token_f1(self) -> None:
-        from soup_cli.utils.live_eval import token_f1
+        from ai_forge_cli.utils.live_eval import token_f1
 
         assert token_f1("hello world", "hello world") == pytest.approx(1.0)
         assert token_f1("foo", "bar") == 0.0
         assert token_f1("", "x") == 0.0
 
     def test_baselines_live_when_model(self, monkeypatch) -> None:
-        from soup_cli.utils import live_eval
-        from soup_cli.utils.advise import synth_probe_baselines
+        from ai_forge_cli.utils import live_eval
+        from ai_forge_cli.utils.advise import synth_probe_baselines
 
         def fake_make_generator(model_id, **kwargs):
             return lambda prompt: "the capital is paris"
@@ -328,8 +328,8 @@ class TestAdviseLiveProbe:
         assert out["few_shot"] >= out["zero_shot"]
 
     def test_baselines_falls_back_when_live_raises(self, monkeypatch) -> None:
-        from soup_cli.utils import live_eval
-        from soup_cli.utils.advise import synth_probe_baselines
+        from ai_forge_cli.utils import live_eval
+        from ai_forge_cli.utils.advise import synth_probe_baselines
 
         def boom(*a, **k):
             raise RuntimeError("no gpu")
@@ -340,7 +340,7 @@ class TestAdviseLiveProbe:
         assert set(out) == {"zero_shot", "few_shot", "rag"}
 
     def test_lora_delta_heuristic_when_no_model(self) -> None:
-        from soup_cli.utils.advise import synth_probe_lora_delta
+        from ai_forge_cli.utils.advise import synth_probe_lora_delta
 
         rows = [{"prompt": "q", "response": "a"} for _ in range(200)]
         delta, wall = synth_probe_lora_delta(rows)
@@ -348,8 +348,8 @@ class TestAdviseLiveProbe:
         assert wall > 0
 
     def test_lora_delta_live(self, monkeypatch) -> None:
-        from soup_cli.utils import live_eval
-        from soup_cli.utils.advise import synth_probe_lora_delta
+        from ai_forge_cli.utils import live_eval
+        from ai_forge_cli.utils.advise import synth_probe_lora_delta
 
         monkeypatch.setattr(
             live_eval, "lora_probe", lambda *a, **k: (2.0, 1.0, 12.5)
@@ -360,8 +360,8 @@ class TestAdviseLiveProbe:
         assert wall == pytest.approx(12.5)
 
     def test_lora_delta_live_nan_falls_back(self, monkeypatch) -> None:
-        from soup_cli.utils import live_eval
-        from soup_cli.utils.advise import synth_probe_lora_delta
+        from ai_forge_cli.utils import live_eval
+        from ai_forge_cli.utils.advise import synth_probe_lora_delta
 
         monkeypatch.setattr(
             live_eval, "lora_probe", lambda *a, **k: (float("nan"), 1.0, 5.0)
@@ -377,8 +377,8 @@ class TestAdviseLiveProbe:
 # ===========================================================================
 class TestBaseModelProximity:
     def test_measure_proximity_live(self, monkeypatch) -> None:
-        from soup_cli.utils import live_eval
-        from soup_cli.utils.advise import measure_base_model_proximity
+        from ai_forge_cli.utils import live_eval
+        from ai_forge_cli.utils.advise import measure_base_model_proximity
 
         monkeypatch.setattr(
             live_eval, "measure_logit_agreement", lambda *a, **k: 0.42
@@ -387,8 +387,8 @@ class TestBaseModelProximity:
         assert measure_base_model_proximity(rows, model="m") == pytest.approx(0.42)
 
     def test_measure_proximity_nan_returns_none(self, monkeypatch) -> None:
-        from soup_cli.utils import live_eval
-        from soup_cli.utils.advise import measure_base_model_proximity
+        from ai_forge_cli.utils import live_eval
+        from ai_forge_cli.utils.advise import measure_base_model_proximity
 
         monkeypatch.setattr(
             live_eval, "measure_logit_agreement", lambda *a, **k: float("nan")
@@ -396,13 +396,13 @@ class TestBaseModelProximity:
         assert measure_base_model_proximity([{"prompt": "q", "response": "a"}], model="m") is None
 
     def test_measure_proximity_rejects_empty_model(self) -> None:
-        from soup_cli.utils.advise import measure_base_model_proximity
+        from ai_forge_cli.utils.advise import measure_base_model_proximity
 
         with pytest.raises(ValueError):
             measure_base_model_proximity([], model="")
 
     def test_profile_stores_proximity(self) -> None:
-        from soup_cli.utils.advise import compute_dataset_profile
+        from ai_forge_cli.utils.advise import compute_dataset_profile
 
         rows = [{"prompt": "q", "response": "a"}]
         prof = compute_dataset_profile(rows, base_model_proximity=0.7)
@@ -417,7 +417,7 @@ class TestBaseModelProximity:
 
     def test_advise_cli_probe_model_live(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         # Mock the live boundary: proximity + generator + lora probe.
         monkeypatch.setattr(
@@ -443,7 +443,7 @@ class TestBaseModelProximity:
 class TestTunabilityLiveProbe:
     def test_live_lora_probe(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils import live_eval, tunability
+        from ai_forge_cli.utils import live_eval, tunability
 
         data = tmp_path / "d.jsonl"
         _write_jsonl(data, [{"prompt": "q", "response": "a"} for _ in range(10)])
@@ -464,7 +464,7 @@ class TestTunabilityLiveProbe:
 
     def test_live_lora_probe_nan_neutral(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils import live_eval, tunability
+        from ai_forge_cli.utils import live_eval, tunability
 
         data = tmp_path / "d.jsonl"
         _write_jsonl(data, [{"prompt": "q", "response": "a"} for _ in range(4)])
@@ -479,7 +479,7 @@ class TestTunabilityLiveProbe:
 
     def test_live_lora_probe_one_nan(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils import live_eval, tunability
+        from ai_forge_cli.utils import live_eval, tunability
 
         data = tmp_path / "d.jsonl"
         _write_jsonl(data, [{"prompt": "q", "response": "a"} for _ in range(4)])
@@ -495,7 +495,7 @@ class TestTunabilityLiveProbe:
 
     def test_load_jsonl_rows_outside_cwd_rejected(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils import tunability
+        from ai_forge_cli.utils import tunability
 
         outside = tmp_path.parent / "outside.jsonl"
         _write_jsonl(outside, [{"prompt": "q", "response": "a"}])
@@ -504,7 +504,7 @@ class TestTunabilityLiveProbe:
 
     def test_run_tunability_uses_injected_probe(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils import tunability
+        from ai_forge_cli.utils import tunability
 
         cand = tunability.CandidateBase(
             name="t", repo_id="r", params_b=0.1, license_id="mit",
@@ -567,21 +567,21 @@ def _install_fake_lm_eval(monkeypatch, *, results: dict, raise_for: set | None =
 
 class TestCapabilityLiveRunner:
     def test_primary_metric_prefers_acc_norm(self) -> None:
-        from soup_cli.utils.capability_suite import _primary_metric
+        from ai_forge_cli.utils.capability_suite import _primary_metric
 
         key, val = _primary_metric({"acc,none": 0.4, "acc_norm,none": 0.6})
         assert key.startswith("acc_norm")
         assert val == pytest.approx(0.6)
 
     def test_primary_metric_skips_stderr(self) -> None:
-        from soup_cli.utils.capability_suite import _primary_metric
+        from ai_forge_cli.utils.capability_suite import _primary_metric
 
         key, val = _primary_metric({"exact_match,none": 0.3, "exact_match_stderr,none": 0.1})
         assert "stderr" not in key
         assert val == pytest.approx(0.3)
 
     def test_run_capability_suite_tasks(self, monkeypatch) -> None:
-        from soup_cli.utils.capability_suite import run_capability_suite
+        from ai_forge_cli.utils.capability_suite import run_capability_suite
 
         _install_fake_lm_eval(monkeypatch, results={"arc_easy": {"acc,none": 0.71}})
         out = run_capability_suite(
@@ -592,7 +592,7 @@ class TestCapabilityLiveRunner:
         assert out["results"][0]["score"] == pytest.approx(0.71)
 
     def test_run_capability_suite_per_task_error_isolation(self, monkeypatch) -> None:
-        from soup_cli.utils.capability_suite import run_capability_suite
+        from ai_forge_cli.utils.capability_suite import run_capability_suite
 
         _install_fake_lm_eval(
             monkeypatch,
@@ -606,7 +606,7 @@ class TestCapabilityLiveRunner:
         assert "error" in out["results"][1]
 
     def test_run_capability_suite_resolves_profile(self, monkeypatch) -> None:
-        from soup_cli.utils.capability_suite import run_capability_suite
+        from ai_forge_cli.utils.capability_suite import run_capability_suite
 
         _install_fake_lm_eval(monkeypatch, results={})
         out = run_capability_suite(run_id="r", model_id="m", suite="fast")
@@ -614,14 +614,14 @@ class TestCapabilityLiveRunner:
         assert names == {"mmlu-pro", "humaneval-plus"}
 
     def test_run_capability_empty_result_is_error(self, monkeypatch) -> None:
-        from soup_cli.utils.capability_suite import run_capability_suite
+        from ai_forge_cli.utils.capability_suite import run_capability_suite
 
         _install_fake_lm_eval(monkeypatch, results={"arc_easy": {}})
         out = run_capability_suite(run_id="r", model_id="m", tasks=["arc_easy"])
         assert out["results"][0]["error"] == "no scalar metric in task result"
 
     def test_run_capability_missing_lm_eval(self, monkeypatch) -> None:
-        from soup_cli.utils.capability_suite import run_capability_suite
+        from ai_forge_cli.utils.capability_suite import run_capability_suite
 
         # Force the import to fail.
         monkeypatch.setitem(sys.modules, "lm_eval", None)
@@ -629,7 +629,7 @@ class TestCapabilityLiveRunner:
             run_capability_suite(run_id="r", model_id="m", tasks=["arc_easy"])
 
     def test_run_capability_validation(self) -> None:
-        from soup_cli.utils.capability_suite import run_capability_suite
+        from ai_forge_cli.utils.capability_suite import run_capability_suite
 
         with pytest.raises(ValueError):
             run_capability_suite(run_id="", model_id="m", tasks=["x"])
@@ -671,7 +671,7 @@ class TestCapabilityLiveRunner:
 # ===========================================================================
 class TestBehaviorLive:
     def _patch_generators(self, monkeypatch, base_text: str, post_text: str):
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval, "load_model_and_tokenizer",
@@ -685,7 +685,7 @@ class TestBehaviorLive:
         monkeypatch.setattr(live_eval, "make_generator", fake_make_generator)
 
     def test_run_behavior_live_returns_report(self, monkeypatch) -> None:
-        from soup_cli.utils.behavior_battery import BehaviorDiffReport, run_behavior_live
+        from ai_forge_cli.utils.behavior_battery import BehaviorDiffReport, run_behavior_live
 
         self._patch_generators(monkeypatch, "safe answer", "safe answer")
         report = run_behavior_live(
@@ -695,13 +695,13 @@ class TestBehaviorLive:
         assert report.battery == "xstest"
 
     def test_run_behavior_live_rejects_empty_model(self) -> None:
-        from soup_cli.utils.behavior_battery import run_behavior_live
+        from ai_forge_cli.utils.behavior_battery import run_behavior_live
 
         with pytest.raises(ValueError):
             run_behavior_live(run_id="r", battery="xstest", base_model="")
 
     def test_run_behavior_live_rejects_bad_max_probes(self, monkeypatch) -> None:
-        from soup_cli.utils.behavior_battery import run_behavior_live
+        from ai_forge_cli.utils.behavior_battery import run_behavior_live
 
         self._patch_generators(monkeypatch, "x", "x")
         with pytest.raises(ValueError):
@@ -739,7 +739,7 @@ class TestBehaviorLive:
 # ===========================================================================
 class TestDiagnoseLive:
     def _patch_live_eval(self, monkeypatch, base_text="hello", post_text="hello"):
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval, "load_model_and_tokenizer",
@@ -757,13 +757,13 @@ class TestDiagnoseLive:
         monkeypatch.setattr(live_eval, "make_multi_generator", fake_make_multi)
 
     def test_token_f1_helper(self) -> None:
-        from soup_cli.utils.live_eval import token_f1
+        from ai_forge_cli.utils.live_eval import token_f1
 
         assert token_f1("a b c", "a b c") == pytest.approx(1.0)
         assert token_f1("x", "y") == 0.0
 
     def test_looks_like_json_dataset(self) -> None:
-        from soup_cli.utils.diagnose.live import _looks_like_json_dataset
+        from ai_forge_cli.utils.diagnose.live import _looks_like_json_dataset
 
         json_rows = [{"response": '{"k": 1}'} for _ in range(5)]
         text_rows = [{"response": "plain text"} for _ in range(5)]
@@ -772,7 +772,7 @@ class TestDiagnoseLive:
 
     def test_load_dataset_rows_outside_cwd(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.diagnose.live import _load_dataset_rows
+        from ai_forge_cli.utils.diagnose.live import _load_dataset_rows
 
         outside = tmp_path.parent / "x.jsonl"
         _write_jsonl(outside, [{"prompt": "q", "response": "a"}])
@@ -781,7 +781,7 @@ class TestDiagnoseLive:
 
     def test_load_adapter_pair_aliases_when_no_adapter(self, monkeypatch) -> None:
         self._patch_live_eval(monkeypatch)
-        from soup_cli.utils.diagnose.live import load_adapter_pair
+        from ai_forge_cli.utils.diagnose.live import load_adapter_pair
 
         closures = load_adapter_pair("m", None)
         assert set(closures) == {"base_gen", "adapter_gen", "base_multi", "adapter_multi"}
@@ -790,8 +790,8 @@ class TestDiagnoseLive:
     def test_run_live_diagnose_returns_report(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
         self._patch_live_eval(monkeypatch)
-        from soup_cli.utils.diagnose.live import run_live_diagnose
-        from soup_cli.utils.diagnose.report import FAILURE_MODES
+        from ai_forge_cli.utils.diagnose.live import run_live_diagnose
+        from ai_forge_cli.utils.diagnose.report import FAILURE_MODES
 
         data = tmp_path / "d.jsonl"
         _write_jsonl(data, [{"prompt": f"q{i}", "response": f"a{i}"} for i in range(8)])
@@ -805,7 +805,7 @@ class TestDiagnoseLive:
     def test_run_live_diagnose_format_neutral_when_not_json(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
         self._patch_live_eval(monkeypatch)
-        from soup_cli.utils.diagnose.live import run_live_diagnose
+        from ai_forge_cli.utils.diagnose.live import run_live_diagnose
 
         data = tmp_path / "d.jsonl"
         _write_jsonl(data, [{"prompt": "q", "response": "plain text"} for _ in range(6)])
@@ -814,15 +814,15 @@ class TestDiagnoseLive:
 
     def test_run_live_diagnose_no_dataset(self, monkeypatch) -> None:
         self._patch_live_eval(monkeypatch)
-        from soup_cli.utils.diagnose.live import run_live_diagnose
-        from soup_cli.utils.diagnose.report import FAILURE_MODES
+        from ai_forge_cli.utils.diagnose.live import run_live_diagnose
+        from ai_forge_cli.utils.diagnose.report import FAILURE_MODES
 
         report = run_live_diagnose(run_id="r", base="m")
         # refusal still runs; dataset-driven probes neutral but present.
         assert set(report.scores) >= set(FAILURE_MODES)
 
     def test_run_live_diagnose_rejects_empty_base(self) -> None:
-        from soup_cli.utils.diagnose.live import run_live_diagnose
+        from ai_forge_cli.utils.diagnose.live import run_live_diagnose
 
         with pytest.raises(ValueError):
             run_live_diagnose(run_id="r", base="")
@@ -850,7 +850,7 @@ class TestDiagnoseLive:
 # ===========================================================================
 class TestPatchInvariants:
     def test_version_bumped(self) -> None:
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
 
         major_minor = tuple(int(x) for x in __version__.split(".")[:3])
         assert major_minor >= (0, 71, 7)
@@ -862,7 +862,7 @@ class TestPatchInvariants:
         ):
             src = (
                 Path(__file__).resolve().parent.parent
-                / "src" / "soup_cli" / "utils" / mod
+                / "src" / "ai_forge_cli" / "utils" / mod
             ).read_text(encoding="utf-8")
             assert "\nimport torch" not in src, mod
             assert "\nimport transformers" not in src, mod

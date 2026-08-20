@@ -28,19 +28,19 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.utils.canary_discovery import (
+from ai_forge_cli.utils.canary_discovery import (
     CanarySet,
     discover_canaries,
     load_canary_set,
     write_canary_set,
 )
-from soup_cli.utils.eval_design import (
+from ai_forge_cli.utils.eval_design import (
     SCORER_TYPES,
     design_evals_from_data,
     load_eval_design,
     write_eval_design,
 )
-from soup_cli.utils.eval_gate_hook import (
+from ai_forge_cli.utils.eval_gate_hook import (
     GateThresholds,
     RegressionVerdict,
     decide_regression,
@@ -48,7 +48,7 @@ from soup_cli.utils.eval_gate_hook import (
     render_pre_push_hook,
     write_pre_push_hook,
 )
-from soup_cli.utils.eval_lock_coverage import (
+from ai_forge_cli.utils.eval_lock_coverage import (
     compute_coverage,
     lock_suite,
 )
@@ -62,13 +62,13 @@ POSIX_ONLY = pytest.mark.skipif(os.name == "nt", reason="POSIX-only symlink test
 
 class TestImmutableRegistries:
     def test_recommended_scorers_is_mappingproxy(self):
-        from soup_cli.utils.eval_lock_coverage import _RECOMMENDED_SCORERS
+        from ai_forge_cli.utils.eval_lock_coverage import _RECOMMENDED_SCORERS
         assert isinstance(_RECOMMENDED_SCORERS, _types.MappingProxyType)
         with pytest.raises(TypeError):
             _RECOMMENDED_SCORERS["evil"] = ()  # type: ignore[index]
 
     def test_metric_direction_is_mappingproxy(self):
-        from soup_cli.utils.eval_gate_hook import _METRIC_DIRECTION
+        from ai_forge_cli.utils.eval_gate_hook import _METRIC_DIRECTION
         assert isinstance(_METRIC_DIRECTION, _types.MappingProxyType)
         with pytest.raises(TypeError):
             _METRIC_DIRECTION["evil"] = 0  # type: ignore[index]
@@ -321,7 +321,7 @@ class TestShellEscape:
         )
 
     def test_render_no_handrolled_escape_symbol_remains(self):
-        from soup_cli.utils import eval_gate_hook as mod
+        from ai_forge_cli.utils import eval_gate_hook as mod
         # Ensure the new helper name exists and the old function is gone.
         assert hasattr(mod, "_safe_shell_quote")
         assert not hasattr(mod, "_shell_quote")
@@ -398,12 +398,12 @@ class TestNoHeavyImports:
     @pytest.mark.parametrize(
         "module",
         [
-            "src/soup_cli/utils/eval_design.py",
-            "src/soup_cli/utils/canary_discovery.py",
-            "src/soup_cli/utils/eval_lock_coverage.py",
-            "src/soup_cli/utils/eval_gate_hook.py",
-            "src/soup_cli/utils/_eval_text.py",
-            "src/soup_cli/commands/_eval_v0550.py",
+            "src/ai_forge_cli/utils/eval_design.py",
+            "src/ai_forge_cli/utils/canary_discovery.py",
+            "src/ai_forge_cli/utils/eval_lock_coverage.py",
+            "src/ai_forge_cli/utils/eval_gate_hook.py",
+            "src/ai_forge_cli/utils/_eval_text.py",
+            "src/ai_forge_cli/commands/_eval_v0550.py",
         ],
     )
     def test_no_top_level_torch_or_transformers(self, module):
@@ -432,17 +432,17 @@ class TestNoHeavyImports:
 
 class TestSharedTextUtils:
     def test_shared_module_exposes_row_text_and_tokenize(self):
-        from soup_cli.utils import _eval_text
+        from ai_forge_cli.utils import _eval_text
         assert hasattr(_eval_text, "row_text")
         assert hasattr(_eval_text, "tokenize")
 
     def test_canary_no_longer_imports_from_eval_design(self):
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "canary_discovery.py"
+            / "src" / "ai_forge_cli" / "utils" / "canary_discovery.py"
         ).read_text(encoding="utf-8")
-        assert "from soup_cli.utils.eval_design import _row_text" not in src
-        assert "from soup_cli.utils._eval_text import" in src
+        assert "from ai_forge_cli.utils.eval_design import _row_text" not in src
+        assert "from ai_forge_cli.utils._eval_text import" in src
 
 
 # ---------------------------------------------------------------------------
@@ -466,7 +466,7 @@ class TestScorerMixCompleteness:
 
 class TestEvalAgainst:
     def _make_tracker(self, tmp_path):
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
         return ExperimentTracker(db_path=Path(tmp_path) / "t.db")
 
     def test_get_metric_series_happy(self, tmp_path):
@@ -506,7 +506,7 @@ class TestEvalAgainst:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, ["against", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -527,7 +527,7 @@ class TestCoverageMarkupEscape:
     def test_v0550_module_escapes_task_category(self):
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "commands" / "_eval_v0550.py"
+            / "src" / "ai_forge_cli" / "commands" / "_eval_v0550.py"
         ).read_text(encoding="utf-8")
         # The coverage table title must wrap report.task_category in escape().
         assert "escape(report.task_category)" in src

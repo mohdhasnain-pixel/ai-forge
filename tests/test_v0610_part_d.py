@@ -17,7 +17,7 @@ import pytest
 
 class TestModuleSurface:
     def test_imports(self):
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             DEFAULT_BLOWUP_POLICY,
             VERDICTS,
             EditGovernor,
@@ -38,7 +38,7 @@ class TestModuleSurface:
 
 class TestNormBlowupPolicy:
     def test_defaults(self):
-        from soup_cli.utils.edit_governor import NormBlowupPolicy
+        from ai_forge_cli.utils.edit_governor import NormBlowupPolicy
 
         p = NormBlowupPolicy()
         assert p.warn_threshold > 0
@@ -47,14 +47,14 @@ class TestNormBlowupPolicy:
         assert p.auto_switch_at >= 0
 
     def test_frozen(self):
-        from soup_cli.utils.edit_governor import NormBlowupPolicy
+        from ai_forge_cli.utils.edit_governor import NormBlowupPolicy
 
         p = NormBlowupPolicy()
         with pytest.raises(dataclasses.FrozenInstanceError):
             p.warn_threshold = 999.0  # type: ignore
 
     def test_invalid_bounds(self):
-        from soup_cli.utils.edit_governor import NormBlowupPolicy
+        from ai_forge_cli.utils.edit_governor import NormBlowupPolicy
 
         with pytest.raises(ValueError):
             NormBlowupPolicy(warn_threshold=10.0, blowup_threshold=5.0)
@@ -66,7 +66,7 @@ class TestNormBlowupPolicy:
             NormBlowupPolicy(max_sequential_edits=0)
 
     def test_bool_rejected(self):
-        from soup_cli.utils.edit_governor import NormBlowupPolicy
+        from ai_forge_cli.utils.edit_governor import NormBlowupPolicy
 
         with pytest.raises(TypeError):
             NormBlowupPolicy(warn_threshold=True)  # type: ignore
@@ -75,7 +75,7 @@ class TestNormBlowupPolicy:
             NormBlowupPolicy(max_sequential_edits=True)  # type: ignore
 
     def test_non_finite_rejected(self):
-        from soup_cli.utils.edit_governor import NormBlowupPolicy
+        from ai_forge_cli.utils.edit_governor import NormBlowupPolicy
 
         with pytest.raises(ValueError):
             NormBlowupPolicy(warn_threshold=float("nan"))
@@ -86,13 +86,13 @@ class TestNormBlowupPolicy:
 
 class TestClassifyNormBlowup:
     def test_ok_band(self):
-        from soup_cli.utils.edit_governor import classify_norm_blowup
+        from ai_forge_cli.utils.edit_governor import classify_norm_blowup
 
         assert classify_norm_blowup(0.01) == "OK"
         assert classify_norm_blowup(0.0) == "OK"
 
     def test_warn_band(self):
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             DEFAULT_BLOWUP_POLICY,
             classify_norm_blowup,
         )
@@ -105,7 +105,7 @@ class TestClassifyNormBlowup:
         assert classify_norm_blowup(midpoint) == "WARN"
 
     def test_blowup_band(self):
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             DEFAULT_BLOWUP_POLICY,
             classify_norm_blowup,
         )
@@ -114,13 +114,13 @@ class TestClassifyNormBlowup:
         assert classify_norm_blowup(100.0) == "BLOWUP"
 
     def test_bool_rejected(self):
-        from soup_cli.utils.edit_governor import classify_norm_blowup
+        from ai_forge_cli.utils.edit_governor import classify_norm_blowup
 
         with pytest.raises(TypeError):
             classify_norm_blowup(True)
 
     def test_non_finite_rejected(self):
-        from soup_cli.utils.edit_governor import classify_norm_blowup
+        from ai_forge_cli.utils.edit_governor import classify_norm_blowup
 
         with pytest.raises(ValueError):
             classify_norm_blowup(float("nan"))
@@ -129,7 +129,7 @@ class TestClassifyNormBlowup:
             classify_norm_blowup(float("inf"))
 
     def test_negative_rejected(self):
-        from soup_cli.utils.edit_governor import classify_norm_blowup
+        from ai_forge_cli.utils.edit_governor import classify_norm_blowup
 
         with pytest.raises(ValueError):
             classify_norm_blowup(-1.0)
@@ -137,7 +137,7 @@ class TestClassifyNormBlowup:
 
 class TestGovernorRecommendMethod:
     def test_no_switch_below_threshold(self):
-        from soup_cli.utils.edit_governor import governor_recommend_method
+        from ai_forge_cli.utils.edit_governor import governor_recommend_method
 
         result = governor_recommend_method(
             current_method="rome",
@@ -148,7 +148,7 @@ class TestGovernorRecommendMethod:
         assert result.switched is False
 
     def test_switch_at_auto_switch_count(self):
-        from soup_cli.utils.edit_governor import governor_recommend_method
+        from ai_forge_cli.utils.edit_governor import governor_recommend_method
 
         result = governor_recommend_method(
             current_method="rome",
@@ -160,7 +160,7 @@ class TestGovernorRecommendMethod:
         assert result.switched is True
 
     def test_blowup_forces_switch(self):
-        from soup_cli.utils.edit_governor import governor_recommend_method
+        from ai_forge_cli.utils.edit_governor import governor_recommend_method
 
         result = governor_recommend_method(
             current_method="rome",
@@ -171,7 +171,7 @@ class TestGovernorRecommendMethod:
         assert result.switched is True
 
     def test_alphaedit_no_further_switch(self):
-        from soup_cli.utils.edit_governor import governor_recommend_method
+        from ai_forge_cli.utils.edit_governor import governor_recommend_method
 
         # AlphaEdit is already the survival-mode method — no further switch.
         result = governor_recommend_method(
@@ -183,7 +183,7 @@ class TestGovernorRecommendMethod:
         assert result.switched is False
 
     def test_invalid_method_rejected(self):
-        from soup_cli.utils.edit_governor import governor_recommend_method
+        from ai_forge_cli.utils.edit_governor import governor_recommend_method
 
         with pytest.raises(ValueError):
             governor_recommend_method(
@@ -193,7 +193,7 @@ class TestGovernorRecommendMethod:
             )
 
     def test_bool_edit_count_rejected(self):
-        from soup_cli.utils.edit_governor import governor_recommend_method
+        from ai_forge_cli.utils.edit_governor import governor_recommend_method
 
         with pytest.raises(TypeError):
             governor_recommend_method(
@@ -203,7 +203,7 @@ class TestGovernorRecommendMethod:
             )
 
     def test_negative_edit_count_rejected(self):
-        from soup_cli.utils.edit_governor import governor_recommend_method
+        from ai_forge_cli.utils.edit_governor import governor_recommend_method
 
         with pytest.raises(ValueError):
             governor_recommend_method(
@@ -213,7 +213,7 @@ class TestGovernorRecommendMethod:
             )
 
     def test_negative_norm_delta_rejected(self):
-        from soup_cli.utils.edit_governor import governor_recommend_method
+        from ai_forge_cli.utils.edit_governor import governor_recommend_method
 
         with pytest.raises(ValueError):
             governor_recommend_method(
@@ -224,7 +224,7 @@ class TestGovernorRecommendMethod:
 
     def test_auto_switch_boundary_exact(self):
         """Review L5 — exact `auto_switch_at=10` should switch."""
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             DEFAULT_BLOWUP_POLICY,
             governor_recommend_method,
         )
@@ -240,7 +240,7 @@ class TestGovernorRecommendMethod:
 
     def test_auto_switch_below_boundary_no_switch(self):
         """Review L5 — one below auto_switch_at does NOT switch."""
-        from soup_cli.utils.edit_governor import (
+        from ai_forge_cli.utils.edit_governor import (
             DEFAULT_BLOWUP_POLICY,
             governor_recommend_method,
         )
@@ -256,20 +256,20 @@ class TestGovernorRecommendMethod:
 
 class TestEditGovernor:
     def test_construct(self):
-        from soup_cli.utils.edit_governor import EditGovernor
+        from ai_forge_cli.utils.edit_governor import EditGovernor
 
         g = EditGovernor(base_model="meta-llama/Llama-3.1-8B")
         assert g.edit_count == 0
 
     def test_record_edit(self):
-        from soup_cli.utils.edit_governor import EditGovernor
+        from ai_forge_cli.utils.edit_governor import EditGovernor
 
         g = EditGovernor(base_model="meta-llama/Llama-3.1-8B")
         g.record_edit(method="rome", norm_delta=0.0)
         assert g.edit_count == 1
 
     def test_refuses_above_max_edits(self):
-        from soup_cli.utils.edit_governor import EditGovernor, GovernedEditError
+        from ai_forge_cli.utils.edit_governor import EditGovernor, GovernedEditError
 
         g = EditGovernor(
             base_model="meta-llama/Llama-3.1-8B",
@@ -281,7 +281,7 @@ class TestEditGovernor:
             g.check_can_edit()
 
     def test_blowup_blocks_further(self):
-        from soup_cli.utils.edit_governor import EditGovernor, GovernedEditError
+        from ai_forge_cli.utils.edit_governor import EditGovernor, GovernedEditError
 
         g = EditGovernor(base_model="meta-llama/Llama-3.1-8B")
         g.record_edit(method="rome", norm_delta=100.0)  # blowup
@@ -289,26 +289,26 @@ class TestEditGovernor:
             g.check_can_edit()
 
     def test_empty_base_rejected(self):
-        from soup_cli.utils.edit_governor import EditGovernor
+        from ai_forge_cli.utils.edit_governor import EditGovernor
 
         with pytest.raises(ValueError):
             EditGovernor(base_model="")
 
     def test_null_byte_base_rejected(self):
-        from soup_cli.utils.edit_governor import EditGovernor
+        from ai_forge_cli.utils.edit_governor import EditGovernor
 
         with pytest.raises(ValueError):
             EditGovernor(base_model="b\x00")
 
     def test_invalid_method_in_record_rejected(self):
-        from soup_cli.utils.edit_governor import EditGovernor
+        from ai_forge_cli.utils.edit_governor import EditGovernor
 
         g = EditGovernor(base_model="b")
         with pytest.raises(ValueError):
             g.record_edit(method="zzz", norm_delta=0.0)
 
     def test_recommend_next(self):
-        from soup_cli.utils.edit_governor import EditGovernor
+        from ai_forge_cli.utils.edit_governor import EditGovernor
 
         g = EditGovernor(base_model="b")
         g.record_edit(method="rome", norm_delta=0.0)
@@ -317,7 +317,7 @@ class TestEditGovernor:
         assert rec.method == "rome"
 
     def test_snapshot(self):
-        from soup_cli.utils.edit_governor import EditGovernor
+        from ai_forge_cli.utils.edit_governor import EditGovernor
 
         g = EditGovernor(base_model="b")
         g.record_edit(method="rome", norm_delta=0.01)

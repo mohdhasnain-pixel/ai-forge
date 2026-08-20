@@ -44,7 +44,7 @@ class _FakeJudge:
         return 0 if len(resp_a) > len(resp_b) else 1
 
     def evaluate(self, prompt, response, category="default"):
-        from soup_cli.eval.judge import JudgeScore
+        from ai_forge_cli.eval.judge import JudgeScore
 
         return JudgeScore(
             prompt=prompt, response=response, weighted_score=float(len(response))
@@ -65,33 +65,33 @@ class _PosBias:
 
 class TestPairwiseCompare:
     def test_a_preferred(self):
-        from soup_cli.eval.judge import pairwise_compare
+        from ai_forge_cli.eval.judge import pairwise_compare
 
         assert pairwise_compare("p", "longer response", "short", _FakeJudge(), swap=True) == 0
 
     def test_b_preferred(self):
-        from soup_cli.eval.judge import pairwise_compare
+        from ai_forge_cli.eval.judge import pairwise_compare
 
         assert pairwise_compare("p", "short", "longer response", _FakeJudge(), swap=True) == 1
 
     def test_tie_on_equal(self):
-        from soup_cli.eval.judge import pairwise_compare
+        from ai_forge_cli.eval.judge import pairwise_compare
 
         assert pairwise_compare("p", "aaaa", "bbbb", _FakeJudge(), swap=True) == -1
 
     def test_swap_debias_disagreement_is_tie(self):
-        from soup_cli.eval.judge import pairwise_compare
+        from ai_forge_cli.eval.judge import pairwise_compare
 
         # A judge that ALWAYS says "first is best" disagrees under swap -> tie.
         assert pairwise_compare("p", "x", "y", _PosBias(), swap=True) == -1
 
     def test_no_swap_uses_single_call(self):
-        from soup_cli.eval.judge import pairwise_compare
+        from ai_forge_cli.eval.judge import pairwise_compare
 
         assert pairwise_compare("p", "x", "y", _PosBias(), swap=False) == 0
 
     def test_one_side_failure_is_tie(self):
-        from soup_cli.eval.judge import pairwise_compare
+        from ai_forge_cli.eval.judge import pairwise_compare
 
         # Definite verdict on the first order, failure (-1) on the swap -> the
         # single unconfirmed verdict must NOT be trusted; result is a tie.
@@ -108,25 +108,25 @@ class TestPairwiseCompare:
 
 class TestPairwiseWinrate:
     def test_tuned_always_wins(self):
-        from soup_cli.eval.judge import pairwise_winrate
+        from ai_forge_cli.eval.judge import pairwise_winrate
 
         # base short, tuned long -> _FakeJudge prefers tuned every time -> 1.0
         pairs = [("p", "s", "longer"), ("q", "s", "longer")]
         assert pairwise_winrate(pairs, _FakeJudge()) == 1.0
 
     def test_all_ties_is_half(self):
-        from soup_cli.eval.judge import pairwise_winrate
+        from ai_forge_cli.eval.judge import pairwise_winrate
 
         pairs = [("p", "aaa", "bbb")]  # equal length -> tie -> 0.5
         assert pairwise_winrate(pairs, _FakeJudge()) == 0.5
 
     def test_empty_pairs_is_half(self):
-        from soup_cli.eval.judge import pairwise_winrate
+        from ai_forge_cli.eval.judge import pairwise_winrate
 
         assert pairwise_winrate([], _FakeJudge()) == 0.5
 
     def test_mixed_winrate(self):
-        from soup_cli.eval.judge import pairwise_winrate
+        from ai_forge_cli.eval.judge import pairwise_winrate
 
         # tuned wins (long), tuned loses (short), tie (equal) -> (1 + 0 + 0.5)/3
         pairs = [("a", "s", "longer"), ("b", "longer", "s"), ("c", "xx", "yy")]
@@ -135,23 +135,23 @@ class TestPairwiseWinrate:
 
 class TestParsePairwise:
     def test_json_winner_a(self):
-        from soup_cli.eval.judge import _parse_pairwise
+        from ai_forge_cli.eval.judge import _parse_pairwise
 
         assert _parse_pairwise('{"winner": "A"}') == 0
 
     def test_json_winner_b_lowercase(self):
-        from soup_cli.eval.judge import _parse_pairwise
+        from ai_forge_cli.eval.judge import _parse_pairwise
 
         assert _parse_pairwise('the answer is {"winner": "b"}') == 1
 
     def test_bare_token_fallback(self):
-        from soup_cli.eval.judge import _parse_pairwise
+        from ai_forge_cli.eval.judge import _parse_pairwise
 
         assert _parse_pairwise("A is clearly better") == 0
         assert _parse_pairwise("B wins here") == 1
 
     def test_unparseable_is_tie(self):
-        from soup_cli.eval.judge import _parse_pairwise
+        from ai_forge_cli.eval.judge import _parse_pairwise
 
         assert _parse_pairwise("I cannot decide") == -1
         assert _parse_pairwise("") == -1
@@ -159,14 +159,14 @@ class TestParsePairwise:
 
 class TestCompareePairMethod:
     def test_compare_pair_parses_llm_reply(self, monkeypatch):
-        from soup_cli.eval.judge import JudgeEvaluator
+        from ai_forge_cli.eval.judge import JudgeEvaluator
 
         ev = JudgeEvaluator(provider="ollama", model="m")
         monkeypatch.setattr(ev, "_call_llm", lambda prompt: '{"winner": "B"}')
         assert ev.compare_pair("p", "x", "y") == 1
 
     def test_compare_pair_llm_failure_is_tie(self, monkeypatch):
-        from soup_cli.eval.judge import JudgeEvaluator
+        from ai_forge_cli.eval.judge import JudgeEvaluator
 
         ev = JudgeEvaluator(provider="ollama", model="m")
 
@@ -190,7 +190,7 @@ class TestCompareePairMethod:
 )
 class TestSoupPairwiseJudge:
     def test_judge_returns_best_index(self):
-        from soup_cli.eval.judge import make_soup_pairwise_judge
+        from ai_forge_cli.eval.judge import make_soup_pairwise_judge
 
         j = make_soup_pairwise_judge(_FakeJudge())  # prefers longer
         # prompt0: [short, long] -> B(1); prompt1: [long, short] -> A(0)
@@ -198,19 +198,19 @@ class TestSoupPairwiseJudge:
         assert out == [1, 0]
 
     def test_judge_tie_returns_minus_one(self):
-        from soup_cli.eval.judge import make_soup_pairwise_judge
+        from ai_forge_cli.eval.judge import make_soup_pairwise_judge
 
         j = make_soup_pairwise_judge(_FakeJudge())
         assert j.judge(["p"], [["aaaa", "bbbb"]]) == [-1]
 
     def test_shuffle_order_false_no_swap(self):
-        from soup_cli.eval.judge import make_soup_pairwise_judge
+        from ai_forge_cli.eval.judge import make_soup_pairwise_judge
 
         j = make_soup_pairwise_judge(_PosBias())
         assert j.judge(["p"], [["x", "y"]], shuffle_order=False) == [0]
 
     def test_malformed_pair_returns_minus_one(self):
-        from soup_cli.eval.judge import make_soup_pairwise_judge
+        from ai_forge_cli.eval.judge import make_soup_pairwise_judge
 
         j = make_soup_pairwise_judge(_FakeJudge())
         assert j.judge(["p"], [["only-one"]]) == [-1]
@@ -218,7 +218,7 @@ class TestSoupPairwiseJudge:
     def test_is_trl_base_pairwise_judge(self):
         from trl import BasePairwiseJudge
 
-        from soup_cli.eval.judge import make_soup_pairwise_judge
+        from ai_forge_cli.eval.judge import make_soup_pairwise_judge
 
         assert isinstance(make_soup_pairwise_judge(_FakeJudge()), BasePairwiseJudge)
 
@@ -231,7 +231,7 @@ class TestSoupPairwiseJudge:
 
 class TestJudgeRewardFunc:
     def test_named_and_scores_by_evaluate(self):
-        from soup_cli.eval.judge import make_judge_reward_func
+        from ai_forge_cli.eval.judge import make_judge_reward_func
 
         fn = make_judge_reward_func(_FakeJudge())
         assert fn.__name__ == "soup_judge"
@@ -240,12 +240,12 @@ class TestJudgeRewardFunc:
         assert scores == [2.0, 4.0]
 
     def test_custom_name(self):
-        from soup_cli.eval.judge import make_judge_reward_func
+        from ai_forge_cli.eval.judge import make_judge_reward_func
 
         assert make_judge_reward_func(_FakeJudge(), name="mine").__name__ == "mine"
 
     def test_conversational_prompt_and_completion(self):
-        from soup_cli.eval.judge import make_judge_reward_func
+        from ai_forge_cli.eval.judge import make_judge_reward_func
 
         fn = make_judge_reward_func(_FakeJudge())
         prompts = [[{"role": "user", "content": "hi"}]]
@@ -253,7 +253,7 @@ class TestJudgeRewardFunc:
         assert fn(prompts, completions) == [4.0]
 
     def test_evaluate_failure_scores_zero(self):
-        from soup_cli.eval.judge import make_judge_reward_func
+        from ai_forge_cli.eval.judge import make_judge_reward_func
 
         class _Boom:
             def evaluate(self, prompt, response, category="default"):
@@ -275,23 +275,23 @@ class _Task:
 
 class TestShipPairwise:
     def test_pairwise_in_supported(self):
-        from soup_cli.utils.ship_verdict import SUPPORTED_TASK_MODES
+        from ai_forge_cli.utils.ship_verdict import SUPPORTED_TASK_MODES
 
         assert "pairwise" in SUPPORTED_TASK_MODES
 
     def test_leg1_pairwise_builds_taskwin(self, monkeypatch):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         monkeypatch.setattr(
-            "soup_cli.eval.custom.load_eval_tasks",
+            "ai_forge_cli.eval.custom.load_eval_tasks",
             lambda path: [_Task("q1"), _Task("q2")],
         )
         monkeypatch.setattr(
-            "soup_cli.eval.gate._parse_judge_url",
+            "ai_forge_cli.eval.gate._parse_judge_url",
             lambda url: ("ollama", "m", None),
         )
         monkeypatch.setattr(
-            "soup_cli.eval.judge.JudgeEvaluator", lambda **kw: _FakeJudge()
+            "ai_forge_cli.eval.judge.JudgeEvaluator", lambda **kw: _FakeJudge()
         )
         # base_gen short, tuned_gen long; _FakeJudge prefers long -> winrate 1.0
         tw = ship_cmd._leg1_pairwise(
@@ -308,7 +308,7 @@ class TestShipPairwise:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.ship import app
+        from ai_forge_cli.commands.ship import app
 
         path = os.path.join(os.getcwd(), "_ev_pairwise_v07131.json")
         with open(path, "w", encoding="utf-8") as fh:
@@ -332,7 +332,7 @@ class TestShipPairwise:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.ship import app
+        from ai_forge_cli.commands.ship import app
 
         path = os.path.join(os.getcwd(), "_ev_pairwise_tie_v07131.json")
         with open(path, "w", encoding="utf-8") as fh:
@@ -367,7 +367,7 @@ training:
 
 class TestOnlineDpoSchema:
     def test_happy_parse(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_ODPO)
         assert cfg.task == "online_dpo"
@@ -376,7 +376,7 @@ class TestOnlineDpoSchema:
         assert cfg.training.online_dpo_max_new_tokens == 64
 
     def test_reward_model_leg_parses(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             "base: sshleifer/tiny-gpt2\ntask: online_dpo\n"
@@ -389,7 +389,7 @@ class TestOnlineDpoSchema:
     def test_reject_both_judge_and_reward(self):
         import pytest
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="exactly one"):
             load_config_from_string(_ODPO + "  reward_model: some/rm\n")
@@ -397,7 +397,7 @@ class TestOnlineDpoSchema:
     def test_reject_neither(self):
         import pytest
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="judge|reward_model"):
             load_config_from_string(
@@ -408,7 +408,7 @@ class TestOnlineDpoSchema:
     def test_reject_mlx_backend(self):
         import pytest
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="transformers"):
             load_config_from_string(
@@ -420,7 +420,7 @@ class TestOnlineDpoSchema:
     def test_footgun_field_without_task(self):
         import pytest
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="online_dpo"):
             load_config_from_string(
@@ -432,7 +432,7 @@ class TestOnlineDpoSchema:
     def test_reject_empty_judge(self):
         import pytest
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="non-empty|empty"):
             load_config_from_string(
@@ -442,7 +442,7 @@ class TestOnlineDpoSchema:
             )
 
     def test_loss_type_and_max_new_tokens(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             _ODPO + "  online_dpo_loss_type: ipo\n  online_dpo_max_new_tokens: 128\n"
@@ -453,7 +453,7 @@ class TestOnlineDpoSchema:
     def test_reject_vision_modality(self):
         import pytest
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="modality"):
             load_config_from_string(
@@ -465,7 +465,7 @@ class TestOnlineDpoSchema:
     def test_footgun_loss_type_without_task(self):
         import pytest
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="online_dpo"):
             load_config_from_string(
@@ -476,7 +476,7 @@ class TestOnlineDpoSchema:
     def test_field_validator_direct(self):
         import pytest
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(Exception, match="null"):
             TrainingConfig(online_dpo_judge="ollama://\x00m")
@@ -488,7 +488,7 @@ class TestOnlineDpoSchema:
     def test_max_new_tokens_bounds(self):
         import pytest
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(Exception):
             TrainingConfig(online_dpo_max_new_tokens=0)
@@ -503,7 +503,7 @@ class TestOnlineDpoSchema:
 
 class TestOnlineDpoWrapper:
     def test_prompt_rows_from_messages(self):
-        from soup_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
+        from ai_forge_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
 
         rows = [
             {
@@ -517,13 +517,13 @@ class TestOnlineDpoWrapper:
         assert out == [{"prompt": [{"role": "user", "content": "hi"}]}]
 
     def test_prompt_rows_from_prompt_field(self):
-        from soup_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
+        from ai_forge_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
 
         out = OnlineDPOTrainerWrapper._to_prompt_rows([{"prompt": "hello"}])
         assert out == [{"prompt": [{"role": "user", "content": "hello"}]}]
 
     def test_prompt_rows_keeps_system(self):
-        from soup_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
+        from ai_forge_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
 
         rows = [
             {
@@ -541,7 +541,7 @@ class TestOnlineDpoWrapper:
         ]
 
     def test_prompt_rows_multiturn_keeps_alternation(self):
-        from soup_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
+        from ai_forge_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
 
         rows = [
             {
@@ -567,7 +567,7 @@ class TestOnlineDpoWrapper:
         ]
 
     def test_prompt_rows_no_user_skipped(self):
-        from soup_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
+        from ai_forge_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
 
         out = OnlineDPOTrainerWrapper._to_prompt_rows(
             [{"messages": [{"role": "assistant", "content": "x"}]}]
@@ -586,9 +586,9 @@ class TestOnlineDpoWrapper:
         # Parametrized over trl version by the wrapper itself: the seam evaluator
         # is adapted to judge= (trl 0.19.x) or reward_funcs= (trl 1.x). Builds a
         # real trainer on either.
-        import soup_cli.trainer.online_dpo as od
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
+        import ai_forge_cli.trainer.online_dpo as od
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
 
         cfg = load_config_from_string(
             "base: hf-internal-testing/tiny-random-gpt2\ntask: online_dpo\n"
@@ -617,8 +617,8 @@ class _Tcfg:
 
 
 def _online_dpo_wrapper():
-    from soup_cli.config.loader import load_config_from_string
-    from soup_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
+    from ai_forge_cli.config.loader import load_config_from_string
+    from ai_forge_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
 
     cfg = load_config_from_string(
         "base: hf-internal-testing/tiny-random-gpt2\ntask: online_dpo\n"
@@ -630,7 +630,7 @@ def _online_dpo_wrapper():
 
 class TestBuildJudgeOrReward:
     def test_judge_url_branch_adapts_to_trl_version(self):
-        import soup_cli.trainer.online_dpo as od
+        import ai_forge_cli.trainer.online_dpo as od
 
         od._ONLINE_DPO_JUDGE_OVERRIDE = None
         result = _online_dpo_wrapper()._build_judge_or_reward(_Tcfg(judge="ollama://m"))
@@ -644,7 +644,7 @@ class TestBuildJudgeOrReward:
             assert "judge" not in result
 
     def test_reward_model_branch_adapts_to_trl_version(self, monkeypatch):
-        import soup_cli.trainer.online_dpo as od
+        import ai_forge_cli.trainer.online_dpo as od
 
         od._ONLINE_DPO_JUDGE_OVERRIDE = None
         monkeypatch.setattr(
@@ -663,7 +663,7 @@ class TestBuildJudgeOrReward:
         # It now asks the installed trl instead. `tests/test_issue300_online_dpo_kwargs.py`
         # carries the stronger form (binding every built kwarg against the real
         # signature); this one keeps the shape assertion honest.
-        from soup_cli.trainer.online_dpo import _trl_accepts
+        from ai_forge_cli.trainer.online_dpo import _trl_accepts
 
         if _trl_accepts("reward_model"):
             assert set(result.keys()) == {"reward_model", "reward_processing_class"}
@@ -675,7 +675,7 @@ class TestBuildJudgeOrReward:
         )
 
     def test_precedence_override_wins(self):
-        import soup_cli.trainer.online_dpo as od
+        import ai_forge_cli.trainer.online_dpo as od
 
         od._ONLINE_DPO_JUDGE_OVERRIDE = _FakeJudge()
         try:
@@ -689,7 +689,7 @@ class TestBuildJudgeOrReward:
             od._ONLINE_DPO_JUDGE_OVERRIDE = None
 
     def test_neither_raises(self):
-        import soup_cli.trainer.online_dpo as od
+        import ai_forge_cli.trainer.online_dpo as od
 
         od._ONLINE_DPO_JUDGE_OVERRIDE = None
         with pytest.raises(ValueError, match="judge|reward_model"):
@@ -707,7 +707,7 @@ class TestOnlineDpoRouting:
         # another equality branch) that instantiates the wrapper.
         import inspect
 
-        from soup_cli.commands import train as train_cmd
+        from ai_forge_cli.commands import train as train_cmd
 
         src = inspect.getsource(train_cmd)
         assert 'elif cfg.task == "online_dpo":' in src
@@ -723,7 +723,7 @@ class _ScoreJudge:
     """evaluate(prompt, response) -> JudgeScore(weighted_score=len(response))."""
 
     def evaluate(self, prompt, response, category="default"):
-        from soup_cli.eval.judge import JudgeScore
+        from ai_forge_cli.eval.judge import JudgeScore
 
         return JudgeScore(
             prompt=prompt, response=response, weighted_score=float(len(response))
@@ -732,7 +732,7 @@ class _ScoreJudge:
 
 class TestBestOfN:
     def test_pick_best_argmax(self):
-        from soup_cli.utils.best_of_n import judge_pick_best
+        from ai_forge_cli.utils.best_of_n import judge_pick_best
 
         pick = judge_pick_best("p", ["a", "abcd", "ab"], _ScoreJudge())
         assert pick.winner_idx == 1
@@ -740,7 +740,7 @@ class TestBestOfN:
         assert pick.scores == (1.0, 4.0, 2.0)
 
     def test_pick_best_ties_first(self):
-        from soup_cli.utils.best_of_n import judge_pick_best
+        from ai_forge_cli.utils.best_of_n import judge_pick_best
 
         pick = judge_pick_best("p", ["ab", "cd"], _ScoreJudge())
         assert pick.winner_idx == 0
@@ -748,13 +748,13 @@ class TestBestOfN:
     def test_pick_best_empty_raises(self):
         import pytest
 
-        from soup_cli.utils.best_of_n import judge_pick_best
+        from ai_forge_cli.utils.best_of_n import judge_pick_best
 
         with pytest.raises(ValueError, match="candidate"):
             judge_pick_best("p", [], _ScoreJudge())
 
     def test_build_sft_row(self):
-        from soup_cli.utils.best_of_n import BestOfNPick, build_sft_row
+        from ai_forge_cli.utils.best_of_n import BestOfNPick, build_sft_row
 
         row = build_sft_row(
             "p", BestOfNPick(1, "win", (1.0, 3.0)), judge_model="ollama://m"
@@ -769,18 +769,18 @@ class TestBestOfN:
         assert row["_best_of_n"]["scores"] == [1.0, 3.0]
 
     def test_build_dpo_pair(self):
-        from soup_cli.utils.best_of_n import BestOfNPick, build_dpo_pair
+        from ai_forge_cli.utils.best_of_n import BestOfNPick, build_dpo_pair
 
         pair = build_dpo_pair("p", BestOfNPick(1, "win", (1.0, 3.0)), ["lose", "win"])
         assert pair == {"prompt": "p", "chosen": "win", "rejected": "lose"}
 
     def test_build_dpo_pair_all_equal_none(self):
-        from soup_cli.utils.best_of_n import BestOfNPick, build_dpo_pair
+        from ai_forge_cli.utils.best_of_n import BestOfNPick, build_dpo_pair
 
         assert build_dpo_pair("p", BestOfNPick(0, "x", (2.0, 2.0)), ["x", "x"]) is None
 
     def test_three_candidates_non_boundary_winner_and_loser(self):
-        from soup_cli.utils.best_of_n import build_dpo_pair, judge_pick_best
+        from ai_forge_cli.utils.best_of_n import build_dpo_pair, judge_pick_best
 
         # scores by length: ["xx"(2), "xxxx"(4), "x"(1)] -> winner idx1, loser idx2
         cands = ["xx", "xxxx", "x"]
@@ -793,10 +793,10 @@ class TestBestOfN:
         import ast
         import pathlib
 
-        import soup_cli
+        import ai_forge_cli
 
         src = (
-            pathlib.Path(soup_cli.__file__).parent / "utils" / "best_of_n.py"
+            pathlib.Path(ai_forge_cli.__file__).parent / "utils" / "best_of_n.py"
         ).read_text(encoding="utf-8")
         tree = ast.parse(src)
         top = {
@@ -822,7 +822,7 @@ class TestBestOfNCli:
     def test_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         result = CliRunner().invoke(app, ["best-of-n", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -833,7 +833,7 @@ class TestBestOfNCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         path = os.path.join(os.getcwd(), "_bon_prompts_bad_n.jsonl")
         with open(path, "w", encoding="utf-8") as fh:
@@ -854,7 +854,7 @@ class TestBestOfNCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         path = os.path.join(os.getcwd(), "_bon_prompts_ssrf.jsonl")
         with open(path, "w", encoding="utf-8") as fh:
@@ -874,7 +874,7 @@ class TestBestOfNCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         path = os.path.join(os.getcwd(), "_bon_prompts_outcwd.jsonl")
         with open(path, "w", encoding="utf-8") as fh:
@@ -895,16 +895,16 @@ class TestBestOfNCli:
 
         from typer.testing import CliRunner
 
-        import soup_cli.commands.data as data_cmd
-        import soup_cli.utils.best_of_n as bon
-        from soup_cli.commands.data import app
+        import ai_forge_cli.commands.data as data_cmd
+        import ai_forge_cli.utils.best_of_n as bon
+        from ai_forge_cli.commands.data import app
 
         monkeypatch.setattr(data_cmd, "_load_bon_model", lambda base, device, trust: (None, None))
         monkeypatch.setattr(
             bon, "sample_candidates",
             lambda model, tok, prompt, **kw: ["a", "abcd", "xy"],
         )
-        monkeypatch.setattr("soup_cli.eval.judge.JudgeEvaluator", lambda **kw: _ScoreJudge())
+        monkeypatch.setattr("ai_forge_cli.eval.judge.JudgeEvaluator", lambda **kw: _ScoreJudge())
 
         ppath = os.path.join(os.getcwd(), "_bon_prompts_ok.jsonl")
         opath = os.path.join(os.getcwd(), "_bon_out.jsonl")
@@ -934,7 +934,7 @@ class TestBestOfNCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         path = os.path.join(os.getcwd(), "_bon_prompts_plan.jsonl")
         with open(path, "w", encoding="utf-8") as fh:
@@ -957,7 +957,7 @@ class TestBestOfNCli:
 
 class TestEvolve:
     def test_depth_round_produces_lineage(self):
-        from soup_cli.utils.evolve import run_evolve
+        from ai_forge_cli.utils.evolve import run_evolve
 
         # A generate_fn that returns a fresh, distinct instruction each call
         # (so no evolution is eliminated as "unchanged").
@@ -975,25 +975,25 @@ class TestEvolve:
         assert all(r.strategy == "depth" for r in rows)
 
     def test_breadth_strategy(self):
-        from soup_cli.utils.evolve import run_evolve
+        from ai_forge_cli.utils.evolve import run_evolve
 
         rows = run_evolve(["x"], "breadth", 1, lambda p: "brand new instruction")
         assert rows and rows[0].strategy == "breadth"
         assert rows[0].instruction == "brand new instruction"
 
     def test_unchanged_is_eliminated(self):
-        from soup_cli.utils.evolve import run_evolve
+        from ai_forge_cli.utils.evolve import run_evolve
 
         rows = run_evolve(["same"], "depth", 1, lambda p: "same")  # echoes seed
         assert rows == []
 
     def test_empty_is_eliminated(self):
-        from soup_cli.utils.evolve import run_evolve
+        from ai_forge_cli.utils.evolve import run_evolve
 
         assert run_evolve(["x"], "depth", 1, lambda p: "   ") == []
 
     def test_meta_prompt_echo_eliminated(self):
-        from soup_cli.utils.evolve import run_evolve
+        from ai_forge_cli.utils.evolve import run_evolve
 
         rows = run_evolve(["x"], "depth", 1, lambda p: "#Given Prompt#: x")
         assert rows == []
@@ -1001,7 +1001,7 @@ class TestEvolve:
     def test_bad_strategy(self):
         import pytest
 
-        from soup_cli.utils.evolve import run_evolve
+        from ai_forge_cli.utils.evolve import run_evolve
 
         with pytest.raises(ValueError, match="strategy"):
             run_evolve(["x"], "sideways", 1, lambda p: "y")
@@ -1009,7 +1009,7 @@ class TestEvolve:
     def test_bad_rounds(self):
         import pytest
 
-        from soup_cli.utils.evolve import run_evolve
+        from ai_forge_cli.utils.evolve import run_evolve
 
         with pytest.raises(ValueError, match="rounds"):
             run_evolve(["x"], "depth", 0, lambda p: "y")
@@ -1017,7 +1017,7 @@ class TestEvolve:
             run_evolve(["x"], "depth", 6, lambda p: "y")
 
     def test_full_elimination_carries_forward_seed(self):
-        from soup_cli.utils.evolve import run_evolve
+        from ai_forge_cli.utils.evolve import run_evolve
 
         calls = {"i": 0}
 
@@ -1032,7 +1032,7 @@ class TestEvolve:
         assert rows[0].seed == "seedX"  # original seed carried forward
 
     def test_evolve_instruction_renders_seed(self):
-        from soup_cli.utils.evolve import evolve_instruction
+        from ai_forge_cli.utils.evolve import evolve_instruction
 
         captured = {}
 
@@ -1048,10 +1048,10 @@ class TestEvolve:
         import ast
         import pathlib
 
-        import soup_cli
+        import ai_forge_cli
 
         tree = ast.parse(
-            (pathlib.Path(soup_cli.__file__).parent / "utils" / "evolve.py").read_text(
+            (pathlib.Path(ai_forge_cli.__file__).parent / "utils" / "evolve.py").read_text(
                 encoding="utf-8"
             )
         )
@@ -1081,7 +1081,7 @@ class TestEvolveCli:
     def test_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         result = CliRunner().invoke(app, ["evolve", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -1092,7 +1092,7 @@ class TestEvolveCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         path = _write_seeds("_evolve_badstrat.jsonl")
         try:
@@ -1111,7 +1111,7 @@ class TestEvolveCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         path = _write_seeds("_evolve_badrounds.jsonl")
         try:
@@ -1130,7 +1130,7 @@ class TestEvolveCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         path = _write_seeds("_evolve_anthropic.jsonl")
         try:
@@ -1149,7 +1149,7 @@ class TestEvolveCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         path = _write_seeds("_evolve_plan.jsonl")
         try:
@@ -1167,7 +1167,7 @@ class TestEvolveCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         path = _write_seeds("_evolve_outcwd.jsonl")
         try:
@@ -1186,7 +1186,7 @@ class TestEvolveCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.data import app
+        from ai_forge_cli.commands.data import app
 
         counter = {"i": 0}
 
@@ -1197,7 +1197,7 @@ class TestEvolveCli:
 
             return _gen
 
-        monkeypatch.setattr("soup_cli.utils.magpie.make_magpie_generate_fn", _fake_make)
+        monkeypatch.setattr("ai_forge_cli.utils.magpie.make_magpie_generate_fn", _fake_make)
 
         ipath = _write_seeds("_evolve_ok_in.jsonl")
         opath = os.path.join(os.getcwd(), "_evolve_ok_out.jsonl")

@@ -8,7 +8,7 @@ import pytest
 from rich.console import Console
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -29,12 +29,12 @@ def _plain(s: str) -> str:
 
 class TestHFResumePreferLocal:
     def test_find_highest_local_checkpoint_empty(self, tmp_path):
-        from soup_cli.monitoring.hf_push import _find_highest_local_checkpoint
+        from ai_forge_cli.monitoring.hf_push import _find_highest_local_checkpoint
 
         assert _find_highest_local_checkpoint(str(tmp_path)) is None
 
     def test_find_highest_local_checkpoint_picks_max(self, tmp_path):
-        from soup_cli.monitoring.hf_push import _find_highest_local_checkpoint
+        from ai_forge_cli.monitoring.hf_push import _find_highest_local_checkpoint
 
         (tmp_path / "checkpoint-100").mkdir()
         (tmp_path / "checkpoint-50").mkdir()
@@ -48,7 +48,7 @@ class TestHFResumePreferLocal:
         assert _find_highest_local_checkpoint(str(tmp_path)) == 200
 
     def test_find_highest_local_checkpoint_missing_dir(self, tmp_path):
-        from soup_cli.monitoring.hf_push import _find_highest_local_checkpoint
+        from ai_forge_cli.monitoring.hf_push import _find_highest_local_checkpoint
 
         assert _find_highest_local_checkpoint(str(tmp_path / "nope")) is None
 
@@ -56,7 +56,7 @@ class TestHFResumePreferLocal:
         self, tmp_path, monkeypatch
     ):
         """If local checkpoint-N == remote checkpoint-N, skip download."""
-        from soup_cli.monitoring.hf_push import prepare_hf_resume
+        from ai_forge_cli.monitoring.hf_push import prepare_hf_resume
 
         monkeypatch.chdir(tmp_path)
         out_dir = tmp_path / "runs"
@@ -70,11 +70,11 @@ class TestHFResumePreferLocal:
             return kwargs.get("local_dir", "")
 
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push.resolve_latest_checkpoint_revision",
+            "ai_forge_cli.monitoring.hf_push.resolve_latest_checkpoint_revision",
             lambda repo_id, token=None, endpoint=None: "checkpoint-300",
         )
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push._download_checkpoint", fake_download
+            "ai_forge_cli.monitoring.hf_push._download_checkpoint", fake_download
         )
 
         result = prepare_hf_resume(
@@ -87,7 +87,7 @@ class TestHFResumePreferLocal:
     def test_prepare_hf_resume_skips_download_when_local_newer(
         self, tmp_path, monkeypatch
     ):
-        from soup_cli.monitoring.hf_push import prepare_hf_resume
+        from ai_forge_cli.monitoring.hf_push import prepare_hf_resume
 
         monkeypatch.chdir(tmp_path)
         out_dir = tmp_path / "runs"
@@ -101,11 +101,11 @@ class TestHFResumePreferLocal:
             return kwargs.get("local_dir", "")
 
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push.resolve_latest_checkpoint_revision",
+            "ai_forge_cli.monitoring.hf_push.resolve_latest_checkpoint_revision",
             lambda repo_id, token=None, endpoint=None: "checkpoint-300",
         )
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push._download_checkpoint", fake_download
+            "ai_forge_cli.monitoring.hf_push._download_checkpoint", fake_download
         )
 
         result = prepare_hf_resume(
@@ -118,7 +118,7 @@ class TestHFResumePreferLocal:
     def test_prepare_hf_resume_downloads_when_remote_newer(
         self, tmp_path, monkeypatch
     ):
-        from soup_cli.monitoring.hf_push import prepare_hf_resume
+        from ai_forge_cli.monitoring.hf_push import prepare_hf_resume
 
         monkeypatch.chdir(tmp_path)
         out_dir = tmp_path / "runs"
@@ -133,11 +133,11 @@ class TestHFResumePreferLocal:
             return local_dir
 
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push.resolve_latest_checkpoint_revision",
+            "ai_forge_cli.monitoring.hf_push.resolve_latest_checkpoint_revision",
             lambda repo_id, token=None, endpoint=None: "checkpoint-500",
         )
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push._download_checkpoint", fake_download
+            "ai_forge_cli.monitoring.hf_push._download_checkpoint", fake_download
         )
 
         result = prepare_hf_resume(
@@ -155,7 +155,7 @@ class TestHFResumePreferLocal:
 
 class TestHfSpaceCustomTemplate:
     def test_render_custom_template_dir(self, tmp_path, monkeypatch):
-        from soup_cli.utils.hf_space import render_custom_template_dir
+        from ai_forge_cli.utils.hf_space import render_custom_template_dir
 
         monkeypatch.chdir(tmp_path)
         tdir = tmp_path / "mytpl"
@@ -172,7 +172,7 @@ class TestHfSpaceCustomTemplate:
         assert rendered["requirements.txt"] == "gradio\n"
 
     def test_render_custom_template_rejects_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.utils.hf_space import render_custom_template_dir
+        from ai_forge_cli.utils.hf_space import render_custom_template_dir
 
         cwd = tmp_path / "project"
         cwd.mkdir()
@@ -188,7 +188,7 @@ class TestHfSpaceCustomTemplate:
     def test_render_custom_template_rejects_invalid_repo_id(
         self, tmp_path, monkeypatch
     ):
-        from soup_cli.utils.hf_space import render_custom_template_dir
+        from ai_forge_cli.utils.hf_space import render_custom_template_dir
 
         monkeypatch.chdir(tmp_path)
         tdir = tmp_path / "tpl"
@@ -200,7 +200,7 @@ class TestHfSpaceCustomTemplate:
             render_custom_template_dir(str(tdir), model_repo="bad..repo")
 
     def test_render_custom_template_requires_app_py(self, tmp_path, monkeypatch):
-        from soup_cli.utils.hf_space import render_custom_template_dir
+        from ai_forge_cli.utils.hf_space import render_custom_template_dir
 
         monkeypatch.chdir(tmp_path)
         tdir = tmp_path / "tpl"
@@ -211,7 +211,7 @@ class TestHfSpaceCustomTemplate:
             render_custom_template_dir(str(tdir), model_repo="user/my-model")
 
     def test_render_custom_template_requires_readme(self, tmp_path, monkeypatch):
-        from soup_cli.utils.hf_space import render_custom_template_dir
+        from ai_forge_cli.utils.hf_space import render_custom_template_dir
 
         monkeypatch.chdir(tmp_path)
         tdir = tmp_path / "tpl"
@@ -222,7 +222,7 @@ class TestHfSpaceCustomTemplate:
             render_custom_template_dir(str(tdir), model_repo="user/my-model")
 
     def test_render_custom_template_size_cap(self, tmp_path, monkeypatch):
-        from soup_cli.utils.hf_space import render_custom_template_dir
+        from ai_forge_cli.utils.hf_space import render_custom_template_dir
 
         monkeypatch.chdir(tmp_path)
         tdir = tmp_path / "tpl"
@@ -243,7 +243,7 @@ class TestHfSpaceCustomTemplate:
         if sys.platform == "win32":
             pytest.skip("symlinks require admin on Windows")
 
-        from soup_cli.utils.hf_space import render_custom_template_dir
+        from ai_forge_cli.utils.hf_space import render_custom_template_dir
 
         monkeypatch.chdir(tmp_path)
         tdir = tmp_path / "tpl"
@@ -271,13 +271,13 @@ class TestHfSpaceCustomTemplate:
 
 class TestEvalGateDashboardRow:
     def test_format_gate_row_disabled(self):
-        from soup_cli.monitoring.display import format_gate_row
+        from ai_forge_cli.monitoring.display import format_gate_row
 
         # No state -> empty string
         assert format_gate_row(None) == ""
 
     def test_format_gate_row_pass(self):
-        from soup_cli.monitoring.display import format_gate_row
+        from ai_forge_cli.monitoring.display import format_gate_row
 
         state = {
             "tasks": [
@@ -292,7 +292,7 @@ class TestEvalGateDashboardRow:
         assert "7.8" in out
 
     def test_format_gate_row_regression_stop(self):
-        from soup_cli.monitoring.display import format_gate_row
+        from ai_forge_cli.monitoring.display import format_gate_row
 
         state = {
             "tasks": [
@@ -313,7 +313,7 @@ class TestEvalGateDashboardRow:
         assert "STOP" in out.upper() or "stop" in out
 
     def test_format_gate_row_warn_action(self):
-        from soup_cli.monitoring.display import format_gate_row
+        from ai_forge_cli.monitoring.display import format_gate_row
 
         state = {
             "tasks": [{"name": "t", "score": 0.5, "passed": False, "delta": -0.1}],
@@ -324,7 +324,7 @@ class TestEvalGateDashboardRow:
         assert "WARN" in out
 
     def test_format_gate_row_multi_task(self):
-        from soup_cli.monitoring.display import format_gate_row
+        from ai_forge_cli.monitoring.display import format_gate_row
 
         state = {
             "tasks": [
@@ -341,7 +341,7 @@ class TestEvalGateDashboardRow:
         assert "STOP" in out
 
     def test_format_gate_row_passed_missing_field_renders_neutral(self):
-        from soup_cli.monitoring.display import format_gate_row
+        from ai_forge_cli.monitoring.display import format_gate_row
 
         # `passed` absent — should not silently render as red ✗
         state = {
@@ -356,7 +356,7 @@ class TestEvalGateDashboardRow:
         assert "WARN" not in out
 
     def test_format_gate_row_renders_via_console(self):
-        from soup_cli.monitoring.display import format_gate_row
+        from ai_forge_cli.monitoring.display import format_gate_row
 
         state = {
             "tasks": [{"name": "t", "score": 1.0, "passed": True}],

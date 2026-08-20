@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.utils import build_dag
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils import build_dag
 
 
 def _write(path: Path, text: str) -> Path:
@@ -792,16 +792,16 @@ class TestSoupBuildCli:
 class TestSourceWiring:
     def test_cli_registers_build(self) -> None:
         root = Path(__file__).resolve().parent.parent
-        cli = (root / "src" / "soup_cli" / "cli.py").read_text(encoding="utf-8")
+        cli = (root / "src" / "ai_forge_cli" / "cli.py").read_text(encoding="utf-8")
         assert (
             'name="build"' in cli
             or "build_cmd" in cli
-            or "from soup_cli.commands import build" in cli
+            or "from ai_forge_cli.commands import build" in cli
         )
 
     def test_no_heavy_top_level_imports(self) -> None:
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "utils" / "build_dag.py").read_text(encoding="utf-8")
+        src = (root / "src" / "ai_forge_cli" / "utils" / "build_dag.py").read_text(encoding="utf-8")
         # yaml is also lazy-imported inside parse_build_yaml (TDD review H2).
         for forbidden in (
             "\nimport torch",
@@ -812,7 +812,7 @@ class TestSourceWiring:
             assert forbidden not in src, f"top-level import found: {forbidden!r}"
 
     def test_version_bumped(self) -> None:
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
 
         major_minor = tuple(int(x) for x in __version__.split(".")[:2])
         assert major_minor >= (0, 69)

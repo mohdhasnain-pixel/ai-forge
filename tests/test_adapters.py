@@ -5,7 +5,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -231,7 +231,7 @@ class TestAdapterDiscovery:
     """Test adapter discovery helper function."""
 
     def test_find_adapters_recursive(self, tmp_path):
-        from soup_cli.commands.adapters import _find_adapters
+        from ai_forge_cli.commands.adapters import _find_adapters
 
         _create_adapter(tmp_path / "output" / "checkpoint-100")
         _create_adapter(tmp_path / "output" / "checkpoint-200")
@@ -241,14 +241,14 @@ class TestAdapterDiscovery:
         assert len(adapters) == 3
 
     def test_find_adapters_empty(self, tmp_path):
-        from soup_cli.commands.adapters import _find_adapters
+        from ai_forge_cli.commands.adapters import _find_adapters
 
         adapters = _find_adapters(tmp_path)
         assert adapters == []
 
     def test_find_adapters_respects_max_depth(self, tmp_path):
         """Adapters beyond max_depth should not be found."""
-        from soup_cli.commands.adapters import _find_adapters
+        from ai_forge_cli.commands.adapters import _find_adapters
 
         deep = tmp_path
         for _ in range(8):
@@ -258,7 +258,7 @@ class TestAdapterDiscovery:
         assert len(adapters) == 0
 
     def test_read_adapter_config(self, tmp_path):
-        from soup_cli.commands.adapters import _read_adapter_config
+        from ai_forge_cli.commands.adapters import _read_adapter_config
 
         adapter_path = _create_adapter(
             tmp_path / "adapter",

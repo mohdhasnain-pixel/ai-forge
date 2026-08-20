@@ -44,7 +44,7 @@ def _plain(text: str) -> str:
 # ---------------------------------------------------------------------------
 class TestEnergyTracker:
     def test_imports(self):
-        from soup_cli.utils.energy import EnergyMeasurement, EnergyTracker  # noqa: F401
+        from ai_forge_cli.utils.energy import EnergyMeasurement, EnergyTracker  # noqa: F401
 
     def test_tracker_graceful_when_codecarbon_missing(self, monkeypatch):
         """When codecarbon is absent the tracker yields, never crashes, and
@@ -59,7 +59,7 @@ class TestEnergyTracker:
             return real_import(name, *args, **kwargs)
 
         monkeypatch.setattr(builtins, "__import__", _no_codecarbon)
-        from soup_cli.utils.energy import EnergyTracker
+        from ai_forge_cli.utils.energy import EnergyTracker
 
         with EnergyTracker(pue=1.1) as tracker:
             pass  # no work
@@ -78,7 +78,7 @@ class TestEnergyTracker:
             return real_import(name, *args, **kwargs)
 
         monkeypatch.setattr(builtins, "__import__", _no_codecarbon)
-        from soup_cli.utils.energy import EnergyTracker
+        from ai_forge_cli.utils.energy import EnergyTracker
 
         with pytest.raises(RuntimeError, match="boom"):
             with EnergyTracker() as tracker:
@@ -86,13 +86,13 @@ class TestEnergyTracker:
         assert tracker.measurement is None
 
     def test_tracker_rejects_bad_pue(self):
-        from soup_cli.utils.energy import EnergyTracker
+        from ai_forge_cli.utils.energy import EnergyTracker
 
         with pytest.raises(ValueError):
             EnergyTracker(pue=0.5)
 
     def test_tracker_rejects_bad_country(self):
-        from soup_cli.utils.energy import EnergyTracker
+        from ai_forge_cli.utils.energy import EnergyTracker
 
         with pytest.raises(ValueError):
             EnergyTracker(country_iso_code="USAA")  # not 3-letter
@@ -123,7 +123,7 @@ class TestEnergyTracker:
 
         fake.OfflineEmissionsTracker = _FakeTracker
         monkeypatch.setitem(sys.modules, "codecarbon", fake)
-        from soup_cli.utils.energy import EnergyTracker
+        from ai_forge_cli.utils.energy import EnergyTracker
 
         with EnergyTracker(pue=1.2, country_iso_code="USA") as tracker:
             pass
@@ -159,7 +159,7 @@ class TestEnergyTracker:
 
         fake.OfflineEmissionsTracker = _FakeTracker
         monkeypatch.setitem(sys.modules, "codecarbon", fake)
-        from soup_cli.utils.energy import EnergyTracker
+        from ai_forge_cli.utils.energy import EnergyTracker
 
         with EnergyTracker(grid_intensity_g_per_kwh=350.0) as tracker:
             pass
@@ -169,7 +169,7 @@ class TestEnergyTracker:
         assert m.grid_intensity_g_per_kwh == 350.0
 
     def test_train_track_energy_flag_in_help(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = runner.invoke(app, ["train", "--help"])
         assert result.exit_code == 0
@@ -181,13 +181,13 @@ class TestEnergyTracker:
 # ---------------------------------------------------------------------------
 class TestTopDomains:
     def test_imports(self):
-        from soup_cli.utils.annex_xi import (  # noqa: F401
+        from ai_forge_cli.utils.annex_xi import (  # noqa: F401
             extract_top_domains,
             load_top_domains_from_jsonl,
         )
 
     def test_extract_top_domains_counts_and_shares(self):
-        from soup_cli.utils.annex_xi import extract_top_domains
+        from ai_forge_cli.utils.annex_xi import extract_top_domains
 
         rows = [
             {"text": "see https://example.com/a and https://example.com/b"},
@@ -200,14 +200,14 @@ class TestTopDomains:
         assert out[1] == ("other.org", 0.25)
 
     def test_extract_top_domains_strips_port_lowercases(self):
-        from soup_cli.utils.annex_xi import extract_top_domains
+        from ai_forge_cli.utils.annex_xi import extract_top_domains
 
         rows = [{"text": "https://Example.COM:8443/x https://example.com/y"}]
         out = extract_top_domains(rows)
         assert out == (("example.com", 1.0),)
 
     def test_extract_top_domains_messages_field(self):
-        from soup_cli.utils.annex_xi import extract_top_domains
+        from ai_forge_cli.utils.annex_xi import extract_top_domains
 
         rows = [
             {"messages": [{"role": "user", "content": "https://hf.co/datasets/x"}]},
@@ -216,26 +216,26 @@ class TestTopDomains:
         assert out == (("hf.co", 1.0),)
 
     def test_extract_top_domains_empty_returns_empty(self):
-        from soup_cli.utils.annex_xi import extract_top_domains
+        from ai_forge_cli.utils.annex_xi import extract_top_domains
 
         assert extract_top_domains([]) == ()
         assert extract_top_domains([{"text": "no urls here"}]) == ()
 
     def test_extract_top_domains_caps_at_top_n(self):
-        from soup_cli.utils.annex_xi import extract_top_domains
+        from ai_forge_cli.utils.annex_xi import extract_top_domains
 
         rows = [{"text": " ".join(f"https://d{i}.com/x" for i in range(20))}]
         out = extract_top_domains(rows, top_n=5)
         assert len(out) == 5
 
     def test_extract_top_domains_non_iterable_rejected(self):
-        from soup_cli.utils.annex_xi import extract_top_domains
+        from ai_forge_cli.utils.annex_xi import extract_top_domains
 
         with pytest.raises(TypeError):
             extract_top_domains(42)
 
     def test_extract_top_domains_bad_top_n(self):
-        from soup_cli.utils.annex_xi import extract_top_domains
+        from ai_forge_cli.utils.annex_xi import extract_top_domains
 
         with pytest.raises(ValueError):
             extract_top_domains([], top_n=0)
@@ -243,7 +243,7 @@ class TestTopDomains:
             extract_top_domains([], top_n=True)
 
     def test_load_from_jsonl(self, tmp_path, monkeypatch):
-        from soup_cli.utils.annex_xi import load_top_domains_from_jsonl
+        from ai_forge_cli.utils.annex_xi import load_top_domains_from_jsonl
 
         monkeypatch.chdir(tmp_path)
         p = tmp_path / "train.jsonl"
@@ -256,13 +256,13 @@ class TestTopDomains:
         assert out[0][0] == "example.com"
 
     def test_load_from_jsonl_missing_returns_empty(self, tmp_path, monkeypatch):
-        from soup_cli.utils.annex_xi import load_top_domains_from_jsonl
+        from ai_forge_cli.utils.annex_xi import load_top_domains_from_jsonl
 
         monkeypatch.chdir(tmp_path)
         assert load_top_domains_from_jsonl("nope.jsonl") == ()
 
     def test_load_from_jsonl_outside_cwd_returns_empty(self, tmp_path, monkeypatch):
-        from soup_cli.utils.annex_xi import load_top_domains_from_jsonl
+        from ai_forge_cli.utils.annex_xi import load_top_domains_from_jsonl
 
         monkeypatch.chdir(tmp_path)
         # an absolute path outside cwd — best-effort returns ()
@@ -271,14 +271,14 @@ class TestTopDomains:
         assert load_top_domains_from_jsonl(str(outside)) == ()
 
     def test_load_from_jsonl_non_string_returns_empty(self):
-        from soup_cli.utils.annex_xi import load_top_domains_from_jsonl
+        from ai_forge_cli.utils.annex_xi import load_top_domains_from_jsonl
 
         assert load_top_domains_from_jsonl(None) == ()
         assert load_top_domains_from_jsonl("") == ()
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
     def test_load_from_jsonl_symlink_returns_empty(self, tmp_path, monkeypatch):
-        from soup_cli.utils.annex_xi import load_top_domains_from_jsonl
+        from ai_forge_cli.utils.annex_xi import load_top_domains_from_jsonl
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "real.jsonl"
@@ -292,7 +292,7 @@ class TestTopDomains:
 # #181 — PDF rendering for Annex XI/XII
 # ---------------------------------------------------------------------------
 def _sample_annex_data():
-    from soup_cli.utils.annex_xi import AnnexXIData
+    from ai_forge_cli.utils.annex_xi import AnnexXIData
 
     return AnnexXIData(
         model_name="my-model",
@@ -312,24 +312,24 @@ def _sample_annex_data():
 
 class TestAnnexPdf:
     def test_atomic_write_bytes_imports(self):
-        from soup_cli.utils.paths import atomic_write_bytes  # noqa: F401
+        from ai_forge_cli.utils.paths import atomic_write_bytes  # noqa: F401
 
     def test_atomic_write_bytes_roundtrip(self, tmp_path, monkeypatch):
-        from soup_cli.utils.paths import atomic_write_bytes
+        from ai_forge_cli.utils.paths import atomic_write_bytes
 
         monkeypatch.chdir(tmp_path)
         out = atomic_write_bytes(b"%PDF-1.4\nhello", "x.pdf")
         assert Path(out).read_bytes() == b"%PDF-1.4\nhello"
 
     def test_atomic_write_bytes_rejects_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.utils.paths import atomic_write_bytes
+        from ai_forge_cli.utils.paths import atomic_write_bytes
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError):
             atomic_write_bytes(b"x", str(tmp_path.parent / "y.pdf"))
 
     def test_render_annex_pdf_starts_with_pdf_magic(self):
-        from soup_cli.utils.annex_xi import render_annex_pdf
+        from ai_forge_cli.utils.annex_xi import render_annex_pdf
 
         data = _sample_annex_data()
         pdf = render_annex_pdf(data, "xi")
@@ -337,25 +337,25 @@ class TestAnnexPdf:
         assert pdf.startswith(b"%PDF")
 
     def test_render_annex_pdf_xii(self):
-        from soup_cli.utils.annex_xi import render_annex_pdf
+        from ai_forge_cli.utils.annex_xi import render_annex_pdf
 
         pdf = render_annex_pdf(_sample_annex_data(), "xii")
         assert pdf.startswith(b"%PDF")
 
     def test_render_annex_pdf_rejects_non_data(self):
-        from soup_cli.utils.annex_xi import render_annex_pdf
+        from ai_forge_cli.utils.annex_xi import render_annex_pdf
 
         with pytest.raises(TypeError):
             render_annex_pdf({"not": "data"}, "xi")
 
     def test_render_annex_pdf_rejects_bad_section(self):
-        from soup_cli.utils.annex_xi import render_annex_pdf
+        from ai_forge_cli.utils.annex_xi import render_annex_pdf
 
         with pytest.raises(ValueError):
             render_annex_pdf(_sample_annex_data(), "zz")
 
     def test_write_annex_doc_markdown_default(self, tmp_path, monkeypatch):
-        from soup_cli.utils.annex_xi import write_annex_doc
+        from ai_forge_cli.utils.annex_xi import write_annex_doc
 
         monkeypatch.chdir(tmp_path)
         out = write_annex_doc(_sample_annex_data(), "xi", "annex.md")
@@ -363,14 +363,14 @@ class TestAnnexPdf:
         assert "Annex XI" in body
 
     def test_write_annex_doc_pdf_format(self, tmp_path, monkeypatch):
-        from soup_cli.utils.annex_xi import write_annex_doc
+        from ai_forge_cli.utils.annex_xi import write_annex_doc
 
         monkeypatch.chdir(tmp_path)
         out = write_annex_doc(_sample_annex_data(), "xi", "annex.pdf", fmt="pdf")
         assert Path(out).read_bytes().startswith(b"%PDF")
 
     def test_write_annex_doc_rejects_bad_fmt(self, tmp_path, monkeypatch):
-        from soup_cli.utils.annex_xi import write_annex_doc
+        from ai_forge_cli.utils.annex_xi import write_annex_doc
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError):
@@ -391,7 +391,7 @@ def _sample_statement():
 
 class TestCanManifestV3:
     def test_version_bumped_to_3(self):
-        from soup_cli.cans.schema import (
+        from ai_forge_cli.cans.schema import (
             CAN_FORMAT_VERSION,
             SUPPORTED_CAN_FORMAT_VERSIONS,
         )
@@ -400,7 +400,7 @@ class TestCanManifestV3:
         assert SUPPORTED_CAN_FORMAT_VERSIONS == (1, 2, 3)
 
     def test_v1_and_v2_still_load(self):
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         for v in (1, 2, 3):
             m = Manifest(
@@ -410,7 +410,7 @@ class TestCanManifestV3:
             assert m.can_format_version == v
 
     def test_attestations_default_empty(self):
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         m = Manifest(
             can_format_version=3, name="x", author="a",
@@ -419,7 +419,7 @@ class TestCanManifestV3:
         assert m.attestations == []
 
     def test_attestations_accepts_valid_statement(self):
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         m = Manifest(
             can_format_version=3, name="x", author="a",
@@ -430,7 +430,7 @@ class TestCanManifestV3:
         assert m.attestations[0]["_type"].endswith("Statement/v1")
 
     def test_attestations_none_coerced_to_empty(self):
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         m = Manifest(
             can_format_version=3, name="x", author="a",
@@ -442,7 +442,7 @@ class TestCanManifestV3:
     def test_attestations_rejects_non_dict_entry(self):
         from pydantic import ValidationError
 
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         with pytest.raises(ValidationError):
             Manifest(
@@ -454,7 +454,7 @@ class TestCanManifestV3:
     def test_attestations_rejects_missing_type(self):
         from pydantic import ValidationError
 
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         with pytest.raises(ValidationError):
             Manifest(
@@ -466,7 +466,7 @@ class TestCanManifestV3:
     def test_attestations_too_many_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         with pytest.raises(ValidationError):
             Manifest(
@@ -476,7 +476,7 @@ class TestCanManifestV3:
             )
 
     def test_validate_attestation_statement_helper(self):
-        from soup_cli.cans.schema import validate_attestation_statement
+        from ai_forge_cli.cans.schema import validate_attestation_statement
 
         out = validate_attestation_statement(_sample_statement())
         assert out["_type"]
@@ -491,7 +491,7 @@ class TestCanManifestV3:
 
         import yaml
 
-        from soup_cli.cans import pack as pack_mod
+        from ai_forge_cli.cans import pack as pack_mod
 
         monkeypatch.chdir(tmp_path)
 
@@ -525,7 +525,7 @@ class TestCanManifestV3:
         assert len(manifest["attestations"]) == 1
 
     def test_can_pack_attest_flag_in_help(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = runner.invoke(app, ["can", "pack", "--help"])
         assert result.exit_code == 0
@@ -537,17 +537,17 @@ class TestCanManifestV3:
 # ---------------------------------------------------------------------------
 class TestAuditInstrumentation:
     def test_imports(self):
-        from soup_cli.cli import _emit_audit_event, _split_command_args  # noqa: F401
+        from ai_forge_cli.cli import _emit_audit_event, _split_command_args  # noqa: F401
 
     def test_split_command_args_basic(self):
-        from soup_cli.cli import _split_command_args
+        from ai_forge_cli.cli import _split_command_args
 
         cmd, args = _split_command_args(["soup", "train", "--config", "x"])
         assert cmd == "train"
         assert args == ["--config", "x"]
 
     def test_split_command_args_skips_log_level_value(self):
-        from soup_cli.cli import _split_command_args
+        from ai_forge_cli.cli import _split_command_args
 
         cmd, args = _split_command_args(
             ["soup", "--log-level", "debug", "train", "--yes"]
@@ -556,21 +556,21 @@ class TestAuditInstrumentation:
         assert args == ["--yes"]
 
     def test_split_command_args_root_only(self):
-        from soup_cli.cli import _split_command_args
+        from ai_forge_cli.cli import _split_command_args
 
         cmd, args = _split_command_args(["soup"])
         assert cmd == "(root)"
         assert args == []
 
     def test_split_command_args_help_flag(self):
-        from soup_cli.cli import _split_command_args
+        from ai_forge_cli.cli import _split_command_args
 
         cmd, args = _split_command_args(["soup", "--help"])
         assert cmd == "(root)"
         assert args == ["--help"]
 
     def test_emit_audit_event_writes_line(self, tmp_path, monkeypatch):
-        import soup_cli.cli as cli_mod
+        import ai_forge_cli.cli as cli_mod
 
         log = tmp_path / "audit.jsonl"
         monkeypatch.setenv("SOUP_AUDIT_LOG_PATH", str(log))
@@ -583,7 +583,7 @@ class TestAuditInstrumentation:
         assert rows[0]["exit_code"] == 0
 
     def test_emit_audit_event_env_opt_out(self, tmp_path, monkeypatch):
-        import soup_cli.cli as cli_mod
+        import ai_forge_cli.cli as cli_mod
 
         log = tmp_path / "audit.jsonl"
         monkeypatch.setenv("SOUP_AUDIT_LOG_PATH", str(log))
@@ -593,7 +593,7 @@ class TestAuditInstrumentation:
         assert not log.exists()
 
     def test_emit_audit_event_flag_opt_out(self, tmp_path, monkeypatch):
-        import soup_cli.cli as cli_mod
+        import ai_forge_cli.cli as cli_mod
 
         log = tmp_path / "audit.jsonl"
         monkeypatch.setenv("SOUP_AUDIT_LOG_PATH", str(log))
@@ -603,8 +603,8 @@ class TestAuditInstrumentation:
         assert not log.exists()
 
     def test_emit_audit_event_never_raises(self, tmp_path, monkeypatch):
-        import soup_cli.cli as cli_mod
-        import soup_cli.utils.audit_log as audit_mod
+        import ai_forge_cli.cli as cli_mod
+        import ai_forge_cli.utils.audit_log as audit_mod
 
         monkeypatch.setenv("SOUP_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
         monkeypatch.delenv("SOUP_NO_AUDIT_LOG", raising=False)
@@ -619,7 +619,7 @@ class TestAuditInstrumentation:
         cli_mod._emit_audit_event(["soup", "x"], 1)  # must NOT raise
 
     def test_no_audit_log_flag_in_help(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
@@ -633,7 +633,7 @@ class TestAuditInstrumentation:
         env.pop("SOUP_NO_AUDIT_LOG", None)
         env["PYTHONUTF8"] = "1"
         r = subprocess.run(
-            [sys.executable, "-m", "soup_cli", "version"],
+            [sys.executable, "-m", "ai_forge_cli", "version"],
             env=env, capture_output=True, text=True, timeout=120,
         )
         assert r.returncode == 0, (r.stdout, r.stderr)
@@ -648,7 +648,7 @@ class TestAuditInstrumentation:
         env["SOUP_NO_AUDIT_LOG"] = "1"
         env["PYTHONUTF8"] = "1"
         r = subprocess.run(
-            [sys.executable, "-m", "soup_cli", "version"],
+            [sys.executable, "-m", "ai_forge_cli", "version"],
             env=env, capture_output=True, text=True, timeout=120,
         )
         assert r.returncode == 0, (r.stdout, r.stderr)
@@ -672,7 +672,7 @@ def _make_model_dir(tmp_path, *, with_receipt=False):
 
 class TestAirgapReproReceipt:
     def test_plan_accepts_repro_receipt_field(self, tmp_path, monkeypatch):
-        from soup_cli.utils.airgap_bundle import AirgapBundlePlan
+        from ai_forge_cli.utils.airgap_bundle import AirgapBundlePlan
 
         monkeypatch.chdir(tmp_path)
         plan = AirgapBundlePlan(
@@ -684,7 +684,7 @@ class TestAirgapReproReceipt:
         assert plan.repro_receipt == {"run_id": "r1"}
 
     def test_plan_repro_receipt_defaults_none(self, tmp_path, monkeypatch):
-        from soup_cli.utils.airgap_bundle import AirgapBundlePlan
+        from ai_forge_cli.utils.airgap_bundle import AirgapBundlePlan
 
         monkeypatch.chdir(tmp_path)
         plan = AirgapBundlePlan(
@@ -695,7 +695,7 @@ class TestAirgapReproReceipt:
         assert plan.repro_receipt is None
 
     def test_plan_repro_receipt_must_be_mapping(self, tmp_path, monkeypatch):
-        from soup_cli.utils.airgap_bundle import AirgapBundlePlan
+        from ai_forge_cli.utils.airgap_bundle import AirgapBundlePlan
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError):
@@ -709,7 +709,7 @@ class TestAirgapReproReceipt:
     def test_build_embeds_receipt_member(self, tmp_path, monkeypatch):
         import tarfile
 
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
             inspect_airgap_bundle,
@@ -735,7 +735,7 @@ class TestAirgapReproReceipt:
         assert read.repro_receipt == {"run_id": "r1", "seeds": {"torch": 42}}
 
     def test_build_without_receipt_has_none(self, tmp_path, monkeypatch):
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
             inspect_airgap_bundle,
@@ -754,15 +754,15 @@ class TestAirgapReproReceipt:
         assert not any(f.name == "repro-receipt.json" for f in read.files)
 
     def test_cli_repro_receipt_flag_in_help(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = runner.invoke(app, ["airgap-bundle", "--help"])
         assert result.exit_code == 0
         assert "repro-receipt" in _plain(result.output)
 
     def test_cli_explicit_repro_receipt(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils.airgap_bundle import inspect_airgap_bundle
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils.airgap_bundle import inspect_airgap_bundle
 
         monkeypatch.chdir(tmp_path)
         _make_model_dir(tmp_path)
@@ -778,8 +778,8 @@ class TestAirgapReproReceipt:
         assert read.repro_receipt == {"run_id": "explicit"}
 
     def test_cli_auto_detects_receipt_in_model_dir(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils.airgap_bundle import inspect_airgap_bundle
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils.airgap_bundle import inspect_airgap_bundle
 
         monkeypatch.chdir(tmp_path)
         _make_model_dir(tmp_path, with_receipt=True)
@@ -798,7 +798,7 @@ class TestReviewFollowups:
     # --- #180 EnergyTracker boundary (tdd HIGH 1 / LOW 16) ---
     @pytest.mark.parametrize("bad", [-5.0, True, float("nan"), float("inf")])
     def test_energy_tracker_rejects_bad_grid(self, bad):
-        from soup_cli.utils.energy import EnergyTracker
+        from ai_forge_cli.utils.energy import EnergyTracker
 
         with pytest.raises(ValueError):
             EnergyTracker(grid_intensity_g_per_kwh=bad)
@@ -826,7 +826,7 @@ class TestReviewFollowups:
 
         fake.OfflineEmissionsTracker = _FakeTracker
         monkeypatch.setitem(sys.modules, "codecarbon", fake)
-        from soup_cli.utils.energy import EnergyTracker
+        from ai_forge_cli.utils.energy import EnergyTracker
 
         with EnergyTracker(country_iso_code="usa"):
             pass
@@ -834,20 +834,20 @@ class TestReviewFollowups:
 
     # --- #184 extract_top_domains (tdd HIGH 2/3, LOW 18) ---
     def test_extract_top_domains_skips_non_mapping_rows(self):
-        from soup_cli.utils.annex_xi import extract_top_domains
+        from ai_forge_cli.utils.annex_xi import extract_top_domains
 
         out = extract_top_domains([42, None, "https://x.com/a", {"text": "no"}])
         assert out == (("x.com", 1.0),)
 
     def test_extract_top_domains_tie_break_domain_ascending(self):
-        from soup_cli.utils.annex_xi import extract_top_domains
+        from ai_forge_cli.utils.annex_xi import extract_top_domains
 
         out = extract_top_domains([{"text": "https://z.com/1 https://a.com/2"}])
         # equal counts → ascending domain
         assert out == (("a.com", 0.5), ("z.com", 0.5))
 
     def test_extract_top_domains_urls_per_row_cap(self, monkeypatch):
-        import soup_cli.utils.annex_xi as ax
+        import ai_forge_cli.utils.annex_xi as ax
 
         monkeypatch.setattr(ax, "_MAX_URLS_PER_ROW", 2)
         text = " ".join(f"https://d{i}.com/x" for i in range(10))
@@ -857,7 +857,7 @@ class TestReviewFollowups:
 
     # --- #181 atomic_write_bytes (tdd HIGH 4/5) ---
     def test_atomic_write_bytes_rejects_non_bytes(self, tmp_path, monkeypatch):
-        from soup_cli.utils.paths import atomic_write_bytes
+        from ai_forge_cli.utils.paths import atomic_write_bytes
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(TypeError):
@@ -865,7 +865,7 @@ class TestReviewFollowups:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
     def test_atomic_write_bytes_rejects_symlink_target(self, tmp_path, monkeypatch):
-        from soup_cli.utils.paths import atomic_write_bytes
+        from ai_forge_cli.utils.paths import atomic_write_bytes
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "real").write_bytes(b"x")
@@ -874,7 +874,7 @@ class TestReviewFollowups:
             atomic_write_bytes(b"y", "link.pdf")
 
     def test_render_annex_pdf_escapes_operator_markup(self):
-        from soup_cli.utils.annex_xi import AnnexXIData, render_annex_pdf
+        from ai_forge_cli.utils.annex_xi import AnnexXIData, render_annex_pdf
 
         data = AnnexXIData(
             model_name="<b>evil</b> & co",
@@ -889,14 +889,14 @@ class TestReviewFollowups:
 
     # --- #182 attestation caps (security M1 / tdd HIGH 6/7) ---
     def test_validate_attestation_oversize_rejected(self):
-        from soup_cli.cans.schema import validate_attestation_statement
+        from ai_forge_cli.cans.schema import validate_attestation_statement
 
         big = {**_sample_statement(), "pad": "a" * (1024 * 1024 + 10)}
         with pytest.raises(ValueError, match="too large"):
             validate_attestation_statement(big)
 
     def test_validate_attestation_non_serialisable_rejected(self):
-        from soup_cli.cans.schema import validate_attestation_statement
+        from ai_forge_cli.cans.schema import validate_attestation_statement
 
         bad = {**_sample_statement(), "bad": {object()}}
         with pytest.raises(ValueError):
@@ -905,7 +905,7 @@ class TestReviewFollowups:
     def test_manifest_rejects_oversize_attestation(self):
         from pydantic import ValidationError
 
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         big = {**_sample_statement(), "pad": "a" * (1024 * 1024 + 10)}
         with pytest.raises(ValidationError):
@@ -916,7 +916,7 @@ class TestReviewFollowups:
             )
 
     def test_load_attestation_file_oversize_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.can import _load_attestation_files
+        from ai_forge_cli.commands.can import _load_attestation_files
 
         monkeypatch.chdir(tmp_path)
         big = tmp_path / "big.json"
@@ -929,7 +929,7 @@ class TestReviewFollowups:
 
     # --- #183 audit splitter + exit codes (tdd MED 8/9/10/11) ---
     def test_split_command_args_value_opt_followed_by_flag(self):
-        from soup_cli.cli import _split_command_args
+        from ai_forge_cli.cli import _split_command_args
 
         cmd, args = _split_command_args(
             ["soup", "--log-level", "--yes", "train", "--config", "x"]
@@ -939,7 +939,7 @@ class TestReviewFollowups:
         assert args == ["--config", "x"]
 
     def test_split_command_args_trailing_value_opt(self):
-        from soup_cli.cli import _split_command_args
+        from ai_forge_cli.cli import _split_command_args
 
         # Trailing value-opt: i += 2 overshoots, loop exits cleanly (no
         # IndexError) and the leftover token is returned as args.
@@ -948,7 +948,7 @@ class TestReviewFollowups:
         assert args == ["--log-level"]
 
     def test_emit_audit_event_nonzero_exit_code(self, tmp_path, monkeypatch):
-        import soup_cli.cli as cli_mod
+        import ai_forge_cli.cli as cli_mod
 
         log = tmp_path / "audit.jsonl"
         monkeypatch.setenv("SOUP_AUDIT_LOG_PATH", str(log))
@@ -968,7 +968,7 @@ class TestReviewFollowups:
         env.pop("SOUP_NO_AUDIT_LOG", None)
         env["PYTHONUTF8"] = "1"
         r = subprocess.run(
-            [sys.executable, "-m", "soup_cli", "--no-audit-log", "version"],
+            [sys.executable, "-m", "ai_forge_cli", "--no-audit-log", "version"],
             env=env, capture_output=True, text=True, timeout=120,
         )
         assert r.returncode == 0, (r.stdout, r.stderr)
@@ -976,7 +976,7 @@ class TestReviewFollowups:
 
     # --- #188 airgap repro-receipt edges (tdd MED 12/13/14/15, LOW 17) ---
     def test_build_receipt_over_size_cap_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
         )
@@ -995,7 +995,7 @@ class TestReviewFollowups:
     def test_plan_accepts_mappingproxy_receipt(self, tmp_path, monkeypatch):
         from types import MappingProxyType
 
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
             inspect_airgap_bundle,
@@ -1013,7 +1013,7 @@ class TestReviewFollowups:
         assert inspect_airgap_bundle("b.tar").repro_receipt == {"run_id": "proxy"}
 
     def test_manifest_from_payload_coerces_bad_receipt_to_none(self):
-        from soup_cli.utils.airgap_bundle import _manifest_from_payload
+        from ai_forge_cli.utils.airgap_bundle import _manifest_from_payload
 
         m = _manifest_from_payload({
             "soup_version": "0.71.3", "created_at": "x", "model_dir": "model",
@@ -1023,8 +1023,8 @@ class TestReviewFollowups:
         assert m.repro_receipt is None
 
     def test_cli_auto_detect_malformed_receipt_is_none(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils.airgap_bundle import inspect_airgap_bundle
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils.airgap_bundle import inspect_airgap_bundle
 
         monkeypatch.chdir(tmp_path)
         model = _make_model_dir(tmp_path)
@@ -1036,7 +1036,7 @@ class TestReviewFollowups:
         assert inspect_airgap_bundle("b.tar").repro_receipt is None
 
     def test_cli_explicit_missing_receipt_exits_2(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         _make_model_dir(tmp_path)

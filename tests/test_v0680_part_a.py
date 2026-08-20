@@ -1,6 +1,6 @@
 """v0.68.0 Part A — ``soup compile`` (DSPy/GEPA prompt-program compiler).
 
-Tests for ``soup_cli/utils/prompt_compile.py`` + ``soup_cli/commands/compile_cmd.py``.
+Tests for ``ai_forge_cli/utils/prompt_compile.py`` + ``ai_forge_cli/commands/compile_cmd.py``.
 
 Coverage:
 - Closed ``SUPPORTED_PROMPT_OPTIMIZERS`` allowlist (frozenset, immutable)
@@ -29,7 +29,7 @@ from typer.testing import CliRunner
 
 class TestPublicSurface:
     def test_module_importable(self) -> None:
-        from soup_cli.utils import prompt_compile
+        from ai_forge_cli.utils import prompt_compile
 
         assert hasattr(prompt_compile, "SUPPORTED_PROMPT_OPTIMIZERS")
         assert hasattr(prompt_compile, "validate_prompt_optimizer")
@@ -42,7 +42,7 @@ class TestPublicSurface:
         assert hasattr(prompt_compile, "run_compile")
 
     def test_allowlist_is_frozenset(self) -> None:
-        from soup_cli.utils.prompt_compile import SUPPORTED_PROMPT_OPTIMIZERS
+        from ai_forge_cli.utils.prompt_compile import SUPPORTED_PROMPT_OPTIMIZERS
 
         assert isinstance(SUPPORTED_PROMPT_OPTIMIZERS, frozenset)
         # Allowlist should cover the canonical DSPy / GEPA / TextGrad set.
@@ -53,7 +53,7 @@ class TestPublicSurface:
         assert "textgrad" in SUPPORTED_PROMPT_OPTIMIZERS
 
     def test_allowlist_immutable(self) -> None:
-        from soup_cli.utils.prompt_compile import SUPPORTED_PROMPT_OPTIMIZERS
+        from ai_forge_cli.utils.prompt_compile import SUPPORTED_PROMPT_OPTIMIZERS
 
         with pytest.raises(AttributeError):
             SUPPORTED_PROMPT_OPTIMIZERS.add("evil")  # type: ignore[attr-defined]
@@ -66,48 +66,48 @@ class TestPublicSurface:
 
 class TestValidatePromptOptimizer:
     def test_happy(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_prompt_optimizer
+        from ai_forge_cli.utils.prompt_compile import validate_prompt_optimizer
 
         assert validate_prompt_optimizer("mipro") == "mipro"
 
     def test_case_insensitive(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_prompt_optimizer
+        from ai_forge_cli.utils.prompt_compile import validate_prompt_optimizer
 
         assert validate_prompt_optimizer("MIPRO") == "mipro"
         assert validate_prompt_optimizer("Gepa") == "gepa"
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_prompt_optimizer
+        from ai_forge_cli.utils.prompt_compile import validate_prompt_optimizer
 
         with pytest.raises(TypeError):
             validate_prompt_optimizer(True)  # type: ignore[arg-type]
 
     def test_non_string_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_prompt_optimizer
+        from ai_forge_cli.utils.prompt_compile import validate_prompt_optimizer
 
         with pytest.raises(TypeError):
             validate_prompt_optimizer(42)  # type: ignore[arg-type]
 
     def test_empty_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_prompt_optimizer
+        from ai_forge_cli.utils.prompt_compile import validate_prompt_optimizer
 
         with pytest.raises(ValueError):
             validate_prompt_optimizer("")
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_prompt_optimizer
+        from ai_forge_cli.utils.prompt_compile import validate_prompt_optimizer
 
         with pytest.raises(ValueError):
             validate_prompt_optimizer("mipro\x00")
 
     def test_oversize_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_prompt_optimizer
+        from ai_forge_cli.utils.prompt_compile import validate_prompt_optimizer
 
         with pytest.raises(ValueError):
             validate_prompt_optimizer("a" * 33)
 
     def test_unknown_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_prompt_optimizer
+        from ai_forge_cli.utils.prompt_compile import validate_prompt_optimizer
 
         with pytest.raises(ValueError, match="unknown"):
             validate_prompt_optimizer("evil-optimizer")
@@ -120,36 +120,36 @@ class TestValidatePromptOptimizer:
 
 class TestValidateMaxIters:
     def test_happy(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_max_iters
+        from ai_forge_cli.utils.prompt_compile import validate_max_iters
 
         assert validate_max_iters(10) == 10
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_max_iters
+        from ai_forge_cli.utils.prompt_compile import validate_max_iters
 
         with pytest.raises(TypeError):
             validate_max_iters(True)  # type: ignore[arg-type]
 
     def test_non_int_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_max_iters
+        from ai_forge_cli.utils.prompt_compile import validate_max_iters
 
         with pytest.raises(TypeError):
             validate_max_iters(3.14)  # type: ignore[arg-type]
 
     def test_zero_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_max_iters
+        from ai_forge_cli.utils.prompt_compile import validate_max_iters
 
         with pytest.raises(ValueError):
             validate_max_iters(0)
 
     def test_negative_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_max_iters
+        from ai_forge_cli.utils.prompt_compile import validate_max_iters
 
         with pytest.raises(ValueError):
             validate_max_iters(-1)
 
     def test_overcap_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import (
+        from ai_forge_cli.utils.prompt_compile import (
             MAX_COMPILE_ITERS,
             validate_max_iters,
         )
@@ -158,7 +158,7 @@ class TestValidateMaxIters:
             validate_max_iters(MAX_COMPILE_ITERS + 1)
 
     def test_max_boundary_accepted(self) -> None:
-        from soup_cli.utils.prompt_compile import (
+        from ai_forge_cli.utils.prompt_compile import (
             MAX_COMPILE_ITERS,
             validate_max_iters,
         )
@@ -173,7 +173,7 @@ class TestValidateMaxIters:
 
 class TestValidateProgramPath:
     def test_happy(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.prompt_compile import validate_program_path
+        from ai_forge_cli.utils.prompt_compile import validate_program_path
 
         monkeypatch.chdir(tmp_path)
         prog = tmp_path / "program.py"
@@ -183,7 +183,7 @@ class TestValidateProgramPath:
     def test_outside_cwd_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.prompt_compile import validate_program_path
+        from ai_forge_cli.utils.prompt_compile import validate_program_path
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -198,7 +198,7 @@ class TestValidateProgramPath:
     def test_extension_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.prompt_compile import validate_program_path
+        from ai_forge_cli.utils.prompt_compile import validate_program_path
 
         monkeypatch.chdir(tmp_path)
         bad = tmp_path / "program.txt"
@@ -207,7 +207,7 @@ class TestValidateProgramPath:
             validate_program_path(str(bad))
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import validate_program_path
+        from ai_forge_cli.utils.prompt_compile import validate_program_path
 
         with pytest.raises(ValueError):
             validate_program_path("a\x00b.py")
@@ -220,7 +220,7 @@ class TestValidateProgramPath:
     ) -> None:
         import os
 
-        from soup_cli.utils.prompt_compile import validate_program_path
+        from ai_forge_cli.utils.prompt_compile import validate_program_path
 
         monkeypatch.chdir(tmp_path)
         target = tmp_path / "real.py"
@@ -236,7 +236,7 @@ class TestValidateProgramPath:
 
 class TestValidateEvalSuitePath:
     def test_happy(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.prompt_compile import validate_eval_suite_path
+        from ai_forge_cli.utils.prompt_compile import validate_eval_suite_path
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "eval.json"
@@ -246,7 +246,7 @@ class TestValidateEvalSuitePath:
     def test_outside_cwd_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.prompt_compile import validate_eval_suite_path
+        from ai_forge_cli.utils.prompt_compile import validate_eval_suite_path
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -266,7 +266,7 @@ class TestValidateEvalSuitePath:
 
 class TestCompilePlan:
     def test_frozen(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.prompt_compile import CompilePlan
+        from ai_forge_cli.utils.prompt_compile import CompilePlan
 
         monkeypatch.chdir(tmp_path)
         prog = tmp_path / "p.py"
@@ -287,7 +287,7 @@ class TestCompilePlan:
     def test_invalid_optimizer(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.prompt_compile import CompilePlan
+        from ai_forge_cli.utils.prompt_compile import CompilePlan
 
         monkeypatch.chdir(tmp_path)
         prog = tmp_path / "p.py"
@@ -307,7 +307,7 @@ class TestCompilePlan:
 
 class TestCompileResult:
     def test_frozen(self) -> None:
-        from soup_cli.utils.prompt_compile import CompileResult
+        from ai_forge_cli.utils.prompt_compile import CompileResult
 
         result = CompileResult(
             program_text="# compiled",
@@ -319,7 +319,7 @@ class TestCompileResult:
             result.score = 0.9  # type: ignore[misc]
 
     def test_invalid_score(self) -> None:
-        from soup_cli.utils.prompt_compile import CompileResult
+        from ai_forge_cli.utils.prompt_compile import CompileResult
 
         with pytest.raises(ValueError):
             CompileResult(
@@ -327,7 +327,7 @@ class TestCompileResult:
             )
 
     def test_negative_iterations_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import CompileResult
+        from ai_forge_cli.utils.prompt_compile import CompileResult
 
         with pytest.raises(ValueError):
             CompileResult(
@@ -335,7 +335,7 @@ class TestCompileResult:
             )
 
     def test_bool_iterations_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import CompileResult
+        from ai_forge_cli.utils.prompt_compile import CompileResult
 
         with pytest.raises(TypeError):
             CompileResult(
@@ -346,7 +346,7 @@ class TestCompileResult:
             )
 
     def test_non_bool_converged_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import CompileResult
+        from ai_forge_cli.utils.prompt_compile import CompileResult
 
         with pytest.raises(TypeError):
             CompileResult(
@@ -364,7 +364,7 @@ class TestCompileResult:
 
 class TestBuildCompilePlan:
     def test_happy(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.prompt_compile import build_compile_plan
+        from ai_forge_cli.utils.prompt_compile import build_compile_plan
 
         monkeypatch.chdir(tmp_path)
         prog = tmp_path / "p.py"
@@ -394,7 +394,7 @@ class TestRunCompileDeferred:
     ) -> None:
         # v0.71.13 #225: the runner is live; with dspy absent the real
         # branch raises a friendly ImportError naming the [compile] extra.
-        from soup_cli.utils.prompt_compile import build_compile_plan, run_compile
+        from ai_forge_cli.utils.prompt_compile import build_compile_plan, run_compile
 
         monkeypatch.chdir(tmp_path)
         prog = tmp_path / "p.py"
@@ -408,11 +408,11 @@ class TestRunCompileDeferred:
             max_iters=4,
             output_path="out.py",
         )
-        with pytest.raises(ImportError, match=r"soup-cli\[compile\]"):
+        with pytest.raises(ImportError, match=r"ai-forge\[compile\]"):
             run_compile(plan)
 
     def test_non_plan_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import run_compile
+        from ai_forge_cli.utils.prompt_compile import run_compile
 
         with pytest.raises(TypeError):
             run_compile("not-a-plan")  # type: ignore[arg-type]
@@ -425,7 +425,7 @@ class TestRunCompileDeferred:
 
 class TestCli:
     def test_help(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["compile", "--help"])
@@ -433,7 +433,7 @@ class TestCli:
         assert "compile" in result.output.lower()
 
     def test_plan_only(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         prog = tmp_path / "p.py"
@@ -458,7 +458,7 @@ class TestCli:
     def test_unknown_optimizer_exits_2(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         prog = tmp_path / "p.py"
@@ -484,7 +484,7 @@ class TestCli:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """v0.71.13 #225: live runner with dspy absent -> friendly exit 2."""
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         prog = tmp_path / "p.py"
@@ -515,7 +515,7 @@ class TestSourceWiring:
     def test_no_top_level_heavy_imports(self) -> None:
         path = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "prompt_compile.py"
+            / "src" / "ai_forge_cli" / "utils" / "prompt_compile.py"
         )
         text = path.read_text(encoding="utf-8")
         # Heavy / optional deps must be lazy-imported.
@@ -527,7 +527,7 @@ class TestSourceWiring:
             assert token not in text
 
     def test_cli_registered(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         names = [c.name for c in app.registered_commands]
         assert "compile" in names
@@ -535,7 +535,7 @@ class TestSourceWiring:
     def test_uses_atomic_write_helper(self) -> None:
         path = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "commands" / "compile_cmd.py"
+            / "src" / "ai_forge_cli" / "commands" / "compile_cmd.py"
         )
         # If this file is missing the test must fail loudly — Part A CLI is a
         # shipped artefact, not optional. Skipping would hide a regression.
@@ -543,7 +543,7 @@ class TestSourceWiring:
         text = path.read_text(encoding="utf-8")
         util = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "prompt_compile.py"
+            / "src" / "ai_forge_cli" / "utils" / "prompt_compile.py"
         )
         combined = text + util.read_text(encoding="utf-8")
         assert "atomic_write_text" in combined

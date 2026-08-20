@@ -14,7 +14,7 @@ import io
 import os
 from unittest.mock import patch
 
-from soup_cli.utils import encoding as enc
+from ai_forge_cli.utils import encoding as enc
 
 
 def test_force_utf8_stdio_noop_on_posix():
@@ -85,8 +85,8 @@ def test_force_utf8_stdio_handles_missing_reconfigure(monkeypatch):
 
 
 def test_cli_bootstrap_calls_force_utf8(monkeypatch):
-    """soup_cli.cli imports `force_utf8_stdio` so it runs at module load."""
-    import soup_cli.cli as cli_mod
+    """ai_forge_cli.cli imports `force_utf8_stdio` so it runs at module load."""
+    import ai_forge_cli.cli as cli_mod
 
     # Module-level guarantee: the symbol is imported.
     assert hasattr(cli_mod, "_utf8_bootstrap_done") or hasattr(
@@ -99,9 +99,9 @@ def test_writers_use_utf8_encoding():
     import pathlib
 
     audited_files = [
-        "src/soup_cli/commands/quickstart.py",
-        "src/soup_cli/commands/init.py",
-        "src/soup_cli/commands/migrate.py",
+        "src/ai_forge_cli/commands/quickstart.py",
+        "src/ai_forge_cli/commands/init.py",
+        "src/ai_forge_cli/commands/migrate.py",
     ]
     repo_root = pathlib.Path(__file__).resolve().parent.parent
     for rel in audited_files:

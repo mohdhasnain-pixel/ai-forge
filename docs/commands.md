@@ -228,7 +228,7 @@ soup attest emit ... [--sign ed25519 --key <pem>] [-o att.json]  in-toto/SLSA-3 
 soup attest verify <statement> --signature <sig> [--public-key <pem>]  Verify ed25519 attestation signature
 soup airgap-bundle --model <m> --output <out.tar> [--repro-receipt <r.json>]  Signed tarball for data-diode transfer (embeds repro-receipt)
 soup train --config soup.yaml --annex-xi <out.md|out.pdf>  EU AI Act Annex XI/XII doc (markdown or PDF; top_domains auto-filled)
-soup train --config soup.yaml --track-energy [--energy-country USA]  codecarbon offline kWh/CO2 → annex-xi (pip install soup-cli[carbon])
+soup train --config soup.yaml --track-energy [--energy-country USA]  codecarbon offline kWh/CO2 → annex-xi (pip install ai-forge[carbon])
 soup train --config soup.yaml --track-energy --energy-out <energy.json>  persist measurement for `soup bom emit --energy <energy.json>`
 soup train --config soup.yaml --repro-receipt <out.json>  SR 11-7 reproducibility receipt
 soup can pack --entry-id <id> --out r.can --attest <statement.json>  Embed in-toto Statements into a v3 can manifest
@@ -284,9 +284,9 @@ soup adapters bisect <ckpt>... --eval-command "..."  Binary search over training
 soup lock write --base-sha <h> --dataset-sha <h> --env-hash <h>  Write soup.lock (v0.67.0)
 soup lock write --base-sha <h> --dataset-sha <h> --env-lock soup-env.lock  Auto-derive --env-hash from soup-env.lock (v0.71.1)
 soup lock show / soup lock check              Show + drift-check (exit 3 on drift)
-soup compile <program.py> --eval <suite> [--optimizer mipro|gepa|textgrad|copro|bootstrap_fewshot] [--plan-only]  DSPy / GEPA / TextGrad prompt-program compiler — live (v0.71.13; pip install "soup-cli[compile]")
+soup compile <program.py> --eval <suite> [--optimizer mipro|gepa|textgrad|copro|bootstrap_fewshot] [--plan-only]  DSPy / GEPA / TextGrad prompt-program compiler — live (v0.71.13; pip install "ai-forge[compile]")
 soup distill-prompt --traces <jsonl> --teacher <m> --student <m> --strategy sft|preference|kl [--provider ollama|anthropic|vllm] [--base-url <url>] [--temperature F] [--max-rows N]  Distill prompt-heavy traces via a live teacher (v0.71.13)
-soup compile-tools <spec.json|yaml> --eval <jsonl> [--optimizer textgrad|gepa] [--plan-only]  TextGrad / GEPA tool-schema optimiser — live (v0.71.13; pip install "soup-cli[compile]")
+soup compile-tools <spec.json|yaml> --eval <jsonl> [--optimizer textgrad|gepa] [--plan-only]  TextGrad / GEPA tool-schema optimiser — live (v0.71.13; pip install "ai-forge[compile]")
 soup apple-adapter <source-dir> --direction hf-to-mlx|mlx-to-hf|hf-to-apple|mlx-to-apple --output <dir> [--sign] [--plan-only]  PEFT LoRA <-> mlx-lm adapter conversion — live (v0.71.21; *-to-apple upstream-gated exit 3)
 soup local-rl init --db <path>                Create personal-LLM flywheel SQLite schema (v0.68.0)
 soup local-rl status --db <path>              Print interactions / thumbs-up / thumbs-down counters
@@ -328,7 +328,7 @@ server over **stdio**, so any MCP client — Claude Code, Cursor, Cline, Continu
 can drive Soup conversationally. Install the extra first:
 
 ```bash
-pip install "soup-cli[mcp]"
+pip install "ai-forge[mcp]"
 ```
 
 Register it with your client. For **Claude Code** (`.mcp.json` in the repo) or

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.data.loader import load_raw_data
+from ai_forge_cli.data.loader import load_raw_data
 
 
 def test_load_jsonl(sample_alpaca_data: Path):

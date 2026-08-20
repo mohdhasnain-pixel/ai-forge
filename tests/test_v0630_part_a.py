@@ -17,7 +17,7 @@ runner = CliRunner()
 
 
 def test_module_imports():
-    from soup_cli.utils import ingest_sources  # noqa: F401
+    from ai_forge_cli.utils import ingest_sources  # noqa: F401
 
     assert hasattr(ingest_sources, "SUPPORTED_INGEST_SOURCES")
     assert hasattr(ingest_sources, "TraceRecord")
@@ -33,7 +33,7 @@ def test_module_imports():
 
 
 def test_supported_sources_exact():
-    from soup_cli.utils.ingest_sources import SUPPORTED_INGEST_SOURCES
+    from ai_forge_cli.utils.ingest_sources import SUPPORTED_INGEST_SOURCES
 
     assert SUPPORTED_INGEST_SOURCES == frozenset(
         {"langfuse", "langsmith", "helicone", "openpipe", "otel", "openai-stored"}
@@ -41,7 +41,7 @@ def test_supported_sources_exact():
 
 
 def test_trace_record_frozen():
-    from soup_cli.utils.ingest_sources import TraceRecord
+    from ai_forge_cli.utils.ingest_sources import TraceRecord
 
     rec = TraceRecord(
         trace_id="abc",
@@ -61,21 +61,21 @@ def test_trace_record_frozen():
 
 
 def test_validate_source_name_happy():
-    from soup_cli.utils.ingest_sources import validate_source_name
+    from ai_forge_cli.utils.ingest_sources import validate_source_name
 
     for name in ["langfuse", "langsmith", "helicone", "openpipe", "otel", "openai-stored"]:
         assert validate_source_name(name) == name
 
 
 def test_validate_source_name_case_insensitive():
-    from soup_cli.utils.ingest_sources import validate_source_name
+    from ai_forge_cli.utils.ingest_sources import validate_source_name
 
     assert validate_source_name("LANGFUSE") == "langfuse"
     assert validate_source_name("OpenPipe") == "openpipe"
 
 
 def test_validate_source_name_unknown():
-    from soup_cli.utils.ingest_sources import validate_source_name
+    from ai_forge_cli.utils.ingest_sources import validate_source_name
 
     with pytest.raises(ValueError, match="unknown"):
         validate_source_name("evilcorp")
@@ -83,7 +83,7 @@ def test_validate_source_name_unknown():
 
 @pytest.mark.parametrize("bad", [None, 123, True, "", "x" * 33, "lang\x00fuse"])
 def test_validate_source_name_rejects(bad):
-    from soup_cli.utils.ingest_sources import validate_source_name
+    from ai_forge_cli.utils.ingest_sources import validate_source_name
 
     with pytest.raises((TypeError, ValueError)):
         validate_source_name(bad)
@@ -95,7 +95,7 @@ def test_validate_source_name_rejects(bad):
 
 
 def test_parse_langfuse_basic():
-    from soup_cli.utils.ingest_sources import parse_langfuse
+    from ai_forge_cli.utils.ingest_sources import parse_langfuse
 
     events = [
         {
@@ -120,21 +120,21 @@ def test_parse_langfuse_basic():
 
 
 def test_parse_langfuse_skips_non_dict():
-    from soup_cli.utils.ingest_sources import parse_langfuse
+    from ai_forge_cli.utils.ingest_sources import parse_langfuse
 
     rows = list(parse_langfuse(["string-row", 42, None, {"input": "x", "output": "y"}]))
     assert len(rows) == 1
 
 
 def test_parse_langfuse_missing_fields():
-    from soup_cli.utils.ingest_sources import parse_langfuse
+    from ai_forge_cli.utils.ingest_sources import parse_langfuse
 
     rows = list(parse_langfuse([{"id": "x"}, {"input": "only-input"}, {"output": "only-output"}]))
     assert rows == []
 
 
 def test_parse_langsmith_basic():
-    from soup_cli.utils.ingest_sources import parse_langsmith
+    from ai_forge_cli.utils.ingest_sources import parse_langsmith
 
     events = [
         {
@@ -153,7 +153,7 @@ def test_parse_langsmith_basic():
 
 
 def test_parse_helicone_basic():
-    from soup_cli.utils.ingest_sources import parse_helicone
+    from ai_forge_cli.utils.ingest_sources import parse_helicone
 
     events = [
         {
@@ -171,7 +171,7 @@ def test_parse_helicone_basic():
 
 
 def test_parse_openpipe_basic():
-    from soup_cli.utils.ingest_sources import parse_openpipe
+    from ai_forge_cli.utils.ingest_sources import parse_openpipe
 
     events = [
         {
@@ -186,7 +186,7 @@ def test_parse_openpipe_basic():
 
 
 def test_parse_otel_basic():
-    from soup_cli.utils.ingest_sources import parse_otel
+    from ai_forge_cli.utils.ingest_sources import parse_otel
 
     spans = [
         {
@@ -207,7 +207,7 @@ def test_parse_otel_basic():
 
 
 def test_parse_otel_skips_non_llm_spans():
-    from soup_cli.utils.ingest_sources import parse_otel
+    from ai_forge_cli.utils.ingest_sources import parse_otel
 
     spans = [
         {"attributes": {"http.method": "GET"}},
@@ -218,7 +218,7 @@ def test_parse_otel_skips_non_llm_spans():
 
 
 def test_parse_openai_stored_basic():
-    from soup_cli.utils.ingest_sources import parse_openai_stored
+    from ai_forge_cli.utils.ingest_sources import parse_openai_stored
 
     events = [
         {
@@ -241,7 +241,7 @@ def test_parse_openai_stored_basic():
 
 def test_ingest_traces_dispatches_to_parser(tmp_path, monkeypatch):
     """Smoke: ingest_traces routes a JSONL log through the matching parser."""
-    from soup_cli.utils.ingest_sources import ingest_traces
+    from ai_forge_cli.utils.ingest_sources import ingest_traces
 
     monkeypatch.chdir(tmp_path)
     log_file = tmp_path / "langfuse.jsonl"
@@ -257,7 +257,7 @@ def test_ingest_traces_dispatches_to_parser(tmp_path, monkeypatch):
 
 
 def test_ingest_traces_rejects_outside_cwd(tmp_path, monkeypatch):
-    from soup_cli.utils.ingest_sources import ingest_traces
+    from ai_forge_cli.utils.ingest_sources import ingest_traces
 
     monkeypatch.chdir(tmp_path)
     elsewhere = tmp_path.parent / "stray.jsonl"
@@ -271,7 +271,7 @@ def test_ingest_traces_rejects_outside_cwd(tmp_path, monkeypatch):
 
 
 def test_ingest_traces_rejects_unknown_source(tmp_path, monkeypatch):
-    from soup_cli.utils.ingest_sources import ingest_traces
+    from ai_forge_cli.utils.ingest_sources import ingest_traces
 
     monkeypatch.chdir(tmp_path)
     log_file = tmp_path / "x.jsonl"
@@ -281,7 +281,7 @@ def test_ingest_traces_rejects_unknown_source(tmp_path, monkeypatch):
 
 
 def test_ingest_traces_missing_file(tmp_path, monkeypatch):
-    from soup_cli.utils.ingest_sources import ingest_traces
+    from ai_forge_cli.utils.ingest_sources import ingest_traces
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(FileNotFoundError):
@@ -289,7 +289,7 @@ def test_ingest_traces_missing_file(tmp_path, monkeypatch):
 
 
 def test_ingest_traces_rejects_null_byte_path(tmp_path, monkeypatch):
-    from soup_cli.utils.ingest_sources import ingest_traces
+    from ai_forge_cli.utils.ingest_sources import ingest_traces
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(ValueError):
@@ -298,7 +298,7 @@ def test_ingest_traces_rejects_null_byte_path(tmp_path, monkeypatch):
 
 def test_ingest_traces_caps_lines(tmp_path, monkeypatch):
     """Should not hang on extremely large files; respect _MAX_INGEST_LINES."""
-    from soup_cli.utils import ingest_sources
+    from ai_forge_cli.utils import ingest_sources
 
     monkeypatch.chdir(tmp_path)
     log_file = tmp_path / "huge.jsonl"
@@ -312,7 +312,7 @@ def test_ingest_traces_caps_lines(tmp_path, monkeypatch):
 
 
 def test_ingest_traces_skips_malformed_lines(tmp_path, monkeypatch):
-    from soup_cli.utils.ingest_sources import ingest_traces
+    from ai_forge_cli.utils.ingest_sources import ingest_traces
 
     monkeypatch.chdir(tmp_path)
     log_file = tmp_path / "mixed.jsonl"
@@ -332,7 +332,7 @@ def test_ingest_traces_skips_malformed_lines(tmp_path, monkeypatch):
 
 
 def test_resolve_auth_env_each_source(monkeypatch):
-    from soup_cli.utils.ingest_sources import resolve_auth_env
+    from ai_forge_cli.utils.ingest_sources import resolve_auth_env
 
     monkeypatch.setenv("LANGFUSE_KEY", "lf-key")
     monkeypatch.setenv("LANGSMITH_API_KEY", "ls-key")
@@ -350,7 +350,7 @@ def test_resolve_auth_env_each_source(monkeypatch):
 
 
 def test_resolve_auth_env_missing(monkeypatch):
-    from soup_cli.utils.ingest_sources import resolve_auth_env
+    from ai_forge_cli.utils.ingest_sources import resolve_auth_env
 
     for env in [
         "LANGFUSE_KEY",
@@ -365,7 +365,7 @@ def test_resolve_auth_env_missing(monkeypatch):
 
 
 def test_resolve_auth_env_unknown_raises():
-    from soup_cli.utils.ingest_sources import resolve_auth_env
+    from ai_forge_cli.utils.ingest_sources import resolve_auth_env
 
     with pytest.raises(ValueError):
         resolve_auth_env("evilcorp")
@@ -377,7 +377,7 @@ def test_resolve_auth_env_unknown_raises():
 
 
 def test_cli_ingest_help():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["ingest", "--help"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -386,7 +386,7 @@ def test_cli_ingest_help():
 
 
 def test_cli_ingest_happy(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     log = tmp_path / "lf.jsonl"
@@ -411,7 +411,7 @@ def test_cli_ingest_happy(tmp_path, monkeypatch):
 
 
 def test_cli_ingest_unknown_source(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     log = tmp_path / "x.jsonl"
@@ -425,7 +425,7 @@ def test_cli_ingest_unknown_source(tmp_path, monkeypatch):
 
 
 def test_cli_ingest_outside_cwd_rejected(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "stray_log.jsonl"
@@ -443,7 +443,7 @@ def test_cli_ingest_outside_cwd_rejected(tmp_path, monkeypatch):
 
 
 def test_cli_ingest_pii_panel_prints(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     log = tmp_path / "lf.jsonl"

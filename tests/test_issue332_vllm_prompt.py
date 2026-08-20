@@ -80,7 +80,7 @@ class TestBuildChatPrompt:
 
     def test_prompt_equals_apply_chat_template(self):
         """The whole issue: the built prompt must BE the template render."""
-        from soup_cli.utils.vllm import build_chat_prompt
+        from ai_forge_cli.utils.vllm import build_chat_prompt
 
         tok = _tokenizer(_CHATML)
         expected = tok.apply_chat_template(
@@ -93,7 +93,7 @@ class TestBuildChatPrompt:
         """Control for the test above: without it, a builder that ignored the
         tokenizer would still pass if the template happened to render the same
         text. Pins that the two really differ on this fixture."""
-        from soup_cli.utils.vllm import build_chat_prompt
+        from ai_forge_cli.utils.vllm import build_chat_prompt
 
         tok = _tokenizer(_CHATML)
         built = build_chat_prompt(_MESSAGES, tok)
@@ -105,7 +105,7 @@ class TestBuildChatPrompt:
     def test_control_tokenizer_without_template_uses_legacy_format(self):
         """CONTROL — a model that ships no chat template must still be served,
         byte-for-byte as before the fix."""
-        from soup_cli.utils.vllm import build_chat_prompt
+        from ai_forge_cli.utils.vllm import build_chat_prompt
 
         tok = _tokenizer(None)
 
@@ -114,14 +114,14 @@ class TestBuildChatPrompt:
     def test_control_no_tokenizer_at_all_uses_legacy_format(self):
         """CONTROL — the tokenizer is optional (it can fail to load); the
         builder must degrade, never raise."""
-        from soup_cli.utils.vllm import build_chat_prompt
+        from ai_forge_cli.utils.vllm import build_chat_prompt
 
         assert build_chat_prompt(_MESSAGES, None) == _LEGACY
 
     def test_pydantic_style_messages_and_dicts_agree(self):
         """The vLLM app passes objects, the transformers app passes dicts —
         one builder, one answer."""
-        from soup_cli.utils.vllm import build_chat_prompt
+        from ai_forge_cli.utils.vllm import build_chat_prompt
 
         tok = _tokenizer(_CHATML)
         objs = [_Msg(m["role"], m["content"]) for m in _MESSAGES]
@@ -132,7 +132,7 @@ class TestBuildChatPrompt:
         """The transformers backend already served tool-call / multimodal rows
         whose dicts carry more than role+content. The shared builder must not
         quietly drop those keys."""
-        from soup_cli.utils.vllm import build_chat_prompt
+        from ai_forge_cli.utils.vllm import build_chat_prompt
 
         tok = _tokenizer(
             "{% for m in messages %}{{ m['role'] }}:{{ m.get('name', '-') }}"
@@ -144,7 +144,7 @@ class TestBuildChatPrompt:
 
     def test_unknown_roles_are_kept_for_the_template(self):
         """A ``tool`` message must reach the template, not be dropped."""
-        from soup_cli.utils.vllm import build_chat_prompt
+        from ai_forge_cli.utils.vllm import build_chat_prompt
 
         tok = _tokenizer(_CHATML)
         msgs = [{"role": "tool", "content": "42"}]
@@ -154,7 +154,7 @@ class TestBuildChatPrompt:
     def test_a_broken_template_does_not_kill_the_request(self):
         """A template that raises falls back to the legacy format rather than
         500-ing every request on that model."""
-        from soup_cli.utils.vllm import build_chat_prompt
+        from ai_forge_cli.utils.vllm import build_chat_prompt
 
         tok = _tokenizer("{{ this_is_not_defined.boom() }}")
 
@@ -165,7 +165,7 @@ class TestBothBackendsShareOneBuilder:
     """Acceptance #1: vLLM and transformers must produce the SAME string."""
 
     def test_transformers_backend_calls_the_shared_builder(self):
-        src = Path("src/soup_cli/commands/serve.py").read_text(encoding="utf-8")
+        src = Path("src/ai_forge_cli/commands/serve.py").read_text(encoding="utf-8")
         assert "build_chat_prompt(" in src, (
             "the transformers backend must use the shared builder"
         )
@@ -173,8 +173,8 @@ class TestBothBackendsShareOneBuilder:
     def test_no_second_hand_rolled_prompt_remains_in_the_serve_backends(self):
         """The literal that produced the run-on loop must exist in exactly one
         place — inside the shared fallback."""
-        serve_src = Path("src/soup_cli/commands/serve.py").read_text(encoding="utf-8")
-        vllm_src = Path("src/soup_cli/utils/vllm.py").read_text(encoding="utf-8")
+        serve_src = Path("src/ai_forge_cli/commands/serve.py").read_text(encoding="utf-8")
+        vllm_src = Path("src/ai_forge_cli/utils/vllm.py").read_text(encoding="utf-8")
 
         assert 'f"User: {content}"' not in serve_src
         assert vllm_src.count('f"User: {content}"') == 1
@@ -229,7 +229,7 @@ def _build_app(*, tokenizer=None, output=None, capture=None, **kwargs):
             "vllm.lora.request": MagicMock(),
         },
     ):
-        from soup_cli.utils.vllm import create_vllm_app
+        from ai_forge_cli.utils.vllm import create_vllm_app
 
         built = create_vllm_app(
             engine=_fake_engine(output, capture if capture is not None else {}),
@@ -288,31 +288,31 @@ class TestVllmAppPrompt:
 
 class TestResolveFinishReason:
     def test_engine_reported_length_is_reported_as_length(self):
-        from soup_cli.utils.vllm import resolve_finish_reason
+        from ai_forge_cli.utils.vllm import resolve_finish_reason
 
         out = _FakeOutput("x", [1] * 64, finish_reason="length")
         assert resolve_finish_reason(out, 64) == "length"
 
     def test_engine_reported_stop_is_reported_as_stop(self):
-        from soup_cli.utils.vllm import resolve_finish_reason
+        from ai_forge_cli.utils.vllm import resolve_finish_reason
 
         out = _FakeOutput("x", [1, 2], finish_reason="stop")
         assert resolve_finish_reason(out, 64) == "stop"
 
     def test_derived_from_token_count_when_the_engine_says_nothing(self):
         """Older vLLM builds leave ``finish_reason`` unset mid-stream."""
-        from soup_cli.utils.vllm import resolve_finish_reason
+        from ai_forge_cli.utils.vllm import resolve_finish_reason
 
         assert resolve_finish_reason(_FakeOutput("x", [1] * 64), 64) == "length"
 
     def test_control_short_output_with_no_engine_reason_is_stop(self):
-        from soup_cli.utils.vllm import resolve_finish_reason
+        from ai_forge_cli.utils.vllm import resolve_finish_reason
 
         assert resolve_finish_reason(_FakeOutput("x", [1, 2]), 64) == "stop"
 
     def test_unknown_engine_reason_is_normalised_to_stop(self):
         """``abort`` is not an OpenAI finish_reason; never leak it verbatim."""
-        from soup_cli.utils.vllm import resolve_finish_reason
+        from ai_forge_cli.utils.vllm import resolve_finish_reason
 
         out = _FakeOutput("x", [1, 2], finish_reason="abort")
         assert resolve_finish_reason(out, 64) == "stop"
@@ -511,13 +511,13 @@ class TestDashboardBackendWarning:
     """Acceptance: ``--dashboard`` must not silently no-op."""
 
     def test_no_warning_for_backends_that_serve_metrics(self):
-        from soup_cli.commands.serve import _dashboard_warning
+        from ai_forge_cli.commands.serve import _dashboard_warning
 
         assert _dashboard_warning("transformers") is None
         assert _dashboard_warning("vllm") is None
 
     def test_sglang_warns_that_metrics_is_not_served(self):
-        from soup_cli.commands.serve import _dashboard_warning
+        from ai_forge_cli.commands.serve import _dashboard_warning
 
         warning = _dashboard_warning("sglang")
         assert warning is not None
@@ -525,7 +525,7 @@ class TestDashboardBackendWarning:
         assert "/metrics" in warning
 
     def test_serve_emits_the_warning(self):
-        src = Path("src/soup_cli/commands/serve.py").read_text(encoding="utf-8")
+        src = Path("src/ai_forge_cli/commands/serve.py").read_text(encoding="utf-8")
         assert "_dashboard_warning(backend)" in src
 
 
@@ -538,7 +538,7 @@ class TestMaxModelLenFlag:
     def test_serve_exposes_the_flag(self):
         import typer.main
 
-        from soup_cli.cli import app as cli_app
+        from ai_forge_cli.cli import app as cli_app
 
         group = typer.main.get_command(cli_app)
         command = group.commands["serve"]
@@ -552,12 +552,12 @@ class TestMaxModelLenFlag:
         model_path.mkdir()
 
         with patch(
-            "soup_cli.utils.vllm.create_vllm_engine",
+            "ai_forge_cli.utils.vllm.create_vllm_engine",
             return_value=(MagicMock(), "base-model"),
         ) as engine_factory, patch(
-            "soup_cli.utils.vllm.create_vllm_app", return_value=MagicMock()
+            "ai_forge_cli.utils.vllm.create_vllm_app", return_value=MagicMock()
         ):
-            from soup_cli.commands.serve import _serve_vllm
+            from ai_forge_cli.commands.serve import _serve_vllm
 
             _serve_vllm(
                 model_path=model_path,
@@ -577,12 +577,12 @@ class TestMaxModelLenFlag:
         model_path.mkdir()
 
         with patch(
-            "soup_cli.utils.vllm.create_vllm_engine",
+            "ai_forge_cli.utils.vllm.create_vllm_engine",
             return_value=(MagicMock(), "base-model"),
         ) as engine_factory, patch(
-            "soup_cli.utils.vllm.create_vllm_app", return_value=MagicMock()
+            "ai_forge_cli.utils.vllm.create_vllm_app", return_value=MagicMock()
         ):
-            from soup_cli.commands.serve import _serve_vllm
+            from ai_forge_cli.commands.serve import _serve_vllm
 
             _serve_vllm(
                 model_path=model_path,

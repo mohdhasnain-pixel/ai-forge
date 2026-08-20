@@ -100,12 +100,12 @@ _ROWS = {
 #: The config class is named so a failure says *which* trl API moved, rather
 #: than only that some import failed.
 _WRAPPERS = {
-    "bco": ("soup_cli.trainer.bco", "BCOTrainerWrapper", "BCOConfig"),
-    "dpo": ("soup_cli.trainer.dpo", "DPOTrainerWrapper", "DPOConfig"),
-    "ipo": ("soup_cli.trainer.ipo", "IPOTrainerWrapper", "DPOConfig"),
-    "kto": ("soup_cli.trainer.kto", "KTOTrainerWrapper", "KTOConfig"),
-    "orpo": ("soup_cli.trainer.orpo", "ORPOTrainerWrapper", "ORPOConfig"),
-    "simpo": ("soup_cli.trainer.simpo", "SimPOTrainerWrapper", "CPOConfig"),
+    "bco": ("ai_forge_cli.trainer.bco", "BCOTrainerWrapper", "BCOConfig"),
+    "dpo": ("ai_forge_cli.trainer.dpo", "DPOTrainerWrapper", "DPOConfig"),
+    "ipo": ("ai_forge_cli.trainer.ipo", "IPOTrainerWrapper", "DPOConfig"),
+    "kto": ("ai_forge_cli.trainer.kto", "KTOTrainerWrapper", "KTOConfig"),
+    "orpo": ("ai_forge_cli.trainer.orpo", "ORPOTrainerWrapper", "ORPOConfig"),
+    "simpo": ("ai_forge_cli.trainer.simpo", "SimPOTrainerWrapper", "CPOConfig"),
 }
 
 _ALL_SIX = tuple(_WRAPPERS)
@@ -118,7 +118,7 @@ _PREVIOUSLY_UNCOVERED = ("bco", "ipo")
 def _cfg(weights, out_dir, task):
     import yaml
 
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     return load_config_from_string(
         yaml.safe_dump(
@@ -181,7 +181,7 @@ class TestEveryPreferenceTrainerReachesALiveTrlTrainer:
         does not it must be genuinely absent — not silently defaulted, which is
         how a wrapper that had quietly stopped passing it would look.
         """
-        from soup_cli.trainer._trl_compat import config_accepts
+        from ai_forge_cli.trainer._trl_compat import config_accepts
 
         wrapper = _build(tmp_path, monkeypatch, task)
         args = wrapper.trainer.args
@@ -219,7 +219,7 @@ class TestTheCanaryCoversWhatItClaims:
         """
         import pathlib
 
-        trainer_dir = pathlib.Path(__file__).resolve().parents[1] / "src" / "soup_cli" / "trainer"
+        trainer_dir = pathlib.Path(__file__).resolve().parents[1] / "src" / "ai_forge_cli" / "trainer"
         markers = ("max_prompt_length=", "prompt_length_kwargs(")
         users = {
             path.stem

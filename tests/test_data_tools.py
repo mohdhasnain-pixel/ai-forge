@@ -6,12 +6,12 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.data.formats import (
+from ai_forge_cli.cli import app
+from ai_forge_cli.data.formats import (
     format_to_messages,
     messages_to_format,
 )
-from soup_cli.data.validator import extended_stats
+from ai_forge_cli.data.validator import extended_stats
 
 runner = CliRunner()
 

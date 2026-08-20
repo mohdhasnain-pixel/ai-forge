@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.experiment.tracker import ExperimentTracker
+from ai_forge_cli.cli import app
+from ai_forge_cli.experiment.tracker import ExperimentTracker
 
 runner = CliRunner()
 

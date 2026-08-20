@@ -9,7 +9,7 @@ import sys
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.utils.agent_forge import (
+from ai_forge_cli.utils.agent_forge import (
     Endpoint,
     SpecReport,
     SynthRow,
@@ -586,7 +586,7 @@ def test_write_dataset_invalid_row_type(tmp_path, monkeypatch):
 
 def test_cli_agent_synth_smoke(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     (tmp_path / "spec.json").write_text(
         json.dumps(_OPENAPI_SAMPLE), encoding="utf-8"
@@ -601,7 +601,7 @@ def test_cli_agent_synth_smoke(tmp_path, monkeypatch):
 
 def test_cli_agent_synth_unknown_spec_path(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     result = runner.invoke(agent.app, ["synth", "--spec", "missing.json"])
     assert result.exit_code == 1, result.output
@@ -609,7 +609,7 @@ def test_cli_agent_synth_unknown_spec_path(tmp_path, monkeypatch):
 
 def test_cli_agent_synth_outside_cwd_rejected(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     abs_outside = str(tmp_path.parent / "evil.json")
     result = runner.invoke(agent.app, ["synth", "--spec", abs_outside])
@@ -618,7 +618,7 @@ def test_cli_agent_synth_outside_cwd_rejected(tmp_path, monkeypatch):
 
 def test_cli_agent_train_smoke(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     (tmp_path / "spec.json").write_text(
         json.dumps(_OPENAPI_SAMPLE), encoding="utf-8"
@@ -635,7 +635,7 @@ def test_cli_agent_train_smoke(tmp_path, monkeypatch):
 
 def test_cli_agent_eval_smoke(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     (tmp_path / "spec.json").write_text(
         json.dumps(_OPENAPI_SAMPLE), encoding="utf-8"
@@ -660,7 +660,7 @@ def test_cli_agent_eval_smoke(tmp_path, monkeypatch):
 
 def test_cli_agent_eval_outside_cwd_predictions(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     (tmp_path / "spec.json").write_text(
         json.dumps(_OPENAPI_SAMPLE), encoding="utf-8"
@@ -674,14 +674,14 @@ def test_cli_agent_eval_outside_cwd_predictions(tmp_path, monkeypatch):
 
 
 def test_cli_agent_synth_help():
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     result = runner.invoke(agent.app, ["synth", "--help"])
     assert result.exit_code == 0
 
 
 def test_cli_agent_help():
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     result = runner.invoke(agent.app, ["--help"])
     assert result.exit_code == 0
@@ -691,14 +691,14 @@ def test_cli_agent_help():
 
 
 def test_cli_agent_train_help():
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     result = runner.invoke(agent.app, ["train", "--help"])
     assert result.exit_code == 0
 
 
 def test_cli_agent_eval_help():
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     result = runner.invoke(agent.app, ["eval", "--help"])
     assert result.exit_code == 0
@@ -706,7 +706,7 @@ def test_cli_agent_eval_help():
 
 def test_cli_agent_eval_missing_spec(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     (tmp_path / "preds.jsonl").write_text("{}\n", encoding="utf-8")
     result = runner.invoke(
@@ -717,7 +717,7 @@ def test_cli_agent_eval_missing_spec(tmp_path, monkeypatch):
 
 def test_cli_agent_eval_outside_cwd_spec(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     (tmp_path / "preds.jsonl").write_text("{}\n", encoding="utf-8")
     abs_outside = str(tmp_path.parent / "evil.json")
@@ -730,7 +730,7 @@ def test_cli_agent_eval_outside_cwd_spec(tmp_path, monkeypatch):
 
 def test_cli_agent_train_rejects_newline_in_base(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     (tmp_path / "spec.json").write_text(
         json.dumps(_OPENAPI_SAMPLE), encoding="utf-8"
@@ -746,7 +746,7 @@ def test_cli_agent_train_rejects_newline_in_base(tmp_path, monkeypatch):
 
 def test_cli_agent_train_rejects_null_byte_in_base(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     (tmp_path / "spec.json").write_text(
         json.dumps(_OPENAPI_SAMPLE), encoding="utf-8"
@@ -788,7 +788,7 @@ def test_write_dataset_symlink_target_rejected(tmp_path, monkeypatch):
 
 def test_cli_agent_synth_no_endpoints_exits_1(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands import agent
+    from ai_forge_cli.commands import agent
 
     (tmp_path / "empty.json").write_text('{"openapi": "3.0.0", "paths": {}}',
                                           encoding="utf-8")

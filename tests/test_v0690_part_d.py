@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.utils import persona_hub
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils import persona_hub
 
 
 def _write(path: Path, text: str) -> Path:
@@ -400,7 +400,7 @@ class TestPersonaMixCli:
 class TestSourceWiring:
     def test_no_heavy_imports(self) -> None:
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "utils" / "persona_hub.py").read_text(
+        src = (root / "src" / "ai_forge_cli" / "utils" / "persona_hub.py").read_text(
             encoding="utf-8"
         )
         for forbidden in (
@@ -411,7 +411,7 @@ class TestSourceWiring:
             assert forbidden not in src
 
     def test_version_bumped(self) -> None:
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
 
         major_minor = tuple(int(x) for x in __version__.split(".")[:2])
         assert major_minor >= (0, 69)

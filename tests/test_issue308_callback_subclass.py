@@ -15,7 +15,7 @@ defaults for the ~13 unimplemented events.
 The subclassing is done via ``_try_import_callback_base()``. That factory looks
 lazy but is **called at class-definition time**, i.e. at module import — so these
 modules are NOT transformers-free at import time, contrary to what this docstring
-claimed until v0.72.2. Measured: ``import soup_cli.utils.relora`` pulls
+claimed until v0.72.2. Measured: ``import ai_forge_cli.utils.relora`` pulls
 transformers + torch (~4.4s). Harmless here (the trainer path loads transformers
 anyway), but it made ``soup --help`` 5x slower the moment a *light* command
 imported one of these modules — see #320 and
@@ -37,7 +37,7 @@ class TestReLoRACallbackSubclass:
     def test_is_real_trainer_callback_subclass(self):
         from transformers import TrainerCallback
 
-        from soup_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
 
         cb = ReLoRACallback(ReLoRAPolicy(steps=10))
         assert isinstance(cb, TrainerCallback)
@@ -45,7 +45,7 @@ class TestReLoRACallbackSubclass:
     def test_inherits_noop_unimplemented_event(self):
         # on_epoch_begin is NOT overridden — it must exist as an inherited
         # no-op stub, or HF's getattr dispatch crashes.
-        from soup_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
 
         cb = ReLoRACallback(ReLoRAPolicy(steps=10))
         assert callable(cb.on_epoch_begin)
@@ -55,13 +55,13 @@ class TestReLoRACallbackSubclass:
     def test_none_policy_still_subclass(self):
         from transformers import TrainerCallback
 
-        from soup_cli.utils.relora import ReLoRACallback
+        from ai_forge_cli.utils.relora import ReLoRACallback
 
         cb = ReLoRACallback(None)
         assert isinstance(cb, TrainerCallback)
 
     def test_no_top_level_transformers_import(self):
-        import soup_cli.utils.relora as mod
+        import ai_forge_cli.utils.relora as mod
 
         src = Path(mod.__file__).read_text(encoding="utf-8")
         tree = ast.parse(src)
@@ -84,20 +84,20 @@ class TestHFPushCallbackSubclass:
     def test_is_real_trainer_callback_subclass(self):
         from transformers import TrainerCallback
 
-        from soup_cli.monitoring.hf_push import HFPushCallback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback
 
         cb = HFPushCallback(repo_id="user/repo")
         assert isinstance(cb, TrainerCallback)
 
     def test_inherits_noop_unimplemented_event(self):
-        from soup_cli.monitoring.hf_push import HFPushCallback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback
 
         cb = HFPushCallback(repo_id="user/repo")
         assert callable(cb.on_epoch_begin)
         cb.on_epoch_begin(None, None, None)
 
     def test_no_top_level_transformers_import(self):
-        import soup_cli.monitoring.hf_push as mod
+        import ai_forge_cli.monitoring.hf_push as mod
 
         src = Path(mod.__file__).read_text(encoding="utf-8")
         tree = ast.parse(src)
@@ -183,16 +183,16 @@ def _run_two_steps(callback, tmp_path):
 
 class TestRealTrainerDispatch:
     def test_relora_callback_survives_train(self, tmp_path):
-        from soup_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
 
         cb = ReLoRACallback(ReLoRAPolicy(steps=1, warmup_ratio=0.0))
         # Must NOT raise AttributeError on on_epoch_begin during train().
         _run_two_steps(cb, tmp_path)
 
     def test_hfpush_callback_survives_train(self, tmp_path):
-        from soup_cli.monitoring.hf_push import HFPushCallback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback
 
         cb = HFPushCallback(repo_id="user/repo", output_dir=str(tmp_path / "out"))
         # Mock the Hub API so on_train_begin/on_save never touch the network.
-        with patch("soup_cli.monitoring.hf_push.get_hf_api", return_value=MagicMock()):
+        with patch("ai_forge_cli.monitoring.hf_push.get_hf_api", return_value=MagicMock()):
             _run_two_steps(cb, tmp_path)

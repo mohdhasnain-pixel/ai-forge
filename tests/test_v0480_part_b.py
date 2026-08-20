@@ -20,7 +20,7 @@ import os
 
 import pytest
 
-from soup_cli.utils.data_mix import (
+from ai_forge_cli.utils.data_mix import (
     BudgetTracker,
     MixCandidate,
     MixOptimizationReport,
@@ -660,7 +660,7 @@ def test_load_recipe_missing_data_block(tmp_path, monkeypatch):
 def test_mix_cli_help():
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     runner = CliRunner()
     result = runner.invoke(app, ["data", "mix", "--help"])
     assert result.exit_code == 0
@@ -670,7 +670,7 @@ def test_mix_cli_help():
 def test_mix_cli_requires_mode():
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     runner = CliRunner()
     result = runner.invoke(app, ["data", "mix"])
     assert result.exit_code == 2
@@ -681,7 +681,7 @@ def test_mix_cli_mutual_exclusion(tmp_path, monkeypatch):
     (tmp_path / "rec.yaml").write_text("data: {}\n")
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     runner = CliRunner()
     result = runner.invoke(
         app,
@@ -694,7 +694,7 @@ def test_mix_cli_optimize_requires_datasets(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     runner = CliRunner()
     result = runner.invoke(app, ["data", "mix", "--optimize"])
     assert result.exit_code == 2
@@ -705,7 +705,7 @@ def test_mix_cli_optimize_happy(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     runner = CliRunner()
     result = runner.invoke(
         app,
@@ -725,7 +725,7 @@ def test_mix_cli_optimize_invalid_datasets(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     runner = CliRunner()
     result = runner.invoke(
         app,
@@ -744,7 +744,7 @@ def test_mix_cli_apply_happy(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     runner = CliRunner()
     # First generate a recipe.
     result = runner.invoke(
@@ -773,7 +773,7 @@ def test_mix_cli_apply_outside_cwd(tmp_path, monkeypatch):
     monkeypatch.chdir(work)
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     runner = CliRunner()
     result = runner.invoke(
         app, ["data", "mix", "--apply", str(outside)]
@@ -843,7 +843,7 @@ def test_mix_cli_optimize_recipe_content(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     runner = CliRunner()
     result = runner.invoke(
         app,

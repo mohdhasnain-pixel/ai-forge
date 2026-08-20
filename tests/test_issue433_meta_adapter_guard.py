@@ -37,7 +37,7 @@ def _adapter_model(*, adapter_device: str, adapter_trainable: bool = True):
 
 class TestAdapterMaterializationPostcondition:
     def test_zero_materialized_is_valid_when_adapter_is_already_real(self):
-        from soup_cli.utils.layer_stream_runtime import (
+        from ai_forge_cli.utils.layer_stream_runtime import (
             assert_trainable_adapters_materialized,
             materialize_meta_adapters,
         )
@@ -47,7 +47,7 @@ class TestAdapterMaterializationPostcondition:
         assert_trainable_adapters_materialized(model)
 
     def test_frozen_meta_base_is_deliberately_ignored(self):
-        from soup_cli.utils.layer_stream_runtime import (
+        from ai_forge_cli.utils.layer_stream_runtime import (
             assert_trainable_adapters_materialized,
         )
 
@@ -56,7 +56,7 @@ class TestAdapterMaterializationPostcondition:
         assert_trainable_adapters_materialized(model)
 
     def test_trainable_meta_adapter_fails_and_names_the_parameter(self):
-        from soup_cli.utils.layer_stream_runtime import (
+        from ai_forge_cli.utils.layer_stream_runtime import (
             assert_trainable_adapters_materialized,
         )
 
@@ -65,7 +65,7 @@ class TestAdapterMaterializationPostcondition:
             assert_trainable_adapters_materialized(model)
 
     def test_frozen_meta_adapter_is_not_part_of_the_training_invariant(self):
-        from soup_cli.utils.layer_stream_runtime import (
+        from ai_forge_cli.utils.layer_stream_runtime import (
             assert_trainable_adapters_materialized,
         )
 
@@ -76,7 +76,7 @@ class TestAdapterMaterializationPostcondition:
         import torch
         import torch.nn as nn
 
-        from soup_cli.utils.layer_stream_runtime import (
+        from ai_forge_cli.utils.layer_stream_runtime import (
             assert_trainable_adapters_materialized,
         )
 
@@ -100,7 +100,7 @@ def test_streamed_build_refuses_a_materializer_that_skips_a_meta_adapter(monkeyp
     import torch
     import torch.nn as nn
 
-    import soup_cli.utils.layer_stream_runtime as runtime
+    import ai_forge_cli.utils.layer_stream_runtime as runtime
 
     class _Skeleton(nn.Module):
         def __init__(self):

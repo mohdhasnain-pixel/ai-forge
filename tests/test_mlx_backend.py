@@ -23,7 +23,7 @@ class TestMLXDetection:
             return real_import(name, *args, **kwargs)
 
         monkeypatch.setattr(builtins, "__import__", fake_import)
-        from soup_cli.utils import mlx as mlx_utils
+        from ai_forge_cli.utils import mlx as mlx_utils
 
         # Force re-check via direct call
         assert mlx_utils.detect_mlx() is False
@@ -41,7 +41,7 @@ class TestMLXDetection:
         monkeypatch.setitem(sys.modules, "mlx", fake_mlx)
         monkeypatch.setitem(sys.modules, "mlx.core", fake_core)
 
-        from soup_cli.utils import mlx as mlx_utils
+        from ai_forge_cli.utils import mlx as mlx_utils
 
         assert mlx_utils.detect_mlx() is True
 
@@ -56,13 +56,13 @@ class TestMLXDetection:
             return real_import(name, *args, **kwargs)
 
         monkeypatch.setattr(builtins, "__import__", fake_import)
-        from soup_cli.utils import mlx as mlx_utils
+        from ai_forge_cli.utils import mlx as mlx_utils
 
         info = mlx_utils.get_mlx_info()
         assert info["available"] is False
 
     def test_estimate_mlx_batch_size_small_model(self):
-        from soup_cli.utils.mlx import estimate_mlx_batch_size
+        from ai_forge_cli.utils.mlx import estimate_mlx_batch_size
 
         # 7B model on 16GB unified memory
         batch = estimate_mlx_batch_size(
@@ -74,7 +74,7 @@ class TestMLXDetection:
         assert batch >= 1
 
     def test_estimate_mlx_batch_size_large_model_tiny_mem(self):
-        from soup_cli.utils.mlx import estimate_mlx_batch_size
+        from ai_forge_cli.utils.mlx import estimate_mlx_batch_size
 
         # 70B on 16GB is not going to fit — should return 1 minimum
         batch = estimate_mlx_batch_size(
@@ -92,7 +92,7 @@ class TestMLXDetection:
 
 class TestMLXBackendConfig:
     def test_backend_mlx_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: mlx-community/Llama-3.1-8B-Instruct-4bit
@@ -117,13 +117,13 @@ output: ./output
 class TestMLXSFTTrainer:
     def test_trainer_import(self):
         """Import the MLX SFT trainer."""
-        from soup_cli.trainer.mlx_sft import MLXSFTTrainerWrapper
+        from ai_forge_cli.trainer.mlx_sft import MLXSFTTrainerWrapper
 
         assert MLXSFTTrainerWrapper is not None
 
     def test_trainer_setup_mocked(self, tmp_path):
-        from soup_cli.config.schema import DataConfig, SoupConfig, TrainingConfig
-        from soup_cli.trainer.mlx_sft import MLXSFTTrainerWrapper
+        from ai_forge_cli.config.schema import DataConfig, SoupConfig, TrainingConfig
+        from ai_forge_cli.trainer.mlx_sft import MLXSFTTrainerWrapper
 
         cfg = SoupConfig(
             base="mlx-community/Llama-3.1-8B-Instruct-4bit",
@@ -149,8 +149,8 @@ class TestMLXSFTTrainer:
 
         monkeypatch.setattr(builtins, "__import__", fake_import)
 
-        from soup_cli.config.schema import DataConfig, SoupConfig, TrainingConfig
-        from soup_cli.trainer.mlx_sft import MLXSFTTrainerWrapper
+        from ai_forge_cli.config.schema import DataConfig, SoupConfig, TrainingConfig
+        from ai_forge_cli.trainer.mlx_sft import MLXSFTTrainerWrapper
 
         cfg = SoupConfig(
             base="mlx-community/Llama-3.1-8B-Instruct-4bit",
@@ -171,12 +171,12 @@ class TestMLXSFTTrainer:
 
 class TestMLXOtherTrainers:
     def test_mlx_dpo_import(self):
-        from soup_cli.trainer.mlx_dpo import MLXDPOTrainerWrapper
+        from ai_forge_cli.trainer.mlx_dpo import MLXDPOTrainerWrapper
 
         assert MLXDPOTrainerWrapper is not None
 
     def test_mlx_grpo_import(self):
-        from soup_cli.trainer.mlx_grpo import MLXGRPOTrainerWrapper
+        from ai_forge_cli.trainer.mlx_grpo import MLXGRPOTrainerWrapper
 
         assert MLXGRPOTrainerWrapper is not None
 
@@ -188,14 +188,14 @@ class TestMLXOtherTrainers:
 class TestMLXRouting:
     def test_mlx_routing_map(self):
         """Routing dict should map backend=mlx tasks to MLX trainers."""
-        from soup_cli.trainer import mlx_routing
+        from ai_forge_cli.trainer import mlx_routing
 
         assert mlx_routing.MLX_TRAINER_REGISTRY["sft"].__name__ == "MLXSFTTrainerWrapper"
         assert mlx_routing.MLX_TRAINER_REGISTRY["dpo"].__name__ == "MLXDPOTrainerWrapper"
         assert mlx_routing.MLX_TRAINER_REGISTRY["grpo"].__name__ == "MLXGRPOTrainerWrapper"
 
     def test_mlx_unsupported_task_rejected(self):
-        from soup_cli.trainer import mlx_routing
+        from ai_forge_cli.trainer import mlx_routing
 
         assert "ppo" not in mlx_routing.MLX_TRAINER_REGISTRY
         assert "pretrain" not in mlx_routing.MLX_TRAINER_REGISTRY
@@ -208,8 +208,8 @@ class TestMLXRouting:
 
 class TestMLXRecipes:
     def test_llama3_1_8b_sft_mlx(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("llama3.1-8b-sft-mlx")
         assert recipe is not None
@@ -218,8 +218,8 @@ class TestMLXRecipes:
         assert cfg.task == "sft"
 
     def test_qwen3_8b_sft_mlx(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("qwen3-8b-sft-mlx")
         assert recipe is not None
@@ -227,14 +227,14 @@ class TestMLXRecipes:
         assert cfg.backend == "mlx"
 
     def test_gemma3_9b_sft_mlx(self):
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("gemma3-9b-sft-mlx")
         assert recipe is not None
 
     def test_mlx_dpo_config_rejected_at_load(self):
         """backend=mlx + task=dpo is rejected by the SoupConfig validator."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: mlx-community/Llama-3.1-8B-Instruct-4bit
@@ -252,7 +252,7 @@ output: ./output
             load_config_from_string(yaml_str)
 
     def test_mlx_grpo_config_rejected_at_load(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: mlx-community/Llama-3.1-8B-Instruct-4bit
@@ -277,7 +277,7 @@ output: ./output
 class TestMLXDoctor:
     def test_doctor_has_mlx_info(self):
         """`soup doctor` helpers surface MLX info (no crash on non-Apple)."""
-        from soup_cli.commands.doctor import _get_mlx_info
+        from ai_forge_cli.commands.doctor import _get_mlx_info
 
         info = _get_mlx_info()
         assert isinstance(info, dict)

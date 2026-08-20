@@ -197,7 +197,7 @@ def test_help_mentions_the_flag():
     def test_the_flag_exists_and_is_documented(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(app, ["ship", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))

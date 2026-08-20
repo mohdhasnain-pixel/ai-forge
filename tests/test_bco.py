@@ -12,7 +12,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Schema Tests ───────────────────────────────────────────────────────────
 
@@ -87,7 +87,7 @@ class TestBCODataFormat:
     """Test that BCO uses the DPO data format (prompt+chosen+rejected)."""
 
     def test_dpo_format_works_for_bco(self):
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"prompt": "Q", "chosen": "A", "rejected": "B"}]
         assert detect_format(data) == "dpo"
@@ -98,7 +98,7 @@ class TestBCODataFormat:
 
 class TestSplitDpoRowsToBco:
     def test_two_rows_become_four_with_correct_labels(self):
-        from soup_cli.trainer.bco import _split_dpo_rows_to_bco
+        from ai_forge_cli.trainer.bco import _split_dpo_rows_to_bco
 
         rows = [
             {"prompt": "p1", "chosen": "c1", "rejected": "r1"},
@@ -112,7 +112,7 @@ class TestSplitDpoRowsToBco:
         assert out[3] == {"prompt": "p2", "completion": "r2", "label": False}
 
     def test_empty_input_returns_empty_list(self):
-        from soup_cli.trainer.bco import _split_dpo_rows_to_bco
+        from ai_forge_cli.trainer.bco import _split_dpo_rows_to_bco
 
         assert _split_dpo_rows_to_bco([]) == []
 
@@ -127,12 +127,12 @@ class TestSplitDpoRowsToBco:
         ],
     )
     def test_missing_required_field_skipped(self, row):
-        from soup_cli.trainer.bco import _split_dpo_rows_to_bco
+        from ai_forge_cli.trainer.bco import _split_dpo_rows_to_bco
 
         assert _split_dpo_rows_to_bco([row]) == []
 
     def test_extra_keys_ignored(self):
-        from soup_cli.trainer.bco import _split_dpo_rows_to_bco
+        from ai_forge_cli.trainer.bco import _split_dpo_rows_to_bco
 
         out = _split_dpo_rows_to_bco(
             [{"prompt": "p", "chosen": "c", "rejected": "r", "extra": "x"}]
@@ -143,9 +143,9 @@ class TestSplitDpoRowsToBco:
     def test_skipped_rows_logged_at_debug(self, caplog):
         import logging
 
-        from soup_cli.trainer.bco import _split_dpo_rows_to_bco
+        from ai_forge_cli.trainer.bco import _split_dpo_rows_to_bco
 
-        caplog.set_level(logging.DEBUG, logger="soup_cli.trainer.bco")
+        caplog.set_level(logging.DEBUG, logger="ai_forge_cli.trainer.bco")
         _split_dpo_rows_to_bco([{"prompt": "p", "chosen": "c"}])
         assert any("skipped" in r.message.lower() for r in caplog.records)
 
@@ -179,12 +179,12 @@ class TestBCOTemplate:
 
 class TestBCOTrainerWrapper:
     def test_bco_import_exists(self):
-        from soup_cli.trainer.bco import BCOTrainerWrapper
+        from ai_forge_cli.trainer.bco import BCOTrainerWrapper
 
         assert BCOTrainerWrapper is not None
 
     def test_bco_wrapper_init(self):
-        from soup_cli.trainer.bco import BCOTrainerWrapper
+        from ai_forge_cli.trainer.bco import BCOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -198,7 +198,7 @@ class TestBCOTrainerWrapper:
         assert wrapper.trainer is None
 
     def test_bco_wrapper_init_with_options(self):
-        from soup_cli.trainer.bco import BCOTrainerWrapper
+        from ai_forge_cli.trainer.bco import BCOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -212,7 +212,7 @@ class TestBCOTrainerWrapper:
         assert wrapper.deepspeed_config == "ds.json"
 
     def test_bco_train_before_setup_raises(self):
-        from soup_cli.trainer.bco import BCOTrainerWrapper
+        from ai_forge_cli.trainer.bco import BCOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -231,7 +231,7 @@ class TestBCOTrainRouting:
     """Test that train + sweep route to BCO trainer."""
 
     def test_sweep_routes_to_bco_trainer(self):
-        from soup_cli.commands.sweep import _run_single
+        from ai_forge_cli.commands.sweep import _run_single
 
         cfg = SoupConfig(
             base="some-model",
@@ -253,19 +253,19 @@ class TestBCOTrainRouting:
         fake_gpu_info = {"memory_total": "0 MB", "memory_total_bytes": 0}
 
         with mock_patch(
-            "soup_cli.data.loader.load_dataset", return_value=fake_dataset,
+            "ai_forge_cli.data.loader.load_dataset", return_value=fake_dataset,
         ), mock_patch(
-            "soup_cli.utils.gpu.detect_device", return_value=("cpu", "CPU"),
+            "ai_forge_cli.utils.gpu.detect_device", return_value=("cpu", "CPU"),
         ), mock_patch(
-            "soup_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info,
+            "ai_forge_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info,
         ), mock_patch(
-            "soup_cli.experiment.tracker.ExperimentTracker",
+            "ai_forge_cli.experiment.tracker.ExperimentTracker",
         ) as mock_tracker_cls, mock_patch(
-            "soup_cli.monitoring.display.TrainingDisplay",
+            "ai_forge_cli.monitoring.display.TrainingDisplay",
         ), mock_patch(
-            "soup_cli.trainer.bco.BCOTrainerWrapper.setup",
+            "ai_forge_cli.trainer.bco.BCOTrainerWrapper.setup",
         ), mock_patch(
-            "soup_cli.trainer.bco.BCOTrainerWrapper.train",
+            "ai_forge_cli.trainer.bco.BCOTrainerWrapper.train",
             return_value=fake_result,
         ) as mock_train:
             mock_tracker = MagicMock()
@@ -282,14 +282,14 @@ class TestBCOTrainRouting:
 
 class TestBCOSweepParams:
     def test_bco_beta_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"bco_beta": 0.1}}
         _set_nested_param(config, "bco_beta", 0.05)
         assert config["training"]["bco_beta"] == 0.05
 
     def test_bco_beta_shortcut_creates_nested_key(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "bco_beta", 0.2)

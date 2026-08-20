@@ -10,7 +10,7 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.utils.behavior_battery import (
+from ai_forge_cli.utils.behavior_battery import (
     SUPPORTED_BATTERIES,
     BatterySpec,
     BehaviorDiffReport,
@@ -339,21 +339,21 @@ class TestLoadBatteryProbes:
 
 class TestBehaviorCli:
     def test_help_listed(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         assert "behavior" in result.output.lower()
 
     def test_behavior_help(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, ["behavior", "--help"])
         assert result.exit_code == 0
         assert "xstest" in result.output.lower() or "battery" in result.output.lower()
 
     def test_behavior_unknown_battery(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, [
             "behavior", "test_run",
@@ -362,7 +362,7 @@ class TestBehaviorCli:
         assert result.exit_code != 0
 
     def test_behavior_with_evidence(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         ev = tmp_path / "ev.json"
         ev.write_text(json.dumps({
@@ -383,7 +383,7 @@ class TestBehaviorCli:
         assert data["battery"] == "xstest"
 
     def test_behavior_outside_cwd_evidence(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         sub = tmp_path / "sub"
         sub.mkdir()
         monkeypatch.chdir(sub)

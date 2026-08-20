@@ -126,40 +126,40 @@ _MIN_BATCH = {"kto": 2, "grpo": 2}
 #: task -> (module, wrapper class, rows, extra `training:` keys)
 #: Every entry here is driven through a real `setup()`.
 _LIVE = {
-    "sft": ("soup_cli.trainer.sft", "SFTTrainerWrapper", _sft_rows, {}),
-    "bco": ("soup_cli.trainer.bco", "BCOTrainerWrapper", _pref_rows, {}),
-    "dpo": ("soup_cli.trainer.dpo", "DPOTrainerWrapper", _pref_rows, {}),
-    "ipo": ("soup_cli.trainer.ipo", "IPOTrainerWrapper", _pref_rows, {}),
-    "kto": ("soup_cli.trainer.kto", "KTOTrainerWrapper", _kto_rows, {}),
-    "orpo": ("soup_cli.trainer.orpo", "ORPOTrainerWrapper", _pref_rows, {}),
-    "simpo": ("soup_cli.trainer.simpo", "SimPOTrainerWrapper", _pref_rows, {}),
+    "sft": ("ai_forge_cli.trainer.sft", "SFTTrainerWrapper", _sft_rows, {}),
+    "bco": ("ai_forge_cli.trainer.bco", "BCOTrainerWrapper", _pref_rows, {}),
+    "dpo": ("ai_forge_cli.trainer.dpo", "DPOTrainerWrapper", _pref_rows, {}),
+    "ipo": ("ai_forge_cli.trainer.ipo", "IPOTrainerWrapper", _pref_rows, {}),
+    "kto": ("ai_forge_cli.trainer.kto", "KTOTrainerWrapper", _kto_rows, {}),
+    "orpo": ("ai_forge_cli.trainer.orpo", "ORPOTrainerWrapper", _pref_rows, {}),
+    "simpo": ("ai_forge_cli.trainer.simpo", "SimPOTrainerWrapper", _pref_rows, {}),
     "reward_model": (
-        "soup_cli.trainer.reward_model",
+        "ai_forge_cli.trainer.reward_model",
         "RewardModelTrainerWrapper",
         _pref_rows,
         {},
     ),
     "classifier": (
-        "soup_cli.trainer.classifier",
+        "ai_forge_cli.trainer.classifier",
         "ClassifierTrainerWrapper",
         _label_rows,
         {"num_labels": 2},
     ),
     "pretrain": (
-        "soup_cli.trainer.pretrain",
+        "ai_forge_cli.trainer.pretrain",
         "PretrainTrainerWrapper",
         _text_rows,
         {},
     ),
     "embedding": (
-        "soup_cli.trainer.embedding",
+        "ai_forge_cli.trainer.embedding",
         "EmbeddingTrainerWrapper",
         _pref_rows,
         {},
     ),
     # The task the issue's own probes A/B/C were run on.
     "grpo": (
-        "soup_cli.trainer.grpo",
+        "ai_forge_cli.trainer.grpo",
         "GRPOTrainerWrapper",
         _prompt_rows,
         {"num_generations": 2, "reward_fn": "format"},
@@ -172,7 +172,7 @@ _LIVE_TASKS = tuple(_LIVE)
 def _cfg(weights, out_dir, task, **training_over):
     import yaml
 
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     training = {
         "batch_size": _MIN_BATCH.get(task, 1),
@@ -316,7 +316,7 @@ class TestEveryConfigClassAcceptsTheSeed:
         import trl
         from transformers import Seq2SeqTrainingArguments, TrainingArguments
 
-        from soup_cli.trainer._trl_compat import resolve_trl_symbol
+        from ai_forge_cli.trainer._trl_compat import resolve_trl_symbol
 
         classes = {
             # classifier, distill, mole_routing, prm, pretrain, embedding, sft
@@ -338,7 +338,7 @@ class TestEveryConfigClassAcceptsTheSeed:
     @pytest.mark.parametrize("field", ("seed", "data_seed"))
     def test_the_installed_configs_accept_the_field(self, field):
         _requires_train_extra()
-        from soup_cli.trainer._trl_compat import config_accepts
+        from ai_forge_cli.trainer._trl_compat import config_accepts
 
         refused = [
             name
@@ -455,7 +455,7 @@ _NOT_DRIVABLE = {
 def _schema_tasks():
     import typing
 
-    from soup_cli.config.schema import SoupConfig
+    from ai_forge_cli.config.schema import SoupConfig
 
     annotation = SoupConfig.model_fields["task"].annotation
     return set(typing.get_args(annotation))
@@ -508,7 +508,7 @@ _NOT_SEEDED = {
 
 
 def _modules_defining_setup():
-    """`soup_cli.trainer` module name -> its `setup()` AST node.
+    """`ai_forge_cli.trainer` module name -> its `setup()` AST node.
 
     Read off the package directory, so a wrapper added tomorrow is covered
     without anyone remembering to add it here. A module with no `setup()` is not
@@ -519,7 +519,7 @@ def _modules_defining_setup():
     import importlib.util
     from pathlib import Path
 
-    spec = importlib.util.find_spec("soup_cli.trainer")
+    spec = importlib.util.find_spec("ai_forge_cli.trainer")
     found = {}
     for path in sorted(Path(spec.origin).parent.glob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -549,7 +549,7 @@ class TestEveryWrapperAppliesTheSeed:
     @staticmethod
     def _setup_body(name):
         setups = _modules_defining_setup()
-        assert name in setups, f"soup_cli.trainer.{name} defines no setup()"
+        assert name in setups, f"ai_forge_cli.trainer.{name} defines no setup()"
         return setups[name]
 
     @staticmethod
@@ -574,7 +574,7 @@ class TestEveryWrapperAppliesTheSeed:
         list then the derivation is broken, not the code clean.
         """
         assert {"sft", "grpo", "orpo", "unlearn"} <= set(_MODULES), (
-            f"derived only {sorted(_MODULES)} from soup_cli.trainer, which "
+            f"derived only {sorted(_MODULES)} from ai_forge_cli.trainer, which "
             f"cannot be right; the module discovery has gone stale"
         )
 
@@ -585,7 +585,7 @@ class TestEveryWrapperAppliesTheSeed:
         stale = sorted(set(_NOT_SEEDED) - set(setups))
         assert not stale, (
             f"{stale} are excused from seeding here but no longer define a "
-            f"setup() in soup_cli.trainer"
+            f"setup() in ai_forge_cli.trainer"
         )
 
     def test_nothing_on_the_not_seeded_list_secretly_seeds(self):
@@ -616,7 +616,7 @@ class TestEveryWrapperAppliesTheSeed:
             and node.func.id == "apply_training_seed"
         ]
         assert seeded, (
-            f"soup_cli.trainer.{name}.setup() never calls apply_training_seed(), "
+            f"ai_forge_cli.trainer.{name}.setup() never calls apply_training_seed(), "
             f"so its model and adapter initialise at whatever seed happened to "
             f"be live when the process reached them"
         )
@@ -657,16 +657,16 @@ class TestEveryWrapperAppliesTheSeed:
             ):
                 built.append(node.lineno)
         assert built, (
-            f"soup_cli.trainer.{name}.setup() has no recognisable model build; "
+            f"ai_forge_cli.trainer.{name}.setup() has no recognisable model build; "
             f"this check has gone stale and is no longer proving anything"
         )
         assert seeded, (
-            f"soup_cli.trainer.{name}.setup() never calls apply_training_seed() "
+            f"ai_forge_cli.trainer.{name}.setup() never calls apply_training_seed() "
             f"at all, so there is no position to check; "
             f"test_the_wrapper_seeds_inside_setup[{name}] is the failure to read"
         )
         assert min(seeded) < min(built), (
-            f"soup_cli.trainer.{name}: apply_training_seed() is called at line "
+            f"ai_forge_cli.trainer.{name}: apply_training_seed() is called at line "
             f"{min(seeded)}, after the model is built at line {min(built)}"
         )
 
@@ -675,10 +675,10 @@ class TestEveryWrapperAppliesTheSeed:
         """`unlearn` is excluded because it builds no TrainingArguments."""
         import importlib.util
 
-        spec = importlib.util.find_spec(f"soup_cli.trainer.{name}")
+        spec = importlib.util.find_spec(f"ai_forge_cli.trainer.{name}")
         source = open(spec.origin, encoding="utf-8").read()
         assert "training_seed_kwargs(" in source, (
-            f"soup_cli.trainer.{name} builds a TrainingArguments subclass "
+            f"ai_forge_cli.trainer.{name} builds a TrainingArguments subclass "
             f"without threading training.seed into it"
         )
 
@@ -706,7 +706,7 @@ class TestUnlearnSeeding:
         """The control vector has been seeded 0 since RMU landed. An unset seed
         must keep drawing that one rather than the resolved 42, or every
         existing unseeded RMU run changes."""
-        from soup_cli.utils.seeding import resolve_training_seed
+        from ai_forge_cli.utils.seeding import resolve_training_seed
 
         class _Tcfg:
             seed = None
@@ -721,7 +721,7 @@ class TestUnlearnSeeding:
 # ==========================================================================
 class TestSeedingHelper:
     def test_unset_resolves_to_hf_default(self):
-        from soup_cli.utils.seeding import resolve_training_seed
+        from ai_forge_cli.utils.seeding import resolve_training_seed
 
         class _Tcfg:
             seed = None
@@ -729,7 +729,7 @@ class TestSeedingHelper:
         assert resolve_training_seed(_Tcfg()) == 42
 
     def test_zero_is_a_legitimate_seed(self):
-        from soup_cli.utils.seeding import resolve_training_seed
+        from ai_forge_cli.utils.seeding import resolve_training_seed
 
         class _Tcfg:
             seed = 0
@@ -737,7 +737,7 @@ class TestSeedingHelper:
         assert resolve_training_seed(_Tcfg()) == 0
 
     def test_kwargs_carry_both_fields(self):
-        from soup_cli.utils.seeding import training_seed_kwargs
+        from ai_forge_cli.utils.seeding import training_seed_kwargs
 
         class _Tcfg:
             seed = 7
@@ -748,7 +748,7 @@ class TestSeedingHelper:
     def test_unset_data_seed_stays_none(self):
         """`None` means "follow `seed`" to HF. Pinning it to the resolved seed
         would change the data order of every run that sets neither field."""
-        from soup_cli.utils.seeding import training_seed_kwargs
+        from ai_forge_cli.utils.seeding import training_seed_kwargs
 
         class _Tcfg:
             seed = 7
@@ -760,7 +760,7 @@ class TestSeedingHelper:
         _requires_train_extra()
         import torch
 
-        from soup_cli.utils.seeding import apply_training_seed
+        from ai_forge_cli.utils.seeding import apply_training_seed
 
         class _Tcfg:
             seed = 1234
@@ -781,7 +781,7 @@ class TestSeedingHelper:
             "import sys;"
             "sys.modules['torch'] = None;"
             "sys.modules['transformers'] = None;"
-            "import soup_cli.utils.seeding as s;"
+            "import ai_forge_cli.utils.seeding as s;"
             "print(s.resolve_training_seed(type('T', (), {'seed': None})()))"
         )
         out = subprocess.run(

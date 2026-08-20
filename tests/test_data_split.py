@@ -34,7 +34,7 @@ class TestDataSplitCLI:
         """Data help should mention split subcommand."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "--help"])
@@ -44,7 +44,7 @@ class TestDataSplitCLI:
         """Basic split with --val 20 should produce two files."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "data.jsonl"
         _make_jsonl(data_file, 100)
@@ -70,7 +70,7 @@ class TestDataSplitCLI:
         """Split with --val 10 --test 10 should produce three files."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "data.jsonl"
         _make_jsonl(data_file, 100)
@@ -100,7 +100,7 @@ class TestDataSplitCLI:
         """Split with --absolute should use absolute counts."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "data.jsonl"
         _make_jsonl(data_file, 100)
@@ -120,7 +120,7 @@ class TestDataSplitCLI:
         """Same seed should produce the same split."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "data.jsonl"
         _make_jsonl(data_file, 50)
@@ -149,7 +149,7 @@ class TestDataSplitCLI:
         """Should error if input file doesn't exist."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(
@@ -162,7 +162,7 @@ class TestDataSplitCLI:
         """Should error if neither --val nor --test is specified."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "data.jsonl"
         _make_jsonl(data_file, 50)
@@ -178,7 +178,7 @@ class TestDataSplitCLI:
         """Should error on empty dataset."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "data.jsonl"
         data_file.write_text("", encoding="utf-8")
@@ -201,7 +201,7 @@ class TestDataSplitEdgeCases:
         """val=90 should work but leave 10% for train."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "data.jsonl"
         _make_jsonl(data_file, 100)
@@ -219,7 +219,7 @@ class TestDataSplitEdgeCases:
         """Stratified split should preserve category distribution."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "data.jsonl"
         _make_jsonl(data_file, 90)  # 30 per category (cat_0, cat_1, cat_2)
@@ -251,7 +251,7 @@ class TestDataSplitEdgeCases:
         """Should error if absolute val count exceeds dataset size."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "data.jsonl"
         _make_jsonl(data_file, 10)
@@ -274,7 +274,7 @@ class TestDataSplitSecurity:
         """Output files should be created in the same directory as input."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "data.jsonl"
         _make_jsonl(data_file, 20)

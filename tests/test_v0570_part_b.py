@@ -10,8 +10,8 @@ import numpy as np
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app as soup_app
-from soup_cli.utils.adapter_merge import (
+from ai_forge_cli.cli import app as soup_app
+from ai_forge_cli.utils.adapter_merge import (
     SUPPORTED_STRATEGIES,
     MergeReport,
     merge_adapters,
@@ -283,7 +283,7 @@ def test_supported_strategies_immutable():
     # allowlist policy). STRATEGY_ORDER preserves canonical iteration order.
     # v0.67.0 Part A: floor-check widened to include "cmaes" (mirrors
     # v0.51.0 / v0.54.0 / v0.66.0 floor-check policy).
-    from soup_cli.utils.adapter_merge import STRATEGY_ORDER
+    from ai_forge_cli.utils.adapter_merge import STRATEGY_ORDER
     assert {"linear", "ties", "dare", "svd"} <= SUPPORTED_STRATEGIES
     assert isinstance(SUPPORTED_STRATEGIES, frozenset)
     for entry in ("linear", "ties", "dare", "svd"):
@@ -338,7 +338,7 @@ def test_merge_adapters_rejects_symlink_at_output_safetensors(tmp_path, monkeypa
 
 
 def test_no_top_level_torch_import_in_merge():
-    src = (Path(__file__).parent.parent / "src" / "soup_cli" / "utils" / "adapter_merge.py"
+    src = (Path(__file__).parent.parent / "src" / "ai_forge_cli" / "utils" / "adapter_merge.py"
            ).read_text(encoding="utf-8")
     for line in src.splitlines():
         stripped = line.lstrip()

@@ -15,8 +15,8 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.utils.prm import (
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.utils.prm import (
     KNOWN_VLM_REGEX,
     is_known_vlm_base,
     validate_vision_grpo_compat,
@@ -96,7 +96,7 @@ class TestGRPOFP16:
 class TestGRPOFP16Routing:
     def test_grpo_wrapper_sets_fp16_true_bf16_false_when_grpo_fp16(self) -> None:
         """v0.53.3 #128 — wrapper translates grpo_fp16=True into HF kwargs."""
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = load_config_from_string(_minimal_grpo_yaml(
             training={
@@ -118,7 +118,7 @@ class TestGRPOFP16Routing:
         stubbed here in both directions."""
         import torch
 
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = load_config_from_string(_minimal_grpo_yaml())
         wrapper = GRPOTrainerWrapper(cfg, device="cuda")
@@ -145,7 +145,7 @@ class TestGRPOFP16Routing:
         assert wrapper._build_precision_kwargs() == {"fp16": True, "bf16": False}
 
     def test_grpo_wrapper_cpu_no_precision(self) -> None:
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = load_config_from_string(_minimal_grpo_yaml(
             training={
@@ -369,7 +369,7 @@ class TestReviewFixes:
         card rather than forcing fp16 (#387: it used to force bf16 instead)."""
         import torch
 
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = load_config_from_string(_minimal_grpo_yaml(
             training={
@@ -395,7 +395,7 @@ class TestReviewFixes:
 
     def test_precision_kwargs_mps_device(self) -> None:
         """tdd-review HIGH — non-CUDA / non-CPU device (MPS) returns no-MP."""
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = load_config_from_string(_minimal_grpo_yaml())
         wrapper = GRPOTrainerWrapper(cfg, device="mps")

@@ -1,4 +1,4 @@
-"""Tests for `resolve_transform` in `soup_cli.utils.build_dag`.
+"""Tests for `resolve_transform` in `ai_forge_cli.utils.build_dag`.
 
 Covers:
   - Built-in transform resolution.
@@ -68,37 +68,37 @@ class TestResolveTransformBuiltins:
     """resolve_transform returns built-ins by name."""
 
     def test_identity(self):
-        from soup_cli.utils.build_dag import BUILTIN_TRANSFORMS, resolve_transform
+        from ai_forge_cli.utils.build_dag import BUILTIN_TRANSFORMS, resolve_transform
 
         fn = resolve_transform("identity")
         assert fn is BUILTIN_TRANSFORMS["identity"]
 
     def test_drop_empty(self):
-        from soup_cli.utils.build_dag import BUILTIN_TRANSFORMS, resolve_transform
+        from ai_forge_cli.utils.build_dag import BUILTIN_TRANSFORMS, resolve_transform
 
         fn = resolve_transform("drop_empty")
         assert fn is BUILTIN_TRANSFORMS["drop_empty"]
 
     def test_lowercase(self):
-        from soup_cli.utils.build_dag import BUILTIN_TRANSFORMS, resolve_transform
+        from ai_forge_cli.utils.build_dag import BUILTIN_TRANSFORMS, resolve_transform
 
         fn = resolve_transform("lowercase")
         assert fn is BUILTIN_TRANSFORMS["lowercase"]
 
     def test_add_field(self):
-        from soup_cli.utils.build_dag import BUILTIN_TRANSFORMS, resolve_transform
+        from ai_forge_cli.utils.build_dag import BUILTIN_TRANSFORMS, resolve_transform
 
         fn = resolve_transform("add_field")
         assert fn is BUILTIN_TRANSFORMS["add_field"]
 
     def test_token_count(self):
-        from soup_cli.utils.build_dag import BUILTIN_TRANSFORMS, resolve_transform
+        from ai_forge_cli.utils.build_dag import BUILTIN_TRANSFORMS, resolve_transform
 
         fn = resolve_transform("token_count")
         assert fn is BUILTIN_TRANSFORMS["token_count"]
 
     def test_unknown_raises_value_error(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         with pytest.raises(ValueError, match="unknown transform"):
             resolve_transform("does_not_exist_xyz")
@@ -113,14 +113,14 @@ class TestResolveTransformExtraPrecedence:
     """Per-call ``extra`` shadows built-ins and dotted paths."""
 
     def test_extra_shadows_builtin(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         custom = lambda row, config: {"custom": True}  # noqa: E731
         fn = resolve_transform("identity", extra={"identity": custom})
         assert fn is custom
 
     def test_extra_shadows_dotted_path(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         mod_name = _make_transform_module(
             "_soup_test_mod_shadow", "my_transform", arity=2, kind="callable"
@@ -132,7 +132,7 @@ class TestResolveTransformExtraPrecedence:
         assert fn is custom
 
     def test_extra_non_callable_raises_type_error(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         with pytest.raises(TypeError, match="must be callable"):
             resolve_transform("foo", extra={"foo": 42})
@@ -147,7 +147,7 @@ class TestResolveTransformDottedPath:
     """Valid dotted paths are imported and returned."""
 
     def test_happy_path(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         mod_name = _make_transform_module(
             "_soup_test_mod_hp", "my_transform", arity=2, kind="callable"
@@ -157,7 +157,7 @@ class TestResolveTransformDottedPath:
         assert fn({"a": 1}, {}) == {"a": 1}
 
     def test_nested_module_path(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         mod_name = _make_transform_module(
             "_soup_test_mod_nested", "nested_fn", arity=2, kind="callable"
@@ -167,7 +167,7 @@ class TestResolveTransformDottedPath:
 
     def test_lru_cache_serves_same_result(self):
         """Resolving the same dotted path twice returns the identical object."""
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         mod_name = _make_transform_module(
             "_soup_test_mod_cache", "cached_fn", arity=2, kind="callable"
@@ -186,13 +186,13 @@ class TestResolveTransformDottedPathErrors:
     """Invalid dotted paths raise descriptive ValueErrors."""
 
     def test_unknown_module(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         with pytest.raises(ValueError, match="cannot import module"):
             resolve_transform("nonexistent_module_xyz_123:something")
 
     def test_non_callable_attribute(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         mod_name = _make_transform_module(
             "_soup_test_mod_noncall", "not_a_fn", arity=2, kind="non_callable"
@@ -201,7 +201,7 @@ class TestResolveTransformDottedPathErrors:
             resolve_transform(f"{mod_name}:not_a_fn")
 
     def test_wrong_arity_one_arg(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         mod_name = _make_transform_module(
             "_soup_test_mod_arity1", "one_arg", arity=2, kind="partial"
@@ -210,7 +210,7 @@ class TestResolveTransformDottedPathErrors:
             resolve_transform(f"{mod_name}:one_arg")
 
     def test_wrong_arity_three_args(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         mod_name = _make_transform_module(
             "_soup_test_mod_arity3", "three_args", arity=2, kind="three_args"
@@ -219,7 +219,7 @@ class TestResolveTransformDottedPathErrors:
             resolve_transform(f"{mod_name}:three_args")
 
     def test_missing_attribute(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         mod_name = _make_transform_module(
             "_soup_test_mod_missing", "exists_fn", arity=2, kind="callable"
@@ -228,20 +228,20 @@ class TestResolveTransformDottedPathErrors:
             resolve_transform(f"{mod_name}:does_not_exist")
 
     def test_empty_module_part(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         with pytest.raises(ValueError, match="non-empty on both sides"):
             resolve_transform(":some_function")
 
     def test_empty_function_part(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         with pytest.raises(ValueError, match="non-empty on both sides"):
             resolve_transform("some_module:")
 
     def test_no_colon_in_name_still_raises_unknown(self):
         """A name without ':' that isn't a builtin raises unknown-transform."""
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         with pytest.raises(ValueError, match="unknown transform"):
             resolve_transform("random_string_without_colon")
@@ -256,7 +256,7 @@ class TestResolveTransformExtraShadowsManifest:
     """When the same name appears in ``extra`` and as a dotted path, extra wins."""
 
     def test_extra_overrides_dotted_path(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         mod_name = _make_transform_module(
             "_soup_test_mod_override", "manifest_fn", arity=2, kind="callable"
@@ -275,7 +275,7 @@ class TestResolveTransformExtraShadowsManifest:
         assert fn_from_extra is custom
 
     def test_builtin_overridden_by_extra(self):
-        from soup_cli.utils.build_dag import resolve_transform
+        from ai_forge_cli.utils.build_dag import resolve_transform
 
         custom = lambda row, config: {"overridden": True}  # noqa: E731
         fn = resolve_transform("identity", extra={"identity": custom})

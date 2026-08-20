@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.loader import load_config_from_string
 
 # ---------------------------------------------------------------------------
 # Schema gate widening
@@ -114,7 +114,7 @@ _TRAINER_FILES = [
     "bco.py",
 ]
 
-_TRAINER_DIR = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "trainer"
+_TRAINER_DIR = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "trainer"
 
 
 class TestTrainerSourceWiring:
@@ -169,13 +169,13 @@ class TestRewardModelValidator:
     """
 
     def test_reward_model_null_byte_rejected(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValueError, match="null bytes"):
             TrainingConfig(reward_model="rm\x00evil")
 
     def test_reward_model_oversize_rejected(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValueError, match="512"):
             TrainingConfig(reward_model="x" * 513)
@@ -253,7 +253,7 @@ class TestPPORewardModelQuantMenu:
     def test_load_reward_model_signature_accepts_tcfg(self):
         import inspect
 
-        from soup_cli.trainer.ppo import _load_reward_model
+        from ai_forge_cli.trainer.ppo import _load_reward_model
 
         sig = inspect.signature(_load_reward_model)
         assert "tcfg" in sig.parameters, (
@@ -281,8 +281,8 @@ class TestPPORewardModelQuantMenu:
         # trust_remote_code helpers, Quant Menu loader) and assert that
         # build_quantization_config_for_loader is called with the right
         # tcfg + base when tcfg is supplied.
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.trainer import ppo as ppo_mod
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.trainer import ppo as ppo_mod
 
         calls: list[dict] = []
 
@@ -312,7 +312,7 @@ class TestPPORewardModelQuantMenu:
         monkeypatch.setitem(sys.modules, "transformers", fake_tf)
 
         # Stub trust_remote helpers to avoid filesystem probing.
-        from soup_cli.utils import trust_remote
+        from ai_forge_cli.utils import trust_remote
         monkeypatch.setattr(
             trust_remote, "model_requires_trust_remote_code", lambda _p: False
         )
@@ -321,7 +321,7 @@ class TestPPORewardModelQuantMenu:
             lambda *a, **kw: kw.get("requested", False),
         )
 
-        from soup_cli.utils import quant_menu
+        from ai_forge_cli.utils import quant_menu
         monkeypatch.setattr(
             quant_menu, "build_quantization_config_for_loader", fake_loader
         )
@@ -343,7 +343,7 @@ class TestPPORewardModelQuantMenu:
     def test_load_reward_model_no_tcfg_skips_quant_menu(self, monkeypatch):
         # Backward compat: when tcfg=None (default), no quant config is
         # built and the loader is NOT called.
-        from soup_cli.trainer import ppo as ppo_mod
+        from ai_forge_cli.trainer import ppo as ppo_mod
 
         called: list = []
 
@@ -351,7 +351,7 @@ class TestPPORewardModelQuantMenu:
             called.append(True)
             return None
 
-        from soup_cli.utils import quant_menu
+        from ai_forge_cli.utils import quant_menu
         monkeypatch.setattr(
             quant_menu, "build_quantization_config_for_loader", fake_loader
         )
@@ -374,7 +374,7 @@ class TestPPORewardModelQuantMenu:
         fake_tf.AutoModelForSequenceClassification = _FakeRM
         monkeypatch.setitem(sys.modules, "transformers", fake_tf)
 
-        from soup_cli.utils import trust_remote
+        from ai_forge_cli.utils import trust_remote
         monkeypatch.setattr(
             trust_remote, "model_requires_trust_remote_code", lambda _p: False
         )
@@ -395,8 +395,8 @@ class TestLoaderEntryPointNonSft:
     """
 
     def test_loader_gptq_calls_validator_and_returns_config(self, monkeypatch):
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.utils import quant_menu
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.utils import quant_menu
 
         sentinel = object()
 

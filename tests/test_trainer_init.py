@@ -1,6 +1,6 @@
 """Tests for trainer wrapper constructors and basic attributes (no GPU needed)."""
 
-from soup_cli.config.schema import SoupConfig
+from ai_forge_cli.config.schema import SoupConfig
 
 
 def _make_config(**overrides):
@@ -17,7 +17,7 @@ class TestSFTTrainerInit:
     """Test SFTTrainerWrapper constructor."""
 
     def test_default_attributes(self):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = _make_config()
         wrapper = SFTTrainerWrapper(cfg, device="cpu")
@@ -30,14 +30,14 @@ class TestSFTTrainerInit:
         assert wrapper.trainer is None
 
     def test_custom_report_to(self):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = _make_config()
         wrapper = SFTTrainerWrapper(cfg, device="cuda", report_to="wandb")
         assert wrapper.report_to == "wandb"
 
     def test_deepspeed_config(self):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = _make_config()
         wrapper = SFTTrainerWrapper(
@@ -53,7 +53,7 @@ class TestSFTTrainerInit:
         import types
         from types import SimpleNamespace
 
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = _make_config(
             data={
@@ -125,29 +125,29 @@ class TestSFTTrainerInit:
         monkeypatch.setitem(sys.modules, "transformers", fake_transformers)
         monkeypatch.setitem(sys.modules, "peft", fake_peft)
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **kwargs: None,
         )
-        monkeypatch.setattr("soup_cli.utils.moe.detect_moe_model", lambda _m: False)
-        monkeypatch.setattr("soup_cli.utils.moe.get_moe_target_modules", lambda _m: [])
+        monkeypatch.setattr("ai_forge_cli.utils.moe.detect_moe_model", lambda _m: False)
+        monkeypatch.setattr("ai_forge_cli.utils.moe.get_moe_target_modules", lambda _m: [])
         monkeypatch.setattr(
-            "soup_cli.utils.block_expansion.apply_block_expansion_if_configured",
+            "ai_forge_cli.utils.block_expansion.apply_block_expansion_if_configured",
             lambda *args, **kwargs: None,
         )
         monkeypatch.setattr(
-            "soup_cli.utils.moe_quant.apply_moe_expert_quant_if_configured",
+            "ai_forge_cli.utils.moe_quant.apply_moe_expert_quant_if_configured",
             lambda *args, **kwargs: None,
         )
         monkeypatch.setattr(
-            "soup_cli.utils.peft_wiring.apply_pre_lora_patches",
+            "ai_forge_cli.utils.peft_wiring.apply_pre_lora_patches",
             lambda *args, **kwargs: None,
         )
         monkeypatch.setattr(
-            "soup_cli.utils.peft_wiring.apply_post_lora_patches",
+            "ai_forge_cli.utils.peft_wiring.apply_post_lora_patches",
             lambda *args, **kwargs: None,
         )
         monkeypatch.setattr(
-            "soup_cli.utils.v028_features.apply_v028_speed_memory",
+            "ai_forge_cli.utils.v028_features.apply_v028_speed_memory",
             lambda *args, **kwargs: None,
         )
 
@@ -170,7 +170,7 @@ class TestSFTTrainerInit:
         import types
         from types import SimpleNamespace
 
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = _make_config(
             modality="vision",
@@ -244,7 +244,7 @@ class TestSFTTrainerInit:
         monkeypatch.setitem(sys.modules, "peft", fake_peft)
 
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **kwargs: None,
         )
 
@@ -266,7 +266,7 @@ class TestSFTTrainerInit:
         import types
         from types import SimpleNamespace
 
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = _make_config(
             modality="audio",
@@ -340,7 +340,7 @@ class TestSFTTrainerInit:
         monkeypatch.setitem(sys.modules, "peft", fake_peft)
 
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **kwargs: None,
         )
 
@@ -359,7 +359,7 @@ class TestDPOTrainerInit:
     """Test DPOTrainerWrapper constructor."""
 
     def test_default_attributes(self):
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = _make_config(task="dpo")
         wrapper = DPOTrainerWrapper(cfg, device="cpu")
@@ -371,7 +371,7 @@ class TestDPOTrainerInit:
         assert wrapper.trainer is None
 
     def test_report_to_wandb(self):
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = _make_config(task="dpo")
         wrapper = DPOTrainerWrapper(cfg, device="cpu", report_to="wandb")
@@ -384,7 +384,7 @@ class TestDPOTrainerInit:
         import types
         from types import SimpleNamespace
 
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = _make_config(
             task="dpo",
@@ -468,7 +468,7 @@ class TestDPOTrainerInit:
         monkeypatch.setitem(sys.modules, "peft", fake_peft)
 
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **kwargs: None,
         )
 
@@ -490,7 +490,7 @@ class TestGRPOTrainerInit:
     """Test GRPOTrainerWrapper constructor."""
 
     def test_default_attributes(self):
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = _make_config(task="grpo")
         wrapper = GRPOTrainerWrapper(cfg, device="cpu")
@@ -506,7 +506,7 @@ class TestGRPOTrainerInit:
         import types
         from types import SimpleNamespace
 
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = _make_config(
             task="grpo",
@@ -590,7 +590,7 @@ class TestGRPOTrainerInit:
         monkeypatch.setitem(sys.modules, "peft", fake_peft)
 
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **kwargs: None,
         )
 
@@ -612,7 +612,7 @@ class TestRewardModelTrainerInit:
     """Test RewardModelTrainerWrapper constructor."""
 
     def test_default_attributes(self):
-        from soup_cli.trainer.reward_model import RewardModelTrainerWrapper
+        from ai_forge_cli.trainer.reward_model import RewardModelTrainerWrapper
 
         cfg = _make_config(task="reward_model")
         wrapper = RewardModelTrainerWrapper(cfg, device="cpu")
@@ -627,7 +627,7 @@ class TestPPOTrainerInit:
     """Test PPOTrainerWrapper constructor."""
 
     def test_default_attributes(self):
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = _make_config(task="ppo")
         wrapper = PPOTrainerWrapper(cfg, device="cpu")
@@ -642,7 +642,7 @@ class TestIPOTrainerInit:
         import types
         from types import SimpleNamespace
 
-        from soup_cli.trainer.ipo import IPOTrainerWrapper
+        from ai_forge_cli.trainer.ipo import IPOTrainerWrapper
 
         cfg = _make_config(
             task="ipo",
@@ -726,7 +726,7 @@ class TestIPOTrainerInit:
         monkeypatch.setitem(sys.modules, "peft", fake_peft)
 
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **kwargs: None,
         )
 
@@ -751,7 +751,7 @@ class TestKTOTrainerInit:
         import types
         from types import SimpleNamespace
 
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         cfg = _make_config(
             task="kto",
@@ -835,7 +835,7 @@ class TestKTOTrainerInit:
         monkeypatch.setitem(sys.modules, "peft", fake_peft)
 
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **kwargs: None,
         )
 
@@ -860,7 +860,7 @@ class TestBCOTrainerInit:
         import types
         from types import SimpleNamespace
 
-        from soup_cli.trainer.bco import BCOTrainerWrapper
+        from ai_forge_cli.trainer.bco import BCOTrainerWrapper
 
         cfg = _make_config(
             task="bco",
@@ -944,7 +944,7 @@ class TestBCOTrainerInit:
         monkeypatch.setitem(sys.modules, "peft", fake_peft)
 
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **kwargs: None,
         )
 
@@ -969,7 +969,7 @@ class TestORPOTrainerInit:
         import types
         from types import SimpleNamespace
 
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
 
         cfg = _make_config(
             task="orpo",
@@ -1053,7 +1053,7 @@ class TestORPOTrainerInit:
         monkeypatch.setitem(sys.modules, "peft", fake_peft)
 
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **kwargs: None,
         )
 
@@ -1078,7 +1078,7 @@ class TestSIMPOTrainerInit:
         import types
         from types import SimpleNamespace
 
-        from soup_cli.trainer.simpo import SimPOTrainerWrapper
+        from ai_forge_cli.trainer.simpo import SimPOTrainerWrapper
 
         cfg = _make_config(
             task="simpo",
@@ -1162,7 +1162,7 @@ class TestSIMPOTrainerInit:
         monkeypatch.setitem(sys.modules, "peft", fake_peft)
 
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **kwargs: None,
         )
 
@@ -1223,7 +1223,7 @@ class TestEnableHfTransferProgress:
     """Test _enable_hf_transfer_progress utility."""
 
     def test_enables_progress_bars(self):
-        from soup_cli.trainer.sft import _enable_hf_transfer_progress
+        from ai_forge_cli.trainer.sft import _enable_hf_transfer_progress
 
         # Should not raise
         _enable_hf_transfer_progress()

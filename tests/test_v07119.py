@@ -26,15 +26,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from soup_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.loader import load_config_from_string
 
 # Anchor source reads on the repo root derived from this file's location so the
 # source-grep tests survive another test's ``monkeypatch.chdir`` (cwd leak) in
 # the full suite — matches the v0.71.5 precedent.
 _REPO = Path(__file__).resolve().parent.parent
-_SFT_SRC = (_REPO / "src/soup_cli/trainer/sft.py").read_text(encoding="utf-8")
-_MP_SRC = (_REPO / "src/soup_cli/utils/multipack_trainer.py").read_text(encoding="utf-8")
-_SCHEMA_SRC = (_REPO / "src/soup_cli/config/schema.py").read_text(encoding="utf-8")
+_SFT_SRC = (_REPO / "src/ai_forge_cli/trainer/sft.py").read_text(encoding="utf-8")
+_MP_SRC = (_REPO / "src/ai_forge_cli/utils/multipack_trainer.py").read_text(encoding="utf-8")
+_SCHEMA_SRC = (_REPO / "src/ai_forge_cli/config/schema.py").read_text(encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -206,7 +206,7 @@ def _make_base_class(*, accelerator):
 
 
 def _attach(instance):
-    from soup_cli.utils.multipack_trainer import attach_multipack_state
+    from ai_forge_cli.utils.multipack_trainer import attach_multipack_state
 
     attach_multipack_state(
         instance,
@@ -220,8 +220,8 @@ def _attach(instance):
 class TestMultipackDistributedDataLoader:
     def test_routes_through_accelerator_prepare_when_distributed(self):
         dataloader_cls, _ = _torch_or_skip()
-        from soup_cli.utils.multipack_sampler import MultipackBatchSampler
-        from soup_cli.utils.multipack_trainer import make_multipack_trainer_class
+        from ai_forge_cli.utils.multipack_sampler import MultipackBatchSampler
+        from ai_forge_cli.utils.multipack_trainer import make_multipack_trainer_class
 
         sentinel = object()
         captured: dict = {}
@@ -258,8 +258,8 @@ class TestMultipackDistributedDataLoader:
 
     def test_single_process_returns_raw_dataloader(self):
         dataloader_cls, _ = _torch_or_skip()
-        from soup_cli.utils.multipack_sampler import MultipackBatchSampler
-        from soup_cli.utils.multipack_trainer import make_multipack_trainer_class
+        from ai_forge_cli.utils.multipack_sampler import MultipackBatchSampler
+        from ai_forge_cli.utils.multipack_trainer import make_multipack_trainer_class
 
         accel = MagicMock()
         accel.num_processes = 1  # single GPU / CPU
@@ -283,8 +283,8 @@ class TestMultipackDistributedDataLoader:
 
     def test_no_accelerator_attr_returns_raw_dataloader(self):
         dataloader_cls, _ = _torch_or_skip()
-        from soup_cli.utils.multipack_sampler import MultipackBatchSampler
-        from soup_cli.utils.multipack_trainer import make_multipack_trainer_class
+        from ai_forge_cli.utils.multipack_sampler import MultipackBatchSampler
+        from ai_forge_cli.utils.multipack_trainer import make_multipack_trainer_class
 
         # Build a base with NO accelerator attribute at all (older transformers
         # / direct construction).
@@ -300,8 +300,8 @@ class TestMultipackDistributedDataLoader:
 
     def test_accelerator_none_returns_raw_dataloader(self):
         dataloader_cls, _ = _torch_or_skip()
-        from soup_cli.utils.multipack_sampler import MultipackBatchSampler
-        from soup_cli.utils.multipack_trainer import make_multipack_trainer_class
+        from ai_forge_cli.utils.multipack_sampler import MultipackBatchSampler
+        from ai_forge_cli.utils.multipack_trainer import make_multipack_trainer_class
 
         base_cls = _make_base_class(accelerator=None)
         sub = make_multipack_trainer_class(base_cls)
@@ -317,7 +317,7 @@ class TestMultipackDistributedDataLoader:
         # (not a real int) must NOT route through prepare — `MagicMock() > 1`
         # is truthy, so the isinstance(int) guard is required.
         dataloader_cls, _ = _torch_or_skip()
-        from soup_cli.utils.multipack_trainer import make_multipack_trainer_class
+        from ai_forge_cli.utils.multipack_trainer import make_multipack_trainer_class
 
         accel = MagicMock()  # num_processes is an auto-MagicMock (not int)
         accel.prepare.side_effect = AssertionError("should not be called")
@@ -332,7 +332,7 @@ class TestMultipackDistributedDataLoader:
         assert isinstance(dl, dataloader_cls)
 
     def test_falls_back_to_super_when_state_missing(self):
-        from soup_cli.utils.multipack_trainer import make_multipack_trainer_class
+        from ai_forge_cli.utils.multipack_trainer import make_multipack_trainer_class
 
         accel = MagicMock()
         accel.num_processes = 4
@@ -347,7 +347,7 @@ class TestMultipackDistributedDataLoader:
         # The `not lengths` arm of the state guard: attrs present but lengths is
         # an empty list (unreachable via attach_multipack_state, which rejects
         # it — so poke the attrs directly to exercise the defensive branch).
-        from soup_cli.utils.multipack_trainer import (
+        from ai_forge_cli.utils.multipack_trainer import (
             _BATCH_SIZE_ATTR,
             _LENGTHS_ATTR,
             _MAX_SEQ_ATTR,
@@ -368,7 +368,7 @@ class TestMultipackDistributedDataLoader:
         # v0.40.4 H3 regression, behaviourally — `args.dataloader_drop_last`
         # must reach the MultipackBatchSampler through the #80-refactored path.
         _torch_or_skip()
-        from soup_cli.utils.multipack_trainer import make_multipack_trainer_class
+        from ai_forge_cli.utils.multipack_trainer import make_multipack_trainer_class
 
         accel = MagicMock()
         accel.num_processes = 1  # raw path so we can inspect the sampler
@@ -404,7 +404,7 @@ class TestMultipackSourceWiring:
 
 class TestPatchInvariants:
     def test_version_bumped(self):
-        import soup_cli
+        import ai_forge_cli
 
-        parts = tuple(int(p) for p in soup_cli.__version__.split(".")[:3])
-        assert parts >= (0, 71, 19), soup_cli.__version__
+        parts = tuple(int(p) for p in ai_forge_cli.__version__.split(".")[:3])
+        assert parts >= (0, 71, 19), ai_forge_cli.__version__

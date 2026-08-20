@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import SoupConfig
+from ai_forge_cli.config.schema import SoupConfig
 
 # ─── DoRA Config Tests ──────────────────────────────────────────────────────
 
@@ -55,7 +55,7 @@ class TestDoRAConfig:
         assert cfg.training.lora.alpha == 32
 
     def test_dora_yaml_round_trip(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: some-model
@@ -110,7 +110,7 @@ class TestLoraPlusConfig:
             )
 
     def test_loraplus_yaml_round_trip(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: some-model
@@ -204,7 +204,7 @@ class TestGaLoreConfig:
             )
 
     def test_galore_yaml_round_trip(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: some-model
@@ -232,7 +232,7 @@ class TestGaLoreValidation:
     """Test GaLore config validation helper."""
 
     def test_galore_incompatible_with_4bit(self):
-        from soup_cli.utils.galore import validate_galore_config
+        from ai_forge_cli.utils.galore import validate_galore_config
 
         errors = validate_galore_config(
             use_galore=True, quantization="4bit", backend="transformers",
@@ -241,7 +241,7 @@ class TestGaLoreValidation:
         assert "quantization" in errors[0].lower()
 
     def test_galore_incompatible_with_8bit(self):
-        from soup_cli.utils.galore import validate_galore_config
+        from ai_forge_cli.utils.galore import validate_galore_config
 
         errors = validate_galore_config(
             use_galore=True, quantization="8bit", backend="transformers",
@@ -249,7 +249,7 @@ class TestGaLoreValidation:
         assert len(errors) == 1
 
     def test_galore_incompatible_with_unsloth(self):
-        from soup_cli.utils.galore import validate_galore_config
+        from ai_forge_cli.utils.galore import validate_galore_config
 
         errors = validate_galore_config(
             use_galore=True, quantization="none", backend="unsloth",
@@ -258,7 +258,7 @@ class TestGaLoreValidation:
         assert "unsloth" in errors[0].lower()
 
     def test_galore_valid_config_no_errors(self):
-        from soup_cli.utils.galore import validate_galore_config
+        from ai_forge_cli.utils.galore import validate_galore_config
 
         errors = validate_galore_config(
             use_galore=True, quantization="none", backend="transformers",
@@ -266,7 +266,7 @@ class TestGaLoreValidation:
         assert len(errors) == 0
 
     def test_galore_disabled_no_errors(self):
-        from soup_cli.utils.galore import validate_galore_config
+        from ai_forge_cli.utils.galore import validate_galore_config
 
         errors = validate_galore_config(
             use_galore=False, quantization="4bit", backend="unsloth",
@@ -275,7 +275,7 @@ class TestGaLoreValidation:
 
     def test_galore_multiple_errors(self):
         """Both quantization and unsloth should be flagged."""
-        from soup_cli.utils.galore import validate_galore_config
+        from ai_forge_cli.utils.galore import validate_galore_config
 
         errors = validate_galore_config(
             use_galore=True, quantization="4bit", backend="unsloth",
@@ -290,14 +290,14 @@ class TestGaLoreOptimizerHelper:
     """Test the get_galore_optimizer_and_params helper."""
 
     def test_returns_galore_optimizer_name(self):
-        from soup_cli.utils.galore import get_galore_optimizer_and_params
+        from ai_forge_cli.utils.galore import get_galore_optimizer_and_params
 
         result = get_galore_optimizer_and_params(
         )
         assert result["optim"] == "galore_adamw"
 
     def test_returns_target_modules(self):
-        from soup_cli.utils.galore import get_galore_optimizer_and_params
+        from ai_forge_cli.utils.galore import get_galore_optimizer_and_params
 
         result = get_galore_optimizer_and_params(
         )
@@ -305,31 +305,31 @@ class TestGaLoreOptimizerHelper:
         assert isinstance(result["optim_target_modules"], list)
 
     def test_returns_optim_args_with_rank(self):
-        from soup_cli.utils.galore import get_galore_optimizer_and_params
+        from ai_forge_cli.utils.galore import get_galore_optimizer_and_params
 
         result = get_galore_optimizer_and_params(galore_rank=64)
         assert "rank=64" in result["optim_args"]
 
     def test_returns_optim_args_with_update_gap(self):
-        from soup_cli.utils.galore import get_galore_optimizer_and_params
+        from ai_forge_cli.utils.galore import get_galore_optimizer_and_params
 
         result = get_galore_optimizer_and_params(galore_update_proj_gap=100)
         assert "update_proj_gap=100" in result["optim_args"]
 
     def test_returns_optim_args_with_scale(self):
-        from soup_cli.utils.galore import get_galore_optimizer_and_params
+        from ai_forge_cli.utils.galore import get_galore_optimizer_and_params
 
         result = get_galore_optimizer_and_params(galore_scale=0.5)
         assert "scale=0.5" in result["optim_args"]
 
     def test_invalid_rank_raises_value_error(self):
-        from soup_cli.utils.galore import get_galore_optimizer_and_params
+        from ai_forge_cli.utils.galore import get_galore_optimizer_and_params
 
         with pytest.raises(ValueError, match="Invalid GaLore"):
             get_galore_optimizer_and_params(galore_rank=0)
 
     def test_invalid_scale_raises_value_error(self):
-        from soup_cli.utils.galore import get_galore_optimizer_and_params
+        from ai_forge_cli.utils.galore import get_galore_optimizer_and_params
 
         with pytest.raises(ValueError, match="Invalid GaLore"):
             get_galore_optimizer_and_params(galore_scale=0)
@@ -342,28 +342,28 @@ class TestAdvancedPEFTSweepParams:
     """Test sweep shortcuts for DoRA, LoRA+, GaLore."""
 
     def test_use_dora_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "use_dora", True)
         assert config["training"]["lora"]["use_dora"] is True
 
     def test_loraplus_lr_ratio_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "loraplus_lr_ratio", 16.0)
         assert config["training"]["loraplus_lr_ratio"] == pytest.approx(16.0)
 
     def test_use_galore_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "use_galore", True)
         assert config["training"]["use_galore"] is True
 
     def test_galore_rank_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "galore_rank", 64)

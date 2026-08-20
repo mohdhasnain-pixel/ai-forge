@@ -26,7 +26,7 @@ class TestGetMetricSeriesEvalResults:
     """`tracker.get_metric_series` falls back to eval_results for benchmarks."""
 
     def _tracker(self, tmp_path):
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         return ExperimentTracker(db_path=tmp_path / "exp.db")
 
@@ -128,7 +128,7 @@ class _FakeHistoryEntry:
 
 class TestBuildVerdictHistoryBias:
     def _profile(self, **over):
-        from soup_cli.utils.advise import DatasetProfile
+        from ai_forge_cli.utils.advise import DatasetProfile
 
         base = dict(
             row_count=2000,
@@ -143,13 +143,13 @@ class TestBuildVerdictHistoryBias:
         return DatasetProfile(**base)
 
     def test_summarise_empty_and_none(self):
-        from soup_cli.utils.advise import _summarise_history_outcomes
+        from ai_forge_cli.utils.advise import _summarise_history_outcomes
 
         assert _summarise_history_outcomes(None) == {}
         assert _summarise_history_outcomes([]) == {}
 
     def test_summarise_filters_by_project(self):
-        from soup_cli.utils.advise import _summarise_history_outcomes
+        from ai_forge_cli.utils.advise import _summarise_history_outcomes
 
         hist = [
             _FakeHistoryEntry(choice="SFT", outcome=0.5, project="proj-a"),
@@ -159,7 +159,7 @@ class TestBuildVerdictHistoryBias:
         assert out["SFT"] == (0.5, 1)  # only proj-a counted
 
     def test_summarise_skips_unaccepted_and_none_outcome(self):
-        from soup_cli.utils.advise import _summarise_history_outcomes
+        from ai_forge_cli.utils.advise import _summarise_history_outcomes
 
         hist = [
             _FakeHistoryEntry(choice="SFT", outcome=0.5, accepted=False),
@@ -170,19 +170,19 @@ class TestBuildVerdictHistoryBias:
         assert out["SFT"] == (0.4, 1)
 
     def test_summarise_skips_bool_outcome(self):
-        from soup_cli.utils.advise import _summarise_history_outcomes
+        from ai_forge_cli.utils.advise import _summarise_history_outcomes
 
         hist = [_FakeHistoryEntry(choice="SFT", outcome=True)]
         assert _summarise_history_outcomes(hist) == {}
 
     def test_summarise_non_sequence_rejected(self):
-        from soup_cli.utils.advise import _summarise_history_outcomes
+        from ai_forge_cli.utils.advise import _summarise_history_outcomes
 
         with pytest.raises(TypeError):
             _summarise_history_outcomes(123)  # type: ignore[arg-type]
 
     def test_no_history_identical_to_base(self):
-        from soup_cli.utils.advise import build_verdict
+        from ai_forge_cli.utils.advise import build_verdict
 
         profile = self._profile()  # factual_lookup + high variance → RAG
         base = build_verdict(profile, "factual_lookup")
@@ -191,7 +191,7 @@ class TestBuildVerdictHistoryBias:
         assert base.confidence == with_none.confidence
 
     def test_sft_precedents_flip_marginal_rag_to_sft(self):
-        from soup_cli.utils.advise import build_verdict
+        from ai_forge_cli.utils.advise import build_verdict
 
         profile = self._profile()  # would be RAG by default
         hist = [
@@ -205,7 +205,7 @@ class TestBuildVerdictHistoryBias:
         assert "precedent" in verdict.reason.lower()
 
     def test_sft_precedents_other_project_do_not_flip(self):
-        from soup_cli.utils.advise import build_verdict
+        from ai_forge_cli.utils.advise import build_verdict
 
         profile = self._profile()
         hist = [
@@ -218,7 +218,7 @@ class TestBuildVerdictHistoryBias:
         assert verdict.choice == "RAG"  # unchanged — wrong project
 
     def test_fewer_than_three_sft_precedents_no_flip(self):
-        from soup_cli.utils.advise import build_verdict
+        from ai_forge_cli.utils.advise import build_verdict
 
         profile = self._profile()
         hist = [
@@ -231,7 +231,7 @@ class TestBuildVerdictHistoryBias:
         assert verdict.choice == "RAG"
 
     def test_negative_grpo_precedents_suppress_grpo(self):
-        from soup_cli.utils.advise import build_verdict
+        from ai_forge_cli.utils.advise import build_verdict
 
         profile = self._profile(
             row_count=800, has_reasoning_traces=True, label_variance=0.3,
@@ -249,7 +249,7 @@ class TestBuildVerdictHistoryBias:
         assert "precedent" in verdict.reason.lower()
 
     def test_encouraged_choice_nudges_confidence(self):
-        from soup_cli.utils.advise import build_verdict
+        from ai_forge_cli.utils.advise import build_verdict
 
         # SFT task (not factual_lookup) so base is SFT; encourage SFT.
         profile = self._profile(label_variance=0.3)
@@ -267,20 +267,20 @@ class TestBuildVerdictHistoryBias:
         assert biased.confidence == pytest.approx(min(0.95, base.confidence + 0.05))
 
     def test_summarise_outcome_out_of_range_skipped(self):
-        from soup_cli.utils.advise import _summarise_history_outcomes
+        from ai_forge_cli.utils.advise import _summarise_history_outcomes
 
         hist = [_FakeHistoryEntry(choice="SFT", outcome=2.0)]
         assert _summarise_history_outcomes(hist) == {}
 
     def test_summarise_accepted_must_be_true_not_truthy(self):
-        from soup_cli.utils.advise import _summarise_history_outcomes
+        from ai_forge_cli.utils.advise import _summarise_history_outcomes
 
         # accepted=1 (int) is NOT True → rejected (the guard is `is not True`).
         hist = [_FakeHistoryEntry(choice="SFT", accepted=1, outcome=0.5)]
         assert _summarise_history_outcomes(hist) == {}
 
     def test_is_encouraged_threshold_boundaries(self):
-        from soup_cli.utils.advise import _is_encouraged
+        from ai_forge_cli.utils.advise import _is_encouraged
 
         # >= 0.3 over >= 3 precedents.
         assert _is_encouraged({"SFT": (0.3, 3)}, "SFT") is True
@@ -289,7 +289,7 @@ class TestBuildVerdictHistoryBias:
         assert _is_encouraged({}, "SFT") is False
 
     def test_is_discouraged_threshold_boundaries(self):
-        from soup_cli.utils.advise import _is_discouraged
+        from ai_forge_cli.utils.advise import _is_discouraged
 
         # strict < 0.0 over >= 3 precedents.
         assert _is_discouraged({"GRPO": (0.0, 3)}, "GRPO") is False
@@ -297,8 +297,8 @@ class TestBuildVerdictHistoryBias:
         assert _is_discouraged({"GRPO": (-0.5, 2)}, "GRPO") is False  # count < 3
 
     def test_real_history_entry_duck_types(self):
-        from soup_cli.utils.advise import _summarise_history_outcomes
-        from soup_cli.utils.advise_history import HistoryEntry
+        from ai_forge_cli.utils.advise import _summarise_history_outcomes
+        from ai_forge_cli.utils.advise_history import HistoryEntry
 
         entry = HistoryEntry(
             timestamp="2026-01-01T00:00:00+00:00",
@@ -323,31 +323,31 @@ class TestBuildVerdictHistoryBias:
 
 class TestSharedWebhooks:
     def test_webhooks_module_exports(self):
-        from soup_cli.utils import webhooks
+        from ai_forge_cli.utils import webhooks
 
         assert hasattr(webhooks, "validate_webhook_url")
         assert hasattr(webhooks, "post_webhook")
         assert hasattr(webhooks, "send_webhooks")
 
     def test_drift_alarm_reexports_same_objects(self):
-        from soup_cli.utils import drift_alarm, webhooks
+        from ai_forge_cli.utils import drift_alarm, webhooks
 
         assert drift_alarm.validate_webhook_url is webhooks.validate_webhook_url
         assert drift_alarm.post_webhook is webhooks.post_webhook
 
     def test_validate_webhook_url_https_ok(self):
-        from soup_cli.utils.webhooks import validate_webhook_url
+        from ai_forge_cli.utils.webhooks import validate_webhook_url
 
         assert validate_webhook_url("https://hooks.slack.com/x") is not None
 
     def test_validate_webhook_url_rejects_rfc1918(self):
-        from soup_cli.utils.webhooks import validate_webhook_url
+        from ai_forge_cli.utils.webhooks import validate_webhook_url
 
         with pytest.raises(ValueError):
             validate_webhook_url("http://10.0.0.5/hook")
 
     def test_validate_webhook_url_rejects_loopback_only_http(self):
-        from soup_cli.utils.webhooks import validate_webhook_url
+        from ai_forge_cli.utils.webhooks import validate_webhook_url
 
         assert validate_webhook_url("http://127.0.0.1:9000/h") is not None
         with pytest.raises(ValueError):
@@ -355,7 +355,7 @@ class TestSharedWebhooks:
 
     @pytest.mark.parametrize("bad", [True, 123, None])
     def test_validate_webhook_url_type_rejection(self, bad):
-        from soup_cli.utils.webhooks import validate_webhook_url
+        from ai_forge_cli.utils.webhooks import validate_webhook_url
 
         with pytest.raises(TypeError):
             validate_webhook_url(bad)
@@ -377,13 +377,13 @@ class TestSharedWebhooks:
     def test_validate_webhook_url_value_rejection_matrix(self, bad):
         # Re-prove the SSRF gate against the NEW module path (the validator
         # moved out of drift_alarm in #207 — don't rely on the re-export).
-        from soup_cli.utils.webhooks import validate_webhook_url
+        from ai_forge_cli.utils.webhooks import validate_webhook_url
 
         with pytest.raises(ValueError):
             validate_webhook_url(bad)
 
     def test_send_webhooks_posts_both(self, monkeypatch):
-        from soup_cli.utils import webhooks
+        from ai_forge_cli.utils import webhooks
 
         calls = []
         monkeypatch.setattr(
@@ -400,7 +400,7 @@ class TestSharedWebhooks:
         assert calls[0]["payload"] == {"k": 1}
 
     def test_send_webhooks_skips_none(self, monkeypatch):
-        from soup_cli.utils import webhooks
+        from ai_forge_cli.utils import webhooks
 
         calls = []
         monkeypatch.setattr(
@@ -412,7 +412,7 @@ class TestSharedWebhooks:
         assert calls == []
 
     def test_send_webhooks_swallows_failure(self, monkeypatch):
-        from soup_cli.utils import webhooks
+        from ai_forge_cli.utils import webhooks
 
         monkeypatch.setattr(webhooks, "post_webhook", lambda **kw: False)
         results = webhooks.send_webhooks(
@@ -434,7 +434,7 @@ class TestSharedWebhooks:
     def test_webhook_flags_in_help(self, argv):
         import re as _re
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = runner.invoke(app, argv)
         assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -445,7 +445,7 @@ class TestSharedWebhooks:
         assert "--discord-url" in clean
 
     def test_ingest_rejects_bad_webhook(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "logs.jsonl").write_text(
@@ -463,7 +463,7 @@ class TestSharedWebhooks:
         # --discord-url (guards a copy-paste bug printing --slack-url twice).
         import re as _re
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "logs.jsonl").write_text(
@@ -482,14 +482,14 @@ class TestSharedWebhooks:
         # Direct unit test of the CLI helper (only exercised via 4 CLIs).
         from rich.console import Console
 
-        from soup_cli.commands._webhook_cli import emit_webhooks
+        from ai_forge_cli.commands._webhook_cli import emit_webhooks
 
         # Both None → no-op, no exception.
         emit_webhooks(None, None, payload={"k": 1}, console=Console())
 
     def test_ingest_posts_payload_on_success(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils import webhooks
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import webhooks
 
         captured = []
         monkeypatch.setattr(
@@ -513,8 +513,8 @@ class TestSharedWebhooks:
         assert "auth_env_set" in payload
 
     def test_prune_prompt_posts_payload(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils import webhooks
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import webhooks
 
         captured = []
         monkeypatch.setattr(
@@ -540,8 +540,8 @@ class TestSharedWebhooks:
         assert "prefix_chars" in payload
 
     def test_ab_posts_only_on_decision(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils import webhooks
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import webhooks
 
         captured = []
         monkeypatch.setattr(
@@ -565,8 +565,8 @@ class TestSharedWebhooks:
         assert captured == []
 
     def test_active_sample_posts_payload(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils import webhooks
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import webhooks
 
         captured = []
         monkeypatch.setattr(
@@ -624,7 +624,7 @@ class _FakeWordTokenizer:
 
 class TestPrunePromptTokenizer:
     def test_detect_common_prefix_tokens_happy(self):
-        from soup_cli.utils.prune_prompt import detect_common_prefix_tokens
+        from ai_forge_cli.utils.prune_prompt import detect_common_prefix_tokens
 
         rows = [
             [1, 2, 3, 4],
@@ -634,7 +634,7 @@ class TestPrunePromptTokenizer:
         assert detect_common_prefix_tokens(rows, min_frequency=1.0) == [1, 2, 3]
 
     def test_detect_common_prefix_tokens_partial_majority(self):
-        from soup_cli.utils.prune_prompt import detect_common_prefix_tokens
+        from ai_forge_cli.utils.prune_prompt import detect_common_prefix_tokens
 
         rows = [
             [1, 2, 3],
@@ -647,24 +647,24 @@ class TestPrunePromptTokenizer:
         assert detect_common_prefix_tokens(rows, min_frequency=0.9) == []
 
     def test_detect_common_prefix_tokens_empty(self):
-        from soup_cli.utils.prune_prompt import detect_common_prefix_tokens
+        from ai_forge_cli.utils.prune_prompt import detect_common_prefix_tokens
 
         assert detect_common_prefix_tokens([], min_frequency=1.0) == []
 
     def test_detect_common_prefix_tokens_single_row(self):
-        from soup_cli.utils.prune_prompt import detect_common_prefix_tokens
+        from ai_forge_cli.utils.prune_prompt import detect_common_prefix_tokens
 
         assert detect_common_prefix_tokens([[1, 2]], min_frequency=1.0) == [1, 2]
         assert detect_common_prefix_tokens([[1, 2]], min_frequency=0.5) == []
 
     def test_detect_common_prefix_tokens_invalid_min_frequency(self):
-        from soup_cli.utils.prune_prompt import detect_common_prefix_tokens
+        from ai_forge_cli.utils.prune_prompt import detect_common_prefix_tokens
 
         with pytest.raises(ValueError):
             detect_common_prefix_tokens([[1]], min_frequency=1.5)
 
     def test_detect_common_prefix_tokens_min_freq_lower_and_nan(self):
-        from soup_cli.utils.prune_prompt import detect_common_prefix_tokens
+        from ai_forge_cli.utils.prune_prompt import detect_common_prefix_tokens
 
         with pytest.raises(ValueError):
             detect_common_prefix_tokens([[1]], min_frequency=-0.1)
@@ -672,19 +672,19 @@ class TestPrunePromptTokenizer:
             detect_common_prefix_tokens([[1]], min_frequency=float("nan"))
 
     def test_detect_common_prefix_tokens_non_iterable_rejected(self):
-        from soup_cli.utils.prune_prompt import detect_common_prefix_tokens
+        from ai_forge_cli.utils.prune_prompt import detect_common_prefix_tokens
 
         with pytest.raises(TypeError):
             detect_common_prefix_tokens(123, min_frequency=1.0)  # type: ignore[arg-type]
 
     def test_detect_common_prefix_tokens_non_iterable_row_rejected(self):
-        from soup_cli.utils.prune_prompt import detect_common_prefix_tokens
+        from ai_forge_cli.utils.prune_prompt import detect_common_prefix_tokens
 
         with pytest.raises(TypeError):
             detect_common_prefix_tokens([123, [1, 2]], min_frequency=1.0)  # type: ignore[list-item]
 
     def test_prune_traces_with_fake_tokenizer(self, tmp_path, monkeypatch):
-        from soup_cli.utils.prune_prompt import prune_traces
+        from ai_forge_cli.utils.prune_prompt import prune_traces
 
         monkeypatch.chdir(tmp_path)
         # The varying token (ask0/ask1/...) carries no leading space so the
@@ -718,7 +718,7 @@ class TestPrunePromptTokenizer:
     def test_prune_traces_tokenizer_multibyte_safe(self, tmp_path, monkeypatch):
         # A shared prefix containing a multi-byte token is stripped on a
         # token boundary — never mid-code-point.
-        from soup_cli.utils.prune_prompt import prune_traces
+        from ai_forge_cli.utils.prune_prompt import prune_traces
 
         monkeypatch.chdir(tmp_path)
         rows = "".join(
@@ -739,7 +739,7 @@ class TestPrunePromptTokenizer:
         # `tokenizer` as a string → lazy AutoTokenizer.from_pretrained.
         import types
 
-        from soup_cli.utils import prune_prompt as pp
+        from ai_forge_cli.utils import prune_prompt as pp
 
         monkeypatch.chdir(tmp_path)
         loaded = {}
@@ -768,7 +768,7 @@ class TestPrunePromptTokenizer:
     def test_prune_traces_friendly_error_on_missing_tokenizer(self, tmp_path, monkeypatch):
         import types
 
-        from soup_cli.utils import prune_prompt as pp
+        from ai_forge_cli.utils import prune_prompt as pp
 
         monkeypatch.chdir(tmp_path)
 
@@ -791,7 +791,7 @@ class TestPrunePromptTokenizer:
             )
 
     def test_char_level_unchanged_when_no_tokenizer(self, tmp_path, monkeypatch):
-        from soup_cli.utils.prune_prompt import prune_traces
+        from ai_forge_cli.utils.prune_prompt import prune_traces
 
         monkeypatch.chdir(tmp_path)
         rows = "".join(
@@ -812,7 +812,7 @@ class TestPrunePromptTokenizer:
         # monkeypatch.chdir (v0.58.0 source-grep precedent).
         repo_root = Path(__file__).resolve().parent.parent
         src = (
-            repo_root / "src" / "soup_cli" / "utils" / "prune_prompt.py"
+            repo_root / "src" / "ai_forge_cli" / "utils" / "prune_prompt.py"
         ).read_text(encoding="utf-8")
         assert "\nimport transformers" not in src
         assert "\nfrom transformers" not in src
@@ -830,68 +830,68 @@ class _FakeState:
 
 class TestPercentileBucket:
     def test_max_value_top_bucket(self):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         window = [0.1, 0.2, 0.3, 0.4]
         assert percentile_bucket(0.9, window, 4) == 3
 
     def test_min_value_bucket_zero(self):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         window = [0.5, 0.6, 0.7, 0.8]
         assert percentile_bucket(0.1, window, 4) == 0
 
     def test_mid_value_mid_bucket(self):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         window = [0.0, 1.0, 2.0, 3.0]
         # value 1.5 → 2/4 le → rank 0.5 → bucket 2
         assert percentile_bucket(1.5, window, 4) == 2
 
     def test_single_bucket(self):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         assert percentile_bucket(5.0, [1.0, 2.0], 1) == 0
 
     def test_empty_window_bucket_zero(self):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         assert percentile_bucket(5.0, [], 4) == 0
 
     def test_bool_value_rejected(self):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         with pytest.raises(ValueError):
             percentile_bucket(True, [1.0], 4)
 
     def test_non_finite_value_rejected(self):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         with pytest.raises(ValueError):
             percentile_bucket(float("nan"), [1.0], 4)
 
     def test_bool_num_buckets_rejected(self):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         with pytest.raises(ValueError):
             percentile_bucket(1.0, [1.0], True)
 
     @pytest.mark.parametrize("nb", [0, 21])
     def test_num_buckets_out_of_bounds_rejected(self, nb):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         with pytest.raises(ValueError):
             percentile_bucket(1.0, [1.0], nb)
 
     def test_equal_to_all_window_values_top_bucket(self):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         # value == every member → le == len → rank 1.0 → clamped to top.
         # Pins the `<=` (not `<`) in the rank tally.
         assert percentile_bucket(0.5, [0.5, 0.5], 4) == 3
 
     def test_consistently_high_value_stable_top_bucket(self):
-        from soup_cli.utils.curriculum_dynamic import percentile_bucket
+        from ai_forge_cli.utils.curriculum_dynamic import percentile_bucket
 
         window = [0.1, 0.2, 0.3, 0.4, 0.5]
         # Two independent appearances of a high loss → same top bucket.
@@ -902,10 +902,10 @@ class TestPercentileBucket:
 
 class TestCurriculumCallbackMetric:
     def _callback(self, tmp_path, metric):
-        from soup_cli.monitoring.curriculum_callback import (
+        from ai_forge_cli.monitoring.curriculum_callback import (
             DynamicCurriculumCallback,
         )
-        from soup_cli.utils.curriculum_dynamic import DynamicCurriculumPolicy
+        from ai_forge_cli.utils.curriculum_dynamic import DynamicCurriculumPolicy
 
         policy = DynamicCurriculumPolicy(num_buckets=4, recompute_every_n_steps=10)
         return DynamicCurriculumCallback(
@@ -943,10 +943,10 @@ class TestCurriculumCallbackMetric:
         assert 2 in cb._stats
 
     def test_default_metric_is_length_round_robin(self, tmp_path, monkeypatch):
-        from soup_cli.monitoring.curriculum_callback import (
+        from ai_forge_cli.monitoring.curriculum_callback import (
             DynamicCurriculumCallback,
         )
-        from soup_cli.utils.curriculum_dynamic import DynamicCurriculumPolicy
+        from ai_forge_cli.utils.curriculum_dynamic import DynamicCurriculumPolicy
 
         monkeypatch.chdir(tmp_path)
         policy = DynamicCurriculumPolicy(num_buckets=4, recompute_every_n_steps=10)
@@ -967,7 +967,7 @@ class TestCurriculumCallbackMetric:
         monkeypatch.chdir(tmp_path)
         from types import SimpleNamespace
 
-        from soup_cli.utils.peft_wiring import attach_curriculum_callback
+        from ai_forge_cli.utils.peft_wiring import attach_curriculum_callback
 
         captured = {}
 
@@ -995,7 +995,7 @@ class TestCurriculumCallbackMetric:
 
 class TestDataPushHub:
     def test_hub_flag_in_help(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = runner.invoke(app, ["data", "push", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -1005,7 +1005,7 @@ class TestDataPushHub:
         assert "--hub" in clean
 
     def test_invalid_hub_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "ds.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
@@ -1017,8 +1017,8 @@ class TestDataPushHub:
         assert result.exit_code == 2
 
     def test_modelscope_routes_via_upload_repo(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils import hubs
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import hubs
 
         captured = {}
 
@@ -1034,7 +1034,7 @@ class TestDataPushHub:
             # upload_repo enforces cwd-containment on folder_path; the staging
             # dir MUST be under cwd (regression guard for the system-tempdir
             # bug found in the v0.71.5 step-6 smoke).
-            from soup_cli.utils.paths import is_under_cwd
+            from ai_forge_cli.utils.paths import is_under_cwd
 
             captured["folder_under_cwd"] = is_under_cwd(kw["folder_path"])
 
@@ -1054,8 +1054,8 @@ class TestDataPushHub:
         assert captured["folder_under_cwd"] is True
 
     def test_modelers_missing_sdk_friendly_error(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils import hubs
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import hubs
 
         def _boom(hub, repo_id, **kw):  # noqa: ARG001
             raise ImportError("openmind_hub is not installed. pip install ...")
@@ -1072,8 +1072,8 @@ class TestDataPushHub:
         assert "openmind_hub" in result.output
 
     def test_generic_upload_error_exit_1(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils import hubs
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import hubs
 
         def _boom(hub, repo_id, **kw):  # noqa: ARG001
             raise RuntimeError("network down")
@@ -1091,8 +1091,8 @@ class TestDataPushHub:
 
     def test_hf_default_unchanged_no_token(self, tmp_path, monkeypatch):
         # Default --hub hf with no token → existing "no token" error (regression).
-        from soup_cli.cli import app
-        from soup_cli.utils import hf as _hf
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import hf as _hf
 
         monkeypatch.setattr(_hf, "resolve_token", lambda: None)
         monkeypatch.chdir(tmp_path)
@@ -1116,7 +1116,7 @@ class TestDataForgeHub:
         return docs
 
     def test_hub_flag_in_help(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = runner.invoke(app, ["data", "forge", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -1126,7 +1126,7 @@ class TestDataForgeHub:
         assert "--hub" in clean
 
     def test_invalid_hub_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         self._docs(tmp_path)
@@ -1138,8 +1138,8 @@ class TestDataForgeHub:
         assert result.exit_code == 2
 
     def test_non_hf_prefetches_teacher(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils import hubs
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import hubs
 
         captured = {}
 
@@ -1161,8 +1161,8 @@ class TestDataForgeHub:
         assert captured["hub"] == "modelers"
 
     def test_hf_does_not_prefetch(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils import hubs
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import hubs
 
         called = {"n": 0}
 
@@ -1184,8 +1184,8 @@ class TestDataForgeHub:
     def test_non_hf_bare_teacher_warns_no_prefetch(self, tmp_path, monkeypatch):
         # Non-HF hub but teacher lacks owner/name → warn, do NOT prefetch
         # (code-review MEDIUM fix — no silent no-op of --hub).
-        from soup_cli.cli import app
-        from soup_cli.utils import hubs
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import hubs
 
         called = {"n": 0}
         monkeypatch.setattr(
@@ -1204,8 +1204,8 @@ class TestDataForgeHub:
         assert "ignored" in result.output.lower()
 
     def test_non_hf_prefetch_import_error_exit_1(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.utils import hubs
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import hubs
 
         def _boom(base, hub, **kw):  # noqa: ARG001
             raise ImportError("openmind_hub is not installed")

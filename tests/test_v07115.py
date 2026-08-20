@@ -45,8 +45,8 @@ class TestIterativeDpoDefaultTrainFn:
         """
         import subprocess
 
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils import iterative_dpo as idpo
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils import iterative_dpo as idpo
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "pairs.jsonl").write_text("{}\n", encoding="utf-8")
@@ -77,7 +77,7 @@ class TestIterativeDpoDefaultTrainFn:
         ``dir`` key (the exact shape of the #261 bug)."""
         import subprocess
 
-        from soup_cli.utils import iterative_dpo as idpo
+        from ai_forge_cli.utils import iterative_dpo as idpo
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "pairs.jsonl").write_text("{}\n", encoding="utf-8")
@@ -141,8 +141,8 @@ def _patch_cmaes_libs(monkeypatch, base_loads):
     import peft
     import transformers
 
-    import soup_cli.eval.custom as ev
-    import soup_cli.utils.cmaes_merge as cm
+    import ai_forge_cli.eval.custom as ev
+    import ai_forge_cli.utils.cmaes_merge as cm
 
     def _fake_model_load(name, **kw):
         base_loads.append(name)
@@ -190,7 +190,7 @@ class TestCachedBaseScorer:
             scorer(_write_merged_dir(tmp_path / "b", "other"), "s.jsonl")
 
     def test_empty_tasks_returns_zero(self, tmp_path, monkeypatch):
-        import soup_cli.eval.custom as ev
+        import ai_forge_cli.eval.custom as ev
 
         base_loads: list = []
         cm = _patch_cmaes_libs(monkeypatch, base_loads)
@@ -199,7 +199,7 @@ class TestCachedBaseScorer:
         assert scorer(_write_merged_dir(tmp_path / "a"), "s.jsonl") == 0.0
 
     def test_resolve_returns_fresh_cached_scorer(self, monkeypatch):
-        import soup_cli.utils.cmaes_merge as cm
+        import ai_forge_cli.utils.cmaes_merge as cm
 
         monkeypatch.setattr(cm, "_CMAES_SCORER_OVERRIDE", None)
         s1 = cm._resolve_cmaes_scorer(None)
@@ -209,7 +209,7 @@ class TestCachedBaseScorer:
         assert s1 is not s2  # per-run cache isolation
 
     def test_resolve_honours_override_and_injection(self, monkeypatch):
-        import soup_cli.utils.cmaes_merge as cm
+        import ai_forge_cli.utils.cmaes_merge as cm
 
         def injected(d, s):
             return 0.9
@@ -273,12 +273,12 @@ class TestCachedBaseScorer:
 
 class TestEstimateCost:
     def _state(self):
-        from soup_cli.utils.loop_state import LoopState
+        from ai_forge_cli.utils.loop_state import LoopState
 
         return LoopState(served_model="m", eval_suite="e.jsonl", baseline="b")
 
     def _patch_tracker(self, monkeypatch, runs):
-        import soup_cli.experiment.tracker as trk
+        import ai_forge_cli.experiment.tracker as trk
 
         monkeypatch.setattr(trk.ExperimentTracker, "__init__", lambda self, *a, **k: None)
         monkeypatch.setattr(
@@ -286,7 +286,7 @@ class TestEstimateCost:
         )
 
     def test_uses_last_completed_priced_run(self, monkeypatch):
-        from soup_cli.utils import loop_stages
+        from ai_forge_cli.utils import loop_stages
 
         self._patch_tracker(
             monkeypatch,
@@ -297,7 +297,7 @@ class TestEstimateCost:
         assert cost == pytest.approx(1.10, abs=0.01)
 
     def test_skips_running_finds_completed(self, monkeypatch):
-        from soup_cli.utils import loop_stages
+        from ai_forge_cli.utils import loop_stages
 
         self._patch_tracker(
             monkeypatch,
@@ -310,7 +310,7 @@ class TestEstimateCost:
         assert cost == pytest.approx(0.20, abs=0.01)  # T4 = $0.20/hr
 
     def test_unpriced_gpu_returns_zero(self, monkeypatch):
-        from soup_cli.utils import loop_stages
+        from ai_forge_cli.utils import loop_stages
 
         self._patch_tracker(
             monkeypatch,
@@ -319,19 +319,19 @@ class TestEstimateCost:
         assert loop_stages.estimate_cost(self._state()) == 0.0
 
     def test_no_completed_run_returns_zero(self, monkeypatch):
-        from soup_cli.utils import loop_stages
+        from ai_forge_cli.utils import loop_stages
 
         self._patch_tracker(monkeypatch, [{"status": "running", "device_name": "NVIDIA A100"}])
         assert loop_stages.estimate_cost(self._state()) == 0.0
 
     def test_empty_tracker_returns_zero(self, monkeypatch):
-        from soup_cli.utils import loop_stages
+        from ai_forge_cli.utils import loop_stages
 
         self._patch_tracker(monkeypatch, [])
         assert loop_stages.estimate_cost(self._state()) == 0.0
 
     def test_completed_run_missing_duration_returns_zero(self, monkeypatch):
-        from soup_cli.utils import loop_stages
+        from ai_forge_cli.utils import loop_stages
 
         # completed but no duration_secs -> skip the field check -> 0.0
         self._patch_tracker(
@@ -340,7 +340,7 @@ class TestEstimateCost:
         assert loop_stages.estimate_cost(self._state()) == 0.0
 
     def test_completed_run_missing_device_returns_zero(self, monkeypatch):
-        from soup_cli.utils import loop_stages
+        from ai_forge_cli.utils import loop_stages
 
         self._patch_tracker(
             monkeypatch, [{"status": "completed", "duration_secs": 3600.0}]
@@ -348,7 +348,7 @@ class TestEstimateCost:
         assert loop_stages.estimate_cost(self._state()) == 0.0
 
     def test_estimate_raises_is_swallowed(self, monkeypatch):
-        from soup_cli.utils import loop_stages, run_cost
+        from ai_forge_cli.utils import loop_stages, run_cost
 
         self._patch_tracker(
             monkeypatch,
@@ -365,8 +365,8 @@ class TestEstimateCost:
         assert loop_stages.estimate_cost(self._state()) == 0.0
 
     def test_tracker_error_never_crashes(self, monkeypatch):
-        import soup_cli.experiment.tracker as trk
-        from soup_cli.utils import loop_stages
+        import ai_forge_cli.experiment.tracker as trk
+        from ai_forge_cli.utils import loop_stages
 
         def _boom(self, *a, **k):
             raise RuntimeError("db locked")
@@ -383,7 +383,7 @@ class TestEstimateCost:
 
 class TestEnergyOutHandoff:
     def _measurement(self):
-        from soup_cli.utils.energy import EnergyMeasurement
+        from ai_forge_cli.utils.energy import EnergyMeasurement
 
         return EnergyMeasurement(
             energy_kwh=0.5,
@@ -396,8 +396,8 @@ class TestEnergyOutHandoff:
     def test_write_energy_json_roundtrips_into_bom_consumer(self, tmp_path, monkeypatch):
         """The keys written must be EXACTLY what ``bom emit --energy`` reads
         via ``EnergyMeasurement(**parsed)``."""
-        from soup_cli.commands.train import _write_energy_json
-        from soup_cli.utils.energy import EnergyMeasurement
+        from ai_forge_cli.commands.train import _write_energy_json
+        from ai_forge_cli.utils.energy import EnergyMeasurement
 
         monkeypatch.chdir(tmp_path)
         m = self._measurement()
@@ -413,7 +413,7 @@ class TestEnergyOutHandoff:
         assert EnergyMeasurement(**parsed) == m
 
     def test_write_energy_json_rejects_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.commands.train import _write_energy_json
+        from ai_forge_cli.commands.train import _write_energy_json
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError):
@@ -423,7 +423,7 @@ class TestEnergyOutHandoff:
         sys.platform == "win32", reason="symlink needs elevation on Windows"
     )
     def test_write_energy_json_rejects_symlink(self, tmp_path, monkeypatch):
-        from soup_cli.commands.train import _write_energy_json
+        from ai_forge_cli.commands.train import _write_energy_json
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "real.json").write_text("{}", encoding="utf-8")
@@ -432,7 +432,7 @@ class TestEnergyOutHandoff:
             _write_energy_json("energy.json", self._measurement())
 
     def test_train_help_lists_energy_out(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(app, ["train", "--help"])
         assert result.exit_code == 0
@@ -442,8 +442,8 @@ class TestEnergyOutHandoff:
         """End-to-end: write energy.json via the producer helper, then feed it
         to ``soup bom emit --energy`` (the #256 consumer) and confirm the BOM
         carries the energy properties."""
-        from soup_cli.cli import app
-        from soup_cli.commands.train import _write_energy_json
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands.train import _write_energy_json
 
         monkeypatch.chdir(tmp_path)
         _write_energy_json("energy.json", self._measurement())
@@ -470,7 +470,7 @@ class TestEnergyOutHandoff:
 
 class TestDiagnoseGateRankGuard:
     def _guard(self):
-        from soup_cli.commands.train import _should_run_diagnose_gate_on_rank
+        from ai_forge_cli.commands.train import _should_run_diagnose_gate_on_rank
 
         return _should_run_diagnose_gate_on_rank
 
@@ -530,9 +530,9 @@ class TestDiagnoseGateRankGuard:
 
 class TestPatchInvariants:
     def test_version_at_least_71_15(self):
-        import soup_cli
+        import ai_forge_cli
 
-        parts = tuple(int(p) for p in soup_cli.__version__.split(".")[:3])
+        parts = tuple(int(p) for p in ai_forge_cli.__version__.split(".")[:3])
         assert parts >= (0, 71, 15)
 
     def test_loop_stages_no_heavy_top_level_imports(self):
@@ -540,7 +540,7 @@ class TestPatchInvariants:
 
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "loop_stages.py"
+            / "src" / "ai_forge_cli" / "utils" / "loop_stages.py"
         ).read_text(encoding="utf-8")
         for bad in ("\nimport torch", "\nimport transformers", "\nimport numpy"):
             assert bad not in src
@@ -550,7 +550,7 @@ class TestPatchInvariants:
 
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "cmaes_merge.py"
+            / "src" / "ai_forge_cli" / "utils" / "cmaes_merge.py"
         ).read_text(encoding="utf-8")
         for bad in ("\nimport torch", "\nimport transformers", "\nimport peft"):
             assert bad not in src

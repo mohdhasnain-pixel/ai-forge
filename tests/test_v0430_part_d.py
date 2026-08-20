@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.commands.data import app as data_app
-from soup_cli.utils.demo_bundles import (
+from ai_forge_cli.commands.data import app as data_app
+from ai_forge_cli.utils.demo_bundles import (
     DEMO_BUNDLE_NAMES,
     DemoBundle,
     copy_bundle_to,
@@ -177,7 +177,7 @@ class TestDataDemoCli:
 
 class TestCopyBundleEdgeCases:
     def test_size_cap_branch(self, tmp_path, monkeypatch):
-        from soup_cli.utils import demo_bundles as db
+        from ai_forge_cli.utils import demo_bundles as db
 
         monkeypatch.chdir(tmp_path)
         big_src = tmp_path / "big.jsonl"
@@ -193,7 +193,7 @@ class TestCopyBundleEdgeCases:
         assert not (tmp_path / "out.jsonl").exists()
 
     def test_invalid_json_line(self, tmp_path, monkeypatch):
-        from soup_cli.utils import demo_bundles as db
+        from ai_forge_cli.utils import demo_bundles as db
 
         monkeypatch.chdir(tmp_path)
         bad = tmp_path / "bad.jsonl"

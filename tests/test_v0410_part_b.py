@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TrainingConfig
-from soup_cli.utils.lr_groups import (
+from ai_forge_cli.config.schema import TrainingConfig
+from ai_forge_cli.utils.lr_groups import (
     MAX_LR_GROUPS,
     LrGroup,
     build_optimizer_param_groups,

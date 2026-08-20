@@ -1,6 +1,6 @@
 """The version lives in two files and nothing asserted they agree.
 
-`pyproject.toml` and `src/soup_cli/__init__.py` both carry the version, and the
+`pyproject.toml` and `src/ai_forge_cli/__init__.py` both carry the version, and the
 release checklist says to bump both. Every other version test in this suite is a
 FLOOR check (`>= 0.56.0`, `>= 0.53.11`, ...), which passes happily when one file
 is bumped and the other is forgotten — the wheel then ships with metadata that
@@ -15,7 +15,7 @@ import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PYPROJECT = ROOT / "pyproject.toml"
-INIT = ROOT / "src" / "soup_cli" / "__init__.py"
+INIT = ROOT / "src" / "ai_forge_cli" / "__init__.py"
 
 _PYPROJECT_VERSION = re.compile(r'^version\s*=\s*"([^"]+)"', re.M)
 _INIT_VERSION = re.compile(r'^__version__\s*=\s*"([^"]+)"', re.M)
@@ -36,7 +36,7 @@ def _pyproject_version(text: str) -> str:
 
 def _init_version(text: str) -> str:
     match = _INIT_VERSION.search(text)
-    assert match, "no __version__ line in src/soup_cli/__init__.py"
+    assert match, "no __version__ line in src/ai_forge_cli/__init__.py"
     return match.group(1)
 
 
@@ -45,7 +45,7 @@ class TestVersionSync:
         declared = _pyproject_version(PYPROJECT.read_text(encoding="utf-8"))
         package = _init_version(INIT.read_text(encoding="utf-8"))
         assert declared == package, (
-            f"pyproject.toml says {declared!r} but src/soup_cli/__init__.py says "
+            f"pyproject.toml says {declared!r} but src/ai_forge_cli/__init__.py says "
             f"{package!r} — the release checklist requires BOTH to be bumped. "
             f"The wheel would ship metadata that disagrees with `soup version`."
         )
@@ -54,7 +54,7 @@ class TestVersionSync:
         """The parsed file and the imported module can differ if a stale build
         artifact shadows the source tree — the exact "stale shadow install"
         the checklist warns about at step 6a."""
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
 
         assert __version__ == _init_version(INIT.read_text(encoding="utf-8"))
 

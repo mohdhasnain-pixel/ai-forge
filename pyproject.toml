@@ -3,20 +3,15 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "soup-cli"
+name = "ai-forge"
 version = "0.73.3"
 description = "Fine-tune and post-train LLMs in one command. No SSH, no config hell."
 readme = "README.md"
 license = "Apache-2.0"
-# Upper-bounded on purpose (#358). CI tests 3.10 / 3.11 / 3.12 and nothing above.
-# Without a ceiling, pip on 3.13+ resolves torch wheels nobody here has run, and
-# the failure is not a Soup error message — it is a loader crash inside c10.dll /
-# libc10.so before any Soup code executes, so the user has nothing to act on.
-# `tests/test_requires_python_bound.py` derives this bound from the CI matrix, so
-# widening one without the other fails the suite.
+# Python version constraints
 requires-python = ">=3.10,<3.13"
 authors = [
-    { name = "Soup Team", email = "team@trysoup.dev" },
+    { name = "AI Forge Contributors", email = "contact@ai-forge.dev" },
 ]
 keywords = ["llm", "fine-tuning", "lora", "qlora", "machine-learning"]
 classifiers = [
@@ -27,7 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-# Core install (`pip install soup-cli`) is intentionally light: the CLI, config
+# Core install (`pip install ai-forge`) is intentionally light: the CLI, config
 # system, and data tools — no PyTorch. v0.71.0 split the heavy training stack
 # (torch / transformers / peft / trl / datasets / bitsandbytes / accelerate)
 # into the `[train]` extra below.
@@ -46,7 +41,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# v0.71.0 — heavy training stack. `pip install 'soup-cli[train]'` to fine-tune.
+# v0.71.0 — heavy training stack. `pip install 'ai-forge[train]'` to fine-tune.
 # These were core dependencies through v0.70.0; pins are unchanged.
 train = [
     "torch>=2.0.0",
@@ -111,14 +106,14 @@ train = [
     "accelerate>=0.25.0",
 ]
 # v0.71.0 — convenience meta-extra pulling the main optional stacks.
-all = ["soup-cli[train,serve,ui,data,mcp]"]
+all = ["ai-forge[train,serve,ui,data,mcp]"]
 eval = ["lm-eval>=0.4.0"]
 data = ["datasketch>=1.6.0", "scikit-learn>=1.0.0"]
 wandb = ["wandb>=0.15.0,<0.18.0"]
 # Self-references `[train]` so CI / contributors get the full training stack
 # (CI runs `pip install -e ".[dev]"`; without this every test would fail at
 # `import torch`).
-dev = ["soup-cli[train,mcp,data]", "cryptography>=41.0.0", "reportlab>=4.0.0", "pytest>=7.0", "ruff>=0.1.0", "pytest-cov>=4.0", "httpx>=0.24.0", "mypy>=1.8.0", "pre-commit>=3.5.0"]
+dev = ["ai-forge[train,mcp,data]", "cryptography>=41.0.0", "reportlab>=4.0.0", "pytest>=7.0", "ruff>=0.1.0", "pytest-cov>=4.0", "httpx>=0.24.0", "mypy>=1.8.0", "pre-commit>=3.5.0"]
 ui = ["fastapi>=0.104.0", "uvicorn>=0.24.0"]
 serve = ["fastapi>=0.104.0", "uvicorn>=0.24.0"]
 serve-fast = ["vllm>=0.4.0", "fastapi>=0.104.0", "uvicorn>=0.24.0"]
@@ -173,7 +168,7 @@ compile = ["dspy-ai>=2.5.0", "textgrad>=0.1.0", "gepa>=0.0.1"]
 # dependency). Modal auth is via `modal setup`.
 modal = ["modal>=0.60.0"]
 # v0.71.28 - `soup mcp serve` MCP server. The official `mcp` python SDK is
-# lazy-imported (only src/soup_cli/mcp_server/server.py touches it), so the CLI
+# lazy-imported (only src/ai_forge_cli/mcp_server/server.py touches it), so the CLI
 # stays light without it. Floor pinned to guard against SDK API churn.
 #
 # v0.72.3: capped below 2.0. The floor alone was not enough — mcp 2.0.0 removed
@@ -185,27 +180,27 @@ modal = ["modal>=0.60.0"]
 mcp = ["mcp>=1.2.0,<2"]
 
 [project.scripts]
-soup = "soup_cli.cli:run"
+ai-forge = "ai_forge_cli.cli:run"
 
 [project.urls]
-Homepage = "https://github.com/MakazhanAlpamys/Soup"
-Repository = "https://github.com/MakazhanAlpamys/Soup"
-Issues = "https://github.com/MakazhanAlpamys/Soup/issues"
-Discord = "https://discord.gg/8RgVbFA6Zq"
+Homepage = "https://github.com/mohdhasnain-pixel/ai-forge"
+Repository = "https://github.com/mohdhasnain-pixel/ai-forge"
+Issues = "https://github.com/mohdhasnain-pixel/ai-forge/issues"
+Discussions = "https://github.com/mohdhasnain-pixel/ai-forge/discussions"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/soup_cli"]
+packages = ["src/ai_forge_cli"]
 # v0.53.8 #93 — include bundled fixture JSONLs as package data so
-# `soup data demo` works in zipapp / namespace-package installs.
-# Hatchling's ``packages = ["src/soup_cli"]`` already recurses into the
+# `ai-forge data demo` works in zipapp / namespace-package installs.
+# Hatchling's ``packages = ["src/ai_forge_cli"]`` already recurses into the
 # package directory, so we use the artifacts directive (NOT
 # force-include, which double-shipped the files in v0.53.8 and produced
 # a "duplicate filename in local headers" 400 from PyPI upload).
 artifacts = [
-  "src/soup_cli/data/_fixtures/*.jsonl",
-  "src/soup_cli/data/_fixtures/unlearning/*.jsonl",
-  "src/soup_cli/data/_fixtures/behavior/*.jsonl",
-  "src/soup_cli/data/_fixtures/gate/*.jsonl",
+  "src/ai_forge_cli/data/_fixtures/*.jsonl",
+  "src/ai_forge_cli/data/_fixtures/unlearning/*.jsonl",
+  "src/ai_forge_cli/data/_fixtures/behavior/*.jsonl",
+  "src/ai_forge_cli/data/_fixtures/gate/*.jsonl",
 ]
 
 [tool.ruff]
@@ -221,7 +216,7 @@ select = ["E", "F", "I", "N", "W"]
 # code without drowning in third-party `Any`s. The CI `type-check` job is
 # non-blocking; tighten incrementally as modules gain annotations.
 python_version = "3.10"
-files = ["src/soup_cli"]
+files = ["src/ai_forge_cli"]
 ignore_missing_imports = true
 follow_imports = "silent"
 
@@ -232,4 +227,4 @@ markers = [
     "unit: fast isolated tests — no subprocess, network, filesystem, or real model load",
     "integration: tests that touch real subprocess, SQLite, filesystem, or HTTP",
 ]
-addopts = "-m 'not smoke' --cov=soup_cli --cov-fail-under=77 --cov-report=term-missing:skip-covered"
+addopts = "-m 'not smoke' --cov=ai_forge_cli --cov-fail-under=77 --cov-report=term-missing:skip-covered"

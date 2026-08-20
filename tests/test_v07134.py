@@ -28,70 +28,70 @@ class TestParseExpression:
         return {"coder", "math", "toxic"}
 
     def test_happy_add_scale_sub(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         terms = parse_expression("coder + 0.5*math - toxic", self._names())
         got = {t.name: t.coeff for t in terms}
         assert got == {"coder": 1.0, "math": 0.5, "toxic": -1.0}
 
     def test_name_star_coeff(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         terms = parse_expression("coder*2", self._names())
         assert terms[0].name == "coder" and terms[0].coeff == 2.0
 
     def test_leading_negative(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         terms = parse_expression("-coder + math", self._names())
         got = {t.name: t.coeff for t in terms}
         assert got == {"coder": -1.0, "math": 1.0}
 
     def test_single_term_scale(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         terms = parse_expression("2*coder", self._names())
         assert len(terms) == 1 and terms[0].coeff == 2.0
 
     def test_duplicate_names_sum(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         terms = parse_expression("coder + coder", self._names())
         assert len(terms) == 1 and terms[0].coeff == 2.0
 
     def test_all_cancel_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         with pytest.raises(ValueError, match="cancel"):
             parse_expression("coder - coder", self._names())
 
     def test_empty_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         with pytest.raises(ValueError, match="empty"):
             parse_expression("   ", self._names())
 
     def test_unknown_name_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         with pytest.raises(ValueError, match="ghost"):
             parse_expression("coder + ghost", self._names())
 
     def test_injection_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         for bad in ['__import__("os")', "coder; rm -rf", "coder && ls", "coder | cat"]:
             with pytest.raises(ValueError):
                 parse_expression(bad, self._names())
 
     def test_over_length_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         with pytest.raises(ValueError, match="too long"):
             parse_expression("coder+" * 5000 + "coder", self._names())
 
     def test_non_finite_coeff_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         # "nan"/"inf" are names by charset, not floats — so they parse as
         # unknown adapter names, not as coefficients. The finite guard defends
@@ -100,25 +100,25 @@ class TestParseExpression:
             parse_expression("nan*coder", self._names())
 
     def test_double_negative_folds_positive(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         terms = parse_expression("- -coder", self._names())
         assert terms[0].name == "coder" and terms[0].coeff == 1.0
 
     def test_mixed_signs_fold(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         assert parse_expression("+ -coder", self._names())[0].coeff == -1.0
         assert parse_expression("coder - + math", self._names())[1].coeff == -1.0
 
     def test_spaced_coeff_forms(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         assert parse_expression("coder * 2", self._names())[0].coeff == 2.0
         assert parse_expression("2 * coder", self._names())[0].coeff == 2.0
 
     def test_overflow_coeff_rejected_as_non_finite(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         # 1e400 overflows Python float -> inf -> caught by the isfinite guard
         with pytest.raises(ValueError, match="finite"):
@@ -134,13 +134,13 @@ class TestParseExpression:
         ],
     )
     def test_malformed_grammar(self, expr, kw):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         with pytest.raises(ValueError, match=kw):
             parse_expression(expr, self._names())
 
     def test_too_many_terms_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         names = {f"a{i}" for i in range(70)}
         expr = " + ".join(sorted(names))
@@ -148,13 +148,13 @@ class TestParseExpression:
             parse_expression(expr, names)
 
     def test_non_str_input_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         with pytest.raises(TypeError):
             parse_expression(123, self._names())
 
     def test_no_top_level_torch(self):
-        import soup_cli.utils.adapter_arithmetic as mod
+        import ai_forge_cli.utils.adapter_arithmetic as mod
 
         src = Path(mod.__file__).read_text(encoding="utf-8")
         tree = ast.parse(src)
@@ -178,7 +178,7 @@ class TestParseExpression:
 # ---------------------------------------------------------------------------
 class TestMergeTaskArithmetic:
     def test_linear_on_non_lora_tensor(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic
 
         # A tensor that is neither lora_A nor lora_B combines linearly by c.
         a = {"modules_to_save.weight": np.ones((2, 3), dtype=np.float32)}
@@ -188,7 +188,7 @@ class TestMergeTaskArithmetic:
         assert skipped == ()
 
     def test_scale_non_lora(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic
 
         a = {"w": np.ones((2, 2), dtype=np.float32)}
         merged, _ = merge_task_arithmetic([a], [2.5])
@@ -196,7 +196,7 @@ class TestMergeTaskArithmetic:
 
     def test_reconstructed_delta_negates(self):
         # For a real LoRA, negating the task vector must negate ΔW = B @ A.
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic
 
         rng = np.random.default_rng(0)
         a_mat = rng.standard_normal((4, 8)).astype(np.float32)
@@ -209,7 +209,7 @@ class TestMergeTaskArithmetic:
         assert np.allclose(delta_neg, -delta_orig, atol=1e-4)
 
     def test_reconstructed_delta_scales_linearly(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic
 
         rng = np.random.default_rng(1)
         a_mat = rng.standard_normal((4, 8)).astype(np.float32)
@@ -223,7 +223,7 @@ class TestMergeTaskArithmetic:
     def test_two_adapter_lora_ab_hand_computed(self):
         import math
 
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic
 
         rng = np.random.default_rng(2)
         a1 = rng.standard_normal((3, 5)).astype(np.float32)
@@ -244,7 +244,7 @@ class TestMergeTaskArithmetic:
     def test_lora_embedding_factor_branch(self):
         import math
 
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic
 
         a = np.ones((2, 2), dtype=np.float32)
         merged, _ = merge_task_arithmetic(
@@ -254,7 +254,7 @@ class TestMergeTaskArithmetic:
         assert np.allclose(merged["x.lora_embedding_B"], math.sqrt(4.0))
 
     def test_mixed_rank_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic
 
         a = {"w": np.ones((2, 3), dtype=np.float32)}
         b = {"w": np.ones((4, 3), dtype=np.float32)}
@@ -262,7 +262,7 @@ class TestMergeTaskArithmetic:
             merge_task_arithmetic([a, b], [1.0, 1.0])
 
     def test_disjoint_keys_skipped(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic
 
         a = {"shared": np.ones((2, 2), dtype=np.float32), "only_a": np.ones((1, 1))}
         b = {"shared": np.ones((2, 2), dtype=np.float32), "only_b": np.ones((1, 1))}
@@ -271,7 +271,7 @@ class TestMergeTaskArithmetic:
         assert set(skipped) == {"only_a", "only_b"}
 
     def test_length_mismatch_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic
 
         with pytest.raises(ValueError, match="length"):
             merge_task_arithmetic([{"w": np.ones((1, 1))}], [1.0, 2.0])
@@ -279,7 +279,7 @@ class TestMergeTaskArithmetic:
 
 class TestReadAdapterBase:
     def test_reads_base(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_arithmetic import read_adapter_base
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_base
 
         monkeypatch.chdir(tmp_path)
         d = tmp_path / "ad"
@@ -290,7 +290,7 @@ class TestReadAdapterBase:
         assert read_adapter_base("ad") == "meta/x"
 
     def test_missing_returns_none(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_arithmetic import read_adapter_base
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_base
 
         monkeypatch.chdir(tmp_path)
         d = tmp_path / "ad"
@@ -299,7 +299,7 @@ class TestReadAdapterBase:
 
     @pytest.mark.skipif(os.name == "nt", reason="symlink needs admin on Windows")
     def test_symlinked_config_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_arithmetic import read_adapter_base
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_base
 
         monkeypatch.chdir(tmp_path)
         secret = tmp_path / "secret.json"
@@ -318,7 +318,7 @@ class TestReadAdapterBase:
         return "ad"
 
     def test_oversize_config_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_arithmetic import read_adapter_base
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_base
 
         big = '{"base_model_name_or_path": "' + "x" * (300 * 1024) + '"}'
         ad = self._write_cfg(tmp_path, monkeypatch, big)
@@ -326,20 +326,20 @@ class TestReadAdapterBase:
             read_adapter_base(ad)
 
     def test_malformed_json_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_arithmetic import read_adapter_base
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_base
 
         ad = self._write_cfg(tmp_path, monkeypatch, "{not json")
         with pytest.raises(ValueError, match="valid JSON"):
             read_adapter_base(ad)
 
     def test_non_dict_returns_none(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_arithmetic import read_adapter_base
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_base
 
         ad = self._write_cfg(tmp_path, monkeypatch, "[1, 2, 3]")
         assert read_adapter_base(ad) is None
 
     def test_non_string_base_returns_none(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_arithmetic import read_adapter_base
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_base
 
         ad = self._write_cfg(tmp_path, monkeypatch, '{"base_model_name_or_path": 42}')
         assert read_adapter_base(ad) is None
@@ -347,7 +347,7 @@ class TestReadAdapterBase:
 
 class TestCoeffCap:
     def test_over_cap_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import parse_expression
+        from ai_forge_cli.utils.adapter_arithmetic import parse_expression
 
         with pytest.raises(ValueError, match="cap"):
             parse_expression("1e300*coder", {"coder"})
@@ -376,7 +376,7 @@ class TestArithmeticCli:
     def _run(self, args, cwd):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         runner = CliRunner()
         # invoke inside cwd so cwd-containment checks pass
@@ -390,7 +390,7 @@ class TestArithmeticCli:
     def test_help_registered(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         res = CliRunner().invoke(app, ["arithmetic", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
@@ -585,7 +585,7 @@ training:
 
 
 def _load(yaml_str):
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     return load_config_from_string(yaml_str)
 
@@ -734,19 +734,19 @@ class _FakeOpt:
 
 class TestLisaPolicy:
     def test_valid(self):
-        from soup_cli.utils.lisa import LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaPolicy
 
         p = LisaPolicy(num_layers=2, interval_steps=20)
         assert p.num_layers == 2 and p.interval_steps == 20
 
     def test_bool_rejected(self):
-        from soup_cli.utils.lisa import LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaPolicy
 
         with pytest.raises((ValueError, TypeError)):
             LisaPolicy(num_layers=True, interval_steps=20)
 
     def test_bounds_rejected(self):
-        from soup_cli.utils.lisa import LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaPolicy
 
         with pytest.raises(ValueError):
             LisaPolicy(num_layers=0, interval_steps=20)
@@ -754,13 +754,13 @@ class TestLisaPolicy:
             LisaPolicy(num_layers=2, interval_steps=0)
 
     def test_negative_seed_rejected(self):
-        from soup_cli.utils.lisa import LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaPolicy
 
         with pytest.raises(ValueError, match="seed"):
             LisaPolicy(num_layers=2, interval_steps=20, seed=-1)
 
     def test_non_bool_reset_optimizer_rejected(self):
-        from soup_cli.utils.lisa import LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaPolicy
 
         with pytest.raises(TypeError, match="reset_optimizer"):
             LisaPolicy(num_layers=2, interval_steps=20, reset_optimizer=1)
@@ -786,7 +786,7 @@ class TestLisaCallback:
         )
 
     def test_initial_selection(self):
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         model = _fake_lm(6)
         cb = LisaCallback(LisaPolicy(num_layers=2, interval_steps=20, seed=0))
@@ -797,7 +797,7 @@ class TestLisaCallback:
         assert self._flag(model, "model.norm")
 
     def test_resample_changes_set(self):
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         model = _fake_lm(6)
         cb = LisaCallback(LisaPolicy(num_layers=2, interval_steps=10, seed=0))
@@ -812,7 +812,7 @@ class TestLisaCallback:
         assert len(self._trainable_layer_indices(model)) == 2
 
     def test_deterministic_by_seed(self):
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         picks = []
         for _ in range(2):
@@ -824,7 +824,7 @@ class TestLisaCallback:
         assert picks[0] == picks[1]
 
     def test_clamp_num_layers(self):
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         model = _fake_lm(4)
         cb = LisaCallback(LisaPolicy(num_layers=10, interval_steps=20, seed=0))
@@ -832,7 +832,7 @@ class TestLisaCallback:
         assert len(self._trainable_layer_indices(model)) == 4  # clamped
 
     def test_optimizer_state_cleared_on_refreeze(self):
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         model = _fake_lm(6)
         cb = LisaCallback(LisaPolicy(num_layers=2, interval_steps=10, seed=0))
@@ -860,7 +860,7 @@ class TestLisaCallback:
     def test_optimizer_state_preserved_when_reset_disabled(self):
         import re
 
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         model = _fake_lm(6)
         cb = LisaCallback(
@@ -879,7 +879,7 @@ class TestLisaCallback:
     def test_non_float_param_in_chosen_layer_skipped(self):
         import torch
 
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         model = _fake_lm(4)
         # force every decoder param non-float so any chosen one is skipped
@@ -894,7 +894,7 @@ class TestLisaCallback:
         assert cb._active_decoder_params == []
 
     def test_always_on_persist_after_resample(self):
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         model = _fake_lm(6)
         cb = LisaCallback(LisaPolicy(num_layers=2, interval_steps=10, seed=1))
@@ -907,7 +907,7 @@ class TestLisaCallback:
     def test_gpt2_style_naming(self):
         import torch.nn as nn
 
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         class GPT2ish(nn.Module):
             def __init__(self):
@@ -927,7 +927,7 @@ class TestLisaCallback:
             assert self._flag(model, sub)
 
     def test_model_none_is_noop(self):
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         cb = LisaCallback(LisaPolicy(num_layers=1, interval_steps=5))
         # no model kwarg -> returns control, no crash
@@ -935,7 +935,7 @@ class TestLisaCallback:
         assert cb.on_step_end(None, _State(5), None) is None
 
     def test_clear_optimizer_state_tolerates_stateless_opt(self):
-        from soup_cli.utils.lisa import LisaCallback
+        from ai_forge_cli.utils.lisa import LisaCallback
 
         # optimizer object with no .state attr -> best-effort no-op, no raise
         LisaCallback._clear_optimizer_state(object(), [])
@@ -946,7 +946,7 @@ class TestLisaCallback:
         # stubs or training crashes on on_epoch_begin.
         from transformers import TrainerCallback
 
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         cb = LisaCallback(LisaPolicy(num_layers=1, interval_steps=5))
         assert isinstance(cb, TrainerCallback)
@@ -956,7 +956,7 @@ class TestLisaCallback:
     def test_no_decoder_layers_raises(self):
         import torch.nn as nn
 
-        from soup_cli.utils.lisa import LisaCallback, LisaPolicy
+        from ai_forge_cli.utils.lisa import LisaCallback, LisaPolicy
 
         class NoLayers(nn.Module):
             def __init__(self):
@@ -969,7 +969,7 @@ class TestLisaCallback:
             cb.on_train_begin(None, _State(0), None, model=NoLayers())
 
     def test_no_top_level_torch(self):
-        import soup_cli.utils.lisa as mod
+        import ai_forge_cli.utils.lisa as mod
 
         src = Path(mod.__file__).read_text(encoding="utf-8")
         tree = ast.parse(src)
@@ -1010,8 +1010,8 @@ class _TCfg:
 
 class TestAttachLisa:
     def test_attaches_when_enabled(self):
-        from soup_cli.utils.lisa import LisaCallback
-        from soup_cli.utils.peft_wiring import attach_lisa_callback
+        from ai_forge_cli.utils.lisa import LisaCallback
+        from ai_forge_cli.utils.peft_wiring import attach_lisa_callback
 
         tr = _FakeTrainer()
         assert attach_lisa_callback(tr, _TCfg()) is True
@@ -1023,7 +1023,7 @@ class TestAttachLisa:
         assert cbs[0].policy.reset_optimizer is True
 
     def test_noop_when_disabled(self):
-        from soup_cli.utils.peft_wiring import attach_lisa_callback
+        from ai_forge_cli.utils.peft_wiring import attach_lisa_callback
 
         cfg = _TCfg()
         cfg.lisa_enabled = False
@@ -1034,7 +1034,7 @@ class TestAttachLisa:
 
 class TestSftRouting:
     def test_branch_and_attach_present(self):
-        import soup_cli.trainer.sft as sft
+        import ai_forge_cli.trainer.sft as sft
 
         src = Path(sft.__file__).read_text(encoding="utf-8")
         assert "tcfg.lisa_enabled" in src

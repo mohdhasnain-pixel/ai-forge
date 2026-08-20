@@ -47,7 +47,7 @@ def temp_registry(tmp_path, monkeypatch):
     branches.mkdir()
     monkeypatch.setenv("SOUP_BRANCHES_DIR", str(branches))
 
-    from soup_cli.registry.store import RegistryStore
+    from ai_forge_cli.registry.store import RegistryStore
 
     def _push(name="mymodel", tag="v1", base="meta-llama/x", task="dpo",
               config=None, data_path=None):
@@ -74,12 +74,12 @@ def _write_cfg(tmp_path, name="soup.yaml", body="base: meta-llama/x\ntask: dpo\n
 
 class TestBranchRefKind:
     def test_branch_ref_in_valid_kinds(self):
-        from soup_cli.registry.store import _VALID_KINDS
+        from ai_forge_cli.registry.store import _VALID_KINDS
 
         assert "branch_ref" in _VALID_KINDS
 
     def test_attach_artifact_branch_ref(self, temp_registry, tmp_path):
-        from soup_cli.registry.attach import attach_artifact
+        from ai_forge_cli.registry.attach import attach_artifact
 
         entry_id = temp_registry()
         ptr = tmp_path / "ptr.json"
@@ -92,7 +92,7 @@ class TestBranchRefKind:
 
 class TestBranchSchema:
     def test_registry_entry_id_field_default_none(self, temp_registry, tmp_path):
-        from soup_cli.utils.adapter_branch import create_branch, load_branch
+        from ai_forge_cli.utils.adapter_branch import create_branch, load_branch
 
         cfg = _write_cfg(tmp_path)
         snap = create_branch("b1", config_path=cfg, base_model="meta-llama/x")
@@ -101,7 +101,7 @@ class TestBranchSchema:
         assert reloaded.registry_entry_id is None
 
     def test_create_with_registry_entry_id_roundtrips(self, temp_registry, tmp_path):
-        from soup_cli.utils.adapter_branch import create_branch, load_branch
+        from ai_forge_cli.utils.adapter_branch import create_branch, load_branch
 
         cfg = _write_cfg(tmp_path)
         create_branch(
@@ -111,7 +111,7 @@ class TestBranchSchema:
         assert load_branch("b2").registry_entry_id == "reg_20260601_abc123"
 
     def test_create_with_dataset_sha256_direct(self, temp_registry, tmp_path):
-        from soup_cli.utils.adapter_branch import create_branch, load_branch
+        from ai_forge_cli.utils.adapter_branch import create_branch, load_branch
 
         cfg = _write_cfg(tmp_path)
         sha = "c" * 64
@@ -121,7 +121,7 @@ class TestBranchSchema:
         assert load_branch("b3").dataset_sha256 == sha
 
     def test_dataset_path_and_sha_mutually_exclusive(self, temp_registry, tmp_path):
-        from soup_cli.utils.adapter_branch import create_branch
+        from ai_forge_cli.utils.adapter_branch import create_branch
 
         cfg = _write_cfg(tmp_path)
         ds = tmp_path / "data.jsonl"
@@ -133,7 +133,7 @@ class TestBranchSchema:
             )
 
     def test_registry_entry_id_null_byte_rejected(self, temp_registry, tmp_path):
-        from soup_cli.utils.adapter_branch import create_branch
+        from ai_forge_cli.utils.adapter_branch import create_branch
 
         cfg = _write_cfg(tmp_path)
         with pytest.raises(ValueError):
@@ -144,7 +144,7 @@ class TestBranchSchema:
 
     def test_back_compat_v057_pointer(self, temp_registry, tmp_path):
         """A v0.57.0 pointer with no registry_entry_id key loads cleanly."""
-        from soup_cli.utils.adapter_branch import _branches_dir, load_branch
+        from ai_forge_cli.utils.adapter_branch import _branches_dir, load_branch
 
         legacy = {
             "name": "legacy",
@@ -165,8 +165,8 @@ class TestBranchSchema:
 
 class TestAttachBranchToRegistry:
     def test_happy(self, temp_registry, tmp_path):
-        from soup_cli.registry.store import RegistryStore
-        from soup_cli.utils.adapter_branch import (
+        from ai_forge_cli.registry.store import RegistryStore
+        from ai_forge_cli.utils.adapter_branch import (
             attach_branch_to_registry,
             create_branch,
             load_branch,
@@ -184,7 +184,7 @@ class TestAttachBranchToRegistry:
         assert "branch_ref" in kinds
 
     def test_missing_entry_friendly(self, temp_registry, tmp_path):
-        from soup_cli.utils.adapter_branch import (
+        from ai_forge_cli.utils.adapter_branch import (
             attach_branch_to_registry,
             create_branch,
         )
@@ -197,7 +197,7 @@ class TestAttachBranchToRegistry:
 
 class TestBranchFromRegistry:
     def test_derives_all_fields(self, temp_registry, tmp_path):
-        from soup_cli.utils.adapter_branch import branch_from_registry
+        from ai_forge_cli.utils.adapter_branch import branch_from_registry
 
         entry_id = temp_registry(base="org/big-model")
         snap = branch_from_registry("derived", entry_id)
@@ -207,7 +207,7 @@ class TestBranchFromRegistry:
         assert len(snap.config_sha256) == 64
 
     def test_with_data_hash(self, temp_registry, tmp_path):
-        from soup_cli.utils.adapter_branch import branch_from_registry
+        from ai_forge_cli.utils.adapter_branch import branch_from_registry
 
         ds = tmp_path / "data.jsonl"
         ds.write_text('{"x": 1}\n', encoding="utf-8")
@@ -217,7 +217,7 @@ class TestBranchFromRegistry:
         assert len(snap.dataset_sha256) == 64
 
     def test_missing_entry(self, temp_registry, tmp_path):
-        from soup_cli.utils.adapter_branch import branch_from_registry
+        from ai_forge_cli.utils.adapter_branch import branch_from_registry
 
         with pytest.raises(ValueError, match="not found"):
             branch_from_registry("nope", "no-such-id")
@@ -225,7 +225,7 @@ class TestBranchFromRegistry:
 
 class TestBranchCli:
     def _app(self):
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         return app
 
@@ -241,7 +241,7 @@ class TestBranchCli:
             ],
         )
         assert result.exit_code == 0, (result.output, repr(result.exception))
-        from soup_cli.utils.adapter_branch import load_branch
+        from ai_forge_cli.utils.adapter_branch import load_branch
 
         assert load_branch("clibranch").registry_entry_id == entry_id
 
@@ -252,7 +252,7 @@ class TestBranchCli:
             ["branch", "fromreg", "--from-registry", entry_id],
         )
         assert result.exit_code == 0, (result.output, repr(result.exception))
-        from soup_cli.utils.adapter_branch import load_branch
+        from ai_forge_cli.utils.adapter_branch import load_branch
 
         snap = load_branch("fromreg")
         assert snap.base_model == "org/from-reg"
@@ -279,8 +279,8 @@ class TestHistoryBranchEdges:
     def test_history_renders_branch_edge(self, temp_registry, tmp_path):
         import typer
 
-        from soup_cli.commands.history import history as history_cmd
-        from soup_cli.utils.adapter_branch import (
+        from ai_forge_cli.commands.history import history as history_cmd
+        from ai_forge_cli.utils.adapter_branch import (
             attach_branch_to_registry,
             create_branch,
         )
@@ -329,7 +329,7 @@ def _make_adapter(dir_path, *, scale=1.0):
 
 
 def _make_report():
-    from soup_cli.utils.adapter_merge import MergeReport
+    from ai_forge_cli.utils.adapter_merge import MergeReport
 
     return MergeReport(
         strategy="linear", adapters=("a", "b"), weights=(0.5, 0.5),
@@ -339,12 +339,12 @@ def _make_report():
 
 class TestPredictMergedVerdict:
     def test_none_returns_unknown(self):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         assert predict_merged_verdict(_make_report()) == "UNKNOWN"
 
     def test_no_drop_is_ok(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "canary.json"
@@ -355,7 +355,7 @@ class TestPredictMergedVerdict:
         assert predict_merged_verdict(_make_report(), str(suite)) == "OK"
 
     def test_minor_drop(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "canary.json"
@@ -367,7 +367,7 @@ class TestPredictMergedVerdict:
         assert predict_merged_verdict(_make_report(), str(suite)) == "MINOR"
 
     def test_major_drop(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "canary.json"
@@ -378,7 +378,7 @@ class TestPredictMergedVerdict:
         assert predict_merged_verdict(_make_report(), str(suite)) == "MAJOR"
 
     def test_length_mismatch(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "canary.json"
@@ -390,7 +390,7 @@ class TestPredictMergedVerdict:
             predict_merged_verdict(_make_report(), str(suite))
 
     def test_empty_scores(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "canary.json"
@@ -401,7 +401,7 @@ class TestPredictMergedVerdict:
             predict_merged_verdict(_make_report(), str(suite))
 
     def test_non_numeric_score_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "canary.json"
@@ -413,7 +413,7 @@ class TestPredictMergedVerdict:
             predict_merged_verdict(_make_report(), str(suite))
 
     def test_infinity_literal_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "canary.json"
@@ -427,7 +427,7 @@ class TestPredictMergedVerdict:
             predict_merged_verdict(_make_report(), str(suite))
 
     def test_tasks_without_scorer(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "canary.json"
@@ -438,7 +438,7 @@ class TestPredictMergedVerdict:
             predict_merged_verdict(_make_report(), str(suite))
 
     def test_tasks_with_scorer(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "canary.json"
@@ -456,7 +456,7 @@ class TestPredictMergedVerdict:
         ) == "MINOR"
 
     def test_canary_must_be_str(self):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         with pytest.raises(TypeError):
             predict_merged_verdict(_make_report(), 123)  # type: ignore[arg-type]
@@ -464,7 +464,7 @@ class TestPredictMergedVerdict:
 
 class TestMergeCanaryCli:
     def _app(self):
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         return app
 
@@ -530,7 +530,7 @@ class TestMergeCanaryCli:
 
 
 def _cmaes_plan(tmp_path, adapters, *, pop=4, gens=6):
-    from soup_cli.utils.cmaes_merge import build_cmaes_plan
+    from ai_forge_cli.utils.cmaes_merge import build_cmaes_plan
 
     suite = tmp_path / "eval.jsonl"
     suite.write_text('{"prompt": "p", "expected": "e"}\n', encoding="utf-8")
@@ -542,7 +542,7 @@ def _cmaes_plan(tmp_path, adapters, *, pop=4, gens=6):
 
 class TestBuildCmaesEvalFn:
     def test_eval_fn_merges_and_scores(self, tmp_path, monkeypatch):
-        from soup_cli.utils.cmaes_merge import build_cmaes_eval_fn
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_eval_fn
 
         monkeypatch.chdir(tmp_path)
         a = _make_adapter(tmp_path / "a", scale=1.0)
@@ -564,7 +564,7 @@ class TestBuildCmaesEvalFn:
         assert seen["suite"] == plan.eval_suite
 
     def test_eval_fn_cleans_up_temp(self, tmp_path, monkeypatch):
-        from soup_cli.utils.cmaes_merge import build_cmaes_eval_fn
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_eval_fn
 
         monkeypatch.chdir(tmp_path)
         a = _make_adapter(tmp_path / "a")
@@ -582,7 +582,7 @@ class TestBuildCmaesEvalFn:
         assert not os.path.exists(captured[0])
 
     def test_run_cmaes_with_eval_fn_converges(self, tmp_path, monkeypatch):
-        from soup_cli.utils.cmaes_merge import build_cmaes_eval_fn, run_cmaes_merge
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_eval_fn, run_cmaes_merge
 
         monkeypatch.chdir(tmp_path)
         a = _make_adapter(tmp_path / "a")
@@ -597,7 +597,7 @@ class TestBuildCmaesEvalFn:
         assert abs(sum(result.best_weights) - 1.0) < 1e-6
 
     def test_eval_fn_isolates_scorer_failure(self, tmp_path, monkeypatch):
-        from soup_cli.utils.cmaes_merge import (
+        from ai_forge_cli.utils.cmaes_merge import (
             _FAILED_EVAL_SENTINEL,
             _eval_safely,
             build_cmaes_eval_fn,
@@ -619,12 +619,12 @@ class TestBuildCmaesEvalFn:
 
 class TestCmaesCliLive:
     def _app(self):
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         return app
 
     def test_cmaes_runs_loop_and_writes_output(self, tmp_path, monkeypatch):
-        import soup_cli.utils.cmaes_merge as cm
+        import ai_forge_cli.utils.cmaes_merge as cm
 
         monkeypatch.chdir(tmp_path)
         # Inject a synthetic scorer so the CLI never loads a model.
@@ -673,7 +673,7 @@ def loop_env(tmp_path, monkeypatch):
     monkeypatch.delenv("SOUP_LOOP_TRACE_DIR", raising=False)
     monkeypatch.delenv("SOUP_LOOP_SERVE_ENDPOINT", raising=False)
 
-    from soup_cli.utils.loop_state import LoopState
+    from ai_forge_cli.utils.loop_state import LoopState
 
     def _state(served="mymodel", eval_suite="evals/gate.yaml", baseline="base-ref",
                pre_wired=False):
@@ -703,7 +703,7 @@ class TestLoopStatePreWired:
         assert loop_env().pre_wired is False
 
     def test_non_bool_rejected(self):
-        from soup_cli.utils.loop_state import LoopState
+        from ai_forge_cli.utils.loop_state import LoopState
 
         with pytest.raises(ValueError):
             LoopState(
@@ -712,14 +712,14 @@ class TestLoopStatePreWired:
             )
 
     def test_init_state_persists(self, loop_env, tmp_path):
-        from soup_cli.utils.loop_state import init_state, read_state
+        from ai_forge_cli.utils.loop_state import init_state, read_state
 
         state, _path = init_state("mymodel", "evals/gate.yaml", "base-ref", pre_wired=True)
         assert state.pre_wired is True
         assert read_state().pre_wired is True
 
     def test_to_dict_includes_pre_wired(self, loop_env):
-        from soup_cli.utils.loop_state import LoopState
+        from ai_forge_cli.utils.loop_state import LoopState
 
         keys = set(loop_env().to_dict().keys())
         assert keys == set(LoopState.__dataclass_fields__.keys())
@@ -728,7 +728,7 @@ class TestLoopStatePreWired:
 
 class TestHarvestStage:
     def test_produces_pairs(self, loop_env, tmp_path, monkeypatch):
-        from soup_cli.utils.loop_stages import harvest_from_traces
+        from ai_forge_cli.utils.loop_stages import harvest_from_traces
 
         td = _write_trace_dir(tmp_path)
         monkeypatch.setenv("SOUP_LOOP_TRACE_DIR", td)
@@ -738,7 +738,7 @@ class TestHarvestStage:
         assert os.path.isfile(out["pairs_path"])
 
     def test_no_trace_dir_zero(self, loop_env):
-        from soup_cli.utils.loop_stages import harvest_from_traces
+        from ai_forge_cli.utils.loop_stages import harvest_from_traces
 
         out = harvest_from_traces(loop_env())
         assert out["pairs_harvested"] == 0
@@ -749,7 +749,7 @@ class TestHarvestStage:
 
         Distinct from the no-dir case: traces_collected > 0 but
         pairs_harvested == 0 and pairs_path is None (no file written)."""
-        from soup_cli.utils.loop_stages import harvest_from_traces
+        from ai_forge_cli.utils.loop_stages import harvest_from_traces
 
         trace_dir = tmp_path / "traces"
         trace_dir.mkdir()
@@ -772,7 +772,7 @@ class TestHarvestStage:
 
 class TestTrainStage:
     def test_skips_without_pairs(self, loop_env):
-        from soup_cli.utils.loop_stages import train_dpo_from_pairs
+        from ai_forge_cli.utils.loop_stages import train_dpo_from_pairs
 
         out = train_dpo_from_pairs(
             loop_env(), {"pairs_harvested": 0, "pairs_path": None}
@@ -781,7 +781,7 @@ class TestTrainStage:
         assert out["run_id"] is None
 
     def test_invokes_runner(self, loop_env, tmp_path, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
+        import ai_forge_cli.utils.loop_stages as ls
 
         captured = {}
 
@@ -804,7 +804,7 @@ class TestTrainStage:
         assert "train" in argv and "--yes" in argv
 
     def test_runner_failure_skips(self, loop_env, tmp_path, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
+        import ai_forge_cli.utils.loop_stages as ls
 
         class _R:
             returncode = 1
@@ -820,13 +820,13 @@ class TestTrainStage:
 
 class TestGateStage:
     def test_skipped_when_train_skipped(self, loop_env):
-        from soup_cli.utils.loop_stages import gate_against_baseline
+        from ai_forge_cli.utils.loop_stages import gate_against_baseline
 
         out = gate_against_baseline(loop_env(), {"skipped": True})
         assert out["gate_verdict"] == "SKIPPED"
 
     def test_skipped_when_adapter_missing(self, loop_env):
-        from soup_cli.utils.loop_stages import gate_against_baseline
+        from ai_forge_cli.utils.loop_stages import gate_against_baseline
 
         out = gate_against_baseline(
             loop_env(), {"skipped": False, "adapter_path": "nope/dir"}
@@ -834,7 +834,7 @@ class TestGateStage:
         assert out["gate_verdict"] == "SKIPPED"
 
     def test_ok_verdict(self, loop_env, tmp_path, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
+        import ai_forge_cli.utils.loop_stages as ls
 
         # Real eval suite + tasks; injected generate factory returns expected.
         evals = tmp_path / "evals"
@@ -869,14 +869,14 @@ class TestGateStage:
 
 class TestDeployStage:
     def test_noop_when_not_ok(self, loop_env):
-        from soup_cli.utils.loop_stages import deploy_to_canary
+        from ai_forge_cli.utils.loop_stages import deploy_to_canary
 
         out = deploy_to_canary(loop_env(), {"gate_verdict": "MAJOR"})
         assert out["deployed"] is False
         assert out["canary_verdict"] is None
 
     def test_posts_when_ok(self, loop_env, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
+        import ai_forge_cli.utils.loop_stages as ls
 
         seen = {}
 
@@ -897,7 +897,7 @@ class TestDeployStage:
 
 class TestPrewiredConfig:
     def test_build_returns_wired_config(self):
-        from soup_cli.utils.loop_stages import (
+        from ai_forge_cli.utils.loop_stages import (
             build_prewired_watch_config,
             deploy_to_canary,
             gate_against_baseline,
@@ -914,9 +914,9 @@ class TestPrewiredConfig:
 
 class TestPrewiredE2E:
     def test_watch_harvests_and_trains(self, loop_env, tmp_path, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
-        from soup_cli.utils.loop_iteration import list_iterations, read_iteration
-        from soup_cli.utils.loop_state import write_state
+        import ai_forge_cli.utils.loop_stages as ls
+        from ai_forge_cli.utils.loop_iteration import list_iterations, read_iteration
+        from ai_forge_cli.utils.loop_state import write_state
 
         td = _write_trace_dir(tmp_path)
         monkeypatch.setenv("SOUP_LOOP_TRACE_DIR", td)
@@ -929,12 +929,12 @@ class TestPrewiredE2E:
             ls, "_TRAIN_RUNNER", lambda argv, **k: train_calls.append(argv) or _R()
         )
         write_state(loop_env(pre_wired=True))
-        from soup_cli.utils.loop_stages import build_prewired_watch_config
+        from ai_forge_cli.utils.loop_stages import build_prewired_watch_config
 
         cfg = build_prewired_watch_config(
             max_iterations=1, poll_interval_sec=1.0,
         )
-        from soup_cli.utils.loop_daemon import watch
+        from ai_forge_cli.utils.loop_daemon import watch
 
         _final, ran = watch(cfg)
         assert ran == 1
@@ -953,7 +953,7 @@ class TestLoopStagesSourceWiring:
 
         root = Path(__file__).resolve().parent.parent
         src = (
-            root / "src" / "soup_cli" / "utils" / "loop_stages.py"
+            root / "src" / "ai_forge_cli" / "utils" / "loop_stages.py"
         ).read_text(encoding="utf-8")
         head = "\n".join(
             line for line in src.splitlines()[:60]
@@ -967,7 +967,7 @@ class TestLoopStagesSourceWiring:
 
 class TestLoopCliPrewired:
     def _app(self):
-        from soup_cli.commands.loop import app
+        from ai_forge_cli.commands.loop import app
 
         return app
 
@@ -977,7 +977,7 @@ class TestLoopCliPrewired:
             "--baseline", "base-ref", "--pre-wired",
         ])
         assert result.exit_code == 0, (result.output, repr(result.exception))
-        from soup_cli.utils.loop_state import read_state
+        from ai_forge_cli.utils.loop_state import read_state
 
         assert read_state().pre_wired is True
 
@@ -1006,7 +1006,7 @@ class TestLoopCliPrewired:
 
 
 def _write_iteration(iteration_id, *, served="mymodel"):
-    from soup_cli.utils.loop_iteration import IterationRecord, write_iteration
+    from ai_forge_cli.utils.loop_iteration import IterationRecord, write_iteration
 
     rec = IterationRecord(
         iteration_id=iteration_id,
@@ -1033,14 +1033,14 @@ class TestRegistryNameFrom:
         ("//weird", "weird"),
     ])
     def test_sanitises(self, raw, expected_start):
-        from soup_cli.utils.loop_iteration import registry_name_from
+        from ai_forge_cli.utils.loop_iteration import registry_name_from
 
         out = registry_name_from(raw)
         assert out[0].isalnum()
         assert out.startswith(expected_start) or out == "loop"
 
     def test_empty_falls_back(self):
-        from soup_cli.utils.loop_iteration import registry_name_from
+        from ai_forge_cli.utils.loop_iteration import registry_name_from
 
         assert registry_name_from("") == "loop"
         assert registry_name_from("///") == "loop"
@@ -1048,8 +1048,8 @@ class TestRegistryNameFrom:
 
 class TestPackIterationAsCan:
     def test_writes_can_and_entry(self, loop_env, tmp_path):
-        from soup_cli.registry.store import RegistryStore
-        from soup_cli.utils.loop_iteration import pack_iteration_as_can
+        from ai_forge_cli.registry.store import RegistryStore
+        from ai_forge_cli.utils.loop_iteration import pack_iteration_as_can
 
         _write_iteration("iter-aaa")
         can_path, entry_id = pack_iteration_as_can(
@@ -1063,8 +1063,8 @@ class TestPackIterationAsCan:
         assert entry["name"] == "mymodel"
 
     def test_can_verifies(self, loop_env, tmp_path):
-        from soup_cli.cans.unpack import inspect_can
-        from soup_cli.utils.loop_iteration import pack_iteration_as_can
+        from ai_forge_cli.cans.unpack import inspect_can
+        from ai_forge_cli.utils.loop_iteration import pack_iteration_as_can
 
         _write_iteration("iter-bbb")
         can_path, _ = pack_iteration_as_can("iter-bbb", served_model="mymodel")
@@ -1072,8 +1072,8 @@ class TestPackIterationAsCan:
         assert manifest.name == "mymodel"
 
     def test_parent_lineage(self, loop_env, tmp_path):
-        from soup_cli.registry.store import RegistryStore
-        from soup_cli.utils.loop_iteration import pack_iteration_as_can
+        from ai_forge_cli.registry.store import RegistryStore
+        from ai_forge_cli.utils.loop_iteration import pack_iteration_as_can
 
         _write_iteration("iter-p1")
         _write_iteration("iter-p2")
@@ -1086,8 +1086,8 @@ class TestPackIterationAsCan:
         assert any(a["id"] == parent_id for a in ancestors)
 
     def test_missing_parent_still_creates(self, loop_env, tmp_path):
-        from soup_cli.registry.store import RegistryStore
-        from soup_cli.utils.loop_iteration import pack_iteration_as_can
+        from ai_forge_cli.registry.store import RegistryStore
+        from ai_forge_cli.utils.loop_iteration import pack_iteration_as_can
 
         _write_iteration("iter-mp")
         _can, entry_id = pack_iteration_as_can(
@@ -1099,10 +1099,10 @@ class TestPackIterationAsCan:
 
 class TestWatchPackCans:
     def test_three_iterations_chain(self, loop_env, tmp_path, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
-        from soup_cli.registry.store import RegistryStore
-        from soup_cli.utils.loop_daemon import watch
-        from soup_cli.utils.loop_state import write_state
+        import ai_forge_cli.utils.loop_stages as ls
+        from ai_forge_cli.registry.store import RegistryStore
+        from ai_forge_cli.utils.loop_daemon import watch
+        from ai_forge_cli.utils.loop_state import write_state
 
         td = _write_trace_dir(tmp_path)
         monkeypatch.setenv("SOUP_LOOP_TRACE_DIR", td)
@@ -1112,7 +1112,7 @@ class TestWatchPackCans:
 
         monkeypatch.setattr(ls, "_TRAIN_RUNNER", lambda *a, **k: _R())
         write_state(loop_env(pre_wired=True))
-        from soup_cli.utils.loop_stages import build_prewired_watch_config
+        from ai_forge_cli.utils.loop_stages import build_prewired_watch_config
 
         cfg = build_prewired_watch_config(
             max_iterations=3, poll_interval_sec=1.0,
@@ -1127,19 +1127,19 @@ class TestWatchPackCans:
         # Cans exist + verify.
         import glob
 
-        from soup_cli.cans.unpack import inspect_can
+        from ai_forge_cli.cans.unpack import inspect_can
         cans = glob.glob(os.path.join(".soup-loops", "*", "iteration.can"))
         assert len(cans) == 3
         for c in cans:
             inspect_can(c)  # raises if invalid
 
     def test_replay_extract(self, loop_env, tmp_path):
-        from soup_cli.utils.loop_iteration import pack_iteration_as_can
+        from ai_forge_cli.utils.loop_iteration import pack_iteration_as_can
 
         _write_iteration("iter-ext")
         pack_iteration_as_can("iter-ext", served_model="mymodel")
 
-        from soup_cli.commands.loop import app
+        from ai_forge_cli.commands.loop import app
 
         result = runner.invoke(
             app, ["replay", "iter-ext", "--extract", "extracted"]
@@ -1149,7 +1149,7 @@ class TestWatchPackCans:
 
     def test_replay_extract_missing_can(self, loop_env, tmp_path):
         _write_iteration("iter-nocan")
-        from soup_cli.commands.loop import app
+        from ai_forge_cli.commands.loop import app
 
         result = runner.invoke(
             app, ["replay", "iter-nocan", "--extract", "extracted"]
@@ -1165,7 +1165,7 @@ class TestWatchPackCans:
 
 class TestParsePrTarget:
     def test_happy(self):
-        from soup_cli.utils.adapter_pr import parse_pr_target
+        from ai_forge_cli.utils.adapter_pr import parse_pr_target
 
         assert parse_pr_target("MakazhanAlpamys/Soup#42") == (
             "MakazhanAlpamys",
@@ -1174,7 +1174,7 @@ class TestParsePrTarget:
         )
 
     def test_strips_whitespace(self):
-        from soup_cli.utils.adapter_pr import parse_pr_target
+        from ai_forge_cli.utils.adapter_pr import parse_pr_target
 
         assert parse_pr_target("  owner/repo#7  ") == ("owner", "repo", 7)
 
@@ -1192,19 +1192,19 @@ class TestParsePrTarget:
         ],
     )
     def test_rejects_bad(self, bad):
-        from soup_cli.utils.adapter_pr import parse_pr_target
+        from ai_forge_cli.utils.adapter_pr import parse_pr_target
 
         with pytest.raises(ValueError):
             parse_pr_target(bad)
 
     def test_non_string(self):
-        from soup_cli.utils.adapter_pr import parse_pr_target
+        from ai_forge_cli.utils.adapter_pr import parse_pr_target
 
         with pytest.raises(TypeError):
             parse_pr_target(42)  # type: ignore[arg-type]
 
     def test_bool_rejected(self):
-        from soup_cli.utils.adapter_pr import parse_pr_target
+        from ai_forge_cli.utils.adapter_pr import parse_pr_target
 
         with pytest.raises(TypeError):
             parse_pr_target(True)  # type: ignore[arg-type]
@@ -1212,28 +1212,28 @@ class TestParsePrTarget:
 
 class TestResolveGithubToken:
     def test_github_token(self):
-        from soup_cli.utils.adapter_pr import resolve_github_token
+        from ai_forge_cli.utils.adapter_pr import resolve_github_token
 
         assert resolve_github_token({"GITHUB_TOKEN": "ghp_abc"}) == "ghp_abc"
 
     def test_gh_token_fallback(self):
-        from soup_cli.utils.adapter_pr import resolve_github_token
+        from ai_forge_cli.utils.adapter_pr import resolve_github_token
 
         assert resolve_github_token({"GH_TOKEN": "ghp_xyz"}) == "ghp_xyz"
 
     def test_strips_whitespace(self):
-        from soup_cli.utils.adapter_pr import resolve_github_token
+        from ai_forge_cli.utils.adapter_pr import resolve_github_token
 
         assert resolve_github_token({"GITHUB_TOKEN": "  tok  "}) == "tok"
 
     def test_missing_fails_fast(self):
-        from soup_cli.utils.adapter_pr import resolve_github_token
+        from ai_forge_cli.utils.adapter_pr import resolve_github_token
 
         with pytest.raises(RuntimeError, match="token"):
             resolve_github_token({})
 
     def test_blank_treated_as_missing(self):
-        from soup_cli.utils.adapter_pr import resolve_github_token
+        from ai_forge_cli.utils.adapter_pr import resolve_github_token
 
         with pytest.raises(RuntimeError):
             resolve_github_token({"GITHUB_TOKEN": "   "})
@@ -1241,7 +1241,7 @@ class TestResolveGithubToken:
 
 class TestPostPrComment:
     def test_happy_path_invokes_gh(self):
-        from soup_cli.utils.adapter_pr import post_pr_comment
+        from ai_forge_cli.utils.adapter_pr import post_pr_comment
 
         captured = {}
 
@@ -1268,7 +1268,7 @@ class TestPostPrComment:
         assert json.loads(captured["input"])["body"] == "## Hello\nbody"
 
     def test_missing_token_fails_before_subprocess(self):
-        from soup_cli.utils.adapter_pr import post_pr_comment
+        from ai_forge_cli.utils.adapter_pr import post_pr_comment
 
         def fake_run(argv, **kwargs):  # pragma: no cover — must not be reached
             raise AssertionError("subprocess should not run without a token")
@@ -1277,7 +1277,7 @@ class TestPostPrComment:
             post_pr_comment("o/r#1", "body", env={}, runner=fake_run)
 
     def test_nonzero_exit_raises(self):
-        from soup_cli.utils.adapter_pr import post_pr_comment
+        from ai_forge_cli.utils.adapter_pr import post_pr_comment
 
         class _Result:
             returncode = 1
@@ -1290,7 +1290,7 @@ class TestPostPrComment:
             )
 
     def test_empty_body_rejected(self):
-        from soup_cli.utils.adapter_pr import post_pr_comment
+        from ai_forge_cli.utils.adapter_pr import post_pr_comment
 
         with pytest.raises(ValueError):
             post_pr_comment(
@@ -1298,7 +1298,7 @@ class TestPostPrComment:
             )
 
     def test_null_byte_body_rejected(self):
-        from soup_cli.utils.adapter_pr import post_pr_comment
+        from ai_forge_cli.utils.adapter_pr import post_pr_comment
 
         with pytest.raises(ValueError):
             post_pr_comment(
@@ -1309,7 +1309,7 @@ class TestPostPrComment:
             )
 
     def test_bad_target_rejected(self):
-        from soup_cli.utils.adapter_pr import post_pr_comment
+        from ai_forge_cli.utils.adapter_pr import post_pr_comment
 
         with pytest.raises(ValueError):
             post_pr_comment(
@@ -1320,7 +1320,7 @@ class TestPostPrComment:
 
 class TestPrCliPush:
     def _adapters_app(self):
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         return app
 
@@ -1352,7 +1352,7 @@ class TestPrCliPush:
 
     def test_push_happy(self, monkeypatch):
         # Mock the post so we never touch the network.
-        import soup_cli.utils.adapter_pr as ap
+        import ai_forge_cli.utils.adapter_pr as ap
 
         monkeypatch.setattr(
             ap, "post_pr_comment",
@@ -1385,7 +1385,7 @@ class TestVerdictBoundaries:
     """Strict `<` boundaries: drop==0.02 → MINOR, drop==0.05 → MAJOR."""
 
     def _verdict(self, tmp_path, monkeypatch, baseline, candidate):
-        from soup_cli.utils.adapter_merge import predict_merged_verdict
+        from ai_forge_cli.utils.adapter_merge import predict_merged_verdict
 
         monkeypatch.chdir(tmp_path)
         suite = tmp_path / "canary.json"
@@ -1429,9 +1429,9 @@ class TestPackIterationSafely:
     def test_pack_failure_never_crashes_watch(self, loop_env, tmp_path, monkeypatch):
         """A pack failure mid-watch must not kill the daemon; the iteration
         manifest gets a ``pack-failed:`` note and the loop survives."""
-        import soup_cli.utils.loop_iteration as li
-        from soup_cli.utils.loop_daemon import WatchConfig, watch
-        from soup_cli.utils.loop_state import init_state
+        import ai_forge_cli.utils.loop_iteration as li
+        from ai_forge_cli.utils.loop_daemon import WatchConfig, watch
+        from ai_forge_cli.utils.loop_state import init_state
 
         init_state("mymodel", "evals/gate.yaml", "base-ref")
 
@@ -1447,7 +1447,7 @@ class TestPackIterationSafely:
         final_state, n = watch(cfg)
         assert n == 1  # the daemon completed its single iteration
         # The manifest was re-written with the pack-failed note.
-        from soup_cli.utils.loop_iteration import list_iterations, read_iteration
+        from ai_forge_cli.utils.loop_iteration import list_iterations, read_iteration
         ids = list_iterations()
         assert len(ids) == 1
         rec = read_iteration(ids[0])
@@ -1456,9 +1456,9 @@ class TestPackIterationSafely:
     def test_pack_iterations_false_skips_packing(self, loop_env, tmp_path):
         import glob
 
-        from soup_cli.registry.store import RegistryStore
-        from soup_cli.utils.loop_daemon import WatchConfig, watch
-        from soup_cli.utils.loop_state import init_state
+        from ai_forge_cli.registry.store import RegistryStore
+        from ai_forge_cli.utils.loop_daemon import WatchConfig, watch
+        from ai_forge_cli.utils.loop_state import init_state
 
         init_state("mymodel", "evals/gate.yaml", "base-ref")
         cfg = WatchConfig(
@@ -1473,7 +1473,7 @@ class TestPackIterationSafely:
 
 class TestGhArgvAdjacency:
     def test_method_and_input_flags_adjacent(self):
-        from soup_cli.utils.adapter_pr import post_pr_comment
+        from ai_forge_cli.utils.adapter_pr import post_pr_comment
 
         captured = {}
 
@@ -1501,7 +1501,7 @@ class TestPostPrCommentEnvAllowlist:
     def test_secrets_not_leaked_to_child(self, monkeypatch):
         """When ``env`` is None, the gh child env is built from an allowlist
         so HF_TOKEN / OPENAI_API_KEY never reach the subprocess."""
-        from soup_cli.utils.adapter_pr import post_pr_comment
+        from ai_forge_cli.utils.adapter_pr import post_pr_comment
 
         monkeypatch.setenv("GITHUB_TOKEN", "ghp_real")
         monkeypatch.setenv("HF_TOKEN", "hf_secret")
@@ -1528,7 +1528,7 @@ class TestPostPrCommentEnvAllowlist:
         assert "PATH" in child_env
 
     def test_body_over_cap_rejected(self):
-        from soup_cli.utils.adapter_pr import post_pr_comment
+        from ai_forge_cli.utils.adapter_pr import post_pr_comment
 
         big = "x" * 60_001
         with pytest.raises(ValueError, match="cap"):
@@ -1540,7 +1540,7 @@ class TestPostPrCommentEnvAllowlist:
 
 class TestCmaesTempCleanup:
     def test_temp_removed_even_when_scorer_raises(self, tmp_path, monkeypatch):
-        from soup_cli.utils.cmaes_merge import build_cmaes_eval_fn
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_eval_fn
 
         monkeypatch.chdir(tmp_path)
         a = _make_adapter(tmp_path / "a")
@@ -1562,7 +1562,7 @@ class TestCmaesTempCleanup:
 
 class TestRegistryNameFromCap:
     def test_caps_at_128_chars(self):
-        from soup_cli.utils.loop_iteration import registry_name_from
+        from ai_forge_cli.utils.loop_iteration import registry_name_from
 
         out = registry_name_from("a" * 500)
         assert len(out) == 128
@@ -1571,7 +1571,7 @@ class TestRegistryNameFromCap:
 
 class TestDeploySsrfGuard:
     def test_public_http_endpoint_rejected(self, loop_env, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
+        import ai_forge_cli.utils.loop_stages as ls
 
         # Plain HTTP to a public IP is rejected by validate_webhook_url.
         monkeypatch.setenv("SOUP_LOOP_SERVE_ENDPOINT", "http://8.8.8.8:8000")
@@ -1583,7 +1583,7 @@ class TestDeploySsrfGuard:
         assert "SSRF" in str(out.get("notes", ""))
 
     def test_public_https_endpoint_rejected(self, loop_env, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
+        import ai_forge_cli.utils.loop_stages as ls
 
         # HTTPS to a PUBLIC host passes the webhook validator but the deploy
         # surface tightens to loopback/LAN only (review MEDIUM-4).
@@ -1596,7 +1596,7 @@ class TestDeploySsrfGuard:
         assert "loopback/LAN" in str(out.get("notes", ""))
 
     def test_public_hostname_rejected(self, loop_env, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
+        import ai_forge_cli.utils.loop_stages as ls
 
         # A non-IP hostname can't be verified private without DNS → rejected.
         monkeypatch.setenv("SOUP_LOOP_SERVE_ENDPOINT", "https://evil.example.com")
@@ -1608,7 +1608,7 @@ class TestDeploySsrfGuard:
         assert "loopback/LAN" in str(out.get("notes", ""))
 
     def test_loopback_endpoint_allowed_to_post(self, loop_env, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
+        import ai_forge_cli.utils.loop_stages as ls
 
         monkeypatch.setenv("SOUP_LOOP_SERVE_ENDPOINT", "http://127.0.0.1:8000")
         # Inject the poster so no real network call happens.
@@ -1621,7 +1621,7 @@ class TestDeploySsrfGuard:
         assert out["canary_verdict"] == "OK"
 
     def test_private_lan_endpoint_allowed(self, loop_env, monkeypatch):
-        import soup_cli.utils.loop_stages as ls
+        import ai_forge_cli.utils.loop_stages as ls
 
         # RFC1918 over HTTPS is a legitimate LAN serve endpoint.
         monkeypatch.setenv("SOUP_LOOP_SERVE_ENDPOINT", "https://192.168.1.5:8000")
@@ -1637,10 +1637,10 @@ class TestNoHeavyTopLevelImports:
     """Heavy deps must be lazy-imported inside functions (cold-start policy)."""
 
     @pytest.mark.parametrize("module", [
-        "soup_cli.utils.cmaes_merge",
-        "soup_cli.utils.loop_stages",
-        "soup_cli.utils.loop_iteration",
-        "soup_cli.utils.adapter_pr",
+        "ai_forge_cli.utils.cmaes_merge",
+        "ai_forge_cli.utils.loop_stages",
+        "ai_forge_cli.utils.loop_iteration",
+        "ai_forge_cli.utils.adapter_pr",
     ])
     def test_no_top_level_heavy_imports(self, module):
         import importlib
@@ -1658,7 +1658,7 @@ class TestNoHeavyTopLevelImports:
 
 class TestLoopStagesAtomicWrites:
     def test_uses_atomic_write_text(self):
-        import soup_cli.utils.loop_stages as ls
+        import ai_forge_cli.utils.loop_stages as ls
 
         path = ls.__file__
         with open(path, encoding="utf-8") as fh:
@@ -1671,7 +1671,7 @@ class TestLoopStagesAtomicWrites:
 
 class TestMergeAdaptersCmaesGuard:
     def test_cmaes_strategy_rejected_with_path_hint(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import merge_adapters
+        from ai_forge_cli.utils.adapter_merge import merge_adapters
 
         monkeypatch.chdir(tmp_path)
         a = _make_adapter(tmp_path / "a")
@@ -1682,7 +1682,7 @@ class TestMergeAdaptersCmaesGuard:
 
 class TestWriteMergedAdapterPublic:
     def test_public_symbol_and_alias(self):
-        from soup_cli.utils import adapter_merge
+        from ai_forge_cli.utils import adapter_merge
 
         assert hasattr(adapter_merge, "write_merged_adapter")
         # back-compat alias preserved for any external caller.
@@ -1692,7 +1692,7 @@ class TestWriteMergedAdapterPublic:
         )
 
     def test_cmaes_imports_public_name(self):
-        import soup_cli.utils.cmaes_merge as cm
+        import ai_forge_cli.utils.cmaes_merge as cm
 
         with open(cm.__file__, encoding="utf-8") as fh:
             src = fh.read()
@@ -1706,9 +1706,9 @@ class TestPackEntryRollback:
     ):
         """If pack_entry fails after the Registry push, the entry is rolled
         back so the watch-loop lineage chain never points at an orphan."""
-        import soup_cli.cans.pack as pack_mod
-        from soup_cli.registry.store import RegistryStore
-        from soup_cli.utils.loop_iteration import pack_iteration_as_can
+        import ai_forge_cli.cans.pack as pack_mod
+        from ai_forge_cli.registry.store import RegistryStore
+        from ai_forge_cli.utils.loop_iteration import pack_iteration_as_can
 
         _write_iteration("iter-rb")
 
@@ -1725,31 +1725,31 @@ class TestPackEntryRollback:
 
 class TestWatchConfigValidation:
     def test_pack_iterations_must_be_bool(self):
-        from soup_cli.utils.loop_daemon import WatchConfig
+        from ai_forge_cli.utils.loop_daemon import WatchConfig
 
         with pytest.raises(ValueError):
             WatchConfig(pack_iterations="yes")  # type: ignore[arg-type]
 
     def test_base_model_null_byte_rejected(self):
-        from soup_cli.utils.loop_daemon import WatchConfig
+        from ai_forge_cli.utils.loop_daemon import WatchConfig
 
         with pytest.raises(ValueError):
             WatchConfig(base_model="a\x00b")
 
     def test_base_model_empty_rejected(self):
-        from soup_cli.utils.loop_daemon import WatchConfig
+        from ai_forge_cli.utils.loop_daemon import WatchConfig
 
         with pytest.raises(ValueError):
             WatchConfig(base_model="")
 
     def test_served_model_oversize_rejected(self):
-        from soup_cli.utils.loop_daemon import WatchConfig
+        from ai_forge_cli.utils.loop_daemon import WatchConfig
 
         with pytest.raises(ValueError):
             WatchConfig(served_model="a" * 513)
 
     def test_served_model_none_ok(self):
-        from soup_cli.utils.loop_daemon import WatchConfig
+        from ai_forge_cli.utils.loop_daemon import WatchConfig
 
         cfg = WatchConfig(served_model=None)
         assert cfg.served_model is None
@@ -1757,13 +1757,13 @@ class TestWatchConfigValidation:
 
 class TestCmaesScanGate:
     def _app(self):
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         return app
 
     def test_cmaes_respects_backdoor_scan_gate(self, tmp_path, monkeypatch):
         """A FAIL scan must block --strategy cmaes too (review MEDIUM-5)."""
-        import soup_cli.utils.adapter_scan as scan_mod
+        import ai_forge_cli.utils.adapter_scan as scan_mod
 
         monkeypatch.chdir(tmp_path)
         a = _make_adapter(tmp_path / "a")

@@ -13,7 +13,7 @@ class TestServeValidation:
         """serve should fail if model path doesn't exist."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--model", "/nonexistent/path"])
@@ -24,7 +24,7 @@ class TestServeValidation:
         """serve should fail gracefully if FastAPI not installed."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         with patch.dict("sys.modules", {"fastapi": None}):
@@ -43,7 +43,7 @@ class TestCreateApp:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
@@ -71,7 +71,7 @@ class TestCreateApp:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
@@ -99,7 +99,7 @@ class TestCreateApp:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -124,9 +124,9 @@ class TestCreateApp:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
-        with patch("soup_cli.commands.serve._generate_response") as mock_gen:
+        with patch("ai_forge_cli.commands.serve._generate_response") as mock_gen:
             mock_gen.return_value = ("Hello there!", 10, 5)
 
             app = _create_app(
@@ -162,9 +162,9 @@ class TestCreateApp:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
-        with patch("soup_cli.commands.serve._generate_response") as mock_gen:
+        with patch("ai_forge_cli.commands.serve._generate_response") as mock_gen:
             mock_gen.return_value = ("Hello world", 10, 5)
 
             app = _create_app(
@@ -196,9 +196,9 @@ class TestStreamResponse:
 
     def test_stream_response_yields_chunks(self):
         """_stream_response should yield SSE events."""
-        from soup_cli.commands.serve import _stream_response
+        from ai_forge_cli.commands.serve import _stream_response
 
-        with patch("soup_cli.commands.serve._generate_response") as mock_gen:
+        with patch("ai_forge_cli.commands.serve._generate_response") as mock_gen:
             mock_gen.return_value = ("Hello world", 5, 2)
 
             chunks = list(_stream_response(
@@ -226,7 +226,7 @@ class TestDetectBaseModel:
 
     def test_detect_base_model_from_adapter(self, tmp_path):
         """Should read base model from adapter_config.json."""
-        from soup_cli.commands.serve import _detect_base_model
+        from ai_forge_cli.commands.serve import _detect_base_model
 
         config_file = tmp_path / "adapter_config.json"
         config_file.write_text(json.dumps({
@@ -238,7 +238,7 @@ class TestDetectBaseModel:
 
     def test_detect_base_model_missing_key(self, tmp_path):
         """Should return None if key is missing."""
-        from soup_cli.commands.serve import _detect_base_model
+        from ai_forge_cli.commands.serve import _detect_base_model
 
         config_file = tmp_path / "adapter_config.json"
         config_file.write_text(json.dumps({"other_key": "value"}))
@@ -248,7 +248,7 @@ class TestDetectBaseModel:
 
     def test_detect_base_model_invalid_json(self, tmp_path):
         """Should return None for invalid JSON."""
-        from soup_cli.commands.serve import _detect_base_model
+        from ai_forge_cli.commands.serve import _detect_base_model
 
         config_file = tmp_path / "adapter_config.json"
         config_file.write_text("not json")
@@ -262,8 +262,8 @@ class TestRecordThumbs:
     def _client(self, tmp_path, monkeypatch):
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
-        from soup_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.commands.serve import _create_app
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
 
         monkeypatch.chdir(tmp_path)
         db = "rl.db"
@@ -283,7 +283,7 @@ class TestRecordThumbs:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(app, ["serve", "--help"])
         assert result.exit_code == 0, result.output
@@ -345,7 +345,7 @@ class TestRecordThumbs:
             from fastapi.testclient import TestClient
         except ImportError:
             pytest.skip("FastAPI not installed")
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         monkeypatch.chdir(tmp_path)
         app = _create_app(
@@ -391,7 +391,7 @@ class TestRecordThumbs:
         # against a future refactor dropping the containment check.
         import inspect
 
-        from soup_cli.commands import serve
+        from ai_forge_cli.commands import serve
 
         src = inspect.getsource(serve)
         assert "validate_db_path(record_thumbs)" in src

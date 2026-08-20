@@ -24,23 +24,23 @@ import pytest
 # ---------------------------------------------------------------------------
 class TestAdapterFuse:
     def test_module_exports_fuse_and_release(self):
-        from soup_cli.utils.adapter_fuse import fuse_adapter_into, release_cuda
+        from ai_forge_cli.utils.adapter_fuse import fuse_adapter_into, release_cuda
 
         assert callable(fuse_adapter_into)
         assert callable(release_cuda)
 
     def test_shrink_reuses_the_shared_implementation(self):
         """shrink must not keep a second copy of the fuse (no behavioural drift)."""
-        from soup_cli.commands import shrink
-        from soup_cli.utils.adapter_fuse import fuse_adapter_into, release_cuda
+        from ai_forge_cli.commands import shrink
+        from ai_forge_cli.utils.adapter_fuse import fuse_adapter_into, release_cuda
 
         assert shrink._fuse_adapter is fuse_adapter_into
         assert shrink._release_cuda is release_cuda
 
     def test_no_top_level_torch(self):
-        import soup_cli
+        import ai_forge_cli
 
-        path = Path(soup_cli.__file__).parent / "utils" / "adapter_fuse.py"
+        path = Path(ai_forge_cli.__file__).parent / "utils" / "adapter_fuse.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.Import):
@@ -59,7 +59,7 @@ class TestAdapterFuse:
         import sys
         import types
 
-        from soup_cli.utils import adapter_fuse
+        from ai_forge_cli.utils import adapter_fuse
 
         base = tmp_path / "base"
         base.mkdir()
@@ -110,7 +110,7 @@ class TestAdapterFuse:
 
     def test_fuse_adapter_into_is_the_in_place_special_case(self, monkeypatch):
         """shrink's in-place fuse == merge(base=out=base_dir)."""
-        from soup_cli.utils import adapter_fuse
+        from ai_forge_cli.utils import adapter_fuse
 
         seen: dict = {}
         monkeypatch.setattr(
@@ -127,7 +127,7 @@ class TestAdapterFuse:
     def test_merge_rejects_pickle_weights_in_adapter_dir(self, tmp_path, monkeypatch):
         """security CRITICAL: the adapter dir may be attacker-produced; refuse
         pickle weights before PEFT torch.load's them."""
-        from soup_cli.utils import adapter_fuse
+        from ai_forge_cli.utils import adapter_fuse
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "out" / "_adapter"
@@ -146,7 +146,7 @@ class TestAdapterFuse:
         (a pickle IT wrote). A recursive scan refused Soup's own distill output
         and made `soup draft distill` impossible. Only TOP-LEVEL weights — the
         ones PEFT actually loads — are the threat surface."""
-        from soup_cli.utils.strict_safetensors import (
+        from ai_forge_cli.utils.strict_safetensors import (
             assert_safe_top_level_weights,
             check_strict_safetensors,
         )
@@ -174,7 +174,7 @@ class TestAdapterFuse:
             assert_safe_top_level_weights(str(adapter))
 
     def test_shallow_scan_ignores_trainer_bookkeeping_pickles(self, tmp_path):
-        from soup_cli.utils.strict_safetensors import (
+        from ai_forge_cli.utils.strict_safetensors import (
             assert_safe_top_level_weights,
             find_unsafe_weight_files_shallow,
         )
@@ -191,7 +191,7 @@ class TestAdapterFuse:
     def test_shallow_scan_still_catches_a_pickle_model_file(self, tmp_path):
         """serve --auto-spec loads a registry draft dir: pytorch_model.bin is
         the file from_pretrained would unpickle."""
-        from soup_cli.utils.strict_safetensors import assert_safe_top_level_weights
+        from ai_forge_cli.utils.strict_safetensors import assert_safe_top_level_weights
 
         model_dir = tmp_path / "draft"
         model_dir.mkdir()
@@ -209,7 +209,7 @@ class TestAdapterFuse:
         import sys
         import types
 
-        from soup_cli.utils import adapter_fuse
+        from ai_forge_cli.utils import adapter_fuse
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "out" / "_adapter"
@@ -262,7 +262,7 @@ class TestAdapterFuse:
 
     def test_containment_checked_before_any_model_load(self, tmp_path, monkeypatch):
         """The cheap containment check runs before the heavy imports/loads."""
-        from soup_cli.utils import adapter_fuse
+        from ai_forge_cli.utils import adapter_fuse
 
         seen: list[tuple[str, str]] = []
 
@@ -289,7 +289,7 @@ class TestAdapterFuse:
         import sys
         import types
 
-        from soup_cli.utils import adapter_fuse
+        from ai_forge_cli.utils import adapter_fuse
 
         monkeypatch.chdir(tmp_path)
         base = tmp_path / "base"
@@ -356,7 +356,7 @@ class TestAdapterFuse:
         import sys
         import types
 
-        from soup_cli.utils import adapter_fuse
+        from ai_forge_cli.utils import adapter_fuse
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "out" / "_adapter"
@@ -424,27 +424,27 @@ class _FakeTok:
 
 class TestComputeAcceptance:
     def test_all_match(self):
-        from soup_cli.utils.draft import compute_acceptance
+        from ai_forge_cli.utils.draft import compute_acceptance
 
         assert compute_acceptance([1, 2, 3], [1, 2, 3]) == 1.0
 
     def test_none_match(self):
-        from soup_cli.utils.draft import compute_acceptance
+        from ai_forge_cli.utils.draft import compute_acceptance
 
         assert compute_acceptance([9, 9, 9], [1, 2, 3]) == 0.0
 
     def test_partial(self):
-        from soup_cli.utils.draft import compute_acceptance
+        from ai_forge_cli.utils.draft import compute_acceptance
 
         assert compute_acceptance([1, 2, 9], [1, 2, 3]) == pytest.approx(2 / 3)
 
     def test_empty_is_zero(self):
-        from soup_cli.utils.draft import compute_acceptance
+        from ai_forge_cli.utils.draft import compute_acceptance
 
         assert compute_acceptance([], []) == 0.0
 
     def test_length_mismatch_raises(self):
-        from soup_cli.utils.draft import compute_acceptance
+        from ai_forge_cli.utils.draft import compute_acceptance
 
         with pytest.raises(ValueError, match="same length"):
             compute_acceptance([1, 2], [1])
@@ -452,25 +452,25 @@ class TestComputeAcceptance:
 
 class TestCountAcceptedAndRate:
     def test_count_accepted(self):
-        from soup_cli.utils.draft import count_accepted
+        from ai_forge_cli.utils.draft import count_accepted
 
         assert count_accepted([1, 2, 9], [1, 2, 3]) == 2
         assert count_accepted([], []) == 0
 
     def test_count_accepted_length_mismatch_raises(self):
-        from soup_cli.utils.draft import count_accepted
+        from ai_forge_cli.utils.draft import count_accepted
 
         with pytest.raises(ValueError, match="same length"):
             count_accepted([1], [1, 2])
 
     def test_acceptance_rate(self):
-        from soup_cli.utils.draft import acceptance_rate
+        from ai_forge_cli.utils.draft import acceptance_rate
 
         assert acceptance_rate(75, 100) == 0.75
         assert acceptance_rate(0, 0) == 0.0
 
     def test_acceptance_rate_rejects_impossible_counts(self):
-        from soup_cli.utils.draft import acceptance_rate
+        from ai_forge_cli.utils.draft import acceptance_rate
 
         with pytest.raises(ValueError, match="exceeds"):
             acceptance_rate(5, 3)
@@ -480,7 +480,7 @@ class TestCountAcceptedAndRate:
 
 class TestClassify:
     def test_boundary_exact(self):
-        from soup_cli.utils.draft import classify_acceptance
+        from ai_forge_cli.utils.draft import classify_acceptance
 
         assert classify_acceptance(0.70) == "STRONG"
         assert classify_acceptance(0.6999) == "MODERATE"
@@ -490,19 +490,19 @@ class TestClassify:
         assert classify_acceptance(1.0) == "STRONG"
 
     def test_rejects_bool(self):
-        from soup_cli.utils.draft import classify_acceptance
+        from ai_forge_cli.utils.draft import classify_acceptance
 
         with pytest.raises(TypeError, match="bool"):
             classify_acceptance(True)
 
     def test_rejects_nonfinite(self):
-        from soup_cli.utils.draft import classify_acceptance
+        from ai_forge_cli.utils.draft import classify_acceptance
 
         with pytest.raises(ValueError, match="finite"):
             classify_acceptance(float("nan"))
 
     def test_rejects_out_of_range(self):
-        from soup_cli.utils.draft import classify_acceptance
+        from ai_forge_cli.utils.draft import classify_acceptance
 
         with pytest.raises(ValueError, match="between 0 and 1"):
             classify_acceptance(1.5)
@@ -512,7 +512,7 @@ class TestClassify:
 
 class TestSameTokenizer:
     def test_identical_is_true(self):
-        from soup_cli.utils.draft import same_tokenizer
+        from ai_forge_cli.utils.draft import same_tokenizer
 
         tok = _FakeTok(32000)
         assert same_tokenizer(tok, tok) is True
@@ -525,7 +525,7 @@ class TestSameTokenizer:
         every single token — a vocab_size check alone would wave that through
         and the draft's proposals would be pure noise.
         """
-        from soup_cli.utils.draft import same_tokenizer
+        from ai_forge_cli.utils.draft import same_tokenizer
 
         probe = "Hello, world!"
         a = _FakeTok(32000, {probe: [1, 2, 3]})
@@ -533,12 +533,12 @@ class TestSameTokenizer:
         assert same_tokenizer(a, b) is False
 
     def test_different_vocab_size_is_false(self):
-        from soup_cli.utils.draft import same_tokenizer
+        from ai_forge_cli.utils.draft import same_tokenizer
 
         assert same_tokenizer(_FakeTok(32000), _FakeTok(49152)) is False
 
     def test_missing_vocab_size_attribute_is_false(self):
-        from soup_cli.utils.draft import same_tokenizer
+        from ai_forge_cli.utils.draft import same_tokenizer
 
         class _NoVocab:
             def encode(self, text, add_special_tokens=False):
@@ -549,7 +549,7 @@ class TestSameTokenizer:
 
     def test_probe_corpus_is_non_trivial(self):
         """A single-ASCII-word probe would miss most real tokenizer splits."""
-        from soup_cli.utils.draft import PROBE_CORPUS
+        from ai_forge_cli.utils.draft import PROBE_CORPUS
 
         assert len(PROBE_CORPUS) >= 4
         joined = "".join(PROBE_CORPUS)
@@ -557,7 +557,7 @@ class TestSameTokenizer:
         assert any(ch.isdigit() for ch in joined), "probe must include digits"
 
     def test_broken_tokenizer_encode_is_false_not_raise(self):
-        from soup_cli.utils.draft import same_tokenizer
+        from ai_forge_cli.utils.draft import same_tokenizer
 
         class _Broken:
             vocab_size = 32000
@@ -570,7 +570,7 @@ class TestSameTokenizer:
 
 class TestReport:
     def _report(self, **kw):
-        from soup_cli.utils.draft import AcceptanceReport
+        from ai_forge_cli.utils.draft import AcceptanceReport
 
         defaults = dict(
             target="t",
@@ -596,7 +596,7 @@ class TestReport:
             report.acceptance_rate = 0.1  # type: ignore[misc]
 
     def test_to_dict_round_trip(self):
-        from soup_cli.utils.draft import draft_report_to_dict
+        from ai_forge_cli.utils.draft import draft_report_to_dict
 
         data = draft_report_to_dict(self._report())
         assert data["acceptance_rate"] == 0.75
@@ -609,7 +609,7 @@ class TestReport:
 
         from rich.console import Console
 
-        from soup_cli.utils.draft import render_draft_panel
+        from ai_forge_cli.utils.draft import render_draft_panel
 
         buf = StringIO()
         Console(file=buf, width=100).print(render_draft_panel(self._report()))
@@ -622,7 +622,7 @@ class TestReport:
 
         from rich.console import Console
 
-        from soup_cli.utils.draft import render_draft_panel
+        from ai_forge_cli.utils.draft import render_draft_panel
 
         buf = StringIO()
         report = self._report(tok_s_plain=None, tok_s_assisted=None, speedup=None)
@@ -643,7 +643,7 @@ def draft_registry(tmp_path, monkeypatch):
 
 class TestDraftRegistry:
     def test_round_trip(self, draft_registry, tmp_path):
-        from soup_cli.utils.draft import list_drafts, lookup_draft, register_draft
+        from ai_forge_cli.utils.draft import list_drafts, lookup_draft, register_draft
 
         draft = tmp_path / "mydraft"
         draft.mkdir()
@@ -657,7 +657,7 @@ class TestDraftRegistry:
 
     def test_lookup_is_case_insensitive(self, draft_registry, tmp_path):
         """Must match pick_draft_model's .lower() normalisation."""
-        from soup_cli.utils.draft import lookup_draft, register_draft
+        from ai_forge_cli.utils.draft import lookup_draft, register_draft
 
         draft = tmp_path / "d"
         draft.mkdir()
@@ -669,7 +669,7 @@ class TestDraftRegistry:
         """A moved/deleted draft degrades to 'no draft', never a crash in serve."""
         import shutil
 
-        from soup_cli.utils.draft import lookup_draft, register_draft
+        from ai_forge_cli.utils.draft import lookup_draft, register_draft
 
         draft = tmp_path / "gone"
         draft.mkdir()
@@ -678,7 +678,7 @@ class TestDraftRegistry:
         assert lookup_draft("hf/target") is None
 
     def test_reregister_replaces(self, draft_registry, tmp_path):
-        from soup_cli.utils.draft import list_drafts, lookup_draft, register_draft
+        from ai_forge_cli.utils.draft import list_drafts, lookup_draft, register_draft
 
         first = tmp_path / "one"
         first.mkdir()
@@ -690,27 +690,27 @@ class TestDraftRegistry:
         assert lookup_draft("hf/t") == os.path.realpath(str(second))
 
     def test_malformed_json_reads_as_empty(self, draft_registry):
-        from soup_cli.utils.draft import list_drafts, lookup_draft
+        from ai_forge_cli.utils.draft import list_drafts, lookup_draft
 
         draft_registry.write_text("{ not json", encoding="utf-8")
         assert list_drafts() == []
         assert lookup_draft("anything") is None
 
     def test_non_dict_payload_reads_as_empty(self, draft_registry):
-        from soup_cli.utils.draft import list_drafts
+        from ai_forge_cli.utils.draft import list_drafts
 
         draft_registry.write_text('["nope"]', encoding="utf-8")
         assert list_drafts() == []
 
     def test_missing_file_reads_as_empty(self, draft_registry):
-        from soup_cli.utils.draft import list_drafts, lookup_draft
+        from ai_forge_cli.utils.draft import list_drafts, lookup_draft
 
         assert not draft_registry.exists()
         assert list_drafts() == []
         assert lookup_draft("x") is None
 
     def test_entry_cap_evicts_oldest_first(self, draft_registry, tmp_path):
-        from soup_cli.utils.draft import (
+        from ai_forge_cli.utils.draft import (
             _MAX_REGISTRY_ENTRIES,
             list_drafts,
             register_draft,
@@ -732,7 +732,7 @@ class TestDraftRegistry:
     def test_registry_symlink_is_not_followed_on_read(self, draft_registry, tmp_path):
         """O_NOFOLLOW: a symlink at the registry path must degrade to empty,
         not leak an arbitrary file's parsed content into serve --auto-spec."""
-        from soup_cli.utils.draft import list_drafts
+        from ai_forge_cli.utils.draft import list_drafts
 
         secret = tmp_path / "secret.json"
         secret.write_text(
@@ -742,7 +742,7 @@ class TestDraftRegistry:
         assert list_drafts() == []
 
     def test_atomic_write_leaves_no_temp_file(self, draft_registry, tmp_path):
-        from soup_cli.utils.draft import register_draft
+        from ai_forge_cli.utils.draft import register_draft
 
         draft = tmp_path / "d"
         draft.mkdir()
@@ -756,7 +756,7 @@ class TestDraftRegistry:
         """code-review MEDIUM: read-modify-write under a cross-process lock."""
         import threading
 
-        from soup_cli.utils.draft import list_drafts, register_draft
+        from ai_forge_cli.utils.draft import list_drafts, register_draft
 
         draft = tmp_path / "d"
         draft.mkdir()
@@ -779,7 +779,7 @@ class TestDraftRegistry:
         assert targets == {f"hf/target-{i}" for i in range(12)}
 
     def test_rejects_empty_target_and_bad_rate(self, draft_registry, tmp_path):
-        from soup_cli.utils.draft import register_draft
+        from ai_forge_cli.utils.draft import register_draft
 
         draft = tmp_path / "d"
         draft.mkdir()
@@ -792,8 +792,8 @@ class TestDraftRegistry:
 class TestSpecPairingLocal:
     def test_local_registry_beats_static_map(self, draft_registry, tmp_path):
         """A draft you trained yourself wins over the built-in pairing."""
-        from soup_cli.utils.draft import register_draft
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.draft import register_draft
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         draft = tmp_path / "mydraft"
         draft.mkdir()
@@ -801,23 +801,23 @@ class TestSpecPairingLocal:
         assert pick_draft_model("Qwen/Qwen2.5-72B") == os.path.realpath(str(draft))
 
     def test_falls_back_to_static_map(self, draft_registry):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         assert pick_draft_model("Qwen/Qwen2.5-72B") == "Qwen/Qwen2.5-0.5B"
 
     def test_unknown_target_still_none(self, draft_registry):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         assert pick_draft_model("nobody/nothing-1b") is None
 
     def test_url_target_still_rejected(self, draft_registry):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         assert pick_draft_model("https://evil.example/model") is None
 
     def test_registry_blowup_does_not_crash_serve(self, draft_registry, monkeypatch):
         """pick_draft_model is on serve's startup path — it must never raise."""
-        from soup_cli.utils import spec_pairing
+        from ai_forge_cli.utils import spec_pairing
 
         def _boom(target):
             raise RuntimeError("registry on fire")
@@ -907,7 +907,7 @@ class TestMeasureAcceptance:
     ARGMAX = [99, 10, 99, 12, 99]
 
     def test_shift_convention_is_pinned(self):
-        from soup_cli.utils.draft import measure_acceptance
+        from ai_forge_cli.utils.draft import measure_acceptance
 
         accepted, total = measure_acceptance(
             _FakeTarget(self.FULL_IDS, self.N_PROMPT),
@@ -920,7 +920,7 @@ class TestMeasureAcceptance:
 
     def test_off_by_one_alternatives_would_score_differently(self):
         """Guards the guard: the fixture must discriminate, not just pass."""
-        from soup_cli.utils.draft import compute_acceptance
+        from ai_forge_cli.utils.draft import compute_acceptance
 
         generated = [10, 11, 12]
         correct = self.ARGMAX[1:4]
@@ -931,7 +931,7 @@ class TestMeasureAcceptance:
         assert compute_acceptance(off_minus, generated) == 0.0
 
     def test_multiple_prompts_accumulate(self):
-        from soup_cli.utils.draft import measure_acceptance
+        from ai_forge_cli.utils.draft import measure_acceptance
 
         accepted, total = measure_acceptance(
             _FakeTarget(self.FULL_IDS, self.N_PROMPT),
@@ -943,7 +943,7 @@ class TestMeasureAcceptance:
         assert (accepted, total) == (6, 9)
 
     def test_empty_generation_is_skipped_not_counted(self):
-        from soup_cli.utils.draft import measure_acceptance
+        from ai_forge_cli.utils.draft import measure_acceptance
 
         # Target returns the prompt unchanged -> nothing was generated.
         accepted, total = measure_acceptance(
@@ -957,7 +957,7 @@ class TestMeasureAcceptance:
 
     def test_generation_is_greedy(self):
         """Sampling would make the acceptance rate non-deterministic."""
-        from soup_cli.utils.draft import measure_acceptance
+        from ai_forge_cli.utils.draft import measure_acceptance
 
         target = _FakeTarget(self.FULL_IDS, self.N_PROMPT)
         measure_acceptance(
@@ -970,7 +970,7 @@ class TestMeasureAcceptance:
 
 class TestMeasureThroughput:
     def test_discards_a_warmup_generate(self):
-        from soup_cli.utils.draft import measure_throughput
+        from ai_forge_cli.utils.draft import measure_throughput
 
         target = _FakeTarget([5, 6, 10, 11, 12], 2)
         rate = measure_throughput(
@@ -981,14 +981,14 @@ class TestMeasureThroughput:
         assert rate > 0
 
     def test_empty_prompts_is_zero(self):
-        from soup_cli.utils.draft import measure_throughput
+        from ai_forge_cli.utils.draft import measure_throughput
 
         target = _FakeTarget([5, 6], 2)
         assert measure_throughput(target, _TensorTok([5, 6]), []) == 0.0
         assert target.calls == []
 
     def test_assistant_model_is_forwarded(self):
-        from soup_cli.utils.draft import measure_throughput
+        from ai_forge_cli.utils.draft import measure_throughput
 
         target = _FakeTarget([5, 6, 10, 11, 12], 2)
         draft = _FakeDraft([0, 0, 0, 0, 0])
@@ -1003,7 +1003,7 @@ class TestMeasureThroughput:
         assert target.calls[0]["num_assistant_tokens"] == 7
 
     def test_plain_run_passes_no_assistant(self):
-        from soup_cli.utils.draft import measure_throughput
+        from ai_forge_cli.utils.draft import measure_throughput
 
         target = _FakeTarget([5, 6, 10, 11, 12], 2)
         measure_throughput(target, _TensorTok([5, 6]), ["a"])
@@ -1016,9 +1016,9 @@ class TestDraftNoTopLevelTorch:
         [("utils", "draft.py"), ("commands", "draft.py")],
     )
     def test_is_torch_free(self, relpath):
-        import soup_cli
+        import ai_forge_cli
 
-        path = Path(soup_cli.__file__).parent.joinpath(*relpath)
+        path = Path(ai_forge_cli.__file__).parent.joinpath(*relpath)
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.Import):
@@ -1066,7 +1066,7 @@ def _write_jsonl(path: Path, rows: list[dict]) -> str:
 
 class TestDraftCliPlumbing:
     def test_registered_on_main_app(self, runner):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = runner.invoke(app, ["draft", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -1074,7 +1074,7 @@ class TestDraftCliPlumbing:
             assert sub in result.output
 
     def test_subcommand_help(self, runner):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         for sub in ("distill", "measure", "list"):
             result = runner.invoke(app, [sub, "--help"])
@@ -1085,14 +1085,14 @@ class TestDraftCliPlumbing:
         """code-review MEDIUM: without it, any auto_map model is a dead end."""
         import re
 
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         result = runner.invoke(app, [sub, "--help"])
         plain = re.sub(r"\x1b\[[0-9;]*m", "", result.output).replace("\n", " ")
         assert "--trust-remote-code" in re.sub(r"\s+", " ", plain)
 
     def test_trust_flag_is_threaded_into_resolution(self, monkeypatch):
-        from soup_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands import draft as draft_cmd
 
         seen: dict = {}
 
@@ -1101,10 +1101,10 @@ class TestDraftCliPlumbing:
             return requested
 
         monkeypatch.setattr(
-            "soup_cli.utils.trust_remote.resolve_trust_remote_code", _fake_resolve
+            "ai_forge_cli.utils.trust_remote.resolve_trust_remote_code", _fake_resolve
         )
         monkeypatch.setattr(
-            "soup_cli.utils.trust_remote.model_requires_trust_remote_code",
+            "ai_forge_cli.utils.trust_remote.model_requires_trust_remote_code",
             lambda mid: False,
         )
         assert draft_cmd._resolve_trust("org/x", True) is True
@@ -1120,7 +1120,7 @@ class TestDraftDistillCli:
         )
 
     def _patch_configs(self, monkeypatch, target_vocab, draft_vocab):
-        from soup_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands import draft as draft_cmd
 
         def _fake_vocab(model_id: str, trc: bool = False) -> int:
             return target_vocab if "target" in model_id else draft_vocab
@@ -1128,7 +1128,7 @@ class TestDraftDistillCli:
         monkeypatch.setattr(draft_cmd, "_vocab_size_of", _fake_vocab)
 
     def test_plan_only_writes_nothing(self, runner, in_tmp_cwd, monkeypatch):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_configs(monkeypatch, 49152, 49152)
         data = self._data(in_tmp_cwd)
@@ -1142,7 +1142,7 @@ class TestDraftDistillCli:
         assert not (in_tmp_cwd / "draftout").exists()
 
     def test_vocab_mismatch_rejected(self, runner, in_tmp_cwd, monkeypatch):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_configs(monkeypatch, 49152, 151936)
         data = self._data(in_tmp_cwd)
@@ -1157,7 +1157,7 @@ class TestDraftDistillCli:
 
     def test_data_outside_cwd_rejected(self, runner, in_tmp_cwd, tmp_path_factory,
                                        monkeypatch):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_configs(monkeypatch, 49152, 49152)
         outside = tmp_path_factory.mktemp("outside")
@@ -1171,7 +1171,7 @@ class TestDraftDistillCli:
         assert "cwd" in result.output.lower() or "outside" in result.output.lower()
 
     def test_output_outside_cwd_rejected(self, runner, in_tmp_cwd, monkeypatch):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_configs(monkeypatch, 49152, 49152)
         data = self._data(in_tmp_cwd)
@@ -1185,7 +1185,7 @@ class TestDraftDistillCli:
 
     def test_output_is_cwd_rejected(self, runner, in_tmp_cwd, monkeypatch):
         """security CRITICAL: -o . would rmtree the whole working dir on success."""
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_configs(monkeypatch, 49152, 49152)
         data = self._data(in_tmp_cwd)
@@ -1201,7 +1201,7 @@ class TestDraftDistillCli:
         self, runner, in_tmp_cwd, monkeypatch
     ):
         """security CRITICAL: overwriting an unrelated dir needs --force."""
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_configs(monkeypatch, 49152, 49152)
         data = self._data(in_tmp_cwd)
@@ -1220,7 +1220,7 @@ class TestDraftDistillCli:
         self, runner, in_tmp_cwd, monkeypatch
     ):
         """Re-distilling into a prior draft (has config.json) is fine."""
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_configs(monkeypatch, 49152, 49152)
         data = self._data(in_tmp_cwd)
@@ -1235,7 +1235,7 @@ class TestDraftDistillCli:
         assert result.exit_code == 0, (result.output, repr(result.exception))
 
     def test_missing_data_file_rejected(self, runner, in_tmp_cwd, monkeypatch):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_configs(monkeypatch, 49152, 49152)
         result = runner.invoke(
@@ -1249,7 +1249,7 @@ class TestDraftDistillCli:
     def test_force_overwrites_a_preexisting_nondraft_dir(
         self, runner, in_tmp_cwd, monkeypatch
     ):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_configs(monkeypatch, 49152, 49152)
         data = self._data(in_tmp_cwd)
@@ -1266,7 +1266,7 @@ class TestDraftDistillCli:
     def test_empty_preexisting_dir_allowed_without_force(
         self, runner, in_tmp_cwd, monkeypatch
     ):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_configs(monkeypatch, 49152, 49152)
         data = self._data(in_tmp_cwd)
@@ -1281,8 +1281,8 @@ class TestDraftDistillCli:
     def test_config_unreadable_reports_friendly_error(
         self, runner, in_tmp_cwd, monkeypatch
     ):
-        from soup_cli.commands import draft as draft_cmd
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands.draft import app
 
         def _boom(model_id, trc=False):
             raise OSError("model not found")
@@ -1300,7 +1300,7 @@ class TestDraftDistillCli:
     def test_run_distill_surfaces_subprocess_failure(self, in_tmp_cwd, monkeypatch):
         import subprocess as _sp
 
-        from soup_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands import draft as draft_cmd
 
         class _Result:
             returncode = 1
@@ -1318,7 +1318,7 @@ class TestDraftDistillCli:
     def test_run_distill_timeout_raises_friendly_error(self, in_tmp_cwd, monkeypatch):
         import subprocess as _sp
 
-        from soup_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands import draft as draft_cmd
 
         def _boom(argv, **kw):
             raise _sp.TimeoutExpired(cmd=argv, timeout=kw.get("timeout", 1))
@@ -1334,7 +1334,7 @@ class TestDraftDistillCli:
     def test_run_distill_cpu_device_hides_gpus(self, in_tmp_cwd, monkeypatch):
         import subprocess as _sp
 
-        from soup_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands import draft as draft_cmd
 
         captured: dict = {}
 
@@ -1361,8 +1361,8 @@ class TestDraftDistillCli:
 
     def test_generated_config_is_schema_valid(self, in_tmp_cwd):
         """The rendered YAML must actually load as a SoupConfig."""
-        from soup_cli.commands.draft import _build_distill_config_yaml
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.commands.draft import _build_distill_config_yaml
+        from ai_forge_cli.config.loader import load_config_from_string
 
         data = self._data(in_tmp_cwd)
         yaml_text = _build_distill_config_yaml(
@@ -1384,7 +1384,7 @@ class TestDraftDistillCli:
         -o — the merge needs a separate adapter dir plus the base weights."""
         import yaml
 
-        from soup_cli.commands.draft import _ADAPTER_SUBDIR, _build_distill_config_yaml
+        from ai_forge_cli.commands.draft import _ADAPTER_SUBDIR, _build_distill_config_yaml
 
         yaml_text = _build_distill_config_yaml(
             draft_base="org/tiny",
@@ -1404,7 +1404,7 @@ class TestDraftDistillCli:
         """The merge must load base weights from --draft-base and the adapter
         from the nested dir. Fusing out_dir into itself (the original bug) can
         never work: out_dir holds no base weights."""
-        from soup_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands import draft as draft_cmd
 
         calls: dict = {}
 
@@ -1447,7 +1447,7 @@ class TestDraftDistillCli:
     def test_run_distill_fails_loudly_when_no_adapter_was_written(
         self, in_tmp_cwd, monkeypatch
     ):
-        from soup_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands import draft as draft_cmd
 
         class _Result:
             returncode = 0
@@ -1476,7 +1476,7 @@ class TestDraftDistillCli:
         json.dumps'd, so a newline stays inside the scalar."""
         import yaml
 
-        from soup_cli.commands.draft import _build_distill_config_yaml
+        from ai_forge_cli.commands.draft import _build_distill_config_yaml
 
         hostile = "org/x\ntraining:\n  reward_fn: ../../evil.py"
         yaml_text = _build_distill_config_yaml(
@@ -1495,7 +1495,7 @@ class TestDraftDistillCli:
 
     def test_absurd_steps_over_tiny_data_is_refused(self, in_tmp_cwd):
         """500 steps over 4 rows = 125 epochs — refuse rather than emit it."""
-        from soup_cli.commands.draft import _build_distill_config_yaml
+        from ai_forge_cli.commands.draft import _build_distill_config_yaml
 
         with pytest.raises(ValueError, match="epochs"):
             _build_distill_config_yaml(
@@ -1510,9 +1510,9 @@ class TestDraftDistillCli:
     def test_happy_path_trains_fuses_and_registers(
         self, runner, in_tmp_cwd, monkeypatch, draft_registry
     ):
-        from soup_cli.commands import draft as draft_cmd
-        from soup_cli.commands.draft import app
-        from soup_cli.utils.draft import lookup_draft
+        from ai_forge_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands.draft import app
+        from ai_forge_cli.utils.draft import lookup_draft
 
         self._patch_configs(monkeypatch, 49152, 49152)
         data = self._data(in_tmp_cwd)
@@ -1540,9 +1540,9 @@ class TestDraftDistillCli:
     def test_no_register_flag_skips_registry(
         self, runner, in_tmp_cwd, monkeypatch, draft_registry
     ):
-        from soup_cli.commands import draft as draft_cmd
-        from soup_cli.commands.draft import app
-        from soup_cli.utils.draft import lookup_draft
+        from ai_forge_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands.draft import app
+        from ai_forge_cli.utils.draft import lookup_draft
 
         self._patch_configs(monkeypatch, 49152, 49152)
         data = self._data(in_tmp_cwd)
@@ -1567,7 +1567,7 @@ class TestDraftMeasureCli:
         )
 
     def _patch_load(self, monkeypatch, *, compatible=True):
-        from soup_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands import draft as draft_cmd
 
         tok_a = _FakeTok(49152)
         tok_b = _FakeTok(49152) if compatible else _FakeTok(151936)
@@ -1583,8 +1583,8 @@ class TestDraftMeasureCli:
     ):
         import json as _json
 
-        from soup_cli.commands import draft as draft_cmd
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands.draft import app
 
         self._patch_load(monkeypatch)
         monkeypatch.setattr(draft_cmd, "measure_acceptance", lambda *a, **k: (75, 100))
@@ -1604,8 +1604,8 @@ class TestDraftMeasureCli:
         assert data["n_generated_tokens"] == 100
 
     def test_below_min_acceptance_exits_two(self, runner, in_tmp_cwd, monkeypatch):
-        from soup_cli.commands import draft as draft_cmd
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands.draft import app
 
         self._patch_load(monkeypatch)
         monkeypatch.setattr(draft_cmd, "measure_acceptance", lambda *a, **k: (40, 100))
@@ -1622,7 +1622,7 @@ class TestDraftMeasureCli:
         assert "below" in result.output.lower()
 
     def test_mismatched_tokenizer_exits_one(self, runner, in_tmp_cwd, monkeypatch):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_load(monkeypatch, compatible=False)
         prompts = self._prompts(in_tmp_cwd)
@@ -1637,7 +1637,7 @@ class TestDraftMeasureCli:
     def test_prompts_outside_cwd_rejected(
         self, runner, in_tmp_cwd, tmp_path_factory, monkeypatch
     ):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_load(monkeypatch)
         outside = tmp_path_factory.mktemp("outside2")
@@ -1650,7 +1650,7 @@ class TestDraftMeasureCli:
         assert result.exit_code == 1
 
     def test_empty_prompts_rejected(self, runner, in_tmp_cwd, monkeypatch):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_load(monkeypatch)
         empty = in_tmp_cwd / "empty.jsonl"
@@ -1663,7 +1663,7 @@ class TestDraftMeasureCli:
         assert result.exit_code == 1
 
     def test_bad_min_acceptance_rejected(self, runner, in_tmp_cwd, monkeypatch):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         self._patch_load(monkeypatch)
         prompts = self._prompts(in_tmp_cwd)
@@ -1677,8 +1677,8 @@ class TestDraftMeasureCli:
     def test_model_load_failure_reports_friendly_error(
         self, runner, in_tmp_cwd, monkeypatch
     ):
-        from soup_cli.commands import draft as draft_cmd
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands.draft import app
 
         def _boom(model_id, **kw):
             raise OSError("model not found")
@@ -1696,8 +1696,8 @@ class TestDraftMeasureCli:
     def test_report_output_outside_cwd_rejected(
         self, runner, in_tmp_cwd, monkeypatch
     ):
-        from soup_cli.commands import draft as draft_cmd
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands.draft import app
 
         self._patch_load(monkeypatch)
         monkeypatch.setattr(draft_cmd, "measure_acceptance", lambda *a, **k: (75, 100))
@@ -1714,8 +1714,8 @@ class TestDraftMeasureCli:
     def test_zero_throughput_renders_as_na(self, runner, in_tmp_cwd, monkeypatch):
         import json as _json
 
-        from soup_cli.commands import draft as draft_cmd
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands.draft import app
 
         self._patch_load(monkeypatch)
         monkeypatch.setattr(draft_cmd, "measure_acceptance", lambda *a, **k: (75, 100))
@@ -1737,8 +1737,8 @@ class TestDraftMeasureCli:
         self, runner, in_tmp_cwd, monkeypatch
     ):
         """A target that emits EOS immediately must not divide by zero."""
-        from soup_cli.commands import draft as draft_cmd
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands import draft as draft_cmd
+        from ai_forge_cli.commands.draft import app
 
         self._patch_load(monkeypatch)
         monkeypatch.setattr(draft_cmd, "measure_acceptance", lambda *a, **k: (0, 0))
@@ -1756,8 +1756,8 @@ class TestDraftMeasureCli:
 
 class TestDraftListCli:
     def test_lists_registered_drafts(self, runner, draft_registry, tmp_path):
-        from soup_cli.commands.draft import app
-        from soup_cli.utils.draft import register_draft
+        from ai_forge_cli.commands.draft import app
+        from ai_forge_cli.utils.draft import register_draft
 
         draft = tmp_path / "d"
         draft.mkdir()
@@ -1769,7 +1769,7 @@ class TestDraftListCli:
         assert "71" in result.output
 
     def test_empty_registry_is_not_an_error(self, runner, draft_registry):
-        from soup_cli.commands.draft import app
+        from ai_forge_cli.commands.draft import app
 
         result = runner.invoke(app, ["list"])
         assert result.exit_code == 0
@@ -1778,8 +1778,8 @@ class TestDraftListCli:
     def test_renders_dash_for_unmeasured_acceptance(
         self, runner, draft_registry, tmp_path
     ):
-        from soup_cli.commands.draft import app
-        from soup_cli.utils.draft import register_draft
+        from ai_forge_cli.commands.draft import app
+        from ai_forge_cli.utils.draft import register_draft
 
         draft = tmp_path / "d"
         draft.mkdir()
@@ -1791,8 +1791,8 @@ class TestDraftListCli:
     def test_escapes_markup_in_registered_target(
         self, runner, draft_registry, tmp_path
     ):
-        from soup_cli.commands.draft import app
-        from soup_cli.utils.draft import register_draft
+        from ai_forge_cli.commands.draft import app
+        from ai_forge_cli.utils.draft import register_draft
 
         draft = tmp_path / "d"
         draft.mkdir()
@@ -1810,7 +1810,7 @@ class TestMillionParamSizeGate:
     whisper fix."""
 
     def test_million_suffix_is_parsed(self):
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         assert model_size_from_name(
             "HuggingFaceTB/SmolLM2-135M-Instruct"
@@ -1825,27 +1825,27 @@ class TestMillionParamSizeGate:
     def test_billion_marker_still_wins_over_a_context_length_suffix(self):
         """`Qwen2.5-7B-Instruct-1M` is a 7B model with a 1M CONTEXT — the "1M"
         must not be read as 1M parameters."""
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         assert model_size_from_name("Qwen/Qwen2.5-7B-Instruct-1M") == 7
 
     def test_one_point_seven_b_is_not_seven_b(self):
         """"1.7b" contains "7b" — the marker list must match the longer one."""
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         assert model_size_from_name(
             "HuggingFaceTB/SmolLM2-1.7B-Instruct"
         ) == pytest.approx(1.7)
 
     def test_unknown_model_still_defaults_to_7b(self):
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         assert model_size_from_name("some-unknown-model") == 7.0
 
 
 class TestPromptTexts:
     def test_extracts_messages_and_drops_unusable_rows(self):
-        from soup_cli.commands.draft import _prompt_texts
+        from ai_forge_cli.commands.draft import _prompt_texts
 
         rows = [
             {"messages": [
@@ -1882,8 +1882,8 @@ class TestDistillStepBudget:
 
     def test_steps_are_delivered_not_quartered(self):
         """Asking for 100 steps must reach ~100, not ~22 (100 / 4.44)."""
-        from soup_cli.commands import draft
-        from soup_cli.config.schema import DataConfig, TrainingConfig
+        from ai_forge_cli.commands import draft
+        from ai_forge_cli.config.schema import DataConfig, TrainingConfig
 
         rows, requested = 100, 100
         val_split = float(DataConfig.model_fields["val_split"].default)
@@ -1909,7 +1909,7 @@ class TestDistillStepBudget:
     def test_delivered_steps_track_request_across_shapes(self, val_split, accum):
         """val_split and gradient_accumulation_steps each divide the budget —
         vary them independently (one arm at defaults is not discriminating)."""
-        from soup_cli.commands import draft
+        from ai_forge_cli.commands import draft
 
         rows, requested = 500, 120
         per_epoch = draft._distill_steps_per_epoch(
@@ -1925,8 +1925,8 @@ class TestDistillStepBudget:
     def test_emitted_config_pins_the_run_shape_and_loads(self):
         """The config must pin the shape the epoch math assumed, so a
         schema-default change cannot silently reintroduce the drift (#364)."""
-        from soup_cli.commands import draft
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.commands import draft
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = draft._build_distill_config_yaml(
             draft_base="HuggingFaceTB/SmolLM2-135M", target="org/target",

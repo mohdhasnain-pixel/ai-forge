@@ -46,13 +46,13 @@ def _strip_ansi(text: str) -> str:
 # ---------------------------------------------------------------------------
 class TestSigningPrimitives:
     def test_is_signing_available(self):
-        from soup_cli.utils.signing import is_signing_available
+        from ai_forge_cli.utils.signing import is_signing_available
 
         # cryptography is in the dev env; this must be True here.
         assert is_signing_available() is True
 
     def test_generate_and_roundtrip(self):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             private_key_from_pem,
             public_key_pem,
@@ -70,7 +70,7 @@ class TestSigningPrimitives:
         assert verify_payload(pub, b"the merkle root", sig) is True
 
     def test_verify_rejects_tampered_payload(self):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             private_key_from_pem,
             public_key_pem,
@@ -84,7 +84,7 @@ class TestSigningPrimitives:
         assert verify_payload(pub, b"tampered", sig) is False
 
     def test_verify_rejects_wrong_key(self):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             private_key_from_pem,
             public_key_pem,
@@ -98,7 +98,7 @@ class TestSigningPrimitives:
         assert verify_payload(public_key_pem(other), b"x", sig) is False
 
     def test_verify_bad_signature_hex_returns_false(self):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             private_key_from_pem,
             public_key_pem,
@@ -110,7 +110,7 @@ class TestSigningPrimitives:
         assert verify_payload(pub, b"x", "ab") is False  # wrong length
 
     def test_sign_payload_rejects_non_bytes(self):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             private_key_from_pem,
             sign_payload,
@@ -125,7 +125,7 @@ class TestSigningPrimitives:
         from cryptography.hazmat.primitives import serialization
         from cryptography.hazmat.primitives.asymmetric import rsa
 
-        from soup_cli.utils.signing import private_key_from_pem
+        from ai_forge_cli.utils.signing import private_key_from_pem
 
         rsa_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         rsa_pem = rsa_key.private_bytes(
@@ -137,13 +137,13 @@ class TestSigningPrimitives:
             private_key_from_pem(rsa_pem)
 
     def test_private_key_from_pem_rejects_garbage(self):
-        from soup_cli.utils.signing import private_key_from_pem
+        from ai_forge_cli.utils.signing import private_key_from_pem
 
         with pytest.raises(ValueError):
             private_key_from_pem("not a pem")
 
     def test_load_private_key_file(self, tmp_path):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             load_private_key_file,
             public_key_pem,
@@ -159,20 +159,20 @@ class TestSigningPrimitives:
         assert verify_payload(public_key_pem(key), b"z", sig) is True
 
     def test_load_private_key_file_missing(self, tmp_path):
-        from soup_cli.utils.signing import load_private_key_file
+        from ai_forge_cli.utils.signing import load_private_key_file
 
         with pytest.raises(FileNotFoundError):
             load_private_key_file(str(tmp_path / "nope.pem"))
 
     def test_load_private_key_file_null_byte(self):
-        from soup_cli.utils.signing import load_private_key_file
+        from ai_forge_cli.utils.signing import load_private_key_file
 
         with pytest.raises(ValueError):
             load_private_key_file("a\x00b.pem")
 
     @POSIX_ONLY
     def test_load_private_key_file_symlink_rejected(self, tmp_path):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             load_private_key_file,
         )
@@ -185,7 +185,7 @@ class TestSigningPrimitives:
             load_private_key_file(str(link))
 
     def test_resolve_signing_key_explicit(self, tmp_path):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             resolve_signing_key,
         )
@@ -196,7 +196,7 @@ class TestSigningPrimitives:
         assert key is not None
 
     def test_resolve_signing_key_env(self, tmp_path):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             resolve_signing_key,
         )
@@ -207,7 +207,7 @@ class TestSigningPrimitives:
         assert key is not None
 
     def test_resolve_signing_key_missing_raises(self):
-        from soup_cli.utils.signing import resolve_signing_key
+        from ai_forge_cli.utils.signing import resolve_signing_key
 
         with pytest.raises(ValueError, match="private key"):
             resolve_signing_key(None, env={})
@@ -229,7 +229,7 @@ def _write_fake_adapter(tmp_path):
 # ---------------------------------------------------------------------------
 class TestAdapterSignEd25519:
     def _key(self, tmp_path):
-        from soup_cli.utils.signing import generate_ed25519_private_pem
+        from ai_forge_cli.utils.signing import generate_ed25519_private_pem
 
         kp = tmp_path / "priv.pem"
         kp.write_text(generate_ed25519_private_pem(), encoding="utf-8")
@@ -237,7 +237,7 @@ class TestAdapterSignEd25519:
 
     def test_sign_ed25519_writes_real_signature(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         adir = _write_fake_adapter(tmp_path)
         key = self._key(tmp_path)
@@ -252,7 +252,7 @@ class TestAdapterSignEd25519:
 
     def test_verify_ed25519_passes_on_clean_adapter(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         adir = _write_fake_adapter(tmp_path)
         sign_adapter(str(adir), backend="ed25519", key_path=self._key(tmp_path))
@@ -262,7 +262,7 @@ class TestAdapterSignEd25519:
 
     def test_verify_ed25519_fails_on_tamper(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         adir = _write_fake_adapter(tmp_path)
         sign_adapter(str(adir), backend="ed25519", key_path=self._key(tmp_path))
@@ -273,7 +273,7 @@ class TestAdapterSignEd25519:
 
     def test_verify_ed25519_fails_when_signature_corrupted(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         adir = _write_fake_adapter(tmp_path)
         sign_adapter(str(adir), backend="ed25519", key_path=self._key(tmp_path))
@@ -289,8 +289,8 @@ class TestAdapterSignEd25519:
 
     def test_verify_with_matching_trusted_key(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
-        from soup_cli.utils.signing import load_private_key_file, public_key_pem
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.signing import load_private_key_file, public_key_pem
 
         adir = _write_fake_adapter(tmp_path)
         key_path = self._key(tmp_path)
@@ -305,8 +305,8 @@ class TestAdapterSignEd25519:
 
     def test_verify_with_untrusted_key_fails(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             private_key_from_pem,
             public_key_pem,
@@ -327,7 +327,7 @@ class TestAdapterSignEd25519:
     def test_sign_ed25519_without_key_raises(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         monkeypatch.delenv("SOUP_SIGNING_KEY", raising=False)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         adir = _write_fake_adapter(tmp_path)
         with pytest.raises(ValueError, match="private key"):
@@ -335,7 +335,7 @@ class TestAdapterSignEd25519:
 
     def test_sign_generate_key(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         adir = _write_fake_adapter(tmp_path)
         out_key = tmp_path / "fresh.pem"
@@ -349,7 +349,7 @@ class TestAdapterSignEd25519:
 
     def test_sigstore_still_deferred(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         adir = _write_fake_adapter(tmp_path)
         with pytest.raises(NotImplementedError, match="sigstore"):
@@ -357,7 +357,7 @@ class TestAdapterSignEd25519:
 
     def test_unsigned_still_works(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         adir = _write_fake_adapter(tmp_path)
         rec = sign_adapter(str(adir), backend="unsigned")
@@ -370,14 +370,14 @@ class TestAdapterSignEd25519:
 # ---------------------------------------------------------------------------
 class TestAttestEd25519:
     def _key(self, tmp_path):
-        from soup_cli.utils.signing import generate_ed25519_private_pem
+        from ai_forge_cli.utils.signing import generate_ed25519_private_pem
 
         kp = tmp_path / "priv.pem"
         kp.write_text(generate_ed25519_private_pem(), encoding="utf-8")
         return str(kp)
 
     def test_sign_attestation_ed25519(self, tmp_path):
-        from soup_cli.utils.attest import sign_attestation, verify_attestation
+        from ai_forge_cli.utils.attest import sign_attestation, verify_attestation
 
         payload = b'{"_type": "in-toto"}'
         sig = sign_attestation(payload, backend="ed25519", key_path=self._key(tmp_path))
@@ -388,7 +388,7 @@ class TestAttestEd25519:
         assert verify_attestation(payload, sig["signature"], sig["public_key"]) is True
 
     def test_verify_attestation_rejects_tamper(self, tmp_path):
-        from soup_cli.utils.attest import sign_attestation, verify_attestation
+        from ai_forge_cli.utils.attest import sign_attestation, verify_attestation
 
         payload = b"original-statement"
         sig = sign_attestation(payload, backend="ed25519", key_path=self._key(tmp_path))
@@ -396,19 +396,19 @@ class TestAttestEd25519:
 
     def test_sign_attestation_ed25519_without_key_raises(self, tmp_path, monkeypatch):
         monkeypatch.delenv("SOUP_SIGNING_KEY", raising=False)
-        from soup_cli.utils.attest import sign_attestation
+        from ai_forge_cli.utils.attest import sign_attestation
 
         with pytest.raises(ValueError, match="private key"):
             sign_attestation(b"x", backend="ed25519")
 
     def test_sign_attestation_unsigned_unchanged(self):
-        from soup_cli.utils.attest import sign_attestation
+        from ai_forge_cli.utils.attest import sign_attestation
 
         sig = sign_attestation(b"x", backend="unsigned")
         assert sig == {"signature": "", "backend": "unsigned"}
 
     def test_sign_attestation_sigstore_deferred(self):
-        from soup_cli.utils.attest import sign_attestation
+        from ai_forge_cli.utils.attest import sign_attestation
 
         with pytest.raises(NotImplementedError):
             sign_attestation(b"x", backend="sigstore")
@@ -419,7 +419,7 @@ class TestAttestEd25519:
 # ---------------------------------------------------------------------------
 class TestNamespacePinConcurrency:
     def test_wal_mode_enabled(self, tmp_path):
-        from soup_cli.utils.namespace_pin import NamespacePinStore
+        from ai_forge_cli.utils.namespace_pin import NamespacePinStore
 
         db = tmp_path / "pins.db"
         with NamespacePinStore(str(db)) as store:
@@ -427,7 +427,7 @@ class TestNamespacePinConcurrency:
             assert str(mode).lower() == "wal"
 
     def test_busy_timeout_set(self, tmp_path):
-        from soup_cli.utils.namespace_pin import NamespacePinStore
+        from ai_forge_cli.utils.namespace_pin import NamespacePinStore
 
         db = tmp_path / "pins.db"
         with NamespacePinStore(str(db)) as store:
@@ -437,7 +437,7 @@ class TestNamespacePinConcurrency:
     def test_concurrent_puts_preserve_first_seen(self, tmp_path):
         import threading
 
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePin,
             NamespacePinStore,
             record_repo_first_seen,
@@ -494,7 +494,7 @@ class TestNamespacePinConcurrency:
         # lock must serialise the get+insert so they converge on one anchor.
         import threading
 
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             record_repo_first_seen,
         )
@@ -542,7 +542,7 @@ class TestDownloadRepoNamespacePin:
         from unittest.mock import patch
 
         self._setup(tmp_path, monkeypatch)
-        from soup_cli.utils.hubs import download_repo
+        from ai_forge_cli.utils.hubs import download_repo
 
         meta = lambda rid: ("alice", "2024-01-01T00:00:00+00:00")  # noqa: E731
         with patch("huggingface_hub.snapshot_download", return_value="/snap") as m:
@@ -557,7 +557,7 @@ class TestDownloadRepoNamespacePin:
         from unittest.mock import patch
 
         self._setup(tmp_path, monkeypatch)
-        from soup_cli.utils.hubs import download_repo
+        from ai_forge_cli.utils.hubs import download_repo
 
         meta = lambda rid: ("alice", "2024-01-01T00:00:00+00:00")  # noqa: E731
         with patch("huggingface_hub.snapshot_download", return_value="/snap"):
@@ -569,7 +569,7 @@ class TestDownloadRepoNamespacePin:
         from unittest.mock import patch
 
         self._setup(tmp_path, monkeypatch)
-        from soup_cli.utils.hubs import download_repo
+        from ai_forge_cli.utils.hubs import download_repo
 
         with patch("huggingface_hub.snapshot_download", return_value="/snap"):
             download_repo(
@@ -587,7 +587,7 @@ class TestDownloadRepoNamespacePin:
         from unittest.mock import patch
 
         self._setup(tmp_path, monkeypatch)
-        from soup_cli.utils.hubs import download_repo
+        from ai_forge_cli.utils.hubs import download_repo
 
         with patch("huggingface_hub.snapshot_download", return_value="/snap") as m:
             download_repo(
@@ -607,7 +607,7 @@ class TestDownloadRepoNamespacePin:
         from unittest.mock import patch
 
         self._setup(tmp_path, monkeypatch)
-        from soup_cli.utils.hubs import download_repo
+        from ai_forge_cli.utils.hubs import download_repo
 
         with patch("huggingface_hub.snapshot_download", return_value="/snap") as m:
             result = download_repo(
@@ -621,7 +621,7 @@ class TestDownloadRepoNamespacePin:
         from unittest.mock import patch
 
         self._setup(tmp_path, monkeypatch)
-        from soup_cli.utils.hubs import download_repo
+        from ai_forge_cli.utils.hubs import download_repo
 
         # _metadata_fn that would refuse is never consulted when disabled.
         def boom(rid):  # pragma: no cover - must not be called
@@ -638,7 +638,7 @@ class TestDownloadRepoNamespacePin:
         from unittest.mock import patch
 
         self._setup(tmp_path, monkeypatch)
-        from soup_cli.utils import hubs
+        from ai_forge_cli.utils import hubs
 
         # A real HfApi failure (network / 404) must be swallowed -> None.
         with patch("huggingface_hub.HfApi") as fake_api:
@@ -651,7 +651,7 @@ class TestDownloadRepoNamespacePin:
 # ---------------------------------------------------------------------------
 class TestLicenseExtraction:
     def test_from_adapter_config(self, tmp_path):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
@@ -662,7 +662,7 @@ class TestLicenseExtraction:
         assert extract_license_from_adapter(str(adir)) == "apache-2.0"
 
     def test_from_config_json(self, tmp_path):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
@@ -672,7 +672,7 @@ class TestLicenseExtraction:
         assert extract_license_from_adapter(str(adir)) == "mit"
 
     def test_from_model_card_frontmatter(self, tmp_path):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
@@ -684,7 +684,7 @@ class TestLicenseExtraction:
 
     def test_hf_alias_llama3_1(self, tmp_path):
         # HF model cards spell it `llama3.1`; we canonicalise to `llama-3.1`.
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
@@ -694,7 +694,7 @@ class TestLicenseExtraction:
         assert extract_license_from_adapter(str(adir)) == "llama-3.1"
 
     def test_license_as_list(self, tmp_path):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
@@ -704,7 +704,7 @@ class TestLicenseExtraction:
         assert extract_license_from_adapter(str(adir)) == "mit"
 
     def test_unknown_license_returns_none(self, tmp_path):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
@@ -715,20 +715,20 @@ class TestLicenseExtraction:
         assert extract_license_from_adapter(str(adir)) is None
 
     def test_missing_metadata_returns_none(self, tmp_path):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
         assert extract_license_from_adapter(str(adir)) is None
 
     def test_non_string_returns_none(self):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         assert extract_license_from_adapter(None) is None  # type: ignore[arg-type]
         assert extract_license_from_adapter(123) is None  # type: ignore[arg-type]
 
     def test_adapter_config_precedence_over_readme(self, tmp_path):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
@@ -742,7 +742,7 @@ class TestLicenseExtraction:
 
     @POSIX_ONLY
     def test_symlinked_config_rejected(self, tmp_path):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
@@ -758,8 +758,8 @@ class TestLicenseExtraction:
 # ---------------------------------------------------------------------------
 class TestLicenseOverrideAudit:
     def test_record_license_override_writes_audit(self, tmp_path, monkeypatch):
-        from soup_cli.utils.audit_log import read_audit_tail
-        from soup_cli.utils.license_matrix import record_license_override
+        from ai_forge_cli.utils.audit_log import read_audit_tail
+        from ai_forge_cli.utils.license_matrix import record_license_override
 
         log = tmp_path / "audit.jsonl"
         record_license_override(
@@ -776,8 +776,8 @@ class TestLicenseOverrideAudit:
         assert ev["exit_code"] == 0
 
     def test_record_license_override_redacts_secrets(self, tmp_path):
-        from soup_cli.utils.audit_log import read_audit_tail
-        from soup_cli.utils.license_matrix import record_license_override
+        from ai_forge_cli.utils.audit_log import read_audit_tail
+        from ai_forge_cli.utils.license_matrix import record_license_override
 
         log = tmp_path / "audit.jsonl"
         record_license_override(
@@ -791,8 +791,8 @@ class TestLicenseOverrideAudit:
         assert "<redacted>" in blob
 
     def test_record_license_override_truncates_long_reason(self, tmp_path):
-        from soup_cli.utils.audit_log import read_audit_tail
-        from soup_cli.utils.license_matrix import record_license_override
+        from ai_forge_cli.utils.audit_log import read_audit_tail
+        from ai_forge_cli.utils.license_matrix import record_license_override
 
         log = tmp_path / "audit.jsonl"
         record_license_override(
@@ -850,19 +850,19 @@ class TestMergeScanGate:
     def _run(self, monkeypatch, tmp_path, args, *, scan_overall="OK", scan_raises=None):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         if scan_raises is not None:
             def _scan(path):
                 raise scan_raises
 
-            monkeypatch.setattr("soup_cli.utils.adapter_scan.scan_adapter", _scan)
+            monkeypatch.setattr("ai_forge_cli.utils.adapter_scan.scan_adapter", _scan)
         else:
             monkeypatch.setattr(
-                "soup_cli.utils.adapter_scan.scan_adapter", _fake_scan(scan_overall)
+                "ai_forge_cli.utils.adapter_scan.scan_adapter", _fake_scan(scan_overall)
             )
         monkeypatch.setattr(
-            "soup_cli.utils.adapter_merge.merge_adapters",
+            "ai_forge_cli.utils.adapter_merge.merge_adapters",
             lambda *a, **k: _fake_merge_report(),
         )
         monkeypatch.chdir(tmp_path)
@@ -936,14 +936,14 @@ class TestMergeLicenseAutoExtract:
     def _run(self, monkeypatch, tmp_path, args, audit_log=None):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         # Scan always OK so we isolate the license gate.
         monkeypatch.setattr(
-            "soup_cli.utils.adapter_scan.scan_adapter", _fake_scan("OK")
+            "ai_forge_cli.utils.adapter_scan.scan_adapter", _fake_scan("OK")
         )
         monkeypatch.setattr(
-            "soup_cli.utils.adapter_merge.merge_adapters",
+            "ai_forge_cli.utils.adapter_merge.merge_adapters",
             lambda *a, **k: _fake_merge_report(),
         )
         if audit_log is not None:
@@ -986,7 +986,7 @@ class TestMergeLicenseAutoExtract:
             audit_log=log,
         )
         assert result.exit_code == 0, result.output
-        from soup_cli.utils.audit_log import read_audit_tail
+        from ai_forge_cli.utils.audit_log import read_audit_tail
 
         rows = read_audit_tail(str(log))
         assert any(r["command"] == "adapters merge" for r in rows)
@@ -1002,7 +1002,7 @@ class TestCli:
     def test_adapters_sign_help_lists_ed25519(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         out = _strip_ansi(CliRunner().invoke(app, ["sign", "--help"]).output)
         assert "--key" in out
@@ -1012,7 +1012,7 @@ class TestCli:
     def test_adapters_verify_help_lists_public_key(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         out = _strip_ansi(CliRunner().invoke(app, ["verify", "--help"]).output)
         assert "--public-key" in out
@@ -1020,7 +1020,7 @@ class TestCli:
     def test_adapters_merge_help_lists_allow_unscanned(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         out = _strip_ansi(CliRunner().invoke(app, ["merge", "--help"]).output)
         assert "--allow-unscanned" in out
@@ -1028,7 +1028,7 @@ class TestCli:
     def test_sign_verify_ed25519_end_to_end(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         monkeypatch.chdir(tmp_path)
         adir = _write_fake_adapter(tmp_path)
@@ -1048,7 +1048,7 @@ class TestCli:
     def test_sigstore_backend_exits_nonzero(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         monkeypatch.chdir(tmp_path)
         adir = _write_fake_adapter(tmp_path)
@@ -1064,7 +1064,7 @@ class TestCli:
 # ---------------------------------------------------------------------------
 class TestReviewFollowups:
     def _key(self, tmp_path, name="priv.pem"):
-        from soup_cli.utils.signing import generate_ed25519_private_pem
+        from ai_forge_cli.utils.signing import generate_ed25519_private_pem
 
         kp = tmp_path / name
         kp.write_text(generate_ed25519_private_pem(), encoding="utf-8")
@@ -1072,8 +1072,8 @@ class TestReviewFollowups:
 
     # H1 — attest.verify_attestation wrapper negative paths
     def test_verify_attestation_wrong_key_false(self, tmp_path):
-        from soup_cli.utils.attest import sign_attestation, verify_attestation
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.attest import sign_attestation, verify_attestation
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             private_key_from_pem,
             public_key_pem,
@@ -1084,13 +1084,13 @@ class TestReviewFollowups:
         assert verify_attestation(b"payload", sig["signature"], other_pub) is False
 
     def test_verify_attestation_bad_hex_false(self, tmp_path):
-        from soup_cli.utils.attest import sign_attestation, verify_attestation
+        from ai_forge_cli.utils.attest import sign_attestation, verify_attestation
 
         sig = sign_attestation(b"x", backend="ed25519", key_path=self._key(tmp_path))
         assert verify_attestation(b"x", "zz", sig["public_key"]) is False
 
     def test_verify_attestation_non_bytes_typeerror(self):
-        from soup_cli.utils.attest import verify_attestation
+        from ai_forge_cli.utils.attest import verify_attestation
 
         with pytest.raises(TypeError):
             verify_attestation("not bytes", "00", "pem")  # type: ignore[arg-type]
@@ -1109,7 +1109,7 @@ class TestReviewFollowups:
     def test_attest_verify_non_ed25519_sidecar_exit3(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.attest import app
+        from ai_forge_cli.commands.attest import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -1125,7 +1125,7 @@ class TestReviewFollowups:
     def test_attest_verify_no_pubkey_exit3(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.attest import app
+        from ai_forge_cli.commands.attest import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -1140,8 +1140,8 @@ class TestReviewFollowups:
     def test_attest_verify_untrusted_key_exit3(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.attest import app
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.commands.attest import app
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             private_key_from_pem,
             public_key_pem,
@@ -1165,7 +1165,7 @@ class TestReviewFollowups:
     # H3 — verify_adapter strict raise paths
     def test_verify_adapter_strict_raises_on_tamper(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         adir = _write_fake_adapter(tmp_path)
         sign_adapter(str(adir), backend="ed25519", key_path=self._key(tmp_path))
@@ -1175,7 +1175,7 @@ class TestReviewFollowups:
 
     def test_verify_adapter_strict_raises_on_unsigned(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import verify_adapter
+        from ai_forge_cli.utils.adapter_sign import verify_adapter
 
         adir = _write_fake_adapter(tmp_path)
         with pytest.raises(ValueError, match="not signed"):
@@ -1184,7 +1184,7 @@ class TestReviewFollowups:
     # M1 — empty embedded public key finding
     def test_verify_adapter_empty_pubkey_finding(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         adir = _write_fake_adapter(tmp_path)
         sign_adapter(str(adir), backend="ed25519", key_path=self._key(tmp_path))
@@ -1199,7 +1199,7 @@ class TestReviewFollowups:
     # M2 — trusted public key unreadable
     def test_verify_adapter_trusted_unreadable(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         adir = _write_fake_adapter(tmp_path)
         sign_adapter(str(adir), backend="ed25519", key_path=self._key(tmp_path))
@@ -1211,14 +1211,14 @@ class TestReviewFollowups:
 
     # M3 — unknown backend rejection
     def test_sign_attestation_unknown_backend(self):
-        from soup_cli.utils.attest import sign_attestation
+        from ai_forge_cli.utils.attest import sign_attestation
 
         with pytest.raises(ValueError, match="unknown signature backend"):
             sign_attestation(b"x", backend="bogus")
 
     def test_sign_adapter_unknown_backend(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         adir = _write_fake_adapter(tmp_path)
         with pytest.raises(ValueError, match="unknown backend"):
@@ -1226,7 +1226,7 @@ class TestReviewFollowups:
 
     def test_sign_adapter_non_string_backend(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         adir = _write_fake_adapter(tmp_path)
         with pytest.raises(TypeError):
@@ -1234,7 +1234,7 @@ class TestReviewFollowups:
 
     # M4 — sign/verify payload type boundaries
     def test_sign_payload_accepts_bytearray(self, tmp_path):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             private_key_from_pem,
             sign_payload,
@@ -1245,7 +1245,7 @@ class TestReviewFollowups:
         assert isinstance(sig, str) and len(sig) == 128
 
     def test_verify_payload_non_str_signature_typeerror(self, tmp_path):
-        from soup_cli.utils.signing import (
+        from ai_forge_cli.utils.signing import (
             generate_ed25519_private_pem,
             private_key_from_pem,
             public_key_pem,
@@ -1258,7 +1258,7 @@ class TestReviewFollowups:
 
     # M5 — verify_namespace backward-created_at jump + bool override
     def test_verify_namespace_backward_jump_refused(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             record_repo_first_seen,
             verify_namespace,
@@ -1278,7 +1278,7 @@ class TestReviewFollowups:
         assert "backward" in report.reason.lower()
 
     def test_verify_namespace_bool_override_typeerror(self, tmp_path):
-        from soup_cli.utils.namespace_pin import (
+        from ai_forge_cli.utils.namespace_pin import (
             NamespacePinStore,
             record_repo_first_seen,
             verify_namespace,
@@ -1299,13 +1299,13 @@ class TestReviewFollowups:
 
     # M6 — NamespacePinStore constructor guards
     def test_pin_store_rejects_outside_cwd(self):
-        from soup_cli.utils.namespace_pin import NamespacePinStore
+        from ai_forge_cli.utils.namespace_pin import NamespacePinStore
 
         with pytest.raises(ValueError, match="must stay under"):
             NamespacePinStore("/etc/soup_evil_pin.db")
 
     def test_pin_store_rejects_null_byte(self):
-        from soup_cli.utils.namespace_pin import NamespacePinStore
+        from ai_forge_cli.utils.namespace_pin import NamespacePinStore
 
         with pytest.raises(ValueError, match="null"):
             NamespacePinStore("a\x00b.db")
@@ -1313,7 +1313,7 @@ class TestReviewFollowups:
     @POSIX_ONLY
     def test_pin_store_rejects_symlink_db(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.namespace_pin import NamespacePinStore
+        from ai_forge_cli.utils.namespace_pin import NamespacePinStore
 
         real = tmp_path / "real.db"
         real.write_text("", encoding="utf-8")
@@ -1324,7 +1324,7 @@ class TestReviewFollowups:
 
     # M7 — license extraction precedence
     def test_license_config_json_over_readme(self, tmp_path):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
@@ -1337,7 +1337,7 @@ class TestReviewFollowups:
         assert extract_license_from_adapter(str(adir)) == "mit"
 
     def test_license_adapter_config_over_config_json(self, tmp_path):
-        from soup_cli.utils.license_matrix import extract_license_from_adapter
+        from ai_forge_cli.utils.license_matrix import extract_license_from_adapter
 
         adir = tmp_path / "a"
         adir.mkdir()
@@ -1353,13 +1353,13 @@ class TestReviewFollowups:
     def test_merge_override_without_autodetect_advisory(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         monkeypatch.setattr(
-            "soup_cli.utils.adapter_scan.scan_adapter", _fake_scan("OK")
+            "ai_forge_cli.utils.adapter_scan.scan_adapter", _fake_scan("OK")
         )
         monkeypatch.setattr(
-            "soup_cli.utils.adapter_merge.merge_adapters",
+            "ai_forge_cli.utils.adapter_merge.merge_adapters",
             lambda *a, **k: _fake_merge_report(),
         )
         monkeypatch.chdir(tmp_path)
@@ -1375,17 +1375,17 @@ class TestReviewFollowups:
 
     # L1 — cryptography-unavailable raise
     def test_require_cryptography_raises_when_unavailable(self, monkeypatch):
-        from soup_cli.utils import signing
+        from ai_forge_cli.utils import signing
 
         monkeypatch.setattr(signing, "is_signing_available", lambda: False)
-        with pytest.raises(ValueError, match="soup-cli\\[sign\\]"):
+        with pytest.raises(ValueError, match="ai-forge\\[sign\\]"):
             signing.private_key_from_pem("anything")
 
     # L2 — generate-key null byte
     def test_generate_key_null_byte(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         monkeypatch.delenv("SOUP_SIGNING_KEY", raising=False)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         adir = _write_fake_adapter(tmp_path)
         with pytest.raises(ValueError, match="null"):
@@ -1393,7 +1393,7 @@ class TestReviewFollowups:
 
     # L3 — check_license_compat input guards + CLI count mismatch
     def test_check_license_compat_empty_and_nonlist(self):
-        from soup_cli.utils.license_matrix import check_license_compat
+        from ai_forge_cli.utils.license_matrix import check_license_compat
 
         with pytest.raises(ValueError):
             check_license_compat([])
@@ -1403,7 +1403,7 @@ class TestReviewFollowups:
     def test_merge_license_count_mismatch(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         monkeypatch.chdir(tmp_path)
         a = _make_adapter(tmp_path, "a")
@@ -1420,7 +1420,7 @@ class TestReviewFollowups:
     @POSIX_ONLY
     def test_load_signature_symlink_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         adir = _write_fake_adapter(tmp_path)
         sign_adapter(str(adir), backend="unsigned")
@@ -1433,8 +1433,8 @@ class TestReviewFollowups:
 
     # L6 — audit row populates host/operator
     def test_record_license_override_populates_identity(self, tmp_path):
-        from soup_cli.utils.audit_log import read_audit_tail
-        from soup_cli.utils.license_matrix import record_license_override
+        from ai_forge_cli.utils.audit_log import read_audit_tail
+        from ai_forge_cli.utils.license_matrix import record_license_override
 
         log = tmp_path / "audit.jsonl"
         record_license_override(
@@ -1448,7 +1448,7 @@ class TestReviewFollowups:
     def test_attest_emit_help_lists_key(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.attest import app
+        from ai_forge_cli.commands.attest import app
 
         out = _strip_ansi(CliRunner().invoke(app, ["emit", "--help"]).output)
         assert "--key" in out
@@ -1457,8 +1457,8 @@ class TestReviewFollowups:
     def test_attest_verify_end_to_end(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.attest import app
-        from soup_cli.utils.signing import generate_ed25519_private_pem
+        from ai_forge_cli.commands.attest import app
+        from ai_forge_cli.utils.signing import generate_ed25519_private_pem
 
         monkeypatch.chdir(tmp_path)
         key = tmp_path / "k.pem"
@@ -1495,7 +1495,7 @@ class TestSecurityFixes:
         # L1 — --generate-key must refuse a pre-existing target (closes the
         # Windows TOCTOU window + avoids clobbering an existing key).
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         adir = _write_fake_adapter(tmp_path)
         existing = tmp_path / "exists.pem"
@@ -1507,7 +1507,7 @@ class TestSecurityFixes:
 
     def test_read_public_key_file_size_cap_and_symlink(self, tmp_path):
         # M1 — the shared public-key reader rejects oversize + (POSIX) symlinks.
-        from soup_cli.utils.signing import read_public_key_file
+        from ai_forge_cli.utils.signing import read_public_key_file
 
         big = tmp_path / "big.pub"
         big.write_text("x" * (70 * 1024), encoding="utf-8")  # > 64 KiB cap
@@ -1518,7 +1518,7 @@ class TestSecurityFixes:
 
     @POSIX_ONLY
     def test_read_public_key_file_symlink_rejected(self, tmp_path):
-        from soup_cli.utils.signing import read_public_key_file
+        from ai_forge_cli.utils.signing import read_public_key_file
 
         real = tmp_path / "real.pub"
         real.write_text("k", encoding="utf-8")
@@ -1536,7 +1536,7 @@ class TestSecurityFixes:
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("SOUP_NAMESPACE_PIN_DB", str(tmp_path / "pins.db"))
-        from soup_cli.utils import hubs
+        from ai_forge_cli.utils import hubs
 
         def boom(*a, **k):
             raise sqlite3.OperationalError("database is locked")
@@ -1544,7 +1544,7 @@ class TestSecurityFixes:
         # _run_namespace_check imports NamespacePinStore from namespace_pin at
         # call time, so patch it there (not on the hubs module).
         with patch(
-            "soup_cli.utils.namespace_pin.NamespacePinStore", boom
+            "ai_forge_cli.utils.namespace_pin.NamespacePinStore", boom
         ), patch("huggingface_hub.snapshot_download", return_value="/snap") as m:
             result = hubs.download_repo(
                 "hf", "alice/model", local_dir="./s",

@@ -23,25 +23,25 @@ class _OOMError(Exception):
 
 class TestSchemaField:
     def test_default_is_auto(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig()
         assert tcfg.auto_batch_size_strategy == "auto"
 
     def test_accepts_static(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig(auto_batch_size_strategy="static")
         assert tcfg.auto_batch_size_strategy == "static"
 
     def test_accepts_probe(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig(auto_batch_size_strategy="probe")
         assert tcfg.auto_batch_size_strategy == "probe"
 
     def test_rejects_unknown_value(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValueError):
             TrainingConfig(auto_batch_size_strategy="random")
@@ -58,7 +58,7 @@ class TestProbeLoop:
         fits). Doubling probe(4) re-OOMs, so we stay at 2. Power-of-two
         granularity is a deliberate choice: we trade exactness for fewer
         probe steps (each step is a real GPU forward+backward)."""
-        from soup_cli.utils.batch_probe import probe_batch_size
+        from ai_forge_cli.utils.batch_probe import probe_batch_size
 
         capacity = 3
 
@@ -77,7 +77,7 @@ class TestProbeLoop:
 
     def test_converges_when_capacity_above_start(self):
         """Start 2, capacity 8 → doubles 2→4→8→16(OOM), back off → 8."""
-        from soup_cli.utils.batch_probe import probe_batch_size
+        from ai_forge_cli.utils.batch_probe import probe_batch_size
 
         capacity = 8
 
@@ -96,7 +96,7 @@ class TestProbeLoop:
 
     def test_ceiling_caps_at_4x_static(self):
         """Capacity 1000, ceiling 8 → returns 8 (never tries higher)."""
-        from soup_cli.utils.batch_probe import probe_batch_size
+        from ai_forge_cli.utils.batch_probe import probe_batch_size
 
         def probe(b: int) -> bool:
             return True  # never OOMs
@@ -111,7 +111,7 @@ class TestProbeLoop:
 
     def test_starts_oom_halves_to_one(self):
         """Even start=1 OOMs → returns 1 (never go below 1)."""
-        from soup_cli.utils.batch_probe import probe_batch_size
+        from ai_forge_cli.utils.batch_probe import probe_batch_size
 
         def probe(b: int) -> bool:
             raise _OOMError("starved")
@@ -126,7 +126,7 @@ class TestProbeLoop:
 
     def test_max_doublings_capped(self):
         """Search must not run forever — cap at 8 doublings."""
-        from soup_cli.utils.batch_probe import probe_batch_size
+        from ai_forge_cli.utils.batch_probe import probe_batch_size
 
         calls: list[int] = []
 
@@ -145,7 +145,7 @@ class TestProbeLoop:
         assert len(calls) <= 12
 
     def test_rejects_invalid_start(self):
-        from soup_cli.utils.batch_probe import probe_batch_size
+        from ai_forge_cli.utils.batch_probe import probe_batch_size
 
         with pytest.raises(ValueError, match="start"):
             probe_batch_size(
@@ -156,7 +156,7 @@ class TestProbeLoop:
             )
 
     def test_rejects_invalid_ceiling(self):
-        from soup_cli.utils.batch_probe import probe_batch_size
+        from ai_forge_cli.utils.batch_probe import probe_batch_size
 
         with pytest.raises(ValueError, match="ceiling"):
             probe_batch_size(
@@ -168,7 +168,7 @@ class TestProbeLoop:
 
     def test_unrelated_exception_propagates(self):
         """A non-OOM exception must propagate, not be swallowed as OOM."""
-        from soup_cli.utils.batch_probe import probe_batch_size
+        from ai_forge_cli.utils.batch_probe import probe_batch_size
 
         def probe(b: int) -> bool:
             raise RuntimeError("model bug")
@@ -189,7 +189,7 @@ class TestProbeLoop:
 
 class TestCache:
     def test_key_normalizes(self):
-        from soup_cli.utils.batch_probe import make_cache_key
+        from ai_forge_cli.utils.batch_probe import make_cache_key
 
         a = make_cache_key(
             base="meta-llama/Llama-3.2-1B",
@@ -210,7 +210,7 @@ class TestCache:
         assert a == b
 
     def test_key_differs_on_quantization(self):
-        from soup_cli.utils.batch_probe import make_cache_key
+        from ai_forge_cli.utils.batch_probe import make_cache_key
 
         a = make_cache_key("m", 2048, "4bit", 64, "gpu", 80)
         b = make_cache_key("m", 2048, "8bit", 64, "gpu", 80)
@@ -218,7 +218,7 @@ class TestCache:
 
     def test_key_rejects_bool_inputs(self):
         """v0.30.0 Candidate convention: bool is a subclass of int — guard."""
-        from soup_cli.utils.batch_probe import make_cache_key
+        from ai_forge_cli.utils.batch_probe import make_cache_key
 
         with pytest.raises(ValueError, match="max_length"):
             make_cache_key("m", True, "4bit", 64, "gpu", 80)
@@ -228,7 +228,7 @@ class TestCache:
             make_cache_key("m", 2048, "4bit", 64, "gpu", True)
 
     def test_save_and_load_roundtrip(self, tmp_path, monkeypatch):
-        from soup_cli.utils.batch_probe import (
+        from ai_forge_cli.utils.batch_probe import (
             load_cache,
             make_cache_key,
             save_cache_entry,
@@ -244,7 +244,7 @@ class TestCache:
         assert cache.get(key) == 8
 
     def test_load_corrupt_returns_empty(self, tmp_path, monkeypatch):
-        from soup_cli.utils.batch_probe import load_cache
+        from ai_forge_cli.utils.batch_probe import load_cache
 
         cache_path = tmp_path / "batch_cache.json"
         cache_path.write_text("not json", encoding="utf-8")
@@ -253,7 +253,7 @@ class TestCache:
         assert load_cache() == {}
 
     def test_load_missing_returns_empty(self, tmp_path, monkeypatch):
-        from soup_cli.utils.batch_probe import load_cache
+        from ai_forge_cli.utils.batch_probe import load_cache
 
         cache_path = tmp_path / "missing.json"
         monkeypatch.setenv("SOUP_BATCH_CACHE_PATH", str(cache_path))
@@ -261,7 +261,7 @@ class TestCache:
         assert load_cache() == {}
 
     def test_save_rejects_non_positive_value(self, tmp_path, monkeypatch):
-        from soup_cli.utils.batch_probe import make_cache_key, save_cache_entry
+        from ai_forge_cli.utils.batch_probe import make_cache_key, save_cache_entry
 
         cache_path = tmp_path / "batch_cache.json"
         monkeypatch.setenv("SOUP_BATCH_CACHE_PATH", str(cache_path))
@@ -274,7 +274,7 @@ class TestCache:
 
     def test_save_rejects_bool_value(self, tmp_path, monkeypatch):
         """``bool`` is a subclass of int — guard like v0.30.0 Candidate."""
-        from soup_cli.utils.batch_probe import make_cache_key, save_cache_entry
+        from ai_forge_cli.utils.batch_probe import make_cache_key, save_cache_entry
 
         cache_path = tmp_path / "batch_cache.json"
         monkeypatch.setenv("SOUP_BATCH_CACHE_PATH", str(cache_path))
@@ -291,7 +291,7 @@ class TestCache:
 
 class TestPickBatchSize:
     def test_static_strategy_returns_static_estimate(self, tmp_path, monkeypatch):
-        from soup_cli.utils.batch_probe import pick_batch_size
+        from ai_forge_cli.utils.batch_probe import pick_batch_size
 
         cache_path = tmp_path / "batch_cache.json"
         monkeypatch.setenv("SOUP_BATCH_CACHE_PATH", str(cache_path))
@@ -310,7 +310,7 @@ class TestPickBatchSize:
         assert out == 4
 
     def test_cache_hit_short_circuits_probe(self, tmp_path, monkeypatch):
-        from soup_cli.utils.batch_probe import (
+        from ai_forge_cli.utils.batch_probe import (
             make_cache_key,
             pick_batch_size,
             save_cache_entry,
@@ -343,7 +343,7 @@ class TestPickBatchSize:
         assert called == []  # probe was not invoked
 
     def test_probe_strategy_runs_probe_and_caches(self, tmp_path, monkeypatch):
-        from soup_cli.utils.batch_probe import (
+        from ai_forge_cli.utils.batch_probe import (
             load_cache,
             make_cache_key,
             pick_batch_size,
@@ -380,7 +380,7 @@ class TestPickBatchSize:
 
     def test_probe_without_callable_falls_back_to_static(self, tmp_path, monkeypatch):
         """No probe_fn supplied (e.g. CPU run) → use static estimate."""
-        from soup_cli.utils.batch_probe import pick_batch_size
+        from ai_forge_cli.utils.batch_probe import pick_batch_size
 
         cache_path = tmp_path / "batch_cache.json"
         monkeypatch.setenv("SOUP_BATCH_CACHE_PATH", str(cache_path))
@@ -401,7 +401,7 @@ class TestPickBatchSize:
     def test_auto_strategy_uses_probe_when_probe_fn_supplied(
         self, tmp_path, monkeypatch
     ):
-        from soup_cli.utils.batch_probe import pick_batch_size
+        from ai_forge_cli.utils.batch_probe import pick_batch_size
 
         cache_path = tmp_path / "batch_cache.json"
         monkeypatch.setenv("SOUP_BATCH_CACHE_PATH", str(cache_path))
@@ -429,7 +429,7 @@ class TestPickBatchSize:
 
     def test_cache_corruption_does_not_block_probe(self, tmp_path, monkeypatch):
         """Corrupt cache file → silently re-probe; ceiling = static * 4."""
-        from soup_cli.utils.batch_probe import pick_batch_size
+        from ai_forge_cli.utils.batch_probe import pick_batch_size
 
         cache_path = tmp_path / "batch_cache.json"
         cache_path.write_text("garbage", encoding="utf-8")
@@ -452,7 +452,7 @@ class TestPickBatchSize:
 
     def test_runtime_error_propagates_when_bs1_ooms(self, tmp_path, monkeypatch):
         """All-OOM probe → RuntimeError surfaces to caller."""
-        from soup_cli.utils.batch_probe import pick_batch_size
+        from ai_forge_cli.utils.batch_probe import pick_batch_size
 
         cache_path = tmp_path / "batch_cache.json"
         monkeypatch.setenv("SOUP_BATCH_CACHE_PATH", str(cache_path))
@@ -482,7 +482,7 @@ class TestPickBatchSize:
 
         from rich.console import Console
 
-        from soup_cli.utils.batch_probe import pick_batch_size
+        from ai_forge_cli.utils.batch_probe import pick_batch_size
 
         cache_path = tmp_path / "batch_cache.json"
         monkeypatch.setenv("SOUP_BATCH_CACHE_PATH", str(cache_path))
@@ -517,7 +517,7 @@ class TestCachePathContainment:
         """Env var pointing outside home/cwd/tmp → ignored, default used."""
         import os
 
-        from soup_cli.utils.batch_probe import _cache_path
+        from ai_forge_cli.utils.batch_probe import _cache_path
 
         # Use a sibling-of-temp path that is guaranteed outside any anchor —
         # an absolute root we cannot write to is equally fine, since the
@@ -535,7 +535,7 @@ class TestCachePathContainment:
     def test_in_bounds_override_honoured(self, tmp_path, monkeypatch):
         import os
 
-        from soup_cli.utils.batch_probe import _cache_path
+        from ai_forge_cli.utils.batch_probe import _cache_path
 
         cache_path = tmp_path / "batch_cache.json"
         monkeypatch.setenv("SOUP_BATCH_CACHE_PATH", str(cache_path))
@@ -551,7 +551,7 @@ class TestCachePathContainment:
 
 class TestCacheFileShape:
     def test_cache_is_dict_of_str_int(self, tmp_path, monkeypatch):
-        from soup_cli.utils.batch_probe import make_cache_key, save_cache_entry
+        from ai_forge_cli.utils.batch_probe import make_cache_key, save_cache_entry
 
         cache_path = tmp_path / "batch_cache.json"
         monkeypatch.setenv("SOUP_BATCH_CACHE_PATH", str(cache_path))

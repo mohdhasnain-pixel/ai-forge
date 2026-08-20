@@ -17,7 +17,7 @@ from typer.testing import CliRunner
 
 class TestPublicSurface:
     def test_module_importable(self) -> None:
-        from soup_cli.utils import prompt_distill
+        from ai_forge_cli.utils import prompt_distill
 
         assert hasattr(prompt_distill, "SUPPORTED_DISTILL_STRATEGIES")
         assert hasattr(prompt_distill, "validate_distill_strategy")
@@ -31,7 +31,7 @@ class TestPublicSurface:
 
 class TestAllowlist:
     def test_frozenset(self) -> None:
-        from soup_cli.utils.prompt_distill import SUPPORTED_DISTILL_STRATEGIES
+        from ai_forge_cli.utils.prompt_distill import SUPPORTED_DISTILL_STRATEGIES
 
         assert isinstance(SUPPORTED_DISTILL_STRATEGIES, frozenset)
         assert "sft" in SUPPORTED_DISTILL_STRATEGIES
@@ -39,7 +39,7 @@ class TestAllowlist:
         assert "kl" in SUPPORTED_DISTILL_STRATEGIES
 
     def test_immutable(self) -> None:
-        from soup_cli.utils.prompt_distill import SUPPORTED_DISTILL_STRATEGIES
+        from ai_forge_cli.utils.prompt_distill import SUPPORTED_DISTILL_STRATEGIES
 
         with pytest.raises(AttributeError):
             SUPPORTED_DISTILL_STRATEGIES.add("evil")  # type: ignore[attr-defined]
@@ -47,35 +47,35 @@ class TestAllowlist:
 
 class TestValidateStrategy:
     def test_happy(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_distill_strategy
+        from ai_forge_cli.utils.prompt_distill import validate_distill_strategy
 
         assert validate_distill_strategy("sft") == "sft"
 
     def test_case_insensitive(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_distill_strategy
+        from ai_forge_cli.utils.prompt_distill import validate_distill_strategy
 
         assert validate_distill_strategy("SFT") == "sft"
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_distill_strategy
+        from ai_forge_cli.utils.prompt_distill import validate_distill_strategy
 
         with pytest.raises(TypeError):
             validate_distill_strategy(True)  # type: ignore[arg-type]
 
     def test_unknown_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_distill_strategy
+        from ai_forge_cli.utils.prompt_distill import validate_distill_strategy
 
         with pytest.raises(ValueError, match="unknown"):
             validate_distill_strategy("evil")
 
     def test_empty_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_distill_strategy
+        from ai_forge_cli.utils.prompt_distill import validate_distill_strategy
 
         with pytest.raises(ValueError):
             validate_distill_strategy("")
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_distill_strategy
+        from ai_forge_cli.utils.prompt_distill import validate_distill_strategy
 
         with pytest.raises(ValueError):
             validate_distill_strategy("sft\x00")
@@ -83,43 +83,43 @@ class TestValidateStrategy:
 
 class TestValidateModelId:
     def test_teacher_happy(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_teacher_id
+        from ai_forge_cli.utils.prompt_distill import validate_teacher_id
 
         assert validate_teacher_id("anthropic/claude-3-5-sonnet") == "anthropic/claude-3-5-sonnet"
 
     def test_teacher_oversize_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_teacher_id
+        from ai_forge_cli.utils.prompt_distill import validate_teacher_id
 
         with pytest.raises(ValueError):
             validate_teacher_id("a" * 513)
 
     def test_teacher_null_byte_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_teacher_id
+        from ai_forge_cli.utils.prompt_distill import validate_teacher_id
 
         with pytest.raises(ValueError):
             validate_teacher_id("model\x00")
 
     def test_teacher_bool_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_teacher_id
+        from ai_forge_cli.utils.prompt_distill import validate_teacher_id
 
         with pytest.raises(TypeError):
             validate_teacher_id(True)  # type: ignore[arg-type]
 
     def test_teacher_empty_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_teacher_id
+        from ai_forge_cli.utils.prompt_distill import validate_teacher_id
 
         with pytest.raises(ValueError):
             validate_teacher_id("")
 
     def test_student_happy(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_student_id
+        from ai_forge_cli.utils.prompt_distill import validate_student_id
 
         assert validate_student_id("meta-llama/Llama-3.2-1B") == "meta-llama/Llama-3.2-1B"
 
 
 class TestValidateTracesPath:
     def test_happy(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.prompt_distill import validate_traces_path
+        from ai_forge_cli.utils.prompt_distill import validate_traces_path
 
         monkeypatch.chdir(tmp_path)
         p = tmp_path / "traces.jsonl"
@@ -129,7 +129,7 @@ class TestValidateTracesPath:
     def test_outside_cwd_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.prompt_distill import validate_traces_path
+        from ai_forge_cli.utils.prompt_distill import validate_traces_path
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -142,7 +142,7 @@ class TestValidateTracesPath:
             validate_traces_path(str(p))
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_traces_path
+        from ai_forge_cli.utils.prompt_distill import validate_traces_path
 
         with pytest.raises(ValueError):
             validate_traces_path("t\x00.jsonl")
@@ -155,7 +155,7 @@ class TestValidateTracesPath:
     ) -> None:
         import os
 
-        from soup_cli.utils.prompt_distill import validate_traces_path
+        from ai_forge_cli.utils.prompt_distill import validate_traces_path
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "r.jsonl"
@@ -171,7 +171,7 @@ class TestValidateTracesPath:
 
 class TestDistillPromptPlan:
     def test_frozen(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.prompt_distill import DistillPromptPlan
+        from ai_forge_cli.utils.prompt_distill import DistillPromptPlan
 
         monkeypatch.chdir(tmp_path)
         traces = tmp_path / "traces.jsonl"
@@ -190,7 +190,7 @@ class TestDistillPromptPlan:
     def test_invalid_strategy_propagates(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.prompt_distill import DistillPromptPlan
+        from ai_forge_cli.utils.prompt_distill import DistillPromptPlan
 
         monkeypatch.chdir(tmp_path)
         traces = tmp_path / "traces.jsonl"
@@ -208,7 +208,7 @@ class TestDistillPromptPlan:
 
 class TestBuildPlan:
     def test_happy(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.prompt_distill import build_distill_prompt_plan
+        from ai_forge_cli.utils.prompt_distill import build_distill_prompt_plan
 
         monkeypatch.chdir(tmp_path)
         traces = tmp_path / "traces.jsonl"
@@ -228,7 +228,7 @@ class TestPrepareDataset:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # v0.71.13 #226: live dataset preparation with an injected teacher.
-        from soup_cli.utils.prompt_distill import (
+        from ai_forge_cli.utils.prompt_distill import (
             build_distill_prompt_plan,
             prepare_distill_dataset,
         )
@@ -250,7 +250,7 @@ class TestPrepareDataset:
         assert (tmp_path / "o.jsonl").is_file()
 
     def test_non_plan_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import prepare_distill_dataset
+        from ai_forge_cli.utils.prompt_distill import prepare_distill_dataset
 
         with pytest.raises(TypeError):
             prepare_distill_dataset({})  # type: ignore[arg-type]
@@ -258,14 +258,14 @@ class TestPrepareDataset:
 
 class TestCli:
     def test_help(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["distill-prompt", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
 
     def test_plan_only(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         traces = tmp_path / "traces.jsonl"
@@ -291,7 +291,7 @@ class TestCli:
     def test_unknown_strategy_exits_2(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         traces = tmp_path / "traces.jsonl"
@@ -319,8 +319,8 @@ class TestCli:
     ) -> None:
         # v0.71.13 #226: live runner writes a distilled dataset (provider
         # mocked so the test never touches the network).
-        import soup_cli.utils.prompt_distill as pd
-        from soup_cli.cli import app
+        import ai_forge_cli.utils.prompt_distill as pd
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(
@@ -355,7 +355,7 @@ class TestSourceWiring:
     def test_no_top_level_heavy_imports(self) -> None:
         path = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "utils"
             / "prompt_distill.py"
         )
@@ -364,7 +364,7 @@ class TestSourceWiring:
             assert token not in text
 
     def test_cli_registered(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         names = [c.name for c in app.registered_commands]
         assert "distill-prompt" in names

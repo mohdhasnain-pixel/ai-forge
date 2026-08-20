@@ -5,7 +5,7 @@
 `reward_model=` from `OnlineDPOTrainer` at **0.25.0** but kept `BasePairwiseJudge`
 exported at top level through **0.28.0**. The probe therefore returns True for
 every trl in the supported `<0.27` range — including whatever a fresh
-`pip install "soup-cli[train]"` resolves — and the wrapper passes a keyword that
+`pip install "ai-forge[train]"` resolves — and the wrapper passes a keyword that
 was removed five releases earlier::
 
     TypeError: OnlineDPOTrainer.__init__() got an unexpected keyword argument
@@ -48,7 +48,7 @@ def _real_params():
     two copies of "where does the real signature live" is exactly how the
     original defect happened.
     """
-    from soup_cli.trainer.online_dpo import _trl_accepts
+    from ai_forge_cli.trainer.online_dpo import _trl_accepts
 
     return _trl_accepts
 
@@ -57,7 +57,7 @@ class TestTheKwargsBindAgainstTheRealSignature:
     """The test the blind spot needed: ask trl, not our own predicate."""
 
     def test_the_reward_signal_kwarg_is_one_this_trl_accepts(self):
-        from soup_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
+        from ai_forge_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
 
         class _Tcfg:
             online_dpo_judge = None
@@ -65,7 +65,7 @@ class TestTheKwargsBindAgainstTheRealSignature:
 
         # the wrapper's own kwarg choice, via the documented test seam so no
         # model is loaded
-        from soup_cli.trainer import online_dpo as mod
+        from ai_forge_cli.trainer import online_dpo as mod
 
         sentinel = object()
         original = mod._ONLINE_DPO_JUDGE_OVERRIDE
@@ -91,7 +91,7 @@ class TestTheKwargsBindAgainstTheRealSignature:
         Stated against `inspect.signature` rather than against a version number,
         so it keeps working when trl moves the parameter again.
         """
-        from soup_cli.trainer.online_dpo import _trl_accepts
+        from ai_forge_cli.trainer.online_dpo import _trl_accepts
 
         # At least one real signal kwarg must exist, or the probe is answering
         # False to everything - which is how the first version of this fix looked
@@ -107,6 +107,6 @@ class TestTheKwargsBindAgainstTheRealSignature:
     def test_an_absent_parameter_is_reported_absent(self):
         """CONTROL. A probe that answered True unconditionally would satisfy the
         test above for every name that happens to exist."""
-        from soup_cli.trainer.online_dpo import _trl_accepts
+        from ai_forge_cli.trainer.online_dpo import _trl_accepts
 
         assert _trl_accepts("definitely_not_a_trl_parameter") is False

@@ -22,7 +22,7 @@ class TestSpeculativeDecodingCLI:
         """The serve command should accept --speculative-decoding flag."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -33,7 +33,7 @@ class TestSpeculativeDecodingCLI:
         """The serve command should accept --num-speculative-tokens flag."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -56,7 +56,7 @@ class TestDraftModelLoading:
             "transformers.AutoModelForCausalLM.from_pretrained",
             return_value=mock_model,
         ):
-            from soup_cli.commands.serve import _load_draft_model
+            from ai_forge_cli.commands.serve import _load_draft_model
 
             result = _load_draft_model("small-model", "cuda")
             mock_model.eval.assert_called_once()
@@ -71,7 +71,7 @@ class TestDraftModelLoading:
             "transformers.AutoModelForCausalLM.from_pretrained",
             return_value=mock_model,
         ) as mock_load:
-            from soup_cli.commands.serve import _load_draft_model
+            from ai_forge_cli.commands.serve import _load_draft_model
 
             _load_draft_model("small-model", "cpu")
             call_kwargs = mock_load.call_args[1]
@@ -81,7 +81,7 @@ class TestDraftModelLoading:
         """_load_draft_model should reject URL-based model paths (SSRF)."""
         import typer
 
-        from soup_cli.commands.serve import _load_draft_model
+        from ai_forge_cli.commands.serve import _load_draft_model
 
         with pytest.raises(typer.Exit):
             _load_draft_model("https://evil.com/model", "cuda")
@@ -90,7 +90,7 @@ class TestDraftModelLoading:
         """_load_draft_model should reject http:// URLs."""
         import typer
 
-        from soup_cli.commands.serve import _load_draft_model
+        from ai_forge_cli.commands.serve import _load_draft_model
 
         with pytest.raises(typer.Exit):
             _load_draft_model("http://evil.com/model", "cpu")
@@ -106,7 +106,7 @@ class TestDraftModelLoading:
             "transformers.AutoModelForCausalLM.from_pretrained",
             return_value=mock_model,
         ) as mock_load:
-            from soup_cli.commands.serve import _load_draft_model
+            from ai_forge_cli.commands.serve import _load_draft_model
 
             _load_draft_model("small-model", "cuda")
             call_kwargs = mock_load.call_args[1]
@@ -122,7 +122,7 @@ class TestDraftModelLoading:
             "transformers.AutoModelForCausalLM.from_pretrained",
             return_value=mock_model,
         ) as mock_load:
-            from soup_cli.commands.serve import _load_draft_model
+            from ai_forge_cli.commands.serve import _load_draft_model
 
             _load_draft_model("small-model", "cuda")
             call_kwargs = mock_load.call_args[1]
@@ -155,7 +155,7 @@ class TestGenerateWithDraftModel:
 
         mock_draft = MagicMock()
 
-        from soup_cli.commands.serve import _generate_response
+        from ai_forge_cli.commands.serve import _generate_response
 
         _generate_response(
             mock_model, mock_tokenizer,
@@ -187,7 +187,7 @@ class TestGenerateWithDraftModel:
         }
         mock_tokenizer.decode.return_value = "response"
 
-        from soup_cli.commands.serve import _generate_response
+        from ai_forge_cli.commands.serve import _generate_response
 
         _generate_response(
             mock_model, mock_tokenizer,
@@ -216,7 +216,7 @@ class TestCreateAppWithDraftModel:
         mock_tokenizer = MagicMock()
         mock_draft = MagicMock()
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=mock_model,
@@ -239,7 +239,7 @@ class TestCreateAppWithDraftModel:
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=mock_model,
@@ -261,7 +261,7 @@ class TestVllmSpeculativeDecoding:
         """create_vllm_engine should accept speculative model params."""
         import inspect
 
-        from soup_cli.utils.vllm import create_vllm_engine
+        from ai_forge_cli.utils.vllm import create_vllm_engine
 
         sig = inspect.signature(create_vllm_engine)
         assert "speculative_model" in sig.parameters
@@ -271,7 +271,7 @@ class TestVllmSpeculativeDecoding:
         """Default speculative params should be None and 5."""
         import inspect
 
-        from soup_cli.utils.vllm import create_vllm_engine
+        from ai_forge_cli.utils.vllm import create_vllm_engine
 
         sig = inspect.signature(create_vllm_engine)
         assert sig.parameters["speculative_model"].default is None

@@ -23,7 +23,7 @@ import os
 
 import pytest
 
-from soup_cli.trainer.stream_setup import _distributed_launch, refuse_if_data_parallel
+from ai_forge_cli.trainer.stream_setup import _distributed_launch, refuse_if_data_parallel
 
 
 def _fake_cuda(monkeypatch, count, available=True):

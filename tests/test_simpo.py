@@ -6,7 +6,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Config Tests ───────────────────────────────────────────────────────────
 
@@ -119,12 +119,12 @@ class TestSimPOTrainRouting:
     """Test that train command routes to SimPO trainer."""
 
     def test_simpo_import_exists(self):
-        from soup_cli.trainer.simpo import SimPOTrainerWrapper
+        from ai_forge_cli.trainer.simpo import SimPOTrainerWrapper
 
         assert SimPOTrainerWrapper is not None
 
     def test_simpo_wrapper_init(self):
-        from soup_cli.trainer.simpo import SimPOTrainerWrapper
+        from ai_forge_cli.trainer.simpo import SimPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -138,7 +138,7 @@ class TestSimPOTrainRouting:
         assert wrapper.trainer is None
 
     def test_simpo_wrapper_init_with_options(self):
-        from soup_cli.trainer.simpo import SimPOTrainerWrapper
+        from ai_forge_cli.trainer.simpo import SimPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -159,21 +159,21 @@ class TestSimPOSweepParams:
     """Test SimPO parameter shortcuts in sweep."""
 
     def test_simpo_gamma_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"simpo_gamma": 0.5}}
         _set_nested_param(config, "simpo_gamma", 1.0)
         assert config["training"]["simpo_gamma"] == 1.0
 
     def test_cpo_alpha_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "cpo_alpha", 0.5)
         assert config["training"]["cpo_alpha"] == pytest.approx(0.5)
 
     def test_sweep_run_single_routes_to_simpo_trainer(self):
-        from soup_cli.commands.sweep import _run_single
+        from ai_forge_cli.commands.sweep import _run_single
 
         cfg = SoupConfig(
             base="some-model",
@@ -196,14 +196,14 @@ class TestSimPOSweepParams:
         }
 
         fake_gpu_info = {"memory_total": "0 MB", "memory_total_bytes": 0}
-        with mock_patch("soup_cli.data.loader.load_dataset", return_value=fake_dataset), \
-             mock_patch("soup_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
-             mock_patch("soup_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
-             mock_patch("soup_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
-             mock_patch("soup_cli.monitoring.display.TrainingDisplay"), \
-             mock_patch("soup_cli.trainer.simpo.SimPOTrainerWrapper.setup"), \
+        with mock_patch("ai_forge_cli.data.loader.load_dataset", return_value=fake_dataset), \
+             mock_patch("ai_forge_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
+             mock_patch("ai_forge_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
+             mock_patch("ai_forge_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
+             mock_patch("ai_forge_cli.monitoring.display.TrainingDisplay"), \
+             mock_patch("ai_forge_cli.trainer.simpo.SimPOTrainerWrapper.setup"), \
              mock_patch(
-                 "soup_cli.trainer.simpo.SimPOTrainerWrapper.train", return_value=fake_result
+                 "ai_forge_cli.trainer.simpo.SimPOTrainerWrapper.train", return_value=fake_result
              ) as mock_train:
             mock_tracker = MagicMock()
             mock_tracker.start_run.return_value = "run-simpo-1"
@@ -220,7 +220,7 @@ class TestSimPOSweepParams:
 
 class TestSimPOTrainGuard:
     def test_train_before_setup_raises_runtime_error(self):
-        from soup_cli.trainer.simpo import SimPOTrainerWrapper
+        from ai_forge_cli.trainer.simpo import SimPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -237,7 +237,7 @@ class TestSimPOTrainGuard:
 
 class TestSimPOTrainResults:
     def _make_wrapper_with_mock_trainer(self, log_history=None, global_step=20):
-        from soup_cli.trainer.simpo import SimPOTrainerWrapper
+        from ai_forge_cli.trainer.simpo import SimPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -290,7 +290,7 @@ class TestSimPOInitTemplate:
     def test_init_simpo_template_creates_file(self, tmp_path):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -306,8 +306,8 @@ class TestSimPOInitTemplate:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.config.loader import load_config
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.config.loader import load_config
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -321,9 +321,9 @@ class TestSimPOInitTemplate:
 
 class TestSimPOWizardPath:
     def test_wizard_simpo_task_sets_dpo_format(self):
-        from soup_cli.commands.init import _interactive_wizard
+        from ai_forge_cli.commands.init import _interactive_wizard
 
-        with mock_patch("soup_cli.commands.init.Prompt.ask", side_effect=[
+        with mock_patch("ai_forge_cli.commands.init.Prompt.ask", side_effect=[
             "some-model",
             "simpo",
             "./data.jsonl",
@@ -343,7 +343,7 @@ class TestSimPOWizardPath:
 
 class TestSimPOConfigLoaderRoundTrip:
     def test_simpo_template_round_trip(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(TEMPLATES["simpo"])
         assert cfg.task == "simpo"

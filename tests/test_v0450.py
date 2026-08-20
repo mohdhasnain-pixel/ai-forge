@@ -2,7 +2,7 @@
 
 Covers all five Parts:
 
-- Part A: ``soup_cli.plugins`` registry + ``soup plugins`` CLI
+- Part A: ``ai_forge_cli.plugins`` registry + ``soup plugins`` CLI
 - Part B: ``utils.anthropic_messages`` + ``utils.server_tools`` + ``utils.ngram_spec``
 - Part C: ``utils.integrations`` external integrations catalog
 - Part D: ``utils.trainer_plugins`` advanced trainer plugin allowlist
@@ -14,31 +14,31 @@ from __future__ import annotations
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli import plugins as plugins_pkg
-from soup_cli.utils.anthropic_messages import (
+from ai_forge_cli import plugins as plugins_pkg
+from ai_forge_cli.utils.anthropic_messages import (
     from_anthropic,
     to_anthropic,
     validate_anthropic_payload,
 )
-from soup_cli.utils.integrations import (
+from ai_forge_cli.utils.integrations import (
     get_integration,
     has_integration,
     list_integrations,
 )
-from soup_cli.utils.ngram_spec import (
+from ai_forge_cli.utils.ngram_spec import (
     NgramSpecConfig,
     validate_ngram_config,
     validate_ngram_n,
     validate_num_draft_tokens,
     validate_prompt_lookup_max,
 )
-from soup_cli.utils.recipe_dag import (
+from ai_forge_cli.utils.recipe_dag import (
     NODE_KINDS,
     load_recipe_yaml,
     parse_recipe,
     parse_recipe_yaml,
 )
-from soup_cli.utils.server_tools import (
+from ai_forge_cli.utils.server_tools import (
     SUPPORTED_TOOLS,
     WebSearchConfig,
     is_domain_allowed,
@@ -48,7 +48,7 @@ from soup_cli.utils.server_tools import (
     validate_tool_name,
     validate_web_search_config,
 )
-from soup_cli.utils.trainer_plugins import (
+from ai_forge_cli.utils.trainer_plugins import (
     get_trainer_plugin,
     list_trainer_plugins,
     validate_trainer_plugin_list,
@@ -267,7 +267,7 @@ def test_load_plugins_returns_count():
 
 
 def test_plugins_cli_list_empty():
-    from soup_cli.commands import plugins as plugins_cli
+    from ai_forge_cli.commands import plugins as plugins_cli
 
     runner = CliRunner()
     result = runner.invoke(plugins_cli.app, [])
@@ -276,7 +276,7 @@ def test_plugins_cli_list_empty():
 
 
 def test_plugins_cli_lists_registered():
-    from soup_cli.commands import plugins as plugins_cli
+    from ai_forge_cli.commands import plugins as plugins_cli
 
     plugins_pkg.register_plugin(
         name="cli-test", version="1.2.3", plugin=_NoopPlugin()
@@ -289,7 +289,7 @@ def test_plugins_cli_lists_registered():
 
 
 def test_plugins_cli_install_advisory():
-    from soup_cli.commands import plugins as plugins_cli
+    from ai_forge_cli.commands import plugins as plugins_cli
 
     runner = CliRunner()
     result = runner.invoke(plugins_cli.app, ["install", "anything"])
@@ -298,7 +298,7 @@ def test_plugins_cli_install_advisory():
 
 
 def test_plugins_cli_enable_unknown():
-    from soup_cli.commands import plugins as plugins_cli
+    from ai_forge_cli.commands import plugins as plugins_cli
 
     runner = CliRunner()
     result = runner.invoke(plugins_cli.app, ["enable", "ghost"])
@@ -307,7 +307,7 @@ def test_plugins_cli_enable_unknown():
 
 
 def test_plugins_cli_enable_disable_cycle():
-    from soup_cli.commands import plugins as plugins_cli
+    from ai_forge_cli.commands import plugins as plugins_cli
 
     plugins_pkg.register_plugin(
         name="cycle", version="1.0.0", plugin=_NoopPlugin()
@@ -323,7 +323,7 @@ def test_plugins_cli_enable_disable_cycle():
 
 
 def test_plugins_cli_markup_escaped():
-    from soup_cli.commands import plugins as plugins_cli
+    from ai_forge_cli.commands import plugins as plugins_cli
 
     runner = CliRunner()
     # Crafted name with Rich markup; should be escaped before printing.
@@ -965,7 +965,7 @@ def test_load_recipe_yaml_rejects_symlink(tmp_path, monkeypatch):
 
 
 def test_data_recipe_cli_happy(tmp_path, monkeypatch):
-    from soup_cli.commands import data as data_cmd
+    from ai_forge_cli.commands import data as data_cmd
 
     monkeypatch.chdir(tmp_path)
     recipe_path = tmp_path / "r.yaml"
@@ -983,7 +983,7 @@ def test_data_recipe_cli_happy(tmp_path, monkeypatch):
 
 
 def test_data_recipe_cli_invalid_recipe(tmp_path, monkeypatch):
-    from soup_cli.commands import data as data_cmd
+    from ai_forge_cli.commands import data as data_cmd
 
     monkeypatch.chdir(tmp_path)
     recipe_path = tmp_path / "r.yaml"
@@ -998,7 +998,7 @@ def test_data_recipe_cli_invalid_recipe(tmp_path, monkeypatch):
 
 
 def test_data_recipe_cli_missing_file(tmp_path, monkeypatch):
-    from soup_cli.commands import data as data_cmd
+    from ai_forge_cli.commands import data as data_cmd
 
     monkeypatch.chdir(tmp_path)
     runner = CliRunner()

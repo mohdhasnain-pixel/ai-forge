@@ -51,7 +51,7 @@ class _RaisingPlugin:
 
 @pytest.fixture
 def clear_plugins_fixture():
-    from soup_cli.plugins import clear_plugins
+    from ai_forge_cli.plugins import clear_plugins
 
     clear_plugins()
     yield
@@ -60,15 +60,15 @@ def clear_plugins_fixture():
 
 def test_build_plugin_callback_none_when_no_plugins(clear_plugins_fixture):
     """No registered plugins → build returns None (no-op short-circuit)."""
-    from soup_cli.monitoring.plugin_callback import build_plugin_callback
+    from ai_forge_cli.monitoring.plugin_callback import build_plugin_callback
 
     assert build_plugin_callback() is None
 
 
 def test_build_plugin_callback_skips_disabled(clear_plugins_fixture):
     """Disabled plugin → build returns None (no enabled hooks)."""
-    from soup_cli.monitoring.plugin_callback import build_plugin_callback
-    from soup_cli.plugins import disable_plugin, register_plugin
+    from ai_forge_cli.monitoring.plugin_callback import build_plugin_callback
+    from ai_forge_cli.plugins import disable_plugin, register_plugin
 
     plugin = _RecordingPlugin()
     register_plugin(name="rec-a", version="0.1.0", plugin=plugin)
@@ -81,8 +81,8 @@ def test_build_plugin_callback_returns_callback_when_enabled(
 ):
     """Enabled plugin with at least one hook → real TrainerCallback."""
     transformers = pytest.importorskip("transformers")
-    from soup_cli.monitoring.plugin_callback import build_plugin_callback
-    from soup_cli.plugins import register_plugin
+    from ai_forge_cli.monitoring.plugin_callback import build_plugin_callback
+    from ai_forge_cli.plugins import register_plugin
 
     plugin = _RecordingPlugin()
     register_plugin(name="rec-b", version="0.1.0", plugin=plugin)
@@ -96,8 +96,8 @@ def test_plugin_callback_dispatches_to_implemented_hooks(
 ):
     """Trainer event → only implemented hooks fire."""
     pytest.importorskip("transformers")
-    from soup_cli.monitoring.plugin_callback import build_plugin_callback
-    from soup_cli.plugins import register_plugin
+    from ai_forge_cli.monitoring.plugin_callback import build_plugin_callback
+    from ai_forge_cli.plugins import register_plugin
 
     plugin = _RecordingPlugin()
     register_plugin(name="rec-c", version="0.1.0", plugin=plugin)
@@ -119,8 +119,8 @@ def test_plugin_callback_swallows_hook_exceptions(
 ):
     """One misbehaving plugin must not crash training."""
     pytest.importorskip("transformers")
-    from soup_cli.monitoring.plugin_callback import build_plugin_callback
-    from soup_cli.plugins import register_plugin
+    from ai_forge_cli.monitoring.plugin_callback import build_plugin_callback
+    from ai_forge_cli.plugins import register_plugin
 
     register_plugin(name="bad-plugin", version="0.1.0", plugin=_RaisingPlugin())
     callback = build_plugin_callback()
@@ -141,7 +141,7 @@ def test_attach_plugin_callback_no_plugins_returns_false(
     clear_plugins_fixture,
 ):
     """No plugins registered → helper short-circuits to False (no trainer touch)."""
-    from soup_cli.utils.peft_wiring import attach_plugin_callback
+    from ai_forge_cli.utils.peft_wiring import attach_plugin_callback
 
     trainer = MagicMock()
     attached = attach_plugin_callback(trainer)
@@ -154,8 +154,8 @@ def test_attach_plugin_callback_attaches_when_enabled(
 ):
     """Enabled plugin → trainer.add_callback called once with the callback."""
     pytest.importorskip("transformers")
-    from soup_cli.plugins import register_plugin
-    from soup_cli.utils.peft_wiring import attach_plugin_callback
+    from ai_forge_cli.plugins import register_plugin
+    from ai_forge_cli.utils.peft_wiring import attach_plugin_callback
 
     register_plugin(name="rec-attach", version="0.1.0", plugin=_RecordingPlugin())
     trainer = MagicMock()
@@ -169,8 +169,8 @@ def test_attach_plugin_callback_swallows_add_callback_failure(
 ):
     """trainer.add_callback raising → helper returns False, no crash."""
     pytest.importorskip("transformers")
-    from soup_cli.plugins import register_plugin
-    from soup_cli.utils.peft_wiring import attach_plugin_callback
+    from ai_forge_cli.plugins import register_plugin
+    from ai_forge_cli.utils.peft_wiring import attach_plugin_callback
 
     register_plugin(name="rec-fail", version="0.1.0", plugin=_RecordingPlugin())
     trainer = MagicMock()
@@ -182,8 +182,8 @@ def test_attach_plugin_callback_swallows_add_callback_failure(
 def test_attach_plugin_callback_console_advisory(clear_plugins_fixture):
     """Optional `console` argument prints an advisory; never crashes."""
     pytest.importorskip("transformers")
-    from soup_cli.plugins import register_plugin
-    from soup_cli.utils.peft_wiring import attach_plugin_callback
+    from ai_forge_cli.plugins import register_plugin
+    from ai_forge_cli.utils.peft_wiring import attach_plugin_callback
 
     register_plugin(name="rec-console", version="0.1.0", plugin=_RecordingPlugin())
     trainer = MagicMock()
@@ -200,8 +200,8 @@ def test_attach_plugin_callback_console_print_failure_swallowed(
 ):
     """`console.print` raising must not crash the helper."""
     pytest.importorskip("transformers")
-    from soup_cli.plugins import register_plugin
-    from soup_cli.utils.peft_wiring import attach_plugin_callback
+    from ai_forge_cli.plugins import register_plugin
+    from ai_forge_cli.utils.peft_wiring import attach_plugin_callback
 
     register_plugin(name="rec-console2", version="0.1.0", plugin=_RecordingPlugin())
     trainer = MagicMock()
@@ -214,19 +214,19 @@ def test_attach_plugin_callback_console_print_failure_swallowed(
 @pytest.mark.parametrize(
     "trainer_file",
     [
-        "src/soup_cli/trainer/sft.py",
-        "src/soup_cli/trainer/dpo.py",
-        "src/soup_cli/trainer/grpo.py",
-        "src/soup_cli/trainer/kto.py",
-        "src/soup_cli/trainer/orpo.py",
-        "src/soup_cli/trainer/simpo.py",
-        "src/soup_cli/trainer/ipo.py",
-        "src/soup_cli/trainer/bco.py",
-        "src/soup_cli/trainer/ppo.py",
-        "src/soup_cli/trainer/pretrain.py",
-        "src/soup_cli/trainer/reward_model.py",
-        "src/soup_cli/trainer/embedding.py",
-        "src/soup_cli/trainer/distill.py",
+        "src/ai_forge_cli/trainer/sft.py",
+        "src/ai_forge_cli/trainer/dpo.py",
+        "src/ai_forge_cli/trainer/grpo.py",
+        "src/ai_forge_cli/trainer/kto.py",
+        "src/ai_forge_cli/trainer/orpo.py",
+        "src/ai_forge_cli/trainer/simpo.py",
+        "src/ai_forge_cli/trainer/ipo.py",
+        "src/ai_forge_cli/trainer/bco.py",
+        "src/ai_forge_cli/trainer/ppo.py",
+        "src/ai_forge_cli/trainer/pretrain.py",
+        "src/ai_forge_cli/trainer/reward_model.py",
+        "src/ai_forge_cli/trainer/embedding.py",
+        "src/ai_forge_cli/trainer/distill.py",
     ],
 )
 def test_every_trainer_wires_attach_plugin_callback(trainer_file: str):
@@ -238,7 +238,7 @@ def test_every_trainer_wires_attach_plugin_callback(trainer_file: str):
     )
     # Direct import from canonical peft_wiring module (no re-export shim).
     assert "attach_plugin_callback," in src or (
-        "from soup_cli.utils.peft_wiring import" in src
+        "from ai_forge_cli.utils.peft_wiring import" in src
         and "attach_plugin_callback" in src
     ), f"{trainer_file} must import attach_plugin_callback from peft_wiring"
     # Sanity: imported AND called on self.trainer.
@@ -262,7 +262,7 @@ def _fake_model_and_tokenizer():
 
 def _build_app(**overrides):
     pytest.importorskip("fastapi")
-    from soup_cli.commands.serve import _create_app
+    from ai_forge_cli.commands.serve import _create_app
 
     model, tokenizer = _fake_model_and_tokenizer()
     kwargs = dict(
@@ -323,7 +323,7 @@ def test_anthropic_messages_happy_path(monkeypatch):
 
     # Patch _generate_response so we don't need a real model.
     monkeypatch.setattr(
-        "soup_cli.commands.serve._generate_response",
+        "ai_forge_cli.commands.serve._generate_response",
         lambda *a, **kw: ("hello world", 3, 2),
     )
     app = _build_app()
@@ -355,7 +355,7 @@ def test_ngram_config_threaded_into_generate_response(monkeypatch):
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
 
-    from soup_cli.utils.ngram_spec import NgramSpecConfig
+    from ai_forge_cli.utils.ngram_spec import NgramSpecConfig
 
     received_kwargs: dict = {}
 
@@ -363,7 +363,7 @@ def test_ngram_config_threaded_into_generate_response(monkeypatch):
         received_kwargs.update(kwargs)
         return ("ok", 1, 1)
 
-    monkeypatch.setattr("soup_cli.commands.serve._generate_response", _capture)
+    monkeypatch.setattr("ai_forge_cli.commands.serve._generate_response", _capture)
     cfg = NgramSpecConfig(n=3, num_draft_tokens=4, prompt_lookup_max=0)
     app = _build_app(ngram_config=cfg)
     client = TestClient(app)
@@ -383,8 +383,8 @@ def test_ngram_kwarg_emits_prompt_lookup_num_tokens():
     """Direct unit test on `_generate_response` proves the kwarg makes it
     into ``model.generate``."""
     pytest.importorskip("torch")
-    from soup_cli.commands.serve import _generate_response
-    from soup_cli.utils.ngram_spec import NgramSpecConfig
+    from ai_forge_cli.commands.serve import _generate_response
+    from ai_forge_cli.utils.ngram_spec import NgramSpecConfig
 
     captured: dict = {}
 
@@ -437,8 +437,8 @@ def test_ngram_kwarg_emits_prompt_lookup_num_tokens():
 def test_ngram_kwarg_skipped_when_draft_model_set():
     """A real `assistant_model` wins over n-gram — keys mutually exclusive."""
     pytest.importorskip("torch")
-    from soup_cli.commands.serve import _generate_response
-    from soup_cli.utils.ngram_spec import NgramSpecConfig
+    from ai_forge_cli.commands.serve import _generate_response
+    from ai_forge_cli.utils.ngram_spec import NgramSpecConfig
 
     captured: dict = {}
 
@@ -506,15 +506,15 @@ def test_tool_endpoint_returns_501(path: str):
 
 
 def test_run_recipe_rejects_non_dag():
-    from soup_cli.utils.recipe_run import run_recipe
+    from ai_forge_cli.utils.recipe_run import run_recipe
 
     with pytest.raises(TypeError, match="RecipeDAG"):
         run_recipe("not-a-dag", output_dir="out")  # type: ignore[arg-type]
 
 
 def test_run_recipe_rejects_bad_kwargs():
-    from soup_cli.utils.recipe_dag import RecipeDAG, RecipeNode
-    from soup_cli.utils.recipe_run import run_recipe
+    from ai_forge_cli.utils.recipe_dag import RecipeDAG, RecipeNode
+    from ai_forge_cli.utils.recipe_run import run_recipe
 
     dag = RecipeDAG(
         nodes=(RecipeNode(name="a", kind="seed", config={}),),
@@ -533,8 +533,8 @@ def test_run_recipe_raises_not_implemented():
     A bare `seed` node without a `path` config raises ValueError; coverage of
     the live happy-path lives in test_v0537.py.
     """
-    from soup_cli.utils.recipe_dag import RecipeDAG, RecipeNode
-    from soup_cli.utils.recipe_run import run_recipe
+    from ai_forge_cli.utils.recipe_dag import RecipeDAG, RecipeNode
+    from ai_forge_cli.utils.recipe_run import run_recipe
 
     dag = RecipeDAG(
         nodes=(RecipeNode(name="a", kind="seed", config={}),),
@@ -547,7 +547,7 @@ def test_run_recipe_raises_not_implemented():
 
 def test_data_recipe_execute_flag_present(tmp_path: Path):
     """`soup data recipe --help` lists `--execute`."""
-    from soup_cli.cli import app as cli_app
+    from ai_forge_cli.cli import app as cli_app
 
     runner = CliRunner()
     result = runner.invoke(cli_app, ["data", "recipe", "--help"])
@@ -558,7 +558,7 @@ def test_data_recipe_execute_flag_present(tmp_path: Path):
 
 def test_data_recipe_execute_requires_output(tmp_path: Path, monkeypatch):
     """`--execute` without `--output` exits 2 with a clear message."""
-    from soup_cli.cli import app as cli_app
+    from ai_forge_cli.cli import app as cli_app
 
     monkeypatch.chdir(tmp_path)
     Path("recipe.yaml").write_text(
@@ -584,7 +584,7 @@ def test_data_recipe_execute_surfaces_v0537_marker(tmp_path: Path, monkeypatch):
     (live runner does real I/O). The v0.53.7 marker check from the v0.53.6
     stub era is no longer applicable; live coverage lives in test_v0537.py.
     """
-    from soup_cli.cli import app as cli_app
+    from ai_forge_cli.cli import app as cli_app
 
     monkeypatch.chdir(tmp_path)
     Path("recipe.yaml").write_text(
@@ -622,7 +622,7 @@ def test_instantiate_trainer_plugins_validates_then_raises():
     without it the call surfaces an ImportError (or runs through to advisory
     when present). Live coverage lives in test_v0537.py.
     """
-    from soup_cli.utils.trainer_plugins import instantiate_trainer_plugins
+    from ai_forge_cli.utils.trainer_plugins import instantiate_trainer_plugins
 
     with pytest.raises((NotImplementedError, ImportError, ModuleNotFoundError)):
         instantiate_trainer_plugins(["grokfast"])
@@ -630,14 +630,14 @@ def test_instantiate_trainer_plugins_validates_then_raises():
 
 def test_instantiate_trainer_plugins_validation_runs_first():
     """Unknown plugin name → ValueError BEFORE NotImplementedError."""
-    from soup_cli.utils.trainer_plugins import instantiate_trainer_plugins
+    from ai_forge_cli.utils.trainer_plugins import instantiate_trainer_plugins
 
     with pytest.raises(ValueError, match="unknown trainer plugin"):
         instantiate_trainer_plugins(["definitely-not-a-real-plugin"])
 
 
 def test_instantiate_trainer_plugins_rejects_non_sequence():
-    from soup_cli.utils.trainer_plugins import instantiate_trainer_plugins
+    from ai_forge_cli.utils.trainer_plugins import instantiate_trainer_plugins
 
     with pytest.raises(TypeError):
         instantiate_trainer_plugins("grokfast")  # type: ignore[arg-type]
@@ -645,7 +645,7 @@ def test_instantiate_trainer_plugins_rejects_non_sequence():
 
 def test_instantiate_trainer_plugins_in_dunder_all():
     """Public API surface includes the new stub."""
-    import soup_cli.utils.trainer_plugins as mod
+    import ai_forge_cli.utils.trainer_plugins as mod
 
     assert "instantiate_trainer_plugins" in mod.__all__
 
@@ -656,7 +656,7 @@ def test_instantiate_trainer_plugins_empty_list_passes_validation():
     The v0.53.6 stub raised NotImplementedError on empty input; the live
     runner short-circuits to an empty tuple.
     """
-    from soup_cli.utils.trainer_plugins import instantiate_trainer_plugins
+    from ai_forge_cli.utils.trainer_plugins import instantiate_trainer_plugins
 
     result = instantiate_trainer_plugins([])
     assert result == ()
@@ -674,7 +674,7 @@ def test_ngram_kwarg_omitted_when_config_is_none():
     would break the legacy free-form generation path.
     """
     pytest.importorskip("torch")
-    from soup_cli.commands.serve import _generate_response
+    from ai_forge_cli.commands.serve import _generate_response
 
     captured: dict = {}
 
@@ -708,8 +708,8 @@ def test_ngram_kwarg_omitted_when_config_is_none():
 
 
 def test_run_recipe_rejects_empty_output_dir():
-    from soup_cli.utils.recipe_dag import RecipeDAG, RecipeNode
-    from soup_cli.utils.recipe_run import run_recipe
+    from ai_forge_cli.utils.recipe_dag import RecipeDAG, RecipeNode
+    from ai_forge_cli.utils.recipe_run import run_recipe
 
     dag = RecipeDAG(
         nodes=(RecipeNode(name="a", kind="seed", config={}),),
@@ -721,8 +721,8 @@ def test_run_recipe_rejects_empty_output_dir():
 
 
 def test_run_recipe_rejects_non_str_judge_provider():
-    from soup_cli.utils.recipe_dag import RecipeDAG, RecipeNode
-    from soup_cli.utils.recipe_run import run_recipe
+    from ai_forge_cli.utils.recipe_dag import RecipeDAG, RecipeNode
+    from ai_forge_cli.utils.recipe_run import run_recipe
 
     dag = RecipeDAG(
         nodes=(RecipeNode(name="a", kind="seed", config={}),),
@@ -734,8 +734,8 @@ def test_run_recipe_rejects_non_str_judge_provider():
 
 
 def test_run_recipe_rejects_non_str_judge_model():
-    from soup_cli.utils.recipe_dag import RecipeDAG, RecipeNode
-    from soup_cli.utils.recipe_run import run_recipe
+    from ai_forge_cli.utils.recipe_dag import RecipeDAG, RecipeNode
+    from ai_forge_cli.utils.recipe_run import run_recipe
 
     dag = RecipeDAG(
         nodes=(RecipeNode(name="a", kind="seed", config={}),),
@@ -747,8 +747,8 @@ def test_run_recipe_rejects_non_str_judge_model():
 
 
 def test_run_recipe_rejects_non_str_checkpoint_dir():
-    from soup_cli.utils.recipe_dag import RecipeDAG, RecipeNode
-    from soup_cli.utils.recipe_run import run_recipe
+    from ai_forge_cli.utils.recipe_dag import RecipeDAG, RecipeNode
+    from ai_forge_cli.utils.recipe_run import run_recipe
 
     dag = RecipeDAG(
         nodes=(RecipeNode(name="a", kind="seed", config={}),),
@@ -797,7 +797,7 @@ def test_anthropic_messages_rejects_oversize_max_tokens():
 
 def test_data_recipe_execute_rejects_empty_output(tmp_path: Path, monkeypatch):
     """`--output ""` is rejected at the CLI boundary."""
-    from soup_cli.cli import app as cli_app
+    from ai_forge_cli.cli import app as cli_app
 
     monkeypatch.chdir(tmp_path)
     Path("recipe.yaml").write_text(
@@ -817,7 +817,7 @@ def test_data_recipe_execute_rejects_outside_cwd(tmp_path: Path, monkeypatch):
     """`--output` outside cwd is rejected before the stub runs."""
     import sys
 
-    from soup_cli.cli import app as cli_app
+    from ai_forge_cli.cli import app as cli_app
 
     monkeypatch.chdir(tmp_path)
     sub = tmp_path / "proj"

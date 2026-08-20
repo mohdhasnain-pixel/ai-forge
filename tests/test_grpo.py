@@ -4,7 +4,7 @@ import textwrap
 
 import pytest
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Config Tests ───────────────────────────────────────────────────────────
 
@@ -127,35 +127,35 @@ class TestAccuracyReward:
     """Test the accuracy reward function."""
 
     def test_exact_match(self):
-        from soup_cli.trainer.rewards import accuracy_reward
+        from ai_forge_cli.trainer.rewards import accuracy_reward
 
         completions = [[{"role": "assistant", "content": "The answer is #### 42"}]]
         rewards = accuracy_reward(completions, answer=["42"])
         assert rewards == [1.0]
 
     def test_boxed_match(self):
-        from soup_cli.trainer.rewards import accuracy_reward
+        from ai_forge_cli.trainer.rewards import accuracy_reward
 
         completions = [[{"role": "assistant", "content": "So \\boxed{42} is the result"}]]
         rewards = accuracy_reward(completions, answer=["42"])
         assert rewards == [1.0]
 
     def test_partial_match(self):
-        from soup_cli.trainer.rewards import accuracy_reward
+        from ai_forge_cli.trainer.rewards import accuracy_reward
 
         completions = [[{"role": "assistant", "content": "The answer is 42 degrees"}]]
         rewards = accuracy_reward(completions, answer=["42"])
         assert rewards == [0.5]
 
     def test_no_match(self):
-        from soup_cli.trainer.rewards import accuracy_reward
+        from ai_forge_cli.trainer.rewards import accuracy_reward
 
         completions = [[{"role": "assistant", "content": "I don't know"}]]
         rewards = accuracy_reward(completions, answer=["42"])
         assert rewards == [0.0]
 
     def test_multiple_completions(self):
-        from soup_cli.trainer.rewards import accuracy_reward
+        from ai_forge_cli.trainer.rewards import accuracy_reward
 
         completions = [
             [{"role": "assistant", "content": "#### 42"}],
@@ -166,7 +166,7 @@ class TestAccuracyReward:
         assert rewards == [1.0, 0.0, 0.5]
 
     def test_empty_completion(self):
-        from soup_cli.trainer.rewards import accuracy_reward
+        from ai_forge_cli.trainer.rewards import accuracy_reward
 
         completions = [[]]
         rewards = accuracy_reward(completions, answer=["42"])
@@ -177,7 +177,7 @@ class TestFormatReward:
     """Test the format reward function."""
 
     def test_perfect_format(self):
-        from soup_cli.trainer.rewards import format_reward
+        from ai_forge_cli.trainer.rewards import format_reward
 
         content = "<think>Let me think step by step...</think>\nThe answer is 42."
         completions = [[{"role": "assistant", "content": content}]]
@@ -185,7 +185,7 @@ class TestFormatReward:
         assert rewards == [1.0]
 
     def test_think_only(self):
-        from soup_cli.trainer.rewards import format_reward
+        from ai_forge_cli.trainer.rewards import format_reward
 
         content = "<think>Thinking...</think>"
         completions = [[{"role": "assistant", "content": content}]]
@@ -193,14 +193,14 @@ class TestFormatReward:
         assert rewards == [0.5]
 
     def test_no_format(self):
-        from soup_cli.trainer.rewards import format_reward
+        from ai_forge_cli.trainer.rewards import format_reward
 
         completions = [[{"role": "assistant", "content": "Just a plain answer"}]]
         rewards = format_reward(completions)
         assert rewards == [0.0]
 
     def test_multiple_completions(self):
-        from soup_cli.trainer.rewards import format_reward
+        from ai_forge_cli.trainer.rewards import format_reward
 
         completions = [
             [{"role": "assistant", "content": "<think>A</think>\nB"}],
@@ -214,22 +214,22 @@ class TestExtractAnswer:
     """Test answer extraction from model output."""
 
     def test_hash_format(self):
-        from soup_cli.trainer.rewards import _extract_answer
+        from ai_forge_cli.trainer.rewards import _extract_answer
 
         assert _extract_answer("Some work\n#### 42") == "42"
 
     def test_boxed_format(self):
-        from soup_cli.trainer.rewards import _extract_answer
+        from ai_forge_cli.trainer.rewards import _extract_answer
 
         assert _extract_answer("So \\boxed{42} is the answer") == "42"
 
     def test_no_answer(self):
-        from soup_cli.trainer.rewards import _extract_answer
+        from ai_forge_cli.trainer.rewards import _extract_answer
 
         assert _extract_answer("Just plain text") is None
 
     def test_multiple_hashes(self):
-        from soup_cli.trainer.rewards import _extract_answer
+        from ai_forge_cli.trainer.rewards import _extract_answer
 
         assert _extract_answer("#### step\n#### 42") == "42"
 
@@ -238,19 +238,19 @@ class TestLoadRewardFn:
     """Test reward function loading."""
 
     def test_load_builtin_accuracy(self):
-        from soup_cli.trainer.rewards import accuracy_reward, load_reward_fn
+        from ai_forge_cli.trainer.rewards import accuracy_reward, load_reward_fn
 
         fn = load_reward_fn("accuracy")
         assert fn is accuracy_reward
 
     def test_load_builtin_format(self):
-        from soup_cli.trainer.rewards import format_reward, load_reward_fn
+        from ai_forge_cli.trainer.rewards import format_reward, load_reward_fn
 
         fn = load_reward_fn("format")
         assert fn is format_reward
 
     def test_load_custom_file(self, tmp_path):
-        from soup_cli.trainer.rewards import load_reward_fn
+        from ai_forge_cli.trainer.rewards import load_reward_fn
 
         custom_file = tmp_path / "my_reward.py"
         custom_file.write_text(textwrap.dedent("""\
@@ -262,7 +262,7 @@ class TestLoadRewardFn:
         assert result == [1.0]
 
     def test_load_custom_file_missing_fn(self, tmp_path):
-        from soup_cli.trainer.rewards import load_reward_fn
+        from ai_forge_cli.trainer.rewards import load_reward_fn
 
         custom_file = tmp_path / "bad_reward.py"
         custom_file.write_text("x = 1\n")
@@ -270,7 +270,7 @@ class TestLoadRewardFn:
             load_reward_fn(str(custom_file))
 
     def test_load_unknown_name(self):
-        from soup_cli.trainer.rewards import load_reward_fn
+        from ai_forge_cli.trainer.rewards import load_reward_fn
 
         with pytest.raises(ValueError, match="Unknown reward function"):
             load_reward_fn("nonexistent")
@@ -283,7 +283,7 @@ class TestPrepareGRPODataset:
     """Test GRPO dataset preparation."""
 
     def test_from_prompt_string(self):
-        from soup_cli.trainer.grpo import _prepare_grpo_dataset
+        from ai_forge_cli.trainer.grpo import _prepare_grpo_dataset
 
         data = [{"prompt": "What is 2+2?", "answer": "4"}]
         result = _prepare_grpo_dataset(data)
@@ -292,7 +292,7 @@ class TestPrepareGRPODataset:
         assert result[0]["answer"] == "4"
 
     def test_from_messages(self):
-        from soup_cli.trainer.grpo import _prepare_grpo_dataset
+        from ai_forge_cli.trainer.grpo import _prepare_grpo_dataset
 
         data = [
             {
@@ -311,7 +311,7 @@ class TestPrepareGRPODataset:
         assert result[0]["prompt"][1]["role"] == "user"
 
     def test_from_prompt_message_list(self):
-        from soup_cli.trainer.grpo import _prepare_grpo_dataset
+        from ai_forge_cli.trainer.grpo import _prepare_grpo_dataset
 
         data = [
             {
@@ -324,7 +324,7 @@ class TestPrepareGRPODataset:
         assert result[0]["answer"] == "4"
 
     def test_from_alpaca_format(self):
-        from soup_cli.trainer.grpo import _prepare_grpo_dataset
+        from ai_forge_cli.trainer.grpo import _prepare_grpo_dataset
 
         data = [{"instruction": "Translate hello", "input": "", "output": "hola"}]
         result = _prepare_grpo_dataset(data)
@@ -332,7 +332,7 @@ class TestPrepareGRPODataset:
         assert result[0]["answer"] == "hola"
 
     def test_multiple_rows(self):
-        from soup_cli.trainer.grpo import _prepare_grpo_dataset
+        from ai_forge_cli.trainer.grpo import _prepare_grpo_dataset
 
         data = [
             {"prompt": "Q1", "answer": "A1"},
@@ -378,13 +378,13 @@ class TestGRPOTrainRouting:
 
     def test_grpo_import_exists(self):
         """GRPOTrainerWrapper should be importable."""
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         assert GRPOTrainerWrapper is not None
 
     def test_grpo_wrapper_init(self):
         """GRPOTrainerWrapper should initialize without error."""
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -405,21 +405,21 @@ class TestGRPOSweepParams:
     """Test GRPO parameter shortcuts in sweep."""
 
     def test_grpo_beta_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"grpo_beta": 0.1}}
         _set_nested_param(config, "grpo_beta", 0.04)
         assert config["training"]["grpo_beta"] == 0.04
 
     def test_num_generations_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"num_generations": 4}}
         _set_nested_param(config, "num_generations", 8)
         assert config["training"]["num_generations"] == 8
 
     def test_reward_fn_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"reward_fn": "accuracy"}}
         _set_nested_param(config, "reward_fn", "format")

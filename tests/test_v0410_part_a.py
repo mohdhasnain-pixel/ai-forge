@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TrainingConfig
-from soup_cli.utils.optimizer_zoo import (
+from ai_forge_cli.config.schema import TrainingConfig
+from ai_forge_cli.utils.optimizer_zoo import (
     SUPPORTED_OPTIMIZERS,
     is_new_v0_41_optimizer,
     required_package,

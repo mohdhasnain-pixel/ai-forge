@@ -13,7 +13,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from soup_cli.utils.neat_packing import (
+from ai_forge_cli.utils.neat_packing import (
     build_4d_attention_mask,
     select_packing_strategy,
     tag_sub_sequences,
@@ -163,7 +163,7 @@ def test_4d_mask_rejects_negative_segment_id():
 
 def test_4d_mask_rejects_oversize_allocation():
     # Defence against (B, S, S) OOM — cap rejects too-large allocations.
-    import soup_cli.utils.neat_packing as np_mod
+    import ai_forge_cli.utils.neat_packing as np_mod
     original = np_mod._MAX_MASK_ELEMENTS
     try:
         np_mod._MAX_MASK_ELEMENTS = 10
@@ -175,7 +175,7 @@ def test_4d_mask_rejects_oversize_allocation():
 
 
 def test_tag_rejects_too_many_segments():
-    import soup_cli.utils.neat_packing as np_mod
+    import ai_forge_cli.utils.neat_packing as np_mod
     original = np_mod._MAX_BOUNDARY_SEGMENTS
     try:
         np_mod._MAX_BOUNDARY_SEGMENTS = 2

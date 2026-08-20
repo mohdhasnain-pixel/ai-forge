@@ -21,19 +21,19 @@ import pytest
 
 class TestBuildLogitsProcessors:
     def test_none_returns_empty(self):
-        from soup_cli.utils.structured_output import build_logits_processors
+        from ai_forge_cli.utils.structured_output import build_logits_processors
 
         assert build_logits_processors(None, MagicMock()) == []
 
     def test_off_kind_returns_empty(self):
-        from soup_cli.utils.structured_output import build_logits_processors
+        from ai_forge_cli.utils.structured_output import build_logits_processors
 
         assert build_logits_processors(
             {"kind": "off"}, MagicMock(),
         ) == []
 
     def test_unknown_kind_returns_empty(self):
-        from soup_cli.utils.structured_output import build_logits_processors
+        from ai_forge_cli.utils.structured_output import build_logits_processors
 
         assert build_logits_processors(
             {"kind": "weird"}, MagicMock(),
@@ -41,7 +41,7 @@ class TestBuildLogitsProcessors:
 
     def test_no_libs_installed_returns_empty(self, monkeypatch):
         """When neither outlines nor lmfe is installed, return [] not error."""
-        from soup_cli.utils import structured_output as so
+        from ai_forge_cli.utils import structured_output as so
 
         monkeypatch.setattr(so, "is_outlines_available", lambda: False)
         monkeypatch.setattr(so, "is_lmfe_available", lambda: False)
@@ -50,7 +50,7 @@ class TestBuildLogitsProcessors:
 
     def test_outlines_failure_falls_back_to_empty(self, monkeypatch):
         """Library install present but factory crashes - degrade to free-form."""
-        from soup_cli.utils import structured_output as so
+        from ai_forge_cli.utils import structured_output as so
 
         monkeypatch.setattr(so, "is_outlines_available", lambda: True)
         monkeypatch.setattr(so, "is_lmfe_available", lambda: False)
@@ -71,7 +71,7 @@ class TestBuildLogitsProcessors:
 class TestGenerateResponseLogitsProcessorPlumb:
     def test_logits_processor_forwarded_to_generate(self, monkeypatch):
         """Verify _generate_response forwards logits_processor to model.generate."""
-        from soup_cli.commands import serve
+        from ai_forge_cli.commands import serve
 
         # Mock torch
         fake_torch = MagicMock()
@@ -134,7 +134,7 @@ class TestGenerateResponseSignature:
     def test_signature_includes_logits_processor(self):
         import inspect
 
-        from soup_cli.commands.serve import _generate_response
+        from ai_forge_cli.commands.serve import _generate_response
 
         sig = inspect.signature(_generate_response)
         assert "logits_processor" in sig.parameters
@@ -142,7 +142,7 @@ class TestGenerateResponseSignature:
     def test_source_passes_kwarg_to_generate(self):
         import inspect
 
-        from soup_cli.commands.serve import _generate_response
+        from ai_forge_cli.commands.serve import _generate_response
 
         src = inspect.getsource(_generate_response)
         # Two assertions: kwarg is set on gen_kwargs AND model.generate is
@@ -159,13 +159,13 @@ class TestGenerateResponseSignature:
 
 class TestEvaluateCandidate:
     def test_empty_prompts_rejected(self):
-        from soup_cli.utils.auto_quant import evaluate_candidate
+        from ai_forge_cli.utils.auto_quant import evaluate_candidate
 
         with pytest.raises(ValueError, match="at least one prompt"):
             evaluate_candidate("test", eval_fn=lambda _p: ("", True), prompts=[])
 
     def test_all_correct_marks_ok(self):
-        from soup_cli.utils.auto_quant import evaluate_candidate
+        from ai_forge_cli.utils.auto_quant import evaluate_candidate
 
         cand = evaluate_candidate(
             "test", eval_fn=lambda _p: ("resp", True),
@@ -176,7 +176,7 @@ class TestEvaluateCandidate:
         assert cand.latency_ms >= 0
 
     def test_eval_crash_marks_not_ok(self):
-        from soup_cli.utils.auto_quant import evaluate_candidate
+        from ai_forge_cli.utils.auto_quant import evaluate_candidate
 
         def _flaky(prompt):
             if prompt == "b":
@@ -191,7 +191,7 @@ class TestEvaluateCandidate:
         assert cand.ok is False  # any crash → not ok
 
     def test_below_threshold_marks_not_ok(self):
-        from soup_cli.utils.auto_quant import evaluate_candidate
+        from ai_forge_cli.utils.auto_quant import evaluate_candidate
 
         cand = evaluate_candidate(
             "test", eval_fn=lambda p: ("", p == "a"),
@@ -205,7 +205,7 @@ class TestEvaluateCandidate:
 
 class TestRunAutoQuantPicker:
     def test_picks_best_when_threshold_passes(self):
-        from soup_cli.utils.auto_quant import run_auto_quant_picker
+        from ai_forge_cli.utils.auto_quant import run_auto_quant_picker
 
         # Two candidates, both pass quality, but "fast" is faster
         def _slow(_p):
@@ -226,7 +226,7 @@ class TestRunAutoQuantPicker:
         assert result.score == 1.0
 
     def test_soft_fallback_when_no_candidate_passes(self):
-        from soup_cli.utils.auto_quant import run_auto_quant_picker
+        from ai_forge_cli.utils.auto_quant import run_auto_quant_picker
 
         # Both fail — score 0/3 < 0.9; min_correct_fraction default 0.5
         # also fails so ok=False.
@@ -253,7 +253,7 @@ class TestPushAsResumeIntegration:
           1. HFPushCallback constructs cleanly with a token
           2. on_save trips _upload_checkpoint with allowlist patterns
         """
-        from soup_cli.monitoring import hf_push
+        from ai_forge_cli.monitoring import hf_push
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("HF_TOKEN", "test-token-not-real-1234")
@@ -279,14 +279,14 @@ class TestPushAsResumeIntegration:
             assert cb._repo_failed is False
 
     def test_hfpushcallback_constructor_smoke(self, tmp_path, monkeypatch):
-        from soup_cli.monitoring import hf_push
+        from ai_forge_cli.monitoring import hf_push
 
         monkeypatch.chdir(tmp_path)
         cb = hf_push.HFPushCallback(repo_id="me/r", token="tok")
         assert cb is not None
 
     def test_prepare_hf_resume_containment(self, tmp_path, monkeypatch):
-        from soup_cli.monitoring.hf_push import prepare_hf_resume
+        from ai_forge_cli.monitoring.hf_push import prepare_hf_resume
 
         monkeypatch.chdir(tmp_path)
         outside = str(tmp_path.parent / "evil_resume")

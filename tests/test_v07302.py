@@ -41,8 +41,8 @@ import re
 
 import pytest
 
-from soup_cli.eval.forgetting import MINI_BENCHMARKS, extract_mcq_letter, score_answer
-from soup_cli.eval.gate_suites import (
+from ai_forge_cli.eval.forgetting import MINI_BENCHMARKS, extract_mcq_letter, score_answer
+from ai_forge_cli.eval.gate_suites import (
     DEFAULT_GENERAL_SUITE,
     load_suite_items,
     score_bundled_suite,
@@ -74,7 +74,7 @@ _OVER_REFUSAL_NAME = "mini_over_refusal"
 
 
 def _over_refusal():
-    from soup_cli.eval.gate_suites import MINI_OVER_REFUSAL
+    from ai_forge_cli.eval.gate_suites import MINI_OVER_REFUSAL
 
     assert MINI_OVER_REFUSAL == _OVER_REFUSAL_NAME
     return MINI_OVER_REFUSAL
@@ -351,7 +351,7 @@ class TestIssue346PermissiveControls:
         """The prompt SHOWS the model a menu of ``{"name", "description"}``
         objects. Echoing the correct entry back is not calling the tool, and an
         unwrap that accepted it would credit copying."""
-        from soup_cli.eval.gate_suites import tool_names_in_prompt
+        from ai_forge_cli.eval.gate_suites import tool_names_in_prompt
 
         def gen(prompt):
             names = tool_names_in_prompt(prompt)
@@ -367,7 +367,7 @@ class TestIssue346PermissiveControls:
         """The single-object form of the same thing: right name, but a
         ``description`` where a call has ``arguments``."""
         def gen(prompt):
-            from soup_cli.eval.gate_suites import tool_names_in_prompt
+            from ai_forge_cli.eval.gate_suites import tool_names_in_prompt
 
             expected = None
             for item in _tool_items():
@@ -480,7 +480,7 @@ class TestIssue317LegTwoNowSeesIt:
     def test_an_over_refusing_tune_is_no_longer_indistinguishable(self):
         """The reproduction, inverted. Two models identical on every OTHER
         axis: leg 2 must now separate them and flag the regression."""
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             build_task_win,
             compute_benchmark_deltas,
             decide_ship,
@@ -509,20 +509,20 @@ class TestIssue317LegTwoNowSeesIt:
 
 class TestNoiseFloorIsPure:
     def test_identical_runs_have_a_zero_floor(self):
-        from soup_cli.utils.ship_verdict import compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import compute_noise_floor
 
         floor = compute_noise_floor([{"a": 0.5}, {"a": 0.5}, {"a": 0.5}])
         assert floor.runs == 3
         assert floor.of("a") == 0.0
 
     def test_the_floor_is_the_spread_of_the_repeats(self):
-        from soup_cli.utils.ship_verdict import compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import compute_noise_floor
 
         floor = compute_noise_floor([{"a": 0.50}, {"a": 0.52}, {"a": 0.515}])
         assert floor.of("a") == pytest.approx(0.02)
 
     def test_each_axis_gets_its_own_floor(self):
-        from soup_cli.utils.ship_verdict import compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import compute_noise_floor
 
         floor = compute_noise_floor(
             [{"a": 0.5, "b": 0.1}, {"a": 0.5, "b": 0.3}]
@@ -533,7 +533,7 @@ class TestNoiseFloorIsPure:
     def test_an_unmeasured_axis_has_no_floor(self):
         """A floor we did not measure must be 0.0, not inherited from another
         axis — inheriting would silently suppress a real regression."""
-        from soup_cli.utils.ship_verdict import compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import compute_noise_floor
 
         floor = compute_noise_floor([{"a": 0.1}, {"a": 0.9}])
         assert floor.of("never_measured") == 0.0
@@ -541,7 +541,7 @@ class TestNoiseFloorIsPure:
     def test_fewer_than_two_runs_is_refused(self):
         """One run has no spread; returning 0.0 would report a floor that was
         never measured as if it had been."""
-        from soup_cli.utils.ship_verdict import compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import compute_noise_floor
 
         with pytest.raises(ValueError, match="at least 2"):
             compute_noise_floor([{"a": 0.5}])
@@ -551,7 +551,7 @@ class TestNoiseFloorIsPure:
     def test_an_axis_missing_from_a_run_is_refused(self):
         """A ragged set of runs would silently compute a spread over fewer
         samples than the caller believes."""
-        from soup_cli.utils.ship_verdict import compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import compute_noise_floor
 
         with pytest.raises(ValueError, match="every run"):
             compute_noise_floor([{"a": 0.5, "b": 0.5}, {"a": 0.5}])
@@ -559,7 +559,7 @@ class TestNoiseFloorIsPure:
 
 class TestNoiseFloorChangesTheVerdict:
     def test_a_regression_under_the_floor_is_not_a_regression(self):
-        from soup_cli.utils.ship_verdict import compute_benchmark_deltas, compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import compute_benchmark_deltas, compute_noise_floor
 
         floor = compute_noise_floor([{"x": 0.50}, {"x": 0.62}])  # floor 0.12
         deltas = compute_benchmark_deltas(
@@ -570,7 +570,7 @@ class TestNoiseFloorChangesTheVerdict:
     def test_a_regression_over_the_floor_still_regresses(self):
         """CONTROL. A floor that swallowed everything would be a SHIP-always
         switch — exactly the failure the whole gate exists to prevent."""
-        from soup_cli.utils.ship_verdict import compute_benchmark_deltas, compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import compute_benchmark_deltas, compute_noise_floor
 
         floor = compute_noise_floor([{"x": 0.50}, {"x": 0.52}])  # floor 0.02
         deltas = compute_benchmark_deltas(
@@ -581,7 +581,7 @@ class TestNoiseFloorChangesTheVerdict:
     def test_the_floor_never_lowers_the_configured_threshold(self):
         """CONTROL. A measured floor BELOW --forgetting-threshold must not
         tighten the gate behind the operator's back."""
-        from soup_cli.utils.ship_verdict import compute_benchmark_deltas, compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import compute_benchmark_deltas, compute_noise_floor
 
         floor = compute_noise_floor([{"x": 0.50}, {"x": 0.501}])  # floor 0.001
         deltas = compute_benchmark_deltas(
@@ -590,7 +590,7 @@ class TestNoiseFloorChangesTheVerdict:
         assert deltas[0].regressed is False
 
     def test_a_task_win_under_the_floor_is_not_a_win(self):
-        from soup_cli.utils.ship_verdict import TASK_AXIS, build_task_win, compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import TASK_AXIS, build_task_win, compute_noise_floor
 
         floor = compute_noise_floor([{TASK_AXIS: 0.50}, {TASK_AXIS: 0.55}])  # 0.05
         win = build_task_win("metric", 0.60, 0.62, noise_floor=floor)
@@ -598,7 +598,7 @@ class TestNoiseFloorChangesTheVerdict:
 
     def test_a_task_win_over_the_floor_is_still_a_win(self):
         """CONTROL."""
-        from soup_cli.utils.ship_verdict import TASK_AXIS, build_task_win, compute_noise_floor
+        from ai_forge_cli.utils.ship_verdict import TASK_AXIS, build_task_win, compute_noise_floor
 
         floor = compute_noise_floor([{TASK_AXIS: 0.50}, {TASK_AXIS: 0.51}])  # 0.01
         win = build_task_win("metric", 0.60, 0.70, noise_floor=floor)
@@ -607,7 +607,7 @@ class TestNoiseFloorChangesTheVerdict:
     def test_without_a_floor_nothing_changes(self):
         """CONTROL. The capability is opt-in; the default path must be
         byte-identical to v0.73.1."""
-        from soup_cli.utils.ship_verdict import build_task_win, compute_benchmark_deltas
+        from ai_forge_cli.utils.ship_verdict import build_task_win, compute_benchmark_deltas
 
         assert build_task_win("metric", 0.60, 0.62).won is True
         deltas = compute_benchmark_deltas({"x": 0.90}, {"x": 0.86}, forgetting_threshold=0.05)
@@ -618,7 +618,7 @@ class TestNoiseFloorChangesTheVerdict:
 
 class TestNoiseFloorIsReported:
     def test_the_verdict_carries_the_floor(self):
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             build_task_win,
             compute_benchmark_deltas,
             compute_noise_floor,
@@ -642,7 +642,7 @@ class TestNoiseFloorIsReported:
 
         from rich.console import Console
 
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             build_task_win,
             compute_benchmark_deltas,
             compute_noise_floor,
@@ -663,7 +663,7 @@ class TestNoiseFloorIsReported:
 
     def test_a_verdict_without_a_floor_serialises_none(self):
         """CONTROL. The default path must not grow a fabricated floor."""
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             build_task_win,
             compute_benchmark_deltas,
             decide_ship,
@@ -685,7 +685,7 @@ class TestNoiseFloorSurvivesTheEvidenceRoundTrip:
     opposite decision."""
 
     def _floored_verdict(self):
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             TASK_AXIS,
             build_task_win,
             compute_benchmark_deltas,
@@ -704,7 +704,7 @@ class TestNoiseFloorSurvivesTheEvidenceRoundTrip:
                                   noise_floor=floor)
 
     def test_evidence_carries_the_floor(self):
-        from soup_cli.utils.ship_verdict import verdict_to_evidence
+        from ai_forge_cli.utils.ship_verdict import verdict_to_evidence
 
         _floor, verdict = self._floored_verdict()
         evidence = verdict_to_evidence(verdict)
@@ -712,8 +712,8 @@ class TestNoiseFloorSurvivesTheEvidenceRoundTrip:
         assert evidence["noise_floor"]["floors"]["x"] == pytest.approx(0.12)
 
     def test_replaying_the_evidence_reproduces_the_decision(self):
-        from soup_cli.commands.ship import _verdict_from_evidence
-        from soup_cli.utils.ship_verdict import verdict_to_evidence
+        from ai_forge_cli.commands.ship import _verdict_from_evidence
+        from ai_forge_cli.utils.ship_verdict import verdict_to_evidence
 
         _floor, verdict = self._floored_verdict()
         replayed = _verdict_from_evidence(
@@ -728,8 +728,8 @@ class TestNoiseFloorSurvivesTheEvidenceRoundTrip:
         """CONTROL, and the reason the key has to exist: the SAME scores read
         WITHOUT the floor produce the opposite leg-2 answer. If this test ever
         passes trivially the round-trip test above is proving nothing."""
-        from soup_cli.commands.ship import _verdict_from_evidence
-        from soup_cli.utils.ship_verdict import verdict_to_evidence
+        from ai_forge_cli.commands.ship import _verdict_from_evidence
+        from ai_forge_cli.utils.ship_verdict import verdict_to_evidence
 
         _floor, verdict = self._floored_verdict()
         evidence = verdict_to_evidence(verdict)
@@ -740,7 +740,7 @@ class TestNoiseFloorSurvivesTheEvidenceRoundTrip:
 
     def test_evidence_without_a_floor_is_still_readable(self):
         """CONTROL. Every pre-v0.73.2 evidence file has no such key."""
-        from soup_cli.commands.ship import _verdict_from_evidence
+        from ai_forge_cli.commands.ship import _verdict_from_evidence
 
         verdict = _verdict_from_evidence(
             {
@@ -766,7 +766,7 @@ class TestNoiseFloorSurvivesTheEvidenceRoundTrip:
     def test_a_malformed_floor_block_is_refused_not_dropped(self, block):
         """A floor silently discarded on read replays as a DIFFERENT verdict,
         which is exactly what the round-trip exists to prevent."""
-        from soup_cli.utils.ship_verdict import noise_floor_from_evidence
+        from ai_forge_cli.utils.ship_verdict import noise_floor_from_evidence
 
         with pytest.raises(ValueError):
             noise_floor_from_evidence(block)
@@ -781,7 +781,7 @@ class TestTaskWinStaysConsistentWithTheDecision:
 
         from rich.console import Console
 
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             TASK_AXIS,
             build_task_win,
             compute_benchmark_deltas,
@@ -808,7 +808,7 @@ class TestTaskWinStaysConsistentWithTheDecision:
     def test_an_ordinary_verdict_keeps_its_task_win_object(self):
         """CONTROL. Canonicalising must not rebuild a TaskWin that was already
         consistent — the base/tuned/mode must survive untouched."""
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             build_task_win,
             compute_benchmark_deltas,
             decide_ship,
@@ -831,7 +831,7 @@ class TestAHostileEvidenceFloorIsBoundedAndLoud:
 
     @pytest.mark.parametrize("bad", [1.0001, 2.0, 1e300, -0.0001])
     def test_a_floor_outside_zero_one_is_refused(self, bad):
-        from soup_cli.utils.ship_verdict import noise_floor_from_evidence
+        from ai_forge_cli.utils.ship_verdict import noise_floor_from_evidence
 
         with pytest.raises(ValueError, match=r"\[0.0, 1.0\]"):
             noise_floor_from_evidence({"runs": 2, "floors": {"x": bad}})
@@ -839,19 +839,19 @@ class TestAHostileEvidenceFloorIsBoundedAndLoud:
     def test_a_floor_inside_the_range_is_accepted(self):
         """CONTROL. A legitimate floor must still load — 1.0 IS arithmetically
         reachable from two runs, so the bound is hygiene, not the mitigation."""
-        from soup_cli.utils.ship_verdict import noise_floor_from_evidence
+        from ai_forge_cli.utils.ship_verdict import noise_floor_from_evidence
 
         assert noise_floor_from_evidence({"runs": 2, "floors": {"x": 1.0}}).of("x") == 1.0
 
     def test_too_many_axes_is_refused(self):
-        from soup_cli.utils.ship_verdict import noise_floor_from_evidence
+        from ai_forge_cli.utils.ship_verdict import noise_floor_from_evidence
 
         floors = {f"b{i}": 0.01 for i in range(51)}
         with pytest.raises(ValueError, match="too many axes"):
             noise_floor_from_evidence({"runs": 2, "floors": floors})
 
     def test_an_overlong_axis_name_is_refused(self):
-        from soup_cli.utils.ship_verdict import noise_floor_from_evidence
+        from ai_forge_cli.utils.ship_verdict import noise_floor_from_evidence
 
         with pytest.raises(ValueError, match="chars"):
             noise_floor_from_evidence({"runs": 2, "floors": {"x" * 257: 0.01}})
@@ -864,7 +864,7 @@ class TestAHostileEvidenceFloorIsBoundedAndLoud:
         attacker picks."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "ev.json").write_text(
@@ -893,7 +893,7 @@ class TestAHostileEvidenceFloorIsBoundedAndLoud:
         ignore the warning."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "ev.json").write_text(
@@ -920,7 +920,7 @@ class TestUntrustedNamesCannotDriveTheTerminal:
     HOSTILE = "x\x1b]0;PWNED\x07\x1b[2Jy"
 
     def _verdict_with(self, name):
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             build_task_win,
             compute_benchmark_deltas,
             compute_noise_floor,
@@ -989,7 +989,7 @@ class TestTheMcpEvidenceReaderHonoursTheFloor:
         return path
 
     def test_the_mcp_tool_applies_a_stored_floor(self, tmp_path, monkeypatch):
-        from soup_cli.mcp_server.registry import tool_ship_evidence
+        from ai_forge_cli.mcp_server.registry import tool_ship_evidence
 
         monkeypatch.chdir(tmp_path)
         self._write(tmp_path, self._evidence())
@@ -1000,7 +1000,7 @@ class TestTheMcpEvidenceReaderHonoursTheFloor:
     def test_without_the_floor_the_same_scores_dont_ship(self, tmp_path, monkeypatch):
         """CONTROL. Proves the floor is what carried the decision — without it
         this test would pass for both readers and prove nothing."""
-        from soup_cli.mcp_server.registry import tool_ship_evidence
+        from ai_forge_cli.mcp_server.registry import tool_ship_evidence
 
         monkeypatch.chdir(tmp_path)
         payload = self._evidence()
@@ -1009,8 +1009,8 @@ class TestTheMcpEvidenceReaderHonoursTheFloor:
         assert tool_ship_evidence({"evidence": "ev.json"})["decision"] == "DON'T SHIP"
 
     def test_both_readers_agree(self, tmp_path, monkeypatch):
-        from soup_cli.commands.ship import _verdict_from_evidence
-        from soup_cli.mcp_server.registry import tool_ship_evidence
+        from ai_forge_cli.commands.ship import _verdict_from_evidence
+        from ai_forge_cli.mcp_server.registry import tool_ship_evidence
 
         monkeypatch.chdir(tmp_path)
         payload = self._evidence()
@@ -1025,7 +1025,7 @@ class TestTheMcpEvidenceReaderHonoursTheFloor:
         """The CLI warns on stderr; this transport cannot (stdout is the
         JSON-RPC channel), so the warning must ride in the RESULT. Otherwise
         the MCP tool is the quiet reader an attacker would pick."""
-        from soup_cli.mcp_server.registry import tool_ship_evidence
+        from ai_forge_cli.mcp_server.registry import tool_ship_evidence
 
         monkeypatch.chdir(tmp_path)
         payload = self._evidence()
@@ -1037,7 +1037,7 @@ class TestTheMcpEvidenceReaderHonoursTheFloor:
 
     def test_a_narrow_floor_produces_no_warning(self, tmp_path, monkeypatch):
         """CONTROL. A warnings list that is never empty is not a warning."""
-        from soup_cli.mcp_server.registry import tool_ship_evidence
+        from ai_forge_cli.mcp_server.registry import tool_ship_evidence
 
         monkeypatch.chdir(tmp_path)
         payload = self._evidence()
@@ -1048,7 +1048,7 @@ class TestTheMcpEvidenceReaderHonoursTheFloor:
     def test_a_malformed_floor_is_refused_by_the_mcp_reader_too(
         self, tmp_path, monkeypatch
     ):
-        from soup_cli.mcp_server.registry import McpToolError, tool_ship_evidence
+        from ai_forge_cli.mcp_server.registry import McpToolError, tool_ship_evidence
 
         monkeypatch.chdir(tmp_path)
         payload = self._evidence()
@@ -1066,7 +1066,7 @@ class TestStaleBaselineIsAnnounced:
     real regression gets masked."""
 
     def test_the_affected_suites_are_named(self):
-        from soup_cli.eval.gate_suites import (
+        from ai_forge_cli.eval.gate_suites import (
             DEFAULT_GENERAL_SUITE,
             SCORER_CHANGED_IN_V0_73_2,
         )
@@ -1080,8 +1080,8 @@ class TestStaleBaselineIsAnnounced:
         list must be provably untouched by the prompt cue. A hand-written pair
         of names would silently stop covering a suite added later — the failure
         mode the project's scan-don't-list rule exists to prevent."""
-        from soup_cli.eval.forgetting import MINI_BENCHMARKS, build_mcq_prompt
-        from soup_cli.eval.gate_suites import SCORER_CHANGED_IN_V0_73_2
+        from ai_forge_cli.eval.forgetting import MINI_BENCHMARKS, build_mcq_prompt
+        from ai_forge_cli.eval.gate_suites import SCORER_CHANGED_IN_V0_73_2
 
         unlisted = set(MINI_BENCHMARKS) - set(SCORER_CHANGED_IN_V0_73_2)
         assert unlisted, "the scan found nothing to check"
@@ -1095,8 +1095,8 @@ class TestStaleBaselineIsAnnounced:
         """CONTROL in the other direction: a name on the list that nothing
         actually changed would warn operators for no reason, which is how a
         warning stops being read."""
-        from soup_cli.eval.forgetting import MINI_BENCHMARKS, build_mcq_prompt
-        from soup_cli.eval.gate_suites import MINI_TOOL_CALL, SCORER_CHANGED_IN_V0_73_2
+        from ai_forge_cli.eval.forgetting import MINI_BENCHMARKS, build_mcq_prompt
+        from ai_forge_cli.eval.gate_suites import MINI_TOOL_CALL, SCORER_CHANGED_IN_V0_73_2
 
         for name in SCORER_CHANGED_IN_V0_73_2:
             if name == MINI_TOOL_CALL:  # behavioural, not MCQ — see #346
@@ -1107,7 +1107,7 @@ class TestStaleBaselineIsAnnounced:
             ), f"{name} is listed but nothing changed for it"
 
     def test_a_stale_baseline_warns(self, capsys):
-        from soup_cli.commands.ship import _leg2_scores
+        from ai_forge_cli.commands.ship import _leg2_scores
 
         def gen(prompt):
             return "B"
@@ -1128,7 +1128,7 @@ class TestStaleBaselineIsAnnounced:
     def test_a_baseline_for_an_unaffected_suite_is_quiet(self, capsys):
         """CONTROL. A warning on every baseline would train the operator to
         ignore it."""
-        from soup_cli.commands.ship import _leg2_scores
+        from ai_forge_cli.commands.ship import _leg2_scores
 
         def gen(prompt):
             return "hello 5 world"
@@ -1147,7 +1147,7 @@ class TestStaleBaselineIsAnnounced:
 
     def test_no_baseline_is_quiet(self, capsys):
         """CONTROL. The warning is about a STORED score, not about the suite."""
-        from soup_cli.commands.ship import _leg2_scores
+        from ai_forge_cli.commands.ship import _leg2_scores
 
         def gen(prompt):
             return "B"
@@ -1174,14 +1174,14 @@ def _const_task_scorer(monkeypatch, value=0.5):
     contributes a flat 0.0 spread.
     """
     monkeypatch.setattr(
-        "soup_cli.commands.ship._build_task_floor_scorer",
+        "ai_forge_cli.commands.ship._build_task_floor_scorer",
         lambda *args, **kwargs: (lambda: value),
     )
 
 
 class TestTheFloorWideningTheThresholdIsAnnounced:
     def test_a_floor_above_the_threshold_warns(self, capsys, monkeypatch):
-        from soup_cli.commands.ship import _measure_noise_floor
+        from ai_forge_cli.commands.ship import _measure_noise_floor
 
         _const_task_scorer(monkeypatch)
         # The two repeats must genuinely disagree. An every-other-call flip does
@@ -1205,7 +1205,7 @@ class TestTheFloorWideningTheThresholdIsAnnounced:
 
     def test_a_deterministic_instrument_does_not_warn(self, capsys, monkeypatch):
         """CONTROL. A zero floor never widens anything."""
-        from soup_cli.commands.ship import _measure_noise_floor
+        from ai_forge_cli.commands.ship import _measure_noise_floor
 
         _const_task_scorer(monkeypatch)
         floor = _measure_noise_floor(
@@ -1223,7 +1223,7 @@ def _panel_text(verdict):
 
     from rich.console import Console
 
-    from soup_cli.utils.ship_verdict import render_ship_panel
+    from ai_forge_cli.utils.ship_verdict import render_ship_panel
 
     buf = StringIO()
     Console(file=buf, width=120, no_color=True).print(render_ship_panel(verdict))
@@ -1242,7 +1242,7 @@ class TestThePanelPrintsItsLegOneMarker:
     """
 
     def _verdict(self, base, tuned):
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             build_task_win,
             compute_benchmark_deltas,
             decide_ship,
@@ -1262,7 +1262,7 @@ class TestThePanelPrintsItsLegOneMarker:
     def test_the_rubric_still_prints_it_too(self):
         """CONTROL. The rubric was already correct; escaping the panel must not
         change the surface that worked."""
-        from soup_cli.utils.ship_verdict import format_ship_rubric
+        from ai_forge_cli.utils.ship_verdict import format_ship_rubric
 
         assert "[won]" in format_ship_rubric(self._verdict(0.5, 0.8))
         assert "[no win]" in format_ship_rubric(self._verdict(0.8, 0.5))
@@ -1280,7 +1280,7 @@ class TestTheReasonLineDoesNotSayGotWorseForAGain:
     def test_a_gain_inside_the_floor_is_described_as_a_gain(self):
         """A task that went UP but by less than the floor must not be reported
         as "got worse" — that is the gate stating more than it measured."""
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             TASK_AXIS,
             build_task_win,
             compute_benchmark_deltas,
@@ -1300,7 +1300,7 @@ class TestTheReasonLineDoesNotSayGotWorseForAGain:
 
     def test_a_real_loss_still_says_got_worse(self):
         """CONTROL. The floor-aware branch must not swallow a genuine drop."""
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             TASK_AXIS,
             build_task_win,
             compute_benchmark_deltas,
@@ -1318,7 +1318,7 @@ class TestTheReasonLineDoesNotSayGotWorseForAGain:
 
     def test_a_tie_without_a_floor_still_says_tied(self):
         """CONTROL. The default path's wording is unchanged."""
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             build_task_win,
             compute_benchmark_deltas,
             decide_ship,
@@ -1344,8 +1344,8 @@ def _run_ship_cli(monkeypatch, base_gen, tuned_gen, extra_args=None):
 
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
-    from soup_cli.commands import ship as ship_cmd
+    from ai_forge_cli.cli import app
+    from ai_forge_cli.commands import ship as ship_cmd
 
     monkeypatch.setattr(
         ship_cmd, "_resolve_generators", lambda *a, **k: (base_gen, tuned_gen)
@@ -1377,7 +1377,7 @@ class TestIssue317ThroughTheRealCli:
     dispatched, scored and named by the shipped command."""
 
     def _gen(self, *, refuse_benign, wins_task):
-        from soup_cli.eval.forgetting import build_mcq_prompt
+        from ai_forge_cli.eval.forgetting import build_mcq_prompt
 
         tools = {it["prompt"]: it["expected"] for it in _tool_items()}
         benign = {it["prompt"] for it in load_suite_items(_over_refusal())}
@@ -1515,8 +1515,8 @@ class TestMeasureNoiseFloorBranches:
     """M1 / L2 — the metric-mode leg-1 measurement and the secondary warnings."""
 
     def test_metric_mode_measures_the_leg_one_axis(self, tmp_path, monkeypatch):
-        from soup_cli.commands.ship import _measure_noise_floor
-        from soup_cli.utils.ship_verdict import TASK_AXIS
+        from ai_forge_cli.commands.ship import _measure_noise_floor
+        from ai_forge_cli.utils.ship_verdict import TASK_AXIS
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "task.jsonl").write_text(
@@ -1535,8 +1535,8 @@ class TestMeasureNoiseFloorBranches:
     def test_judge_mode_measures_the_leg_one_axis(self, capsys, monkeypatch):
         """#403 — judge modes now measure the task axis instead of warning and
         leaving it at a 0.0 floor. Base RED: the old code skipped it."""
-        from soup_cli.commands.ship import _measure_noise_floor
-        from soup_cli.utils.ship_verdict import TASK_AXIS
+        from ai_forge_cli.commands.ship import _measure_noise_floor
+        from ai_forge_cli.utils.ship_verdict import TASK_AXIS
 
         _const_task_scorer(monkeypatch, value=0.5)
         floor = _measure_noise_floor(
@@ -1552,7 +1552,7 @@ class TestMeasureNoiseFloorBranches:
     def test_a_non_bundled_suite_is_reported_as_unmeasured(self, capsys, monkeypatch):
         """A silently-skipped axis reads as 'floor 0.0', i.e. as a measurement
         that was never taken."""
-        from soup_cli.commands.ship import _measure_noise_floor
+        from ai_forge_cli.commands.ship import _measure_noise_floor
 
         _const_task_scorer(monkeypatch)
         floor = _measure_noise_floor(
@@ -1565,7 +1565,7 @@ class TestMeasureNoiseFloorBranches:
         assert "bundled suites only" in out and "hellaswag" in out
 
     def test_a_deterministic_instrument_says_so(self, capsys, monkeypatch):
-        from soup_cli.commands.ship import _measure_noise_floor
+        from ai_forge_cli.commands.ship import _measure_noise_floor
 
         _const_task_scorer(monkeypatch)
         _measure_noise_floor(
@@ -1581,9 +1581,9 @@ class TestNoiseFloorJudgeModes:
     result is stamped so it is never read as a decode-only number."""
 
     def test_pairwise_floor_measures_the_base_against_itself(self, monkeypatch):
-        from soup_cli.commands import ship as ship_mod
-        from soup_cli.commands.ship import _measure_noise_floor
-        from soup_cli.utils.ship_verdict import TASK_AXIS
+        from ai_forge_cli.commands import ship as ship_mod
+        from ai_forge_cli.commands.ship import _measure_noise_floor
+        from ai_forge_cli.utils.ship_verdict import TASK_AXIS
 
         spread = iter([0.4, 0.6])
 
@@ -1605,9 +1605,9 @@ class TestNoiseFloorJudgeModes:
         assert floor.judge_inclusive is True
 
     def test_judge_score_floor_measures_the_base_side(self, monkeypatch):
-        from soup_cli.commands import ship as ship_mod
-        from soup_cli.commands.ship import _measure_noise_floor
-        from soup_cli.utils.ship_verdict import TASK_AXIS
+        from ai_forge_cli.commands import ship as ship_mod
+        from ai_forge_cli.commands.ship import _measure_noise_floor
+        from ai_forge_cli.utils.ship_verdict import TASK_AXIS
 
         spread = iter([0.3, 0.5])
 
@@ -1632,7 +1632,7 @@ class TestNoiseFloorJudgeModes:
 
         from rich.console import Console
 
-        from soup_cli.utils.ship_verdict import (
+        from ai_forge_cli.utils.ship_verdict import (
             TASK_AXIS,
             NoiseFloor,
             ShipVerdict,
@@ -1686,32 +1686,32 @@ class TestBuildMcqPrompt:
     inferred from a caller."""
 
     def test_an_mcq_item_gains_the_cue(self):
-        from soup_cli.eval.forgetting import build_mcq_prompt
+        from ai_forge_cli.eval.forgetting import build_mcq_prompt
 
         out = build_mcq_prompt("What is 2 + 2? (A) 3 (B) 4", "B")
         assert out.startswith("What is 2 + 2? (A) 3 (B) 4")
         assert "letter" in out.lower()
 
     def test_a_free_text_item_is_returned_unchanged(self):
-        from soup_cli.eval.forgetting import build_mcq_prompt
+        from ai_forge_cli.eval.forgetting import build_mcq_prompt
 
         assert build_mcq_prompt("Capital of France?", "Paris") == "Capital of France?"
 
     def test_a_non_string_question_is_refused(self):
-        from soup_cli.eval.forgetting import build_mcq_prompt
+        from ai_forge_cli.eval.forgetting import build_mcq_prompt
 
         with pytest.raises(TypeError, match="question"):
             build_mcq_prompt(None, "B")  # type: ignore[arg-type]
 
     def test_a_non_string_answer_is_treated_as_free_text(self):
         """CONTROL. A malformed row must not crash the scorer mid-benchmark."""
-        from soup_cli.eval.forgetting import build_mcq_prompt
+        from ai_forge_cli.eval.forgetting import build_mcq_prompt
 
         assert build_mcq_prompt("q", None) == "q"  # type: ignore[arg-type]
 
     def test_it_is_idempotent_per_call_not_cumulative(self):
         """CONTROL. The cue must not stack if a caller composes prompts."""
-        from soup_cli.eval.forgetting import build_mcq_prompt
+        from ai_forge_cli.eval.forgetting import build_mcq_prompt
 
         once = build_mcq_prompt("q (A) x (B) y", "B")
         assert once.count("letter") == 1
@@ -1735,13 +1735,13 @@ class TestBareFunctionShapeGuard:
         ],
     )
     def test_non_call_shapes_are_rejected(self, obj):
-        from soup_cli.eval.gate_suites import _looks_like_a_bare_function
+        from ai_forge_cli.eval.gate_suites import _looks_like_a_bare_function
 
         assert _looks_like_a_bare_function(obj) is False
 
     def test_a_real_bare_call_is_accepted(self):
         """CONTROL."""
-        from soup_cli.eval.gate_suites import _looks_like_a_bare_function
+        from ai_forge_cli.eval.gate_suites import _looks_like_a_bare_function
 
         assert _looks_like_a_bare_function(
             {"name": "get_weather", "arguments": {"city": "Paris"}}
@@ -1757,7 +1757,7 @@ class TestNoiseFloorCliFlag:
     def test_the_flag_exists_and_is_documented(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(app, ["ship", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -1771,7 +1771,7 @@ class TestNoiseFloorCliFlag:
     def test_out_of_range_is_a_usage_error(self, bad, tmp_path):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         tasks = tmp_path / "t.jsonl"
         tasks.write_text('{"prompt": "hi", "expected": "hi"}\n', encoding="utf-8")
@@ -1790,7 +1790,7 @@ class TestNoiseFloorCliFlag:
         Refusing beats silently ignoring the flag the operator asked for."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         ev = tmp_path / "ev.json"
@@ -1812,7 +1812,7 @@ class TestNoiseFloorCliFlag:
         """CONTROL. The refusal must be about the FLAG, not about --evidence."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         ev = tmp_path / "ev.json"

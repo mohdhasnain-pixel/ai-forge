@@ -18,9 +18,9 @@
 #
 # To adopt it, do all three IN ONE commit, not just this line:
 #   1. re-enable the hook below
-#   2. run `ruff format src/soup_cli/ tests/` and commit the result alone,
+#   2. run `ruff format src/ai_forge_cli/ tests/` and commit the result alone,
 #      then add that commit's SHA to `.git-blame-ignore-revs` so blame skips it
-#   3. add `ruff format --check src/soup_cli/ tests/` to the CI lint job, or
+#   3. add `ruff format --check src/ai_forge_cli/ tests/` to the CI lint job, or
 #      the hook is the only thing enforcing it and drifts the moment someone
 #      commits without hooks installed
 repos:

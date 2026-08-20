@@ -10,7 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from soup_cli.experiment.tracker import ExperimentTracker
+from ai_forge_cli.experiment.tracker import ExperimentTracker
 
 _STATUS_RUNNING = "running"
 _STATUS_TERMINATED = "terminated"

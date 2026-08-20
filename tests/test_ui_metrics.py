@@ -8,7 +8,7 @@ import pytest
 
 def _auth_headers():
     """Return auth headers with the current UI token."""
-    from soup_cli.ui.app import get_auth_token
+    from ai_forge_cli.ui.app import get_auth_token
     return {"Authorization": f"Bearer {get_auth_token()}"}
 
 
@@ -24,8 +24,8 @@ class TestMetricsFullFields:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_id = tracker.start_run(
@@ -59,8 +59,8 @@ class TestMetricsFullFields:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_id = tracker.start_run(
@@ -88,7 +88,7 @@ class TestRunsCompareEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         app = create_app()
         routes = [route.path for route in app.routes]
@@ -103,8 +103,8 @@ class TestRunsCompareEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run1 = tracker.start_run(
@@ -141,7 +141,7 @@ class TestRunsCompareEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.ui.app import create_app
 
             client = TestClient(create_app())
             ids = ",".join([f"run_{i}" for i in range(6)])
@@ -157,7 +157,7 @@ class TestRunsCompareEndpoint:
 
         db_path = tmp_path / "test_validate.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.ui.app import create_app
 
             client = TestClient(create_app())
             response = client.get("/api/runs/compare?ids=nonexistent1,nonexistent2")
@@ -174,7 +174,7 @@ class TestRunsCompareEndpoint:
 
         db_path = tmp_path / "test_empty.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.ui.app import create_app
 
             client = TestClient(create_app())
             response = client.get("/api/runs/compare?ids=")
@@ -189,7 +189,7 @@ class TestRunsCompareEndpoint:
 
         db_path = tmp_path / "test_noauth.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.ui.app import create_app
 
             client = TestClient(create_app())
             response = client.get("/api/runs/compare?ids=run1,run2")
@@ -208,8 +208,8 @@ class TestEvalResultsEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_id = tracker.start_run(
@@ -245,8 +245,8 @@ class TestEvalResultsEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_id = tracker.start_run(
@@ -271,8 +271,8 @@ class TestEvalResultsEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_ids = []
@@ -304,8 +304,8 @@ class TestCompareMetricsContent:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_id = tracker.start_run(
@@ -337,8 +337,8 @@ class TestCompareMetricsContent:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_id = tracker.start_run(

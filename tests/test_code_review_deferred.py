@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import pytest
 
-from soup_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.loader import load_config_from_string
 
 # ─────────────────────────── EMA smoothing window ───────────────────────────
 
 
 def test_ema_smoothing_now_respects_window_size():
-    from soup_cli.utils.reward_hack_control import smooth_signal
+    from ai_forge_cli.utils.reward_hack_control import smooth_signal
 
     # Windowed EMA folds alpha over the whole retained window, so a longer
     # window (bounded by reward_hack_smoothing_window) changes the result.
@@ -50,7 +50,7 @@ training:
 
 
 def test_build_hardware_fit_input_from_config():
-    from soup_cli.commands.train import _build_hardware_fit_input
+    from ai_forge_cli.commands.train import _build_hardware_fit_input
 
     inp = _build_hardware_fit_input(load_config_from_string(_FIT_YAML))
     assert inp is not None
@@ -65,7 +65,7 @@ def test_build_hardware_fit_input_from_config():
 def test_hardware_fit_preflight_gate_and_optout():
     import typer
 
-    from soup_cli.commands import train as train_mod
+    from ai_forge_cli.commands import train as train_mod
 
     cfg = load_config_from_string(_FIT_YAML)
 
@@ -97,7 +97,7 @@ def test_hardware_fit_preflight_gate_and_optout():
 def _mod_pieces(hidden: int, capacity_factor: float):
     import torch.nn as nn
 
-    from soup_cli.utils.mod import _make_mod_forward
+    from ai_forge_cli.utils.mod import _make_mod_forward
 
     class _RecordingLayer(nn.Module):
         def __init__(self) -> None:

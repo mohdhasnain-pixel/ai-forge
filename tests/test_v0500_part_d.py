@@ -10,8 +10,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.config.schema import TrainingConfig
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.schema import TrainingConfig
 
 # ---------------------------------------------------------------------------
 # TrainingConfig defaults

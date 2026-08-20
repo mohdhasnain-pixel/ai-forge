@@ -32,7 +32,7 @@ runner = CliRunner()
 
 
 def test_module_imports():
-    from soup_cli.utils import tunability
+    from ai_forge_cli.utils import tunability
 
     assert hasattr(tunability, "CandidateBase")
     assert hasattr(tunability, "TunabilityResult")
@@ -53,17 +53,17 @@ def test_module_imports():
 
 
 def test_default_candidates_nonempty():
-    from soup_cli.utils.tunability import DEFAULT_CANDIDATES
+    from ai_forge_cli.utils.tunability import DEFAULT_CANDIDATES
 
     assert len(DEFAULT_CANDIDATES) >= 6
     # Each entry must be CandidateBase
-    from soup_cli.utils.tunability import CandidateBase
+    from ai_forge_cli.utils.tunability import CandidateBase
     for c in DEFAULT_CANDIDATES:
         assert isinstance(c, CandidateBase)
 
 
 def test_default_candidates_immutable():
-    from soup_cli.utils.tunability import DEFAULT_CANDIDATES
+    from ai_forge_cli.utils.tunability import DEFAULT_CANDIDATES
 
     # Tuple, not list
     assert isinstance(DEFAULT_CANDIDATES, tuple)
@@ -75,7 +75,7 @@ def test_default_candidates_immutable():
 
 
 def test_candidate_base_frozen():
-    from soup_cli.utils.tunability import CandidateBase
+    from ai_forge_cli.utils.tunability import CandidateBase
 
     c = CandidateBase(
         name="qwen3-0.6b",
@@ -88,42 +88,42 @@ def test_candidate_base_frozen():
 
 
 def test_candidate_base_rejects_empty_name():
-    from soup_cli.utils.tunability import CandidateBase
+    from ai_forge_cli.utils.tunability import CandidateBase
 
     with pytest.raises(ValueError, match="name"):
         CandidateBase(name="", repo_id="x/y", params_b=1.0, license_id="apache-2.0")
 
 
 def test_candidate_base_rejects_null_byte():
-    from soup_cli.utils.tunability import CandidateBase
+    from ai_forge_cli.utils.tunability import CandidateBase
 
     with pytest.raises(ValueError, match="null"):
         CandidateBase(name="bad\x00", repo_id="x/y", params_b=1.0, license_id="apache-2.0")
 
 
 def test_candidate_base_rejects_negative_params():
-    from soup_cli.utils.tunability import CandidateBase
+    from ai_forge_cli.utils.tunability import CandidateBase
 
     with pytest.raises(ValueError, match="params_b"):
         CandidateBase(name="x", repo_id="x/y", params_b=-1.0, license_id="apache-2.0")
 
 
 def test_candidate_base_rejects_bool_params():
-    from soup_cli.utils.tunability import CandidateBase
+    from ai_forge_cli.utils.tunability import CandidateBase
 
     with pytest.raises(TypeError, match="bool"):
         CandidateBase(name="x", repo_id="x/y", params_b=True, license_id="apache-2.0")  # type: ignore[arg-type]
 
 
 def test_candidate_base_rejects_non_finite_params():
-    from soup_cli.utils.tunability import CandidateBase
+    from ai_forge_cli.utils.tunability import CandidateBase
 
     with pytest.raises(ValueError, match="finite"):
         CandidateBase(name="x", repo_id="x/y", params_b=float("nan"), license_id="apache-2.0")
 
 
 def test_candidate_base_rejects_oversize_name():
-    from soup_cli.utils.tunability import CandidateBase
+    from ai_forge_cli.utils.tunability import CandidateBase
 
     with pytest.raises(ValueError, match="too long"):
         CandidateBase(name="x" * 513, repo_id="x/y", params_b=1.0, license_id="apache-2.0")
@@ -136,13 +136,13 @@ def test_candidate_base_rejects_oversize_name():
 
 @pytest.mark.parametrize("value", [10, 100, 1000])
 def test_validate_probe_steps_happy(value):
-    from soup_cli.utils.tunability import validate_probe_steps
+    from ai_forge_cli.utils.tunability import validate_probe_steps
 
     assert validate_probe_steps(value) == value
 
 
 def test_validate_probe_steps_boundary_min():
-    from soup_cli.utils.tunability import validate_probe_steps
+    from ai_forge_cli.utils.tunability import validate_probe_steps
 
     assert validate_probe_steps(10) == 10
     with pytest.raises(ValueError):
@@ -150,7 +150,7 @@ def test_validate_probe_steps_boundary_min():
 
 
 def test_validate_probe_steps_boundary_max():
-    from soup_cli.utils.tunability import validate_probe_steps
+    from ai_forge_cli.utils.tunability import validate_probe_steps
 
     assert validate_probe_steps(10_000) == 10_000
     with pytest.raises(ValueError):
@@ -159,7 +159,7 @@ def test_validate_probe_steps_boundary_max():
 
 @pytest.mark.parametrize("bad", [True, False, None, "100", -1, 0, 9, 10_001, 1.5])
 def test_validate_probe_steps_rejects(bad):
-    from soup_cli.utils.tunability import validate_probe_steps
+    from ai_forge_cli.utils.tunability import validate_probe_steps
 
     with pytest.raises((TypeError, ValueError)):
         validate_probe_steps(bad)
@@ -171,13 +171,13 @@ def test_validate_probe_steps_rejects(bad):
 
 
 def test_validate_holdout_size_happy():
-    from soup_cli.utils.tunability import validate_holdout_size
+    from ai_forge_cli.utils.tunability import validate_holdout_size
 
     assert validate_holdout_size(100) == 100
 
 
 def test_validate_holdout_size_boundary():
-    from soup_cli.utils.tunability import validate_holdout_size
+    from ai_forge_cli.utils.tunability import validate_holdout_size
 
     assert validate_holdout_size(10) == 10
     with pytest.raises(ValueError):
@@ -189,7 +189,7 @@ def test_validate_holdout_size_boundary():
 
 @pytest.mark.parametrize("bad", [True, False, "100", -1, 0])
 def test_validate_holdout_size_rejects(bad):
-    from soup_cli.utils.tunability import validate_holdout_size
+    from ai_forge_cli.utils.tunability import validate_holdout_size
 
     with pytest.raises((TypeError, ValueError)):
         validate_holdout_size(bad)
@@ -201,7 +201,7 @@ def test_validate_holdout_size_rejects(bad):
 
 
 def test_tunability_result_happy():
-    from soup_cli.utils.tunability import CandidateBase, TunabilityResult
+    from ai_forge_cli.utils.tunability import CandidateBase, TunabilityResult
 
     cand = CandidateBase(
         name="qwen3-0.6b", repo_id="x/y", params_b=0.6, license_id="apache-2.0"
@@ -218,7 +218,7 @@ def test_tunability_result_happy():
 
 
 def test_tunability_result_frozen():
-    from soup_cli.utils.tunability import CandidateBase, TunabilityResult
+    from ai_forge_cli.utils.tunability import CandidateBase, TunabilityResult
 
     cand = CandidateBase(name="x", repo_id="x/y", params_b=1.0, license_id="apache-2.0")
     r = TunabilityResult(
@@ -234,7 +234,7 @@ def test_tunability_result_frozen():
 
 
 def test_tunability_result_rejects_non_finite():
-    from soup_cli.utils.tunability import CandidateBase, TunabilityResult
+    from ai_forge_cli.utils.tunability import CandidateBase, TunabilityResult
 
     cand = CandidateBase(name="x", repo_id="x/y", params_b=1.0, license_id="apache-2.0")
     with pytest.raises(ValueError, match="finite"):
@@ -249,7 +249,7 @@ def test_tunability_result_rejects_non_finite():
 
 
 def test_tunability_result_rejects_negative_wall_clock():
-    from soup_cli.utils.tunability import CandidateBase, TunabilityResult
+    from ai_forge_cli.utils.tunability import CandidateBase, TunabilityResult
 
     cand = CandidateBase(name="x", repo_id="x/y", params_b=1.0, license_id="apache-2.0")
     with pytest.raises(ValueError, match="wall_clock"):
@@ -264,7 +264,7 @@ def test_tunability_result_rejects_negative_wall_clock():
 
 
 def test_tunability_result_rejects_negative_cost():
-    from soup_cli.utils.tunability import CandidateBase, TunabilityResult
+    from ai_forge_cli.utils.tunability import CandidateBase, TunabilityResult
 
     cand = CandidateBase(name="x", repo_id="x/y", params_b=1.0, license_id="apache-2.0")
     with pytest.raises(ValueError, match="cost"):
@@ -279,7 +279,7 @@ def test_tunability_result_rejects_negative_cost():
 
 
 def test_tunability_result_rejects_bool_loss():
-    from soup_cli.utils.tunability import CandidateBase, TunabilityResult
+    from ai_forge_cli.utils.tunability import CandidateBase, TunabilityResult
 
     cand = CandidateBase(name="x", repo_id="x/y", params_b=1.0, license_id="apache-2.0")
     with pytest.raises(TypeError, match="bool"):
@@ -300,7 +300,7 @@ def test_tunability_result_rejects_bool_loss():
 
 def test_score_candidate_delta_math():
     """delta = base_loss - probe_loss (positive = improvement)."""
-    from soup_cli.utils.tunability import score_candidate
+    from ai_forge_cli.utils.tunability import score_candidate
 
     base_loss, probe_loss = 2.5, 2.0
     delta = score_candidate(base_loss=base_loss, probe_loss=probe_loss)
@@ -308,19 +308,19 @@ def test_score_candidate_delta_math():
 
 
 def test_score_candidate_zero_when_no_change():
-    from soup_cli.utils.tunability import score_candidate
+    from ai_forge_cli.utils.tunability import score_candidate
 
     assert score_candidate(base_loss=2.0, probe_loss=2.0) == 0.0
 
 
 def test_score_candidate_negative_when_worse():
-    from soup_cli.utils.tunability import score_candidate
+    from ai_forge_cli.utils.tunability import score_candidate
 
     assert score_candidate(base_loss=2.0, probe_loss=2.5) == pytest.approx(-0.5)
 
 
 def test_score_candidate_rejects_non_finite():
-    from soup_cli.utils.tunability import score_candidate
+    from ai_forge_cli.utils.tunability import score_candidate
 
     with pytest.raises(ValueError):
         score_candidate(base_loss=float("nan"), probe_loss=2.0)
@@ -329,7 +329,7 @@ def test_score_candidate_rejects_non_finite():
 
 
 def test_score_candidate_rejects_bool():
-    from soup_cli.utils.tunability import score_candidate
+    from ai_forge_cli.utils.tunability import score_candidate
 
     with pytest.raises(TypeError):
         score_candidate(base_loss=True, probe_loss=2.0)  # type: ignore[arg-type]
@@ -342,7 +342,7 @@ def test_score_candidate_rejects_bool():
 
 def test_pareto_frontier_simple():
     """Maximise delta, minimise cost. Strictly dominated entries get dropped."""
-    from soup_cli.utils.tunability import CandidateBase, TunabilityResult, pareto_frontier
+    from ai_forge_cli.utils.tunability import CandidateBase, TunabilityResult, pareto_frontier
 
     def _mk(name: str, delta: float, cost: float) -> TunabilityResult:
         cand = CandidateBase(name=name, repo_id="x/y", params_b=1.0, license_id="apache-2.0")
@@ -369,13 +369,13 @@ def test_pareto_frontier_simple():
 
 
 def test_pareto_frontier_empty():
-    from soup_cli.utils.tunability import pareto_frontier
+    from ai_forge_cli.utils.tunability import pareto_frontier
 
     assert pareto_frontier([]) == ()
 
 
 def test_pareto_frontier_single():
-    from soup_cli.utils.tunability import CandidateBase, TunabilityResult, pareto_frontier
+    from ai_forge_cli.utils.tunability import CandidateBase, TunabilityResult, pareto_frontier
 
     cand = CandidateBase(name="a", repo_id="x/y", params_b=1.0, license_id="apache-2.0")
     r = TunabilityResult(
@@ -391,13 +391,13 @@ def test_pareto_frontier_single():
 
 
 def test_pareto_frontier_returns_tuple():
-    from soup_cli.utils.tunability import pareto_frontier
+    from ai_forge_cli.utils.tunability import pareto_frontier
 
     assert isinstance(pareto_frontier([]), tuple)
 
 
 def test_pareto_frontier_rejects_non_sequence():
-    from soup_cli.utils.tunability import pareto_frontier
+    from ai_forge_cli.utils.tunability import pareto_frontier
 
     with pytest.raises(TypeError):
         pareto_frontier("not a list")  # type: ignore[arg-type]
@@ -409,7 +409,7 @@ def test_pareto_frontier_rejects_non_sequence():
 
 
 def test_tunability_report_frozen():
-    from soup_cli.utils.tunability import CandidateBase, TunabilityReport, TunabilityResult
+    from ai_forge_cli.utils.tunability import CandidateBase, TunabilityReport, TunabilityResult
 
     cand = CandidateBase(name="x", repo_id="x/y", params_b=1.0, license_id="apache-2.0")
     r = TunabilityResult(
@@ -422,7 +422,7 @@ def test_tunability_report_frozen():
 
 
 def test_tunability_report_results_tuple():
-    from soup_cli.utils.tunability import CandidateBase, TunabilityReport, TunabilityResult
+    from ai_forge_cli.utils.tunability import CandidateBase, TunabilityReport, TunabilityResult
 
     cand = CandidateBase(name="x", repo_id="x/y", params_b=1.0, license_id="apache-2.0")
     r = TunabilityResult(
@@ -441,7 +441,7 @@ def test_tunability_report_results_tuple():
 
 def test_run_tunability_with_mocked_probe(tmp_path):
     """Inject a deterministic probe to exercise the orchestrator."""
-    from soup_cli.utils.tunability import (
+    from ai_forge_cli.utils.tunability import (
         CandidateBase,
         TunabilityResult,
         run_tunability,
@@ -480,7 +480,7 @@ def test_run_tunability_with_mocked_probe(tmp_path):
 
 
 def test_run_tunability_rejects_empty_candidates(tmp_path):
-    from soup_cli.utils.tunability import run_tunability
+    from ai_forge_cli.utils.tunability import run_tunability
 
     dataset = tmp_path / "data.jsonl"
     dataset.write_text("{}\n")
@@ -494,7 +494,7 @@ def test_run_tunability_rejects_empty_candidates(tmp_path):
 
 
 def test_run_tunability_rejects_invalid_probe_steps(tmp_path):
-    from soup_cli.utils.tunability import CandidateBase, run_tunability
+    from ai_forge_cli.utils.tunability import CandidateBase, run_tunability
 
     dataset = tmp_path / "data.jsonl"
     dataset.write_text("{}\n")
@@ -514,7 +514,7 @@ def test_run_tunability_rejects_invalid_probe_steps(tmp_path):
 
 
 def test_write_report_atomic_roundtrip(tmp_path, monkeypatch):
-    from soup_cli.utils.tunability import (
+    from ai_forge_cli.utils.tunability import (
         CandidateBase,
         TunabilityReport,
         TunabilityResult,
@@ -539,7 +539,7 @@ def test_write_report_atomic_roundtrip(tmp_path, monkeypatch):
 
 
 def test_write_report_outside_cwd_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.tunability import (
+    from ai_forge_cli.utils.tunability import (
         CandidateBase,
         TunabilityReport,
         TunabilityResult,
@@ -560,7 +560,7 @@ def test_write_report_outside_cwd_rejected(tmp_path, monkeypatch):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlinks")
 def test_write_report_symlink_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.tunability import (
+    from ai_forge_cli.utils.tunability import (
         CandidateBase,
         TunabilityReport,
         TunabilityResult,
@@ -584,14 +584,14 @@ def test_write_report_symlink_rejected(tmp_path, monkeypatch):
 
 
 def test_write_report_non_report_rejected(tmp_path):
-    from soup_cli.utils.tunability import write_report
+    from ai_forge_cli.utils.tunability import write_report
 
     with pytest.raises(TypeError):
         write_report("not a report", str(tmp_path / "out.json"))  # type: ignore[arg-type]
 
 
 def test_load_report_missing_file(tmp_path, monkeypatch):
-    from soup_cli.utils.tunability import load_report
+    from ai_forge_cli.utils.tunability import load_report
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(FileNotFoundError):
@@ -599,7 +599,7 @@ def test_load_report_missing_file(tmp_path, monkeypatch):
 
 
 def test_load_report_invalid_json(tmp_path):
-    from soup_cli.utils.tunability import load_report
+    from ai_forge_cli.utils.tunability import load_report
 
     p = tmp_path / "bad.json"
     p.write_text("not json")
@@ -613,7 +613,7 @@ def test_load_report_invalid_json(tmp_path):
 
 
 def test_cli_tunability_help():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["tunability", "--help"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -621,7 +621,7 @@ def test_cli_tunability_help():
 
 
 def test_cli_tunability_list_default_candidates():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["tunability", "--list"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -633,7 +633,7 @@ def test_cli_tunability_list_default_candidates():
 
 def test_cli_tunability_requires_dataset(tmp_path, monkeypatch):
     """Without --list and without --dataset, exits with usage error."""
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     result = runner.invoke(app, ["tunability"])
@@ -641,7 +641,7 @@ def test_cli_tunability_requires_dataset(tmp_path, monkeypatch):
 
 
 def test_cli_tunability_outside_cwd(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "data.jsonl"
@@ -652,7 +652,7 @@ def test_cli_tunability_outside_cwd(tmp_path, monkeypatch):
 
 def test_cli_tunability_plan_only(tmp_path, monkeypatch):
     """--plan-only enumerates candidates without running probes."""
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     dataset = tmp_path / "data.jsonl"
@@ -670,27 +670,27 @@ def test_cli_registers_tunability():
     """cli.py registers the tunability command."""
     from pathlib import Path
 
-    src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "cli.py"
+    src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "cli.py"
     text = src.read_text(encoding="utf-8")
     assert "tunability" in text
 
 
 def test_version_bumped_to_0640():
-    import soup_cli
+    import ai_forge_cli
 
     # Floor check so future minor releases don't regress this test (matches
     # v0.51.0 / v0.54.0 / v0.57.0 / v0.60.0 floor-check idiom). Exact-equality
     # at "0.64.0" broke on the v0.65.0 bump — the test name preserves the
     # intent (≥0.64.0 means v0.64.0 shipped).
-    parts = tuple(int(p) for p in soup_cli.__version__.split(".")[:3])
-    assert parts >= (0, 64, 0), soup_cli.__version__
+    parts = tuple(int(p) for p in ai_forge_cli.__version__.split(".")[:3])
+    assert parts >= (0, 64, 0), ai_forge_cli.__version__
 
 
 def test_no_top_level_heavy_imports():
     """tunability module should not import torch/transformers/peft at top-level."""
     from pathlib import Path
 
-    src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "utils" / "tunability.py"
+    src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "utils" / "tunability.py"
     text = src.read_text(encoding="utf-8")
     # Heavy deps must be lazy-imported inside functions
     for bad in ["^import torch", "^from torch", "^import transformers", "^from transformers"]:

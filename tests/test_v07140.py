@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.utils import reward_synth as rs
+from ai_forge_cli.utils import reward_synth as rs
 
 
 # ---------------------------------------------------------------------------
@@ -292,17 +292,17 @@ class TestCalibrateFloors:
 
 class TestLoadRewardFnsGuards:
     def test_none_friendly(self):
-        from soup_cli.trainer.rewards import load_reward_fns
+        from ai_forge_cli.trainer.rewards import load_reward_fns
         with pytest.raises(ValueError, match="must be a string"):
             load_reward_fns(None)
 
     def test_blank_rejected(self):
-        from soup_cli.trainer.rewards import load_reward_fns
+        from ai_forge_cli.trainer.rewards import load_reward_fns
         with pytest.raises(ValueError, match="blank"):
             load_reward_fns("   ")
 
     def test_duplicate_rejected(self):
-        from soup_cli.trainer.rewards import load_reward_fns
+        from ai_forge_cli.trainer.rewards import load_reward_fns
         with pytest.raises(ValueError, match="twice"):
             load_reward_fns("accuracy,accuracy")
 
@@ -376,13 +376,13 @@ class TestRewardSynthCli:
         return CliRunner()
 
     def test_help(self):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         res = self._runner().invoke(app, ["synth", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
         assert "reward" in res.output.lower()
 
     def test_numeric_happy(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"),
                      [{"prompt": "2+2", "answer": "4"}, {"prompt": "3+3", "answer": "6"}])
@@ -394,7 +394,7 @@ class TestRewardSynthCli:
         assert fn(_completions("4", "99"), answer=["4", "6"]) == [1.0, 0.0]
 
     def test_cant_induce_is_error_exit_1(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         # All golds empty → regex can't be induced → INDUCTION ERROR (exit 1),
         # distinct from a calibration refusal (exit 2). No file written.
@@ -407,7 +407,7 @@ class TestRewardSynthCli:
         assert not Path("reward.py").exists()
 
     def test_refusal_deletes_file(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         # A numeric verifier with a huge tolerance accepts the perturbed (+9999)
         # negatives too → discrimination below the default 0.5 → REFUSED (exit 2),
@@ -420,7 +420,7 @@ class TestRewardSynthCli:
         assert not Path("reward.py").exists()
 
     def test_plan_only_writes_nothing(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"answer": "4"}, {"answer": "6"}])
         res = self._runner().invoke(app, ["synth", "refs.jsonl", "-o", "reward.py",
@@ -432,7 +432,7 @@ class TestRewardSynthCli:
         assert "float=false" in res.output.lower().replace(" ", "")
 
     def test_output_must_be_py(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"answer": "4"}])
         res = self._runner().invoke(app, ["synth", "refs.jsonl", "-o", "reward.txt"])
@@ -440,7 +440,7 @@ class TestRewardSynthCli:
         assert ".py" in res.output
 
     def test_overwrite_without_force_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"answer": "4"}, {"answer": "6"}])
         Path("reward.py").write_text("# existing\n", encoding="utf-8")
@@ -450,7 +450,7 @@ class TestRewardSynthCli:
         assert Path("reward.py").read_text(encoding="utf-8") == "# existing\n"
 
     def test_bad_kind_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"answer": "4"}])
         res = self._runner().invoke(app, ["synth", "refs.jsonl", "-o", "reward.py",
@@ -464,44 +464,44 @@ class TestRewardSynthCli:
 # ---------------------------------------------------------------------------
 class TestCommaSplitLoader:
     def test_two_names_two_callables(self):
-        from soup_cli.trainer.rewards import load_reward_fns
+        from ai_forge_cli.trainer.rewards import load_reward_fns
         fns = load_reward_fns("accuracy,format")
         assert isinstance(fns, list) and len(fns) == 2
         assert {f.__name__ for f in fns} == {"accuracy_reward", "format_reward"}
 
     def test_single_name_single_element_list(self):
-        from soup_cli.trainer.rewards import load_reward_fns
+        from ai_forge_cli.trainer.rewards import load_reward_fns
         fns = load_reward_fns("accuracy")
         assert isinstance(fns, list) and len(fns) == 1
         assert fns[0].__name__ == "accuracy_reward"
 
     def test_whitespace_around_segments(self):
-        from soup_cli.trainer.rewards import load_reward_fns
+        from ai_forge_cli.trainer.rewards import load_reward_fns
         fns = load_reward_fns(" accuracy , format ")
         assert len(fns) == 2
 
     def test_empty_segment_raises(self):
-        from soup_cli.trainer.rewards import load_reward_fns
+        from ai_forge_cli.trainer.rewards import load_reward_fns
         with pytest.raises(ValueError, match="empty"):
             load_reward_fns("accuracy,")
 
     def test_verifiable_with_domain(self):
-        from soup_cli.trainer.rewards import load_reward_fns
+        from ai_forge_cli.trainer.rewards import load_reward_fns
         fns = load_reward_fns("verifiable,format", verifiable_domain="math")
         assert len(fns) == 2
 
 
 class TestSelectRewardFn:
     def test_comma_split_returns_list(self):
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.trainer.grpo import _select_reward_fn
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.trainer.grpo import _select_reward_fn
         tcfg = TrainingConfig(reward_fn="accuracy,format")
         out = _select_reward_fn(tcfg, "cpu", False)
         assert isinstance(out, list) and len(out) == 2
 
     def test_single_returns_callable(self):
-        from soup_cli.config.schema import TrainingConfig
-        from soup_cli.trainer.grpo import _select_reward_fn
+        from ai_forge_cli.config.schema import TrainingConfig
+        from ai_forge_cli.trainer.grpo import _select_reward_fn
         tcfg = TrainingConfig(reward_fn="accuracy")
         out = _select_reward_fn(tcfg, "cpu", False)
         assert callable(out) and not isinstance(out, list)
@@ -511,32 +511,32 @@ class TestRewardFnValidator:
     def test_null_byte_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
         with pytest.raises(ValidationError, match="null"):
             TrainingConfig(reward_fn="acc\x00uracy")
 
     def test_empty_comma_segment_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
         with pytest.raises(ValidationError, match="empty"):
             TrainingConfig(reward_fn="accuracy,,format")
 
     def test_overlong_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
         with pytest.raises(ValidationError, match="512"):
             TrainingConfig(reward_fn="a" * 600)
 
     def test_comma_combo_accepted(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
         assert TrainingConfig(reward_fn="accuracy,format").reward_fn == "accuracy,format"
 
 
 class TestRewardFnTaskGate:
     def _cfg(self, task, reward_fn):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
         return load_config_from_string(
             f"base: sshleifer/tiny-gpt2\ntask: {task}\n"
             f"data:\n  train: d.jsonl\ntraining:\n  reward_fn: {reward_fn}\n"
@@ -579,7 +579,7 @@ class TestReviewFixes:
     def test_cli_bad_min_discrimination(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"answer": "4"}])
         res = CliRunner().invoke(app, ["synth", "refs.jsonl", "-o", "r.py",
@@ -589,7 +589,7 @@ class TestReviewFixes:
     def test_cli_bad_tolerance(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"answer": "4"}])
         res = CliRunner().invoke(app, ["synth", "refs.jsonl", "-o", "r.py",
@@ -605,7 +605,7 @@ class TestPerKindPipeline:
         return CliRunner()
 
     def _synth(self, tmp_path, monkeypatch, rows, extra=()):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), rows)
         return self._runner().invoke(
@@ -663,7 +663,7 @@ class TestOutputReport:
         return CliRunner()
 
     def test_report_written_and_parseable(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"answer": "4"}, {"answer": "6"}])
         res = self._runner().invoke(app, ["synth", "refs.jsonl", "-o", "reward.py",
@@ -675,7 +675,7 @@ class TestOutputReport:
         assert set(rep) >= {"pos_accept", "neg_accept", "discrimination", "precision"}
 
     def test_bad_report_path_fails_before_writing_verifier(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"answer": "4"}, {"answer": "6"}])
         res = self._runner().invoke(app, ["synth", "refs.jsonl", "-o", "reward.py",
@@ -691,20 +691,20 @@ class TestCliRobustness:
         return CliRunner()
 
     def test_missing_references_file(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         res = self._runner().invoke(app, ["synth", "nope.jsonl", "-o", "reward.py"])
         assert res.exit_code == 1, (res.output, repr(res.exception))
 
     def test_empty_references_file(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         Path("refs.jsonl").write_text("\n\n", encoding="utf-8")
         res = self._runner().invoke(app, ["synth", "refs.jsonl", "-o", "reward.py"])
         assert res.exit_code == 1 and "no JSON-object rows" in res.output
 
     def test_force_overwrites(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"answer": "4"}, {"answer": "6"}])
         Path("reward.py").write_text("# stale\n", encoding="utf-8")
@@ -714,7 +714,7 @@ class TestCliRobustness:
         assert "# stale" not in Path("reward.py").read_text(encoding="utf-8")
 
     def test_custom_field(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"gold": "4"}, {"gold": "6"}])
         res = self._runner().invoke(app, ["synth", "refs.jsonl", "-o", "reward.py",
@@ -723,20 +723,20 @@ class TestCliRobustness:
         assert Path("reward.py").exists()
 
     def test_output_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         _write_jsonl(Path("refs.jsonl"), [{"answer": "4"}])
         res = self._runner().invoke(app, ["synth", "refs.jsonl", "-o", "../evil.py"])
         assert res.exit_code == 1 and "cwd" in res.output.lower()
 
     def test_references_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.reward import app
+        from ai_forge_cli.commands.reward import app
         monkeypatch.chdir(tmp_path)
         res = self._runner().invoke(app, ["synth", "../secret.jsonl", "-o", "reward.py"])
         assert res.exit_code == 1 and "cwd" in res.output.lower()
 
     def test_registered_on_top_level_cli(self):
-        from soup_cli.cli import app as root
+        from ai_forge_cli.cli import app as root
         res = self._runner().invoke(root, ["reward", "synth", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
 
@@ -788,7 +788,7 @@ class TestBoundaries:
         assert rs.detect_kind(["1", "2", "3", "4", "5", "6", "7", "8", "9", "x"]) == "numeric"
 
     def test_reward_fn_512_boundary(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
         assert TrainingConfig(reward_fn="a" * 512).reward_fn == "a" * 512
         from pydantic import ValidationError
         with pytest.raises(ValidationError, match="512"):
@@ -799,7 +799,7 @@ class TestVerifiableComboGate:
     def test_comma_verifiable_without_domain_rejected(self):
         # #8: "accuracy,verifiable" must fail at config parse (like bare
         # "verifiable"), not silently defer to a runtime crash.
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
         with pytest.raises(ValueError, match="verifiable_domain"):
             load_config_from_string(
                 "base: sshleifer/tiny-gpt2\ntask: grpo\ndata:\n  train: d.jsonl\n"
@@ -807,7 +807,7 @@ class TestVerifiableComboGate:
             )
 
     def test_comma_verifiable_with_domain_ok(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
         cfg = load_config_from_string(
             "base: sshleifer/tiny-gpt2\ntask: grpo\ndata:\n  train: d.jsonl\n"
             "training:\n  reward_fn: accuracy,verifiable\n  verifiable_domain: math\n"
@@ -819,26 +819,26 @@ class TestRewardFnValidatorBlank:
     def test_blank_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
         with pytest.raises(ValidationError, match="blank"):
             TrainingConfig(reward_fn="   ")
 
     def test_bool_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
         with pytest.raises(ValidationError, match="string"):
             TrainingConfig(reward_fn=True)
 
 
 class TestEnvsDocstringFix:
     def test_calculator_docstring(self):
-        from soup_cli.envs import calculator
+        from ai_forge_cli.envs import calculator
         assert "reward_fn='math'" not in (calculator.__doc__ or "")
         assert "verifiable" in (calculator.__doc__ or "")
 
     def test_guess_number_docstring(self):
-        from soup_cli.envs import guess_number
+        from ai_forge_cli.envs import guess_number
         assert "reward_fn='math'" not in (guess_number.__doc__ or "")
         assert "verifiable" in (guess_number.__doc__ or "")
 

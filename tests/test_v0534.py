@@ -22,8 +22,8 @@ import pytest
 from pydantic import ValidationError
 from rich.console import Console
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.utils.errors import format_friendly_error
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.utils.errors import format_friendly_error
 
 _BASE_DATA_LINE = "data:\n  train: ./train.jsonl\n"
 
@@ -43,7 +43,7 @@ class TestOomFriendlyMessage:
     def test_cuda_oom_names_batch_size_and_grad_accum(self):
         buf = StringIO()
         test_console = Console(file=buf, stderr=False)
-        with patch("soup_cli.utils.errors.console", test_console):
+        with patch("ai_forge_cli.utils.errors.console", test_console):
             format_friendly_error(
                 RuntimeError("CUDA out of memory. Tried to allocate 2 GiB"),
                 verbose=False,
@@ -60,7 +60,7 @@ class TestOomFriendlyMessage:
         class OutOfMemoryError(RuntimeError):
             pass
 
-        with patch("soup_cli.utils.errors.console", test_console):
+        with patch("ai_forge_cli.utils.errors.console", test_console):
             format_friendly_error(OutOfMemoryError("oom"), verbose=False)
         out = buf.getvalue()
         assert "--batch-size" in out
@@ -89,13 +89,13 @@ class TestFlashAttnV3Available:
     """
 
     def test_returns_false_when_transformers_says_no(self, monkeypatch):
-        from soup_cli.utils import flash_attn as mod
+        from ai_forge_cli.utils import flash_attn as mod
 
         monkeypatch.setattr(mod, "_transformers_says_fa3", lambda: False)
         assert mod.is_flash_attn_v3_available() is False
 
     def test_returns_true_when_transformers_says_yes(self, monkeypatch):
-        from soup_cli.utils import flash_attn as mod
+        from ai_forge_cli.utils import flash_attn as mod
 
         monkeypatch.setattr(mod, "_transformers_says_fa3", lambda: True)
         assert mod.is_flash_attn_v3_available() is True
@@ -103,7 +103,7 @@ class TestFlashAttnV3Available:
     def test_a_3x_flash_attn_alone_is_not_enough(self, monkeypatch):
         """The case that used to assert the opposite, kept pointing the other way
         so the regression cannot come back quietly."""
-        from soup_cli.utils import flash_attn as mod
+        from ai_forge_cli.utils import flash_attn as mod
 
         monkeypatch.setitem(sys.modules, "flash_attn", SimpleNamespace(__version__="3.0.0"))
         monkeypatch.setattr(mod, "_transformers_says_fa3", lambda: False)
@@ -111,7 +111,7 @@ class TestFlashAttnV3Available:
 
     def test_a_broken_transformers_probe_does_not_raise(self, monkeypatch):
         """A detection helper must never break model loading."""
-        from soup_cli.utils import flash_attn as mod
+        from ai_forge_cli.utils import flash_attn as mod
 
         def _boom():
             raise RuntimeError("transformers exploded")
@@ -125,7 +125,7 @@ class TestLongLoraRejectsFlashAttnV3:
     def test_schema_rejects_longlora_when_fa3_present(self, monkeypatch):
         # Force FA3 detected -> SoupConfig schema gate must reject.
         monkeypatch.setattr(
-            "soup_cli.utils.flash_attn.is_flash_attn_v3_available",
+            "ai_forge_cli.utils.flash_attn.is_flash_attn_v3_available",
             lambda: True,
         )
         yaml_in = """
@@ -141,7 +141,7 @@ training:
 
     def test_schema_passes_when_fa3_absent(self, monkeypatch):
         monkeypatch.setattr(
-            "soup_cli.utils.flash_attn.is_flash_attn_v3_available",
+            "ai_forge_cli.utils.flash_attn.is_flash_attn_v3_available",
             lambda: False,
         )
         yaml_in = """
@@ -161,7 +161,7 @@ training:
 
 class TestIsMistralModel:
     def test_basic(self):
-        from soup_cli.utils.longlora import is_mistral_model
+        from ai_forge_cli.utils.longlora import is_mistral_model
 
         assert is_mistral_model("mistralai/Mistral-7B-v0.1") is True
         assert is_mistral_model("mistralai/Mixtral-8x7B-v0.1") is False  # Mixtral != Mistral name
@@ -169,7 +169,7 @@ class TestIsMistralModel:
         assert is_mistral_model("Mistral-7B-Instruct-v0.3") is True
 
     def test_word_boundary_rejects_substring(self):
-        from soup_cli.utils.longlora import is_mistral_model
+        from ai_forge_cli.utils.longlora import is_mistral_model
 
         # Substring inside an unrelated identifier must NOT match.
         assert is_mistral_model("my-mistralish-finetune") is False
@@ -177,7 +177,7 @@ class TestIsMistralModel:
         assert is_mistral_model("unmistral-7b") is False
 
     def test_input_guards(self):
-        from soup_cli.utils.longlora import is_mistral_model
+        from ai_forge_cli.utils.longlora import is_mistral_model
 
         assert is_mistral_model("") is False
         with pytest.raises(TypeError):
@@ -190,7 +190,7 @@ class TestIsMistralModel:
 
 class TestIsQwenModel:
     def test_basic(self):
-        from soup_cli.utils.longlora import is_qwen_model
+        from ai_forge_cli.utils.longlora import is_qwen_model
 
         assert is_qwen_model("Qwen/Qwen2-7B") is True
         assert is_qwen_model("Qwen/Qwen2.5-7B-Instruct") is True
@@ -203,7 +203,7 @@ class TestIsQwenModel:
 
 class TestIsPhiModel:
     def test_basic(self):
-        from soup_cli.utils.longlora import is_phi_model
+        from ai_forge_cli.utils.longlora import is_phi_model
 
         assert is_phi_model("microsoft/Phi-3-mini") is True
         assert is_phi_model("microsoft/phi-4") is True
@@ -216,7 +216,7 @@ class TestIsPhiModel:
 
 class TestIsSupportedLongloraArch:
     def test_all_families_accepted(self):
-        from soup_cli.utils.longlora import is_supported_longlora_arch
+        from ai_forge_cli.utils.longlora import is_supported_longlora_arch
 
         for name in (
             "meta-llama/Llama-3.1-8B",
@@ -228,7 +228,7 @@ class TestIsSupportedLongloraArch:
             assert is_supported_longlora_arch(name) is True, name
 
     def test_unsupported_arch_rejected(self):
-        from soup_cli.utils.longlora import is_supported_longlora_arch
+        from ai_forge_cli.utils.longlora import is_supported_longlora_arch
 
         assert is_supported_longlora_arch("google/gemma-2-9b") is False
         assert is_supported_longlora_arch("databricks/dbrx-base") is False
@@ -248,7 +248,7 @@ class TestLongloraSchemaAcceptsNewArches:
     )
     def test_accepts(self, monkeypatch, base):
         monkeypatch.setattr(
-            "soup_cli.utils.flash_attn.is_flash_attn_v3_available",
+            "ai_forge_cli.utils.flash_attn.is_flash_attn_v3_available",
             lambda: False,
         )
         yaml_in = f"""
@@ -268,7 +268,7 @@ training:
 
 class TestApplyLongContextLlama3Autodetect:
     def test_autodetect_picks_llama3_when_rope_block_present(self):
-        from soup_cli.utils.long_context import apply_long_context_config
+        from ai_forge_cli.utils.long_context import apply_long_context_config
 
         model_config = SimpleNamespace(
             max_position_embeddings=8192,
@@ -290,7 +290,7 @@ class TestApplyLongContextLlama3Autodetect:
         assert model_config.max_position_embeddings == 32768
 
     def test_autodetect_falls_back_to_dynamic(self):
-        from soup_cli.utils.long_context import apply_long_context_config
+        from ai_forge_cli.utils.long_context import apply_long_context_config
 
         # No rope_scaling on config → fall back to ``dynamic``.
         model_config = SimpleNamespace(max_position_embeddings=4096)
@@ -304,7 +304,7 @@ class TestApplyLongContextLlama3Autodetect:
         assert result["type"] == "dynamic"
 
     def test_explicit_caller_pick_wins_over_autodetect(self):
-        from soup_cli.utils.long_context import apply_long_context_config
+        from ai_forge_cli.utils.long_context import apply_long_context_config
 
         model_config = SimpleNamespace(
             max_position_embeddings=8192,
@@ -323,7 +323,7 @@ class TestApplyLongContextLlama3Autodetect:
 
     def test_rope_scaling_with_rope_type_alias(self):
         """v0.49.0 detect helper also accepts the newer ``rope_type`` key."""
-        from soup_cli.utils.long_context import apply_long_context_config
+        from ai_forge_cli.utils.long_context import apply_long_context_config
 
         model_config = SimpleNamespace(
             max_position_embeddings=8192,
@@ -409,20 +409,20 @@ class FakeModel:
 
 class TestExpandModelBlocks:
     def test_zero_short_circuit(self):
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         m = FakeModel(n_layers=4)
         assert expand_model_blocks(m, 0) == 4
         assert len(m.model.layers) == 4  # unchanged
 
     def test_none_short_circuit(self):
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         m = FakeModel(n_layers=4)
         assert expand_model_blocks(m, None) == 4
 
     def test_appends_n_blocks_and_updates_config(self):
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         m = FakeModel(n_layers=4)
         total = expand_model_blocks(m, 2)
@@ -431,7 +431,7 @@ class TestExpandModelBlocks:
         assert m.config.num_hidden_layers == 6
 
     def test_zero_inits_residual_projections(self):
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         m = FakeModel(n_layers=2)
         expand_model_blocks(m, 1)
@@ -444,7 +444,7 @@ class TestExpandModelBlocks:
         assert any(v != 0.0 for v in old_block.mlp.down_proj.weight.data._values)
 
     def test_over_expansion_clamps_to_available_blocks(self):
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         m = FakeModel(n_layers=2)
         # Request 5 new blocks on a 2-layer model — should clone only 2.
@@ -452,14 +452,14 @@ class TestExpandModelBlocks:
         assert total == 4  # 2 original + 2 clamped clones
 
     def test_missing_layers_raises(self):
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         bad = SimpleNamespace(config=SimpleNamespace(num_hidden_layers=0))
         with pytest.raises(ValueError, match="decoder layers"):
             expand_model_blocks(bad, 2)
 
     def test_validates_input(self):
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         m = FakeModel(n_layers=2)
         with pytest.raises(ValueError):
@@ -472,21 +472,21 @@ class TestApplyLlamaProFreezeNegativeInputs:
     """Review-fix: cover the input-validation surface explicitly."""
 
     def test_rejects_negative_block_count(self):
-        from soup_cli.utils.block_expansion import apply_llama_pro_freeze
+        from ai_forge_cli.utils.block_expansion import apply_llama_pro_freeze
 
         m = FakeModel(n_layers=3)
         with pytest.raises(ValueError):
             apply_llama_pro_freeze(m, -1)
 
     def test_rejects_bool_block_count(self):
-        from soup_cli.utils.block_expansion import apply_llama_pro_freeze
+        from ai_forge_cli.utils.block_expansion import apply_llama_pro_freeze
 
         m = FakeModel(n_layers=3)
         with pytest.raises(ValueError):
             apply_llama_pro_freeze(m, True)
 
     def test_silent_zero_when_layers_missing(self):
-        from soup_cli.utils.block_expansion import apply_llama_pro_freeze
+        from ai_forge_cli.utils.block_expansion import apply_llama_pro_freeze
 
         bad = SimpleNamespace()
         # No ``model.layers`` discoverable → returns 0 without raising.
@@ -497,7 +497,7 @@ class TestExpandSharedHelper:
     """v0.53.4 review fix — centralised ``apply_block_expansion_if_configured``."""
 
     def test_no_op_when_expand_layers_unset(self):
-        from soup_cli.utils.block_expansion import (
+        from ai_forge_cli.utils.block_expansion import (
             apply_block_expansion_if_configured,
         )
 
@@ -508,7 +508,7 @@ class TestExpandSharedHelper:
         assert len(m.model.layers) == 4  # unchanged
 
     def test_expands_and_optionally_freezes(self):
-        from soup_cli.utils.block_expansion import (
+        from ai_forge_cli.utils.block_expansion import (
             apply_block_expansion_if_configured,
         )
 
@@ -526,7 +526,7 @@ class TestExpandSharedHelper:
                 assert p.requires_grad is True
 
     def test_freeze_skipped_when_freeze_field_none(self):
-        from soup_cli.utils.block_expansion import (
+        from ai_forge_cli.utils.block_expansion import (
             apply_block_expansion_if_configured,
         )
 
@@ -545,7 +545,7 @@ class TestZeroInitWarningOnUnknownArch:
     def test_warning_emitted_when_no_projection(self):
         import warnings
 
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         # Block without standard mlp.down_proj / self_attn.o_proj attributes.
         class StubBlock:
@@ -582,30 +582,30 @@ class TestQwenPhiInputGuards:
     """Review-fix coverage parity with TestIsMistralModel.test_input_guards."""
 
     def test_qwen_null_byte_rejected(self):
-        from soup_cli.utils.longlora import is_qwen_model
+        from ai_forge_cli.utils.longlora import is_qwen_model
 
         with pytest.raises(ValueError):
             is_qwen_model("Qwen/\x00Qwen2")
 
     def test_phi_null_byte_rejected(self):
-        from soup_cli.utils.longlora import is_phi_model
+        from ai_forge_cli.utils.longlora import is_phi_model
 
         with pytest.raises(ValueError):
             is_phi_model("microsoft/\x00phi-3")
 
     def test_qwen_oversize_returns_false(self):
-        from soup_cli.utils.longlora import is_qwen_model
+        from ai_forge_cli.utils.longlora import is_qwen_model
 
         assert is_qwen_model("Q" * 1024) is False
 
     def test_phi_none_typeerror(self):
-        from soup_cli.utils.longlora import is_phi_model
+        from ai_forge_cli.utils.longlora import is_phi_model
 
         with pytest.raises(TypeError):
             is_phi_model(None)  # type: ignore[arg-type]
 
     def test_supported_arch_returns_false_on_non_string(self):
-        from soup_cli.utils.longlora import is_supported_longlora_arch
+        from ai_forge_cli.utils.longlora import is_supported_longlora_arch
 
         # Defensive surface — never raises on bad input.
         assert is_supported_longlora_arch(None) is False
@@ -617,7 +617,7 @@ class TestValidateLongloraCompatInputGuards:
     """Review-fix: ensure task / backend null-byte rejection."""
 
     def test_null_byte_in_task_rejected(self):
-        from soup_cli.utils.longlora import validate_longlora_compat
+        from ai_forge_cli.utils.longlora import validate_longlora_compat
 
         with pytest.raises(ValueError, match="null byte"):
             validate_longlora_compat(
@@ -628,7 +628,7 @@ class TestValidateLongloraCompatInputGuards:
             )
 
     def test_null_byte_in_backend_rejected(self):
-        from soup_cli.utils.longlora import validate_longlora_compat
+        from ai_forge_cli.utils.longlora import validate_longlora_compat
 
         with pytest.raises(ValueError, match="null byte"):
             validate_longlora_compat(
@@ -639,7 +639,7 @@ class TestValidateLongloraCompatInputGuards:
             )
 
     def test_oversize_model_name_truncated_in_error(self):
-        from soup_cli.utils.longlora import validate_longlora_compat
+        from ai_forge_cli.utils.longlora import validate_longlora_compat
 
         long_name = "google/gemma-2-9b-" + "x" * 600
         with pytest.raises(ValueError) as exc:
@@ -656,7 +656,7 @@ class TestValidateLongloraCompatInputGuards:
 
 class TestApplyLlamaProFreeze:
     def test_freezes_old_unfreezes_new(self):
-        from soup_cli.utils.block_expansion import (
+        from ai_forge_cli.utils.block_expansion import (
             apply_llama_pro_freeze,
             expand_model_blocks,
         )
@@ -676,7 +676,7 @@ class TestApplyLlamaProFreeze:
         assert m._top_param.requires_grad is False
 
     def test_zero_is_noop(self):
-        from soup_cli.utils.block_expansion import apply_llama_pro_freeze
+        from ai_forge_cli.utils.block_expansion import apply_llama_pro_freeze
 
         m = FakeModel(n_layers=3)
         assert apply_llama_pro_freeze(m, 0) == 0

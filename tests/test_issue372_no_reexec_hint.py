@@ -20,7 +20,7 @@ import shlex
 
 import pytest
 
-from soup_cli.utils.launcher import (
+from ai_forge_cli.utils.launcher import (
     build_accelerate_argv,
     build_train_reexec_argv,
     collect_reexec_passthrough,
@@ -53,12 +53,12 @@ def _printed_tokens(config: str, extra_flags: list[str], num_gpus: int = 4) -> l
 class TestReexecArgvBuilder:
     def test_reexec_argv_always_includes_no_reexec_and_module_form(self):
         argv = build_train_reexec_argv("soup.yaml", ["--fsdp", "full_shard"])
-        assert argv[1:4] == ["-m", "soup_cli.cli", "train"]
+        assert argv[1:4] == ["-m", "ai_forge_cli.cli", "train"]
         assert "--config" in argv and "soup.yaml" in argv
         assert "--no-reexec" in argv
         assert argv[argv.index("--fsdp") + 1] == "full_shard"
 
-    def test_hint_drops_no_reexec_and_uses_soup_cli_name(self):
+    def test_hint_drops_no_reexec_and_uses_ai_forge_cli_name(self):
         argv = build_train_reexec_argv("soup.yaml", ["--fsdp", "full_shard"])
         hint = hint_argv_from_reexec(argv)
         assert hint[:2] == ["soup", "train"]
@@ -165,7 +165,7 @@ def test_every_train_option_is_passed_through_or_deliberately_local():
     """
     import inspect
 
-    from soup_cli.commands.train import train
+    from ai_forge_cli.commands.train import train
 
     cli = set(inspect.signature(train).parameters)
     passed = set(inspect.signature(collect_reexec_passthrough).parameters)
@@ -207,9 +207,9 @@ def test_name_and_replay_survive_the_passthrough():
 def _invoke_no_reexec(tmp_path, monkeypatch, extra_args):
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
-    from soup_cli.utils import launcher as launcher_mod
-    from soup_cli.utils import topology as topo_mod
+    from ai_forge_cli.cli import app
+    from ai_forge_cli.utils import launcher as launcher_mod
+    from ai_forge_cli.utils import topology as topo_mod
 
     for var in (
         "RANK",

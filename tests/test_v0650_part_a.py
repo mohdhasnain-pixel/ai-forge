@@ -10,7 +10,7 @@ import math
 
 import pytest
 
-from soup_cli.eval.calibrate import (
+from ai_forge_cli.eval.calibrate import (
     JudgeCalibrationReport,
     PairwiseJudgement,
     classify_kl_delta,
@@ -379,7 +379,7 @@ class TestBackCompat:
 class TestSourceWiring:
     def test_no_heavy_imports(self):
         from pathlib import Path
-        src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "eval" / "calibrate.py"
+        src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "eval" / "calibrate.py"
         text = src.read_text(encoding="utf-8")
         # Should not import torch, transformers, peft at module scope.
         forbidden_imports = (
@@ -466,6 +466,6 @@ class TestJudgeCalibrationPersistence:
             load_judge_calibration("nope.json")
 
     def test_registry_kind_registered(self):
-        from soup_cli.registry.store import _VALID_KINDS
+        from ai_forge_cli.registry.store import _VALID_KINDS
 
         assert "judge_calibration" in _VALID_KINDS

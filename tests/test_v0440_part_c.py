@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from soup_cli.ui.plugins import (
+from ai_forge_cli.ui.plugins import (
     clear_tabs,
     get_tab,
     list_tabs,
     register_tab,
 )
-from soup_cli.utils.ui_env import UiEnv, resolve_ui_env
+from ai_forge_cli.utils.ui_env import UiEnv, resolve_ui_env
 
 
 @pytest.fixture(autouse=True)

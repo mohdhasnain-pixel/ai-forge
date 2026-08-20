@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from soup_cli.data.formats import detect_format, format_to_messages
-from soup_cli.data.loader import load_raw_data
-from soup_cli.data.validator import validate_and_stats
+from ai_forge_cli.data.formats import detect_format, format_to_messages
+from ai_forge_cli.data.loader import load_raw_data
+from ai_forge_cli.data.validator import validate_and_stats
 
 
 def test_load_jsonl(sample_alpaca_data: Path):

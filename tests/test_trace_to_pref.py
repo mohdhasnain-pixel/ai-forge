@@ -6,7 +6,7 @@ import json
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -18,7 +18,7 @@ runner = CliRunner()
 
 class TestLangChainParser:
     def test_parse_event_with_thumbs_up(self):
-        from soup_cli.data.traces.parsers import parse_langchain
+        from ai_forge_cli.data.traces.parsers import parse_langchain
 
         event = {
             "id": "run-1",
@@ -33,7 +33,7 @@ class TestLangChainParser:
         assert traces[0].signal == "thumbs_up"
 
     def test_parse_event_with_thumbs_down(self):
-        from soup_cli.data.traces.parsers import parse_langchain
+        from ai_forge_cli.data.traces.parsers import parse_langchain
 
         event = {
             "id": "run-2",
@@ -45,7 +45,7 @@ class TestLangChainParser:
         assert traces[0].signal == "thumbs_down"
 
     def test_parse_skips_missing_outputs(self):
-        from soup_cli.data.traces.parsers import parse_langchain
+        from ai_forge_cli.data.traces.parsers import parse_langchain
 
         events = [{"id": "x", "inputs": {"messages": []}, "outputs": None}]
         assert list(parse_langchain(events)) == []
@@ -58,7 +58,7 @@ class TestLangChainParser:
 
 class TestOpenAIParser:
     def test_parse_completion_with_feedback(self):
-        from soup_cli.data.traces.parsers import parse_openai
+        from ai_forge_cli.data.traces.parsers import parse_openai
 
         event = {
             "id": "cmpl-1",
@@ -76,7 +76,7 @@ class TestOpenAIParser:
 
     def test_parse_regeneration_chain(self):
         """Two completions with the same prompt → first=rejected, last=chosen."""
-        from soup_cli.data.traces.parsers import parse_openai
+        from ai_forge_cli.data.traces.parsers import parse_openai
 
         events = [
             {
@@ -103,7 +103,7 @@ class TestOpenAIParser:
 
 class TestSoupServeParser:
     def test_parse_soup_serve_dir(self, tmp_path):
-        from soup_cli.data.traces.parsers import parse_soup_serve
+        from ai_forge_cli.data.traces.parsers import parse_soup_serve
 
         trace_dir = tmp_path / "traces"
         trace_dir.mkdir()
@@ -128,8 +128,8 @@ class TestSoupServeParser:
 
 class TestPairBuilder:
     def test_build_pairs_from_thumbs(self):
-        from soup_cli.data.traces.pair_builder import build_pairs
-        from soup_cli.data.traces.parsers import Trace
+        from ai_forge_cli.data.traces.pair_builder import build_pairs
+        from ai_forge_cli.data.traces.parsers import Trace
 
         traces = [
             Trace(trace_id="a", prompt="Q", output="Good", signal="thumbs_up"),
@@ -142,8 +142,8 @@ class TestPairBuilder:
         assert pairs[0].rejected == "Bad"
 
     def test_build_pairs_from_regenerations(self):
-        from soup_cli.data.traces.pair_builder import build_pairs
-        from soup_cli.data.traces.parsers import Trace
+        from ai_forge_cli.data.traces.pair_builder import build_pairs
+        from ai_forge_cli.data.traces.parsers import Trace
 
         traces = [
             Trace(trace_id="1", prompt="Q", output="First", signal="regenerated",
@@ -157,8 +157,8 @@ class TestPairBuilder:
         assert pairs[0].rejected == "First"
 
     def test_build_pairs_from_user_edit(self):
-        from soup_cli.data.traces.pair_builder import build_pairs
-        from soup_cli.data.traces.parsers import Trace
+        from ai_forge_cli.data.traces.pair_builder import build_pairs
+        from ai_forge_cli.data.traces.parsers import Trace
 
         traces = [
             Trace(trace_id="x", prompt="Q", output="Raw", signal="user_edit",
@@ -170,8 +170,8 @@ class TestPairBuilder:
         assert pairs[0].rejected == "Raw"
 
     def test_build_pairs_skips_missing_counterpart(self):
-        from soup_cli.data.traces.pair_builder import build_pairs
-        from soup_cli.data.traces.parsers import Trace
+        from ai_forge_cli.data.traces.pair_builder import build_pairs
+        from ai_forge_cli.data.traces.parsers import Trace
 
         traces = [
             Trace(trace_id="a", prompt="Q", output="Good", signal="thumbs_up"),
@@ -358,8 +358,8 @@ class TestEmptyAndMalformed:
         assert result.exit_code == 0, (result.output, repr(result.exception))
 
     def test_lone_thumbs_down_drops_pair(self):
-        from soup_cli.data.traces.pair_builder import build_pairs
-        from soup_cli.data.traces.parsers import Trace
+        from ai_forge_cli.data.traces.pair_builder import build_pairs
+        from ai_forge_cli.data.traces.parsers import Trace
 
         traces = [
             Trace(trace_id="a", prompt="Q", output="Bad",
@@ -369,7 +369,7 @@ class TestEmptyAndMalformed:
         assert pairs == []
 
     def test_parse_soup_serve_non_directory_returns_empty(self, tmp_path):
-        from soup_cli.data.traces.parsers import parse_soup_serve
+        from ai_forge_cli.data.traces.parsers import parse_soup_serve
 
         file_not_dir = tmp_path / "file.txt"
         file_not_dir.write_text("hi", encoding="utf-8")
@@ -378,14 +378,14 @@ class TestEmptyAndMalformed:
 
 class TestLiterals:
     def test_format_literal_accepts_known(self):
-        from soup_cli.data.traces.pair_builder import SUPPORTED_SIGNALS
+        from ai_forge_cli.data.traces.pair_builder import SUPPORTED_SIGNALS
 
         # All 3 launch signals should be in the supported set
         for sig in ("thumbs_up", "regenerations", "user_edit"):
             assert sig in SUPPORTED_SIGNALS
 
     def test_parser_registry(self):
-        from soup_cli.data.traces.parsers import SUPPORTED_FORMATS
+        from ai_forge_cli.data.traces.parsers import SUPPORTED_FORMATS
 
         assert "langchain" in SUPPORTED_FORMATS
         assert "openai" in SUPPORTED_FORMATS

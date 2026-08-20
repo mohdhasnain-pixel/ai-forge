@@ -15,12 +15,12 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import SoupConfig, TrainingConfig
-from soup_cli.utils.multipack import (
+from ai_forge_cli.config.schema import SoupConfig, TrainingConfig
+from ai_forge_cli.utils.multipack import (
     build_multipack_sampler_for_lengths,
     supports_multipack,
 )
-from soup_cli.utils.multipack_sampler import MultipackBatchSampler
+from ai_forge_cli.utils.multipack_sampler import MultipackBatchSampler
 
 # ---- TrainingConfig.multipack field --------------------------------------
 

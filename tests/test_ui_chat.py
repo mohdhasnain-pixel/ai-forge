@@ -7,7 +7,7 @@ import pytest
 
 def _auth_headers():
     """Return auth headers with the current UI token."""
-    from soup_cli.ui.app import get_auth_token
+    from ai_forge_cli.ui.app import get_auth_token
     return {"Authorization": f"Bearer {get_auth_token()}"}
 
 
@@ -21,7 +21,7 @@ class TestChatEndpointExists:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         app = create_app()
         routes = [route.path for route in app.routes]
@@ -38,7 +38,7 @@ class TestChatSSRFProtection:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -58,7 +58,7 @@ class TestChatSSRFProtection:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         # Will fail at connection level but not at validation
@@ -80,7 +80,7 @@ class TestChatSSRFProtection:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -105,7 +105,7 @@ class TestChatParamBounds:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -127,7 +127,7 @@ class TestChatParamBounds:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -148,7 +148,7 @@ class TestChatParamBounds:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -173,7 +173,7 @@ class TestChatInvalidScheme:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -193,7 +193,7 @@ class TestChatInvalidScheme:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -213,7 +213,7 @@ class TestChatInvalidScheme:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -234,7 +234,7 @@ class TestChatInvalidScheme:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -258,7 +258,7 @@ class TestChatAuth:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -281,7 +281,7 @@ class TestChatValidation:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -301,7 +301,7 @@ class TestChatValidation:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         # Mock httpx to avoid real connection

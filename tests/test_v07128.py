@@ -11,7 +11,7 @@ import os
 
 import pytest
 
-from soup_cli.mcp_server import registry as reg
+from ai_forge_cli.mcp_server import registry as reg
 
 # ---------------------------------------------------------------------------
 # _sanitize — recursive C0/ESC strip on handler output
@@ -212,7 +212,7 @@ class TestDataDoctorHandler:
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(
-            "soup_cli.utils.data_doctor.resolve_tokenizer",
+            "ai_forge_cli.utils.data_doctor.resolve_tokenizer",
             lambda model, **kw: _FakeTokenizer(),
         )
         p = tmp_path / "chat.jsonl"
@@ -246,12 +246,12 @@ class TestDataDoctorHandler:
         _write_jsonl(p, [{"messages": [{"role": "user", "content": "hi"}]}])
         with pytest.raises(reg.McpToolError) as exc:
             reg.tool_data_doctor({"data": "chat.jsonl", "model": "x", "format": "chatml"})
-        assert "soup-cli[train]" in str(exc.value) or "install" in str(exc.value).lower()
+        assert "ai-forge[train]" in str(exc.value) or "install" in str(exc.value).lower()
 
 
 class TestRecipesHandlers:
     def test_search_returns_results(self):
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         out = reg.tool_recipes_search({"query": "qwen"})
         assert out["count"] >= 1
@@ -590,8 +590,8 @@ class TestServerRoundTrip:
     def test_list_tools_returns_all_18(self):
         from mcp.shared.memory import create_connected_server_and_client_session
 
-        from soup_cli.mcp_server.registry import build_registry
-        from soup_cli.mcp_server.server import build_server
+        from ai_forge_cli.mcp_server.registry import build_registry
+        from ai_forge_cli.mcp_server.server import build_server
 
         server = build_server(build_registry(allow_mutating=True, allow_execute=False))
 
@@ -608,8 +608,8 @@ class TestServerRoundTrip:
         assert all(t.inputSchema.get("type") == "object" for t in result.tools)
 
     def test_call_recipes_search_returns_json(self):
-        from soup_cli.mcp_server.registry import build_registry
-        from soup_cli.mcp_server.server import build_server
+        from ai_forge_cli.mcp_server.registry import build_registry
+        from ai_forge_cli.mcp_server.server import build_server
 
         server = build_server(build_registry(allow_mutating=False, allow_execute=False))
         res = _roundtrip(server, "recipes_search", {"query": "qwen"})
@@ -618,16 +618,16 @@ class TestServerRoundTrip:
         assert payload["count"] >= 1
 
     def test_unknown_tool_is_error(self):
-        from soup_cli.mcp_server.registry import build_registry
-        from soup_cli.mcp_server.server import build_server
+        from ai_forge_cli.mcp_server.registry import build_registry
+        from ai_forge_cli.mcp_server.server import build_server
 
         server = build_server(build_registry(allow_mutating=False, allow_execute=False))
         res = _roundtrip(server, "no_such_tool", {})
         assert res.isError is True
 
     def test_mutating_refused_without_allow(self, tmp_path, monkeypatch):
-        from soup_cli.mcp_server.registry import build_registry
-        from soup_cli.mcp_server.server import build_server
+        from ai_forge_cli.mcp_server.registry import build_registry
+        from ai_forge_cli.mcp_server.server import build_server
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "soup.yaml").write_text(_MIN_CONFIG, encoding="utf-8")
@@ -636,8 +636,8 @@ class TestServerRoundTrip:
         assert res.isError is True
 
     def test_bad_arg_is_error_not_crash(self, tmp_path, monkeypatch):
-        from soup_cli.mcp_server.registry import build_registry
-        from soup_cli.mcp_server.server import build_server
+        from ai_forge_cli.mcp_server.registry import build_registry
+        from ai_forge_cli.mcp_server.server import build_server
 
         monkeypatch.chdir(tmp_path)
         server = build_server(build_registry(allow_mutating=False, allow_execute=False))
@@ -645,8 +645,8 @@ class TestServerRoundTrip:
         assert res.isError is True
 
     def test_output_is_sanitized(self):
-        from soup_cli.mcp_server.registry import ToolSpec
-        from soup_cli.mcp_server.server import build_server
+        from ai_forge_cli.mcp_server.registry import ToolSpec
+        from ai_forge_cli.mcp_server.server import build_server
 
         spec = ToolSpec(
             name="echo",
@@ -662,8 +662,8 @@ class TestServerRoundTrip:
         assert payload["v"] == "abc"  # control bytes stripped by _sanitize
 
     def test_error_message_is_sanitized(self):
-        from soup_cli.mcp_server.registry import McpToolError, ToolSpec
-        from soup_cli.mcp_server.server import build_server
+        from ai_forge_cli.mcp_server.registry import McpToolError, ToolSpec
+        from ai_forge_cli.mcp_server.server import build_server
 
         def _boom(args):
             raise McpToolError("bad\x1b[31mvalue\x07")
@@ -683,8 +683,8 @@ class TestServerRoundTrip:
         assert "\x1b" not in text and "\x07" not in text
 
     def test_handler_stdout_is_redirected_off_the_jsonrpc_channel(self, capsys):
-        from soup_cli.mcp_server.registry import ToolSpec
-        from soup_cli.mcp_server.server import build_server
+        from ai_forge_cli.mcp_server.registry import ToolSpec
+        from ai_forge_cli.mcp_server.server import build_server
 
         def _noisy(args):
             print("LEAK-TO-STDOUT")
@@ -705,8 +705,8 @@ class TestServerRoundTrip:
         assert "LEAK-TO-STDOUT" not in capsys.readouterr().out
 
     def test_non_serializable_result_is_error_not_crash(self):
-        from soup_cli.mcp_server.registry import ToolSpec
-        from soup_cli.mcp_server.server import build_server
+        from ai_forge_cli.mcp_server.registry import ToolSpec
+        from ai_forge_cli.mcp_server.server import build_server
 
         spec = ToolSpec(
             name="bad",
@@ -737,7 +737,7 @@ class TestMcpCli:
     def test_registered_in_main_app(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         r = CliRunner().invoke(app, ["mcp", "--help"], env={"COLUMNS": "200"})
         assert r.exit_code == 0, (r.output, repr(r.exception))
@@ -746,7 +746,7 @@ class TestMcpCli:
     def test_serve_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         r = CliRunner().invoke(app, ["mcp", "serve", "--help"], env={"COLUMNS": "200"})
         assert r.exit_code == 0, (r.output, repr(r.exception))
@@ -758,21 +758,21 @@ class TestMcpCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         # Simulate the `mcp` SDK being absent: importing the server module fails.
-        monkeypatch.setitem(sys.modules, "soup_cli.mcp_server.server", None)
+        monkeypatch.setitem(sys.modules, "ai_forge_cli.mcp_server.server", None)
         r = CliRunner().invoke(app, ["mcp", "serve"])
         assert r.exit_code == 1
         # the hint must name the exact extra (Rich must not eat the '[mcp]')
-        assert "soup-cli[mcp]" in r.output
+        assert "ai-forge[mcp]" in r.output
 
 
 class TestRegistryNoSdkImport:
     def test_registry_source_has_no_mcp_import(self):
         import inspect
 
-        import soup_cli.mcp_server.registry as registry_mod
+        import ai_forge_cli.mcp_server.registry as registry_mod
 
         src = inspect.getsource(registry_mod)
         assert "import mcp" not in src
@@ -813,7 +813,7 @@ class TestOptIntBoolGuard:
 
 class TestRunsRegistryHappyPaths:
     def test_runs_show_happy(self, tmp_path, monkeypatch):
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         monkeypatch.setenv("SOUP_DB_PATH", str(tmp_path / "exp.db"))
         run_id = ExperimentTracker().start_run(
@@ -823,7 +823,7 @@ class TestRunsRegistryHappyPaths:
         assert out["run_id"] == run_id
 
     def test_registry_show_happy(self, tmp_path, monkeypatch):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
         with RegistryStore() as store:
@@ -835,7 +835,7 @@ class TestRunsRegistryHappyPaths:
         assert out["id"] == entry_id
 
     def test_registry_list_filter_narrows(self, tmp_path, monkeypatch):
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
 
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
         with RegistryStore() as store:
@@ -849,7 +849,7 @@ class TestRunsRegistryHappyPaths:
         assert narrowed["entries"][0]["name"] == "alpha"
 
     def test_registry_show_ambiguous_ref(self, tmp_path, monkeypatch):
-        from soup_cli.registry.store import AmbiguousRefError, RegistryStore
+        from ai_forge_cli.registry.store import AmbiguousRefError, RegistryStore
 
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
 
@@ -880,7 +880,7 @@ class TestLoadDataTranslation:
         def _raise(path):
             raise csv.Error("bad csv")
 
-        monkeypatch.setattr("soup_cli.data.loader.load_raw_data", _raise)
+        monkeypatch.setattr("ai_forge_cli.data.loader.load_raw_data", _raise)
         with pytest.raises(reg.McpToolError) as exc:
             reg.tool_data_inspect({"data": "d.jsonl"})
         assert "cannot load data" in str(exc.value)
@@ -960,14 +960,14 @@ class TestServePlumbing:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         calls = []
-        fake_server = ModuleType("soup_cli.mcp_server.server")
+        fake_server = ModuleType("ai_forge_cli.mcp_server.server")
         fake_server.run_stdio_server = (
             lambda *, allow_mutating, allow_execute: calls.append((allow_mutating, allow_execute))
         )
-        monkeypatch.setitem(sys.modules, "soup_cli.mcp_server.server", fake_server)
+        monkeypatch.setitem(sys.modules, "ai_forge_cli.mcp_server.server", fake_server)
         r1 = CliRunner().invoke(app, ["mcp", "serve"])
         r2 = CliRunner().invoke(app, ["mcp", "serve", "--allow-mutating"])
         r3 = CliRunner().invoke(app, ["mcp", "serve", "--allow-execute"])

@@ -7,7 +7,7 @@ import re
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -119,7 +119,7 @@ class TestLogLevelPlumbing:
     def test_log_level_sets_logging_module_level(self, monkeypatch):
         import logging as stdlogging
 
-        from soup_cli.utils.log_level import LogLevel, apply_logging_level
+        from ai_forge_cli.utils.log_level import LogLevel, apply_logging_level
 
         # Reset root logger
         root = stdlogging.getLogger()
@@ -145,7 +145,7 @@ class TestLogLevelPlumbing:
 
 class TestInferHFFallback:
     def test_resolve_model_source_local_path_exists(self, tmp_path):
-        from soup_cli.commands.infer import _resolve_model_source
+        from ai_forge_cli.commands.infer import _resolve_model_source
 
         model_dir = tmp_path / "mymodel"
         model_dir.mkdir()
@@ -156,7 +156,7 @@ class TestInferHFFallback:
         assert value == str(model_dir)
 
     def test_resolve_model_source_hf_id_when_no_local(self, tmp_path, monkeypatch):
-        from soup_cli.commands.infer import _resolve_model_source
+        from ai_forge_cli.commands.infer import _resolve_model_source
 
         monkeypatch.chdir(tmp_path)
         kind, value = _resolve_model_source("user/my-model")
@@ -166,7 +166,7 @@ class TestInferHFFallback:
     def test_resolve_model_source_invalid_hf_id_when_no_local(
         self, tmp_path, monkeypatch
     ):
-        from soup_cli.commands.infer import _resolve_model_source
+        from ai_forge_cli.commands.infer import _resolve_model_source
 
         monkeypatch.chdir(tmp_path)
         # Path-like but doesn't exist and isn't a valid HF id
@@ -174,21 +174,21 @@ class TestInferHFFallback:
             _resolve_model_source("./nonexistent")
 
     def test_resolve_model_source_absolute_path_missing(self, tmp_path, monkeypatch):
-        from soup_cli.commands.infer import _resolve_model_source
+        from ai_forge_cli.commands.infer import _resolve_model_source
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
             _resolve_model_source("/nonexistent/abs/path")
 
     def test_resolve_model_source_tilde_path_missing(self, tmp_path, monkeypatch):
-        from soup_cli.commands.infer import _resolve_model_source
+        from ai_forge_cli.commands.infer import _resolve_model_source
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
             _resolve_model_source("~/nope/missing")
 
     def test_resolve_model_source_windows_drive_letter(self, tmp_path, monkeypatch):
-        from soup_cli.commands.infer import _resolve_model_source
+        from ai_forge_cli.commands.infer import _resolve_model_source
 
         monkeypatch.chdir(tmp_path)
         # Drive-letter syntax always treated as path-like; missing → error.
@@ -196,7 +196,7 @@ class TestInferHFFallback:
             _resolve_model_source("Z:/nope/missing")
 
     def test_is_path_like_branches(self):
-        from soup_cli.commands.infer import _is_path_like
+        from ai_forge_cli.commands.infer import _is_path_like
 
         assert _is_path_like("") is True
         assert _is_path_like("./foo") is True
@@ -219,7 +219,7 @@ class TestRunsCwdOnly:
         assert "--cwd-only" in _plain(result.output)
 
     def test_filter_runs_by_cwd(self, tmp_path):
-        from soup_cli.commands.runs import _filter_runs_by_cwd
+        from ai_forge_cli.commands.runs import _filter_runs_by_cwd
 
         cwd = str(tmp_path.resolve())
         runs = [
@@ -237,7 +237,7 @@ class TestRunsCwdOnly:
 
     def test_filter_runs_by_cwd_cross_drive(self, tmp_path):
         """Cross-drive paths on Windows raise ValueError in commonpath; survive."""
-        from soup_cli.commands.runs import _filter_runs_by_cwd
+        from ai_forge_cli.commands.runs import _filter_runs_by_cwd
 
         cwd = str(tmp_path.resolve())
         runs = [

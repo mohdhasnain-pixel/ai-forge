@@ -32,7 +32,7 @@ They are the evidence behind the preprint:
 released Soup, so a claim in a record above can be re-measured rather than taken
 on trust. It starts small on purpose — most of this session's ~20 harnesses live
 only in a scratchpad on a machine that is gone, which is
-[#379](https://github.com/MakazhanAlpamys/Soup/issues/379).
+[#379](https://github.com/mohdhasnain-pixel/ai-forge/issues/379).
 
 | Script | Question it answers | Cost |
 |---|---|---|
@@ -91,5 +91,5 @@ test suite, so a regression in bit-exactness fails CI rather than reaching a
 user.
 
 ```bash
-pip install "soup-cli[train]"
+pip install "ai-forge[train]"
 ```

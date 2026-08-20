@@ -50,7 +50,7 @@ pytest
 pytest tests/test_training.py -v
 
 # Run tests with coverage
-pytest --cov=soup_cli --cov-report=html
+pytest --cov=ai_forge_cli --cov-report=html
 
 # Run only unit tests (fast)
 pytest -m unit
@@ -79,7 +79,7 @@ pre-commit run --all-files
 
 ```bash
 # Make sure all tests pass
-pytest --cov=soup_cli --cov-fail-under=77
+pytest --cov=ai_forge_cli --cov-fail-under=77
 
 # Run code quality checks
 ruff format src/ tests/
@@ -97,7 +97,7 @@ git commit -am "Brief description of changes"
 3. **Add tests** for any new functionality
 4. **Ensure all tests pass** before submitting:
    ```bash
-   pytest --cov=soup_cli --cov-fail-under=77
+   pytest --cov=ai_forge_cli --cov-fail-under=77
    ```
 5. **Update the CHANGELOG.md** (if present) with notes on your changes
 6. **Push to your fork** and open a Pull Request
@@ -165,7 +165,7 @@ Bugs are tracked as GitHub issues. Create an issue and provide the following inf
 7. **Include your environment**:
    ```bash
    python --version
-   pip show soup-cli
+   pip show ai-forge
    # For GPU issues:
    nvidia-smi
    ```
@@ -176,7 +176,7 @@ Bugs are tracked as GitHub issues. Create an issue and provide the following inf
 Title: Training fails with OOM error on 8GB GPU
 
 Steps to reproduce:
-1. Install soup-cli[train]
+1. Install ai-forge[train]
 2. Download Llama-2-7b
 3. Create test data with 10,000 examples
 4. Run: ai-forge train --model meta-llama/Llama-2-7b --batch-size 32
@@ -236,7 +236,7 @@ Why this is useful:
 ## Architecture Overview
 
 ```
-src/soup_cli/
+src/ai_forge_cli/
 ├── cli.py              # Main CLI entry point
 ├── commands/           # Command implementations
 │   ├── train.py       # Training commands
@@ -299,7 +299,7 @@ tests/
 
 ```python
 import pytest
-from soup_cli.core.trainers import SFTTrainer
+from ai_forge_cli.core.trainers import SFTTrainer
 
 @pytest.mark.unit
 def test_sft_trainer_initialization():

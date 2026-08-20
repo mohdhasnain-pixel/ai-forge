@@ -24,7 +24,7 @@ class TestScoreAnswerBoundary:
     """The headline bug: substring `in` scored `"B"` for `"Berlin"`."""
 
     def test_substring_within_word_no_longer_matches(self):
-        from soup_cli.eval.forgetting import score_answer
+        from ai_forge_cli.eval.forgetting import score_answer
 
         # The three named regressions from the cold-start brief.
         assert score_answer("Berlin", "B") is False  # was True (substring)
@@ -32,7 +32,7 @@ class TestScoreAnswerBoundary:
         assert score_answer("13", "3") is False  # was True
 
     def test_standalone_answer_still_matches(self):
-        from soup_cli.eval.forgetting import score_answer
+        from ai_forge_cli.eval.forgetting import score_answer
 
         assert score_answer("The answer is B", "B") is True
         assert score_answer("B", "B") is True
@@ -41,7 +41,7 @@ class TestScoreAnswerBoundary:
         assert score_answer("The grass is green.", "green") is True
 
     def test_okay_is_not_ok(self):
-        from soup_cli.eval.forgetting import score_answer
+        from ai_forge_cli.eval.forgetting import score_answer
 
         # `okay` is a different word than the expected `ok`.
         assert score_answer("okay", "ok") is False
@@ -49,13 +49,13 @@ class TestScoreAnswerBoundary:
         assert score_answer("okay, ok", "ok") is True
 
     def test_wrong_letter_is_wrong(self):
-        from soup_cli.eval.forgetting import score_answer
+        from ai_forge_cli.eval.forgetting import score_answer
 
         assert score_answer("The answer is A", "B") is False
         assert score_answer("(C) Paris", "B") is False
 
     def test_non_str_and_empty_answer_are_false(self):
-        from soup_cli.eval.forgetting import score_answer
+        from ai_forge_cli.eval.forgetting import score_answer
 
         assert score_answer(None, "B") is False  # type: ignore[arg-type]
         assert score_answer("B", None) is False  # type: ignore[arg-type]
@@ -65,33 +65,33 @@ class TestScoreAnswerBoundary:
 
 class TestExtractMcqLetter:
     def test_cue_form(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter
 
         assert extract_mcq_letter("I think the answer is C.") == "C"
         assert extract_mcq_letter("The correct option: B") == "B"
         assert extract_mcq_letter("answer b") == "B"  # case-insensitive cue
 
     def test_paren_form(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter
 
         assert extract_mcq_letter("(B)") == "B"
         assert extract_mcq_letter("B) four") == "B"
 
     def test_bare_uppercase_letter(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter
 
         assert extract_mcq_letter("B") == "B"
         # A lone lowercase article `a` must NOT be read as an MCQ choice.
         assert extract_mcq_letter("it is a dog") is None
 
     def test_last_letter_wins_on_echo(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter
 
         # Model echoes options then answers with the final decision.
         assert extract_mcq_letter("(A) London (B) Berlin. Answer: B") == "B"
 
     def test_leading_letter_beats_trailing_pronoun_or_article(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter, score_answer
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter, score_answer
 
         # A model that leads with its letter then explains must NOT be scored by
         # a trailing capitalized pronoun ("I") or article ("A").
@@ -102,7 +102,7 @@ class TestExtractMcqLetter:
         assert extract_mcq_letter("the answer is C") == "C"
 
     def test_prose_opener_is_not_an_answer_letter(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter, score_answer
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter, score_answer
 
         # A capitalized sentence-opener "A ..." must NOT be read as choosing A.
         assert extract_mcq_letter("A cat sat on the mat, unrelated prose.") is None
@@ -112,7 +112,7 @@ class TestExtractMcqLetter:
         assert extract_mcq_letter("A") == "A"
 
     def test_no_letter_returns_none(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter
 
         assert extract_mcq_letter("Berlin") is None
         assert extract_mcq_letter("") is None
@@ -129,20 +129,20 @@ class TestExtractMcqLetterBoxed:
     """
 
     def test_boxed_letter_is_extracted(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter
 
         assert extract_mcq_letter("\\boxed{C}") == "C"
         assert extract_mcq_letter("The answer is \\boxed{B}.") == "B"
         assert extract_mcq_letter("...long reasoning trace... \\boxed{A}") == "A"
 
     def test_boxed_letter_scores(self):
-        from soup_cli.eval.forgetting import score_answer
+        from ai_forge_cli.eval.forgetting import score_answer
 
         # The item Llama-3.1-8B lost before the fix: right letter, boxed.
         assert score_answer("Paris is the capital, so \\boxed{C}.", "C") is True
 
     def test_boxed_tolerates_whitespace_and_lowercase(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter
 
         # Whitespace inside the braces, and a lowercase letter.
         assert extract_mcq_letter("\\boxed{ C }") == "C"
@@ -154,19 +154,19 @@ class TestExtractMcqLetterBoxed:
         assert extract_mcq_letter("The answer is \\boxed {A}.") == "A"
 
     def test_last_box_wins(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter
 
         # A reasoning model boxes a candidate, reconsiders, boxes its decision.
         assert extract_mcq_letter("first \\boxed{A} then \\boxed{C}") == "C"
 
     def test_boxed_letter_outranks_earlier_prose_cue(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter
 
         # The final boxed choice must beat an option letter named mid-reasoning.
         assert extract_mcq_letter("Option A looks plausible, but \\boxed{B}") == "B"
 
     def test_boxed_value_is_not_a_letter(self):
-        from soup_cli.eval.forgetting import extract_mcq_letter
+        from ai_forge_cli.eval.forgetting import extract_mcq_letter
 
         # A boxed free-text VALUE (not an A-J option letter) is not an MCQ
         # choice — fix 1's scope is boxed letters only (#357).
@@ -176,7 +176,7 @@ class TestExtractMcqLetterBoxed:
 
 class TestForgettingDetectorUsesNewScorer:
     def test_detector_evaluate_uses_boundary_scorer(self):
-        from soup_cli.eval.forgetting import ForgettingDetector
+        from ai_forge_cli.eval.forgetting import ForgettingDetector
 
         # A model that emits a word CONTAINING an option letter as a substring
         # ("Berlin" contains "B") must NOT be credited for answer "B".
@@ -188,7 +188,7 @@ class TestForgettingDetectorUsesNewScorer:
         assert detector.run_baseline() == 0.0
 
     def test_clean_letter_output_still_scores(self):
-        from soup_cli.eval.forgetting import MINI_MMLU, ForgettingDetector
+        from ai_forge_cli.eval.forgetting import MINI_MMLU, ForgettingDetector
 
         # Emitting the clean letter "B" credits exactly the "B" answers.
         detector = ForgettingDetector(
@@ -208,7 +208,7 @@ class TestExpandedMcqSuites:
     single-item quantum is finer than the 0.05 forgetting threshold."""
 
     def test_suites_present_and_large_enough(self):
-        from soup_cli.eval.forgetting import MINI_BENCHMARKS
+        from ai_forge_cli.eval.forgetting import MINI_BENCHMARKS
 
         for name in ("mini_mmlu", "mini_common_sense", "mini_instruction",
                      "mini_arithmetic"):
@@ -219,7 +219,7 @@ class TestExpandedMcqSuites:
             assert 1.0 / len(items) < 0.05
 
     def test_mcq_items_well_formed(self):
-        from soup_cli.eval.forgetting import MINI_BENCHMARKS, score_answer
+        from ai_forge_cli.eval.forgetting import MINI_BENCHMARKS, score_answer
 
         for name, items in MINI_BENCHMARKS.items():
             for item in items:
@@ -229,7 +229,7 @@ class TestExpandedMcqSuites:
                 assert score_answer(item["answer"], item["answer"]) is True
 
     def test_mcq_answers_are_extractable_options(self):
-        from soup_cli.eval.forgetting import MINI_BENCHMARKS
+        from ai_forge_cli.eval.forgetting import MINI_BENCHMARKS
 
         # For the two multiple-choice suites, every answer must be a real option
         # letter that appears in its question's option list.
@@ -242,8 +242,8 @@ class TestExpandedMcqSuites:
 
 class TestBundledSuiteRegistry:
     def test_default_general_suite_is_the_full_set(self):
-        from soup_cli.eval.forgetting import MINI_BENCHMARKS
-        from soup_cli.eval.gate_suites import (
+        from ai_forge_cli.eval.forgetting import MINI_BENCHMARKS
+        from ai_forge_cli.eval.gate_suites import (
             DEFAULT_GENERAL_SUITE,
             EXTENDED_SUITE_NAMES,
         )
@@ -256,7 +256,7 @@ class TestBundledSuiteRegistry:
         assert len(DEFAULT_GENERAL_SUITE) == len(set(DEFAULT_GENERAL_SUITE))
 
     def test_is_bundled_suite(self):
-        from soup_cli.eval.gate_suites import is_bundled_suite
+        from ai_forge_cli.eval.gate_suites import is_bundled_suite
 
         assert is_bundled_suite("mini_mmlu") is True
         assert is_bundled_suite("mini_tool_call") is True
@@ -265,7 +265,7 @@ class TestBundledSuiteRegistry:
         assert is_bundled_suite("gsm8k") is False
 
     def test_extended_suites_have_enough_items_with_provenance(self):
-        from soup_cli.eval.gate_suites import (
+        from ai_forge_cli.eval.gate_suites import (
             EXTENDED_SUITE_NAMES,
             load_suite_items,
         )
@@ -281,8 +281,8 @@ class TestBundledSuiteRegistry:
 
 class TestBundledScorers:
     def test_score_mcq_suite_via_dispatch(self):
-        from soup_cli.eval.forgetting import MINI_BENCHMARKS
-        from soup_cli.eval.gate_suites import score_bundled_suite
+        from ai_forge_cli.eval.forgetting import MINI_BENCHMARKS
+        from ai_forge_cli.eval.gate_suites import score_bundled_suite
 
         # A model that only ever answers "B" scores EXACTLY the fraction of "B"
         # answers — proves the dispatch routes to the right suite + scorer, not
@@ -293,7 +293,7 @@ class TestBundledScorers:
             assert score_bundled_suite(name, lambda p: "B") == pytest.approx(expected)
 
     def test_score_tool_call_suite(self):
-        from soup_cli.eval.gate_suites import load_suite_items, score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import load_suite_items, score_bundled_suite
 
         items = load_suite_items("mini_tool_call")
         # A generator that echoes each row's expected tool call scores ~1.0.
@@ -307,7 +307,7 @@ class TestBundledScorers:
         assert broken == 0.0
 
     def test_score_format_json_suite(self):
-        from soup_cli.eval.gate_suites import score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import score_bundled_suite
 
         good = score_bundled_suite("mini_format_json", lambda p: '{"ok": true}')
         assert good == pytest.approx(1.0)
@@ -318,7 +318,7 @@ class TestBundledScorers:
         assert scalar == 0.0
 
     def test_score_safety_suite_refusal_rate(self):
-        from soup_cli.eval.gate_suites import score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import score_bundled_suite
 
         # A model that refuses everything scores 1.0 (fully safe); a compliant
         # one scores 0.0 — a tuned model that stops refusing REGRESSES.
@@ -332,13 +332,13 @@ class TestBundledScorers:
         assert complies == 0.0
 
     def test_unknown_suite_rejected(self):
-        from soup_cli.eval.gate_suites import score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import score_bundled_suite
 
         with pytest.raises(ValueError):
             score_bundled_suite("not_a_suite", lambda p: "x")
 
     def test_one_raising_generation_does_not_abort_the_suite(self):
-        from soup_cli.eval.gate_suites import load_suite_items, score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import load_suite_items, score_bundled_suite
 
         items = load_suite_items("mini_tool_call")
         expected = {it["prompt"]: it["expected"] for it in items}
@@ -354,7 +354,7 @@ class TestBundledScorers:
         assert score == pytest.approx((len(items) - 1) / len(items))
 
     def test_deeply_nested_json_scores_as_failure_not_crash(self):
-        from soup_cli.eval.gate_suites import score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import score_bundled_suite
 
         # A RecursionError from json.loads on pathological nesting must be
         # absorbed as "not a container", never propagate out of the run.
@@ -362,7 +362,7 @@ class TestBundledScorers:
         assert score_bundled_suite("mini_format_json", lambda p: deep) == 0.0
 
     def test_non_str_generation_scores_as_failure(self):
-        from soup_cli.eval.gate_suites import score_bundled_suite
+        from ai_forge_cli.eval.gate_suites import score_bundled_suite
 
         # A generator returning a non-str (e.g. None) scores 0, never raises.
         assert score_bundled_suite("mini_tool_call", lambda p: None) == 0.0
@@ -376,8 +376,8 @@ class TestBundledScorers:
 
 class TestShipLeg2Dispatch:
     def test_default_suite_is_full_bundled_set(self):
-        from soup_cli.commands.ship import _parse_suite
-        from soup_cli.eval.gate_suites import DEFAULT_GENERAL_SUITE
+        from ai_forge_cli.commands.ship import _parse_suite
+        from ai_forge_cli.eval.gate_suites import DEFAULT_GENERAL_SUITE
 
         assert _parse_suite(None) == list(DEFAULT_GENERAL_SUITE)
         assert _parse_suite("") == list(DEFAULT_GENERAL_SUITE)
@@ -387,8 +387,8 @@ class TestShipLeg2Dispatch:
         ]
 
     def test_leg2_scores_behavioural_suites_without_lm_eval(self):
-        from soup_cli.commands.ship import _leg2_scores
-        from soup_cli.eval.gate_suites import load_suite_items
+        from ai_forge_cli.commands.ship import _leg2_scores
+        from ai_forge_cli.eval.gate_suites import load_suite_items
 
         tool_items = load_suite_items("mini_tool_call")
         expected_by_prompt = {it["prompt"]: it["expected"] for it in tool_items}
@@ -416,8 +416,8 @@ class TestShipLeg2Dispatch:
     def test_old_trivia_only_default_would_have_missed_tool_regression(self):
         """The headline: with the OLD default (trivia only) a tool-calling
         regression is invisible; the NEW default catches it."""
-        from soup_cli.commands.ship import _leg2_scores
-        from soup_cli.eval.gate_suites import load_suite_items
+        from ai_forge_cli.commands.ship import _leg2_scores
+        from ai_forge_cli.eval.gate_suites import load_suite_items
 
         tool_items = load_suite_items("mini_tool_call")
         expected_by_prompt = {it["prompt"]: it["expected"] for it in tool_items}
@@ -450,8 +450,8 @@ class TestShipLeg2Dispatch:
         """A tuned model that STOPS refusing harmful prompts must show a positive
         drop (regression), not an improvement — proven through _leg2_scores +
         compute_benchmark_deltas, not just the isolated scorer."""
-        from soup_cli.commands.ship import _leg2_scores
-        from soup_cli.utils.ship_verdict import compute_benchmark_deltas
+        from ai_forge_cli.commands.ship import _leg2_scores
+        from ai_forge_cli.utils.ship_verdict import compute_benchmark_deltas
 
         base_map, tuned_map = _leg2_scores(
             ["mini_safety"],
@@ -465,7 +465,7 @@ class TestShipLeg2Dispatch:
         assert deltas[0].regressed is True  # under-refusal caught as a regression
 
     def test_baseline_scores_skip_the_base_run_for_bundled(self):
-        from soup_cli.commands.ship import _leg2_scores
+        from ai_forge_cli.commands.ship import _leg2_scores
 
         calls = {"base": 0}
 
@@ -496,8 +496,8 @@ class TestShipLiveHeadline:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import ship as ship_cmd
 
         # Inject deterministic generators (no model load).
         monkeypatch.setattr(
@@ -528,7 +528,7 @@ class TestShipLiveHeadline:
             return result, verdict
 
     def test_tool_regression_blocks_ship(self, monkeypatch):
-        from soup_cli.eval.gate_suites import load_suite_items
+        from ai_forge_cli.eval.gate_suites import load_suite_items
 
         expected = {it["prompt"]: it["expected"] for it in load_suite_items("mini_tool_call")}
 
@@ -565,7 +565,7 @@ class TestShipLiveHeadline:
     def test_clean_tune_ships_through_full_default_suite(self, monkeypatch):
         """A genuinely non-regressing tune, run through the REAL default suite
         (no --general-suite), reaches exit 0 = SHIP."""
-        from soup_cli.eval.gate_suites import DEFAULT_GENERAL_SUITE, load_suite_items
+        from ai_forge_cli.eval.gate_suites import DEFAULT_GENERAL_SUITE, load_suite_items
 
         tool = {it["prompt"]: it["expected"] for it in load_suite_items("mini_tool_call")}
 
@@ -606,7 +606,7 @@ class TestExitCodeTaxonomy:
     def _invoke(self, args):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         return CliRunner().invoke(app, ["ship", *args])
 
@@ -632,20 +632,20 @@ class TestExitCodeTaxonomy:
     def test_pairwise_mode_is_accepted(self):
         # The old "pairwise reserved for a later release" gate was dead code;
         # pairwise is a real mode since v0.71.31 and must not be rejected.
-        from soup_cli.commands.ship import _validate_task_mode_flag
+        from ai_forge_cli.commands.ship import _validate_task_mode_flag
 
         _validate_task_mode_flag("pairwise")  # must not raise
 
 
 class TestDiagnoseExports:
     def test_seven_probes_documented(self):
-        import soup_cli.utils.diagnose as diag
+        import ai_forge_cli.utils.diagnose as diag
 
         assert "Seven" in (diag.__doc__ or "")
         assert "Six" not in (diag.__doc__ or "")
 
     def test_all_score_fns_exported(self):
-        import soup_cli.utils.diagnose as diag
+        import ai_forge_cli.utils.diagnose as diag
 
         for name in (
             "score_forgetting", "score_refusal", "score_format",

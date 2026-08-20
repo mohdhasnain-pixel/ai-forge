@@ -85,7 +85,7 @@ and multi-config (`build/bin/Release/llama-quantize.exe`, MSVC/Xcode) layouts, o
 inference): Visual Studio 2022 Build Tools with the *Desktop development with C++*
 workload (`Microsoft.VisualStudio.Component.VC.Tools.x86.x64`) + CMake ≥ 3.14, CPU-only.
 Linux/macOS need only a C++ toolchain + CMake. CUDA llama.cpp builds are untested
-(see [#144](https://github.com/MakazhanAlpamys/Soup/issues/144)).
+(see [#144](https://github.com/mohdhasnain-pixel/ai-forge/issues/144)).
 
 > Do **not** run `pip install -r ~/.soup/llama.cpp/requirements.txt` — it pins
 > `torch~=2.2.1` against the CPU wheel index and will downgrade a CUDA PyTorch,
@@ -97,7 +97,7 @@ Linux/macOS need only a C++ toolchain + CMake. CUDA llama.cpp builds are unteste
 Export models to ONNX format for use with [ONNX Runtime](https://onnxruntime.ai/):
 
 ```bash
-pip install "soup-cli[onnx]"
+pip install "ai-forge[onnx]"
 soup export --model ./output --format onnx
 soup export --model ./output --format onnx --output ./model_onnx
 ```
@@ -107,7 +107,7 @@ soup export --model ./output --format onnx --output ./model_onnx
 Export models to TensorRT-LLM format for high-throughput GPU inference:
 
 ```bash
-pip install "soup-cli[tensorrt]"
+pip install "ai-forge[tensorrt]"
 soup export --model ./output --format tensorrt
 soup export --model ./output --format tensorrt --output ./model_trt
 ```
@@ -212,7 +212,7 @@ Start a local OpenAI-compatible inference server:
 
 ```bash
 # Install server dependencies
-pip install "soup-cli[serve]"
+pip install "ai-forge[serve]"
 
 # Start server
 soup serve --model ./output --port 8000
@@ -260,7 +260,7 @@ Use [vLLM](https://github.com/vllm-project/vllm) for significantly better throug
 
 ```bash
 # Install vLLM support (in its own environment, not the training one)
-pip install "soup-cli[serve-fast]"
+pip install "ai-forge[serve-fast]"
 
 # Start with vLLM backend
 soup serve --model ./output --backend vllm
@@ -290,7 +290,7 @@ Use [SGLang](https://github.com/sgl-project/sglang) as an alternative high-throu
 
 ```bash
 # Install SGLang support
-pip install "soup-cli[sglang]"
+pip install "ai-forge[sglang]"
 
 # Start with SGLang backend
 soup serve --model ./output --backend sglang
@@ -504,7 +504,7 @@ The OTLP endpoint is SSRF-hardened: only http/https schemes, plain HTTP only for
 Launch a local web interface to manage experiments, start training, explore data, and chat with models — all from your browser.
 
 ```bash
-pip install "soup-cli[ui]"
+pip install "ai-forge[ui]"
 soup ui
 # -> opens http://127.0.0.1:7860 in your browser
 # -> prints auth token to console
@@ -567,8 +567,8 @@ Closed allowlist: `cli` / `mtmd-cli` / `gguf-split` / `server` / `quantize`. For
 ## Tail-Latency Stats + Tool-Call Timer
 
 ```python
-from soup_cli.utils.tail_latency import summarise_latency
-from soup_cli.utils.tool_outputs import ToolOutputsBuffer, ToolCallTimer
+from ai_forge_cli.utils.tail_latency import summarise_latency
+from ai_forge_cli.utils.tool_outputs import ToolOutputsBuffer, ToolCallTimer
 
 stats = summarise_latency([12.3, 14.1, 9.7, 18.8, 11.2])
 # TailLatencySummary(count=5, mean=..., p50=..., p95=..., p99=..., ema=...)
@@ -584,8 +584,8 @@ Pure-Python EMA + linear-interp percentiles (DoS cap: `MAX_SAMPLES=1_000_000`). 
 ## Web UI Plugin Registry + Env Knobs
 
 ```python
-# src/soup_cli/ui/plugins/my_tab.py
-from soup_cli.ui.plugins import register_tab
+# src/ai_forge_cli/ui/plugins/my_tab.py
+from ai_forge_cli.ui.plugins import register_tab
 
 def render_my_tab(request) -> str:
     return "<div>my tab body</div>"
@@ -644,7 +644,7 @@ If `requirements.txt` lists `streamlit`, the Space is created with the Streamlit
 Pure-Python converters between OpenAI chat-completions and Anthropic Messages payload shapes:
 
 ```python
-from soup_cli.utils.anthropic_messages import to_anthropic, from_anthropic
+from ai_forge_cli.utils.anthropic_messages import to_anthropic, from_anthropic
 
 anthropic_payload = to_anthropic({
     "model": "claude-3-5-sonnet",
@@ -662,7 +662,7 @@ Multiple `system` messages join with `\n\n`. `tool` role with structured (list) 
 ## Server-Side Tools
 
 ```python
-from soup_cli.utils.server_tools import (
+from ai_forge_cli.utils.server_tools import (
     SUPPORTED_TOOLS, WebSearchConfig, is_domain_allowed, validate_web_search_config,
 )
 

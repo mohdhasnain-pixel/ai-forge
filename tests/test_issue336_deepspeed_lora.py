@@ -33,7 +33,7 @@ import json
 
 import pytest
 
-from soup_cli.utils.deepspeed import (
+from ai_forge_cli.utils.deepspeed import (
     CONFIGS,
     get_deepspeed_config,
     prune_empty_param_groups,
@@ -367,7 +367,7 @@ def _scheduler_zip_is_strict() -> bool:
 
 class TestTheGuardOnARealTrainer:
     def test_the_guard_leaves_one_group_for_lora(self, tmp_path):
-        from soup_cli.utils.deepspeed import attach_empty_param_group_guard
+        from ai_forge_cli.utils.deepspeed import attach_empty_param_group_guard
 
         pytest.importorskip("torch")
         trainer = _hf_trainer(_lora_wrap(_tiny_causal_lm()), tmp_path)
@@ -379,7 +379,7 @@ class TestTheGuardOnARealTrainer:
     def test_control_the_guard_leaves_full_finetune_at_two_groups(self, tmp_path):
         """A fix that special-cases LoRA must not disturb the path that
         already worked — full FT trained to completion under ZeRO-2."""
-        from soup_cli.utils.deepspeed import attach_empty_param_group_guard
+        from ai_forge_cli.utils.deepspeed import attach_empty_param_group_guard
 
         pytest.importorskip("torch")
         trainer = _hf_trainer(_tiny_causal_lm(), tmp_path)
@@ -391,7 +391,7 @@ class TestTheGuardOnARealTrainer:
         """THE regression test. torch 2.13 zips ``optimizer.param_groups``
         against the scheduler's per-group values with ``strict=True``, so the
         two lengths agreeing *is* the bug's absence."""
-        from soup_cli.utils.deepspeed import attach_empty_param_group_guard
+        from ai_forge_cli.utils.deepspeed import attach_empty_param_group_guard
 
         pytest.importorskip("torch")
         trainer = _hf_trainer(_lora_wrap(_tiny_causal_lm()), tmp_path)
@@ -434,7 +434,7 @@ class TestTheGuardOnARealTrainer:
             sched.step()
 
     def test_the_guard_is_idempotent(self, tmp_path):
-        from soup_cli.utils.deepspeed import attach_empty_param_group_guard
+        from ai_forge_cli.utils.deepspeed import attach_empty_param_group_guard
 
         pytest.importorskip("torch")
         trainer = _hf_trainer(_lora_wrap(_tiny_causal_lm()), tmp_path)
@@ -447,7 +447,7 @@ class TestTheGuardOnARealTrainer:
         """HF reads ``trainer.optimizer`` after calling ``create_optimizer``;
         a wrapper that returned a different object would leave the trainer
         holding the unpruned one."""
-        from soup_cli.utils.deepspeed import attach_empty_param_group_guard
+        from ai_forge_cli.utils.deepspeed import attach_empty_param_group_guard
 
         pytest.importorskip("torch")
         trainer = _hf_trainer(_lora_wrap(_tiny_causal_lm()), tmp_path)
@@ -467,7 +467,7 @@ class TestTheSftWrapperWiresTheGuard:
     def _sft_source(self):
         from pathlib import Path
 
-        import soup_cli.trainer.sft as sft_mod
+        import ai_forge_cli.trainer.sft as sft_mod
 
         return Path(sft_mod.__file__).read_text(encoding="utf-8")
 

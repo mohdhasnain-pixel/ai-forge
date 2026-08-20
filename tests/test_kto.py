@@ -6,7 +6,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Config Tests ───────────────────────────────────────────────────────────
 
@@ -88,28 +88,28 @@ class TestKTODataFormat:
 
     def test_format_signature_exists(self):
         """KTO format signature should be registered."""
-        from soup_cli.data.formats import FORMAT_SIGNATURES
+        from ai_forge_cli.data.formats import FORMAT_SIGNATURES
 
         assert "kto" in FORMAT_SIGNATURES
         assert FORMAT_SIGNATURES["kto"] == {"prompt", "completion", "label"}
 
     def test_detect_kto_format(self):
         """Should auto-detect KTO format from data keys."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"prompt": "Q", "completion": "A", "label": True}]
         assert detect_format(data) == "kto"
 
     def test_detect_kto_with_extra_keys(self):
         """Should detect KTO format even with extra keys."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"prompt": "Q", "completion": "A", "label": False, "id": 1}]
         assert detect_format(data) == "kto"
 
     def test_convert_kto_desirable(self):
         """Should convert desirable KTO row correctly."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"prompt": "What is 2+2?", "completion": "4", "label": True}
         result = format_to_messages(row, "kto")
@@ -119,7 +119,7 @@ class TestKTODataFormat:
 
     def test_convert_kto_undesirable(self):
         """Should convert undesirable KTO row correctly."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"prompt": "What is 2+2?", "completion": "Fish", "label": False}
         result = format_to_messages(row, "kto")
@@ -129,7 +129,7 @@ class TestKTODataFormat:
 
     def test_convert_kto_label_coerced_to_bool(self):
         """Integer labels should be coerced to boolean."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"prompt": "Q", "completion": "A", "label": 1}
         result = format_to_messages(row, "kto")
@@ -141,7 +141,7 @@ class TestKTODataFormat:
 
     def test_convert_kto_string_label_true(self):
         """String 'true'/'yes'/'1' should parse as True."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         for val in ("true", "True", "TRUE", "yes", "1"):
             row = {"prompt": "Q", "completion": "A", "label": val}
@@ -150,7 +150,7 @@ class TestKTODataFormat:
 
     def test_convert_kto_string_label_false(self):
         """String 'false'/'no'/'0' should parse as False (not truthy coercion)."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         for val in ("false", "False", "FALSE", "no", "0"):
             row = {"prompt": "Q", "completion": "A", "label": val}
@@ -159,7 +159,7 @@ class TestKTODataFormat:
 
     def test_convert_kto_string_label_invalid_returns_none(self):
         """Invalid string label should cause conversion to return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"prompt": "Q", "completion": "A", "label": "maybe"}
         result = format_to_messages(row, "kto")
@@ -200,13 +200,13 @@ class TestKTOTrainRouting:
 
     def test_kto_import_exists(self):
         """KTOTrainerWrapper should be importable."""
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         assert KTOTrainerWrapper is not None
 
     def test_kto_wrapper_init(self):
         """KTOTrainerWrapper should initialize without error."""
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -221,7 +221,7 @@ class TestKTOTrainRouting:
 
     def test_kto_wrapper_init_with_options(self):
         """KTOTrainerWrapper should accept all constructor options."""
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -242,7 +242,7 @@ class TestKTOSweepParams:
     """Test KTO parameter shortcuts in sweep."""
 
     def test_kto_beta_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"kto_beta": 0.1}}
         _set_nested_param(config, "kto_beta", 0.05)
@@ -250,7 +250,7 @@ class TestKTOSweepParams:
 
     def test_kto_beta_shortcut_creates_nested_key(self):
         """kto_beta shortcut should create nested training dict if missing."""
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "kto_beta", 0.2)
@@ -258,7 +258,7 @@ class TestKTOSweepParams:
 
     def test_sweep_run_single_routes_to_kto_trainer(self):
         """_run_single should instantiate KTOTrainerWrapper for kto task."""
-        from soup_cli.commands.sweep import _run_single
+        from ai_forge_cli.commands.sweep import _run_single
 
         cfg = SoupConfig(
             base="some-model",
@@ -281,14 +281,14 @@ class TestKTOSweepParams:
         }
 
         fake_gpu_info = {"memory_total": "0 MB", "memory_total_bytes": 0}
-        with mock_patch("soup_cli.data.loader.load_dataset", return_value=fake_dataset), \
-             mock_patch("soup_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
-             mock_patch("soup_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
-             mock_patch("soup_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
-             mock_patch("soup_cli.monitoring.display.TrainingDisplay"), \
-             mock_patch("soup_cli.trainer.kto.KTOTrainerWrapper.setup"), \
+        with mock_patch("ai_forge_cli.data.loader.load_dataset", return_value=fake_dataset), \
+             mock_patch("ai_forge_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
+             mock_patch("ai_forge_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
+             mock_patch("ai_forge_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
+             mock_patch("ai_forge_cli.monitoring.display.TrainingDisplay"), \
+             mock_patch("ai_forge_cli.trainer.kto.KTOTrainerWrapper.setup"), \
              mock_patch(
-                 "soup_cli.trainer.kto.KTOTrainerWrapper.train", return_value=fake_result
+                 "ai_forge_cli.trainer.kto.KTOTrainerWrapper.train", return_value=fake_result
              ) as mock_train:
             mock_tracker = MagicMock()
             mock_tracker.start_run.return_value = "run-kto-1"
@@ -349,7 +349,7 @@ class TestKTOConfigEdgeCases:
 
     def test_kto_tokenizer_stored_as_none_before_setup(self):
         """tokenizer attribute should be None before setup is called."""
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -361,7 +361,7 @@ class TestKTOConfigEdgeCases:
 
     def test_kto_output_dir_stored_as_none_before_setup(self):
         """_output_dir attribute should be None before setup is called."""
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -380,28 +380,28 @@ class TestKTODataFormatEdgeCases:
 
     def test_detect_empty_dataset_raises(self):
         """detect_format on empty list should raise ValueError."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         with pytest.raises(ValueError, match="Empty dataset"):
             detect_format([])
 
     def test_dpo_keys_do_not_match_kto(self):
         """Data with DPO keys (chosen, rejected) should not be detected as KTO."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"prompt": "Q", "chosen": "A", "rejected": "B"}]
         assert detect_format(data) == "dpo"
 
     def test_kto_keys_do_not_match_dpo(self):
         """Data with KTO keys (completion, label) should not be detected as DPO."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"prompt": "Q", "completion": "A", "label": True}]
         assert detect_format(data) == "kto"
 
     def test_kto_checked_before_dpo_in_order(self):
         """KTO appears before DPO in check_order so KTO takes priority when keys overlap."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         # A row that has KTO keys but NOT the DPO-only keys (chosen, rejected)
         data = [{"prompt": "Q", "completion": "A", "label": False}]
@@ -410,7 +410,7 @@ class TestKTODataFormatEdgeCases:
 
     def test_detect_format_unknown_keys_raises(self):
         """Data with unrecognised keys should raise ValueError."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"question": "Q", "answer": "A"}]
         with pytest.raises(ValueError, match="Cannot detect format"):
@@ -418,14 +418,14 @@ class TestKTODataFormatEdgeCases:
 
     def test_format_to_messages_unknown_format_raises(self):
         """format_to_messages with an unknown format name should raise ValueError."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         with pytest.raises(ValueError, match="Unknown format"):
             format_to_messages({"prompt": "Q", "completion": "A", "label": True}, "kto_v2")
 
     def test_convert_kto_missing_prompt_returns_none(self):
         """Row missing required 'prompt' key should return None (exception caught)."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"completion": "A", "label": True}
         result = format_to_messages(row, "kto")
@@ -433,7 +433,7 @@ class TestKTODataFormatEdgeCases:
 
     def test_convert_kto_missing_completion_returns_none(self):
         """Row missing required 'completion' key should return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"prompt": "Q", "label": True}
         result = format_to_messages(row, "kto")
@@ -441,7 +441,7 @@ class TestKTODataFormatEdgeCases:
 
     def test_convert_kto_missing_label_returns_none(self):
         """Row missing required 'label' key should return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"prompt": "Q", "completion": "A"}
         result = format_to_messages(row, "kto")
@@ -449,7 +449,7 @@ class TestKTODataFormatEdgeCases:
 
     def test_convert_kto_string_label_whitespace_stripped(self):
         """String labels with surrounding whitespace should be stripped and parsed."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row_true = {"prompt": "Q", "completion": "A", "label": "  true  "}
         result_true = format_to_messages(row_true, "kto")
@@ -461,7 +461,7 @@ class TestKTODataFormatEdgeCases:
 
     def test_convert_kto_preserves_extra_keys_not_passed_through(self):
         """Extra keys in the row are not forwarded — output has exactly prompt/completion/label."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"prompt": "Q", "completion": "A", "label": True, "id": 42, "source": "web"}
         result = format_to_messages(row, "kto")
@@ -469,7 +469,7 @@ class TestKTODataFormatEdgeCases:
 
     def test_convert_kto_none_label_coerced_to_false(self):
         """None label should be coerced to False via bool()."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"prompt": "Q", "completion": "A", "label": None}
         result = format_to_messages(row, "kto")
@@ -484,7 +484,7 @@ class TestKTOTrainGuard:
 
     def test_train_before_setup_raises_runtime_error(self):
         """Calling train() before setup() should raise RuntimeError."""
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -497,7 +497,7 @@ class TestKTOTrainGuard:
 
     def test_train_error_message_mentions_setup(self):
         """RuntimeError message should mention setup()."""
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -518,7 +518,7 @@ class TestKTOTrainResults:
 
     def _make_wrapper_with_mock_trainer(self, log_history=None, global_step=20):
         """Helper: return a KTOTrainerWrapper with trainer pre-injected."""
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -593,7 +593,7 @@ class TestKTOTrainResults:
             call_count[0] += 1
             return 0 if call_count[0] == 1 else 90
 
-        with mock_patch("soup_cli.trainer.kto.time.time", side_effect=fake_time):
+        with mock_patch("ai_forge_cli.trainer.kto.time.time", side_effect=fake_time):
             result = wrapper.train()
 
         assert result["duration"] == "1m"
@@ -610,7 +610,7 @@ class TestKTOTrainResults:
             call_count[0] += 1
             return 0 if call_count[0] == 1 else 3720  # 1h 2m
 
-        with mock_patch("soup_cli.trainer.kto.time.time", side_effect=fake_time):
+        with mock_patch("ai_forge_cli.trainer.kto.time.time", side_effect=fake_time):
             result = wrapper.train()
 
         assert result["duration"] == "1h 2m"
@@ -667,7 +667,7 @@ class TestKTOInitTemplate:
         """soup init --template kto should write a file with kto task."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -685,8 +685,8 @@ class TestKTOInitTemplate:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.config.loader import load_config
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.config.loader import load_config
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -705,9 +705,9 @@ class TestKTOWizardPath:
 
     def test_wizard_kto_task_sets_kto_format(self):
         """When the wizard receives task=kto, data format should be forced to 'kto'."""
-        from soup_cli.commands.init import _interactive_wizard
+        from ai_forge_cli.commands.init import _interactive_wizard
 
-        with mock_patch("soup_cli.commands.init.Prompt.ask", side_effect=[
+        with mock_patch("ai_forge_cli.commands.init.Prompt.ask", side_effect=[
             "some-model",
             "kto",
             "./data.jsonl",
@@ -722,7 +722,7 @@ class TestKTOWizardPath:
 
     def test_wizard_kto_does_not_prompt_for_format(self):
         """The wizard should NOT ask for data format when task=kto."""
-        from soup_cli.commands.init import _interactive_wizard
+        from ai_forge_cli.commands.init import _interactive_wizard
 
         prompt_calls = []
 
@@ -737,7 +737,7 @@ class TestKTOWizardPath:
             }
             return answers.get(question, kwargs.get("default", ""))
 
-        with mock_patch("soup_cli.commands.init.Prompt.ask", side_effect=record_prompt):
+        with mock_patch("ai_forge_cli.commands.init.Prompt.ask", side_effect=record_prompt):
             config_text = _interactive_wizard()
 
         # "Data format" prompt should not appear when task is kto
@@ -753,7 +753,7 @@ class TestKTOConfigLoaderRoundTrip:
 
     def test_kto_template_round_trip(self):
         """TEMPLATES['kto'] should parse via load_config_from_string without error."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(TEMPLATES["kto"])
         assert cfg.task == "kto"
@@ -762,7 +762,7 @@ class TestKTOConfigLoaderRoundTrip:
 
     def test_kto_custom_yaml_round_trip(self):
         """Custom KTO YAML string should round-trip correctly."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: custom-model/llama-7b
@@ -790,7 +790,7 @@ output: ./kto_output
 
     def test_kto_invalid_beta_in_yaml_raises_value_error(self):
         """YAML with invalid kto_beta should raise ValueError from load_config_from_string."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: some-model

@@ -5,7 +5,7 @@ import pytest
 
 def _auth_headers():
     """Return auth headers with the current UI token."""
-    from soup_cli.ui.app import get_auth_token
+    from ai_forge_cli.ui.app import get_auth_token
     return {"Authorization": f"Bearer {get_auth_token()}"}
 
 
@@ -19,7 +19,7 @@ class TestConfigSchemaEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         app = create_app()
         routes = [route.path for route in app.routes]
@@ -32,7 +32,7 @@ class TestConfigSchemaEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/config/schema")
@@ -47,7 +47,7 @@ class TestConfigSchemaEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/config/schema")
@@ -63,7 +63,7 @@ class TestConfigSchemaEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/config/schema")
@@ -80,7 +80,7 @@ class TestConfigSchemaEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/config/schema")
@@ -97,7 +97,7 @@ class TestConfigSchemaEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/config/schema")
@@ -118,7 +118,7 @@ class TestRecipesEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         app = create_app()
         routes = [route.path for route in app.routes]
@@ -131,7 +131,7 @@ class TestRecipesEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/recipes")
@@ -147,7 +147,7 @@ class TestRecipesEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/recipes")
@@ -169,7 +169,7 @@ class TestFormToYamlEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         app = create_app()
         routes = [route.path for route in app.routes]
@@ -182,7 +182,7 @@ class TestFormToYamlEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -208,7 +208,7 @@ class TestFormToYamlEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -230,7 +230,7 @@ class TestFormToYamlEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         # Missing base — should fail validation
@@ -251,7 +251,7 @@ class TestFormToYamlEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -267,7 +267,7 @@ class TestFormToYamlEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -295,7 +295,7 @@ class TestFormToYamlEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.experiment.tracker import ExperimentTracker, generate_run_id
+from ai_forge_cli.experiment.tracker import ExperimentTracker, generate_run_id
 
 
 @pytest.fixture

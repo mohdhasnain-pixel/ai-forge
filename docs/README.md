@@ -19,5 +19,5 @@ feature reference — every `soup` capability, grouped by area.
 | [Command reference](commands.md) | The full `soup` command list |
 | [Supported models & extras](models.md) | Recommended model families, the VRAM size guide, the pip extras matrix |
 
-> Per-release notes live on the [GitHub Releases](https://github.com/MakazhanAlpamys/Soup/releases)
+> Per-release notes live on the [GitHub Releases](https://github.com/mohdhasnain-pixel/ai-forge/releases)
 > page; see also the repo-root [CHANGELOG.md](../CHANGELOG.md).

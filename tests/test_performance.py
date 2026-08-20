@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Liger Kernel Tests ─────────────────────────────────────────────────
 
@@ -34,34 +34,34 @@ class TestLigerValidation:
     """Test Liger Kernel validation logic."""
 
     def test_validate_liger_disabled_returns_empty(self):
-        from soup_cli.utils.liger import validate_liger_config
+        from ai_forge_cli.utils.liger import validate_liger_config
 
         errors = validate_liger_config(False, "transformers", "cuda")
         assert errors == []
 
     def test_validate_liger_not_installed(self):
-        from soup_cli.utils.liger import validate_liger_config
+        from ai_forge_cli.utils.liger import validate_liger_config
 
-        with patch("soup_cli.utils.liger.check_liger_available", return_value=False):
+        with patch("ai_forge_cli.utils.liger.check_liger_available", return_value=False):
             errors = validate_liger_config(True, "transformers", "cuda")
             assert any("not installed" in err for err in errors)
 
     def test_validate_liger_unsloth_incompatible(self):
-        from soup_cli.utils.liger import validate_liger_config
+        from ai_forge_cli.utils.liger import validate_liger_config
 
         errors = validate_liger_config(True, "unsloth", "cuda")
         assert any("unsloth" in err.lower() for err in errors)
 
     def test_validate_liger_cpu_incompatible(self):
-        from soup_cli.utils.liger import validate_liger_config
+        from ai_forge_cli.utils.liger import validate_liger_config
 
         errors = validate_liger_config(True, "transformers", "cpu")
         assert any("CUDA" in err for err in errors)
 
     def test_validate_liger_valid_config(self):
-        from soup_cli.utils.liger import validate_liger_config
+        from ai_forge_cli.utils.liger import validate_liger_config
 
-        with patch("soup_cli.utils.liger.check_liger_available", return_value=True):
+        with patch("ai_forge_cli.utils.liger.check_liger_available", return_value=True):
             errors = validate_liger_config(True, "transformers", "cuda")
             assert errors == []
 
@@ -70,7 +70,7 @@ class TestLigerDetection:
     """Test Liger Kernel availability detection."""
 
     def test_check_liger_available_not_installed(self):
-        from soup_cli.utils.liger import check_liger_available
+        from ai_forge_cli.utils.liger import check_liger_available
 
         with patch.dict("sys.modules", {"liger_kernel": None}):
             # When import fails, should return False
@@ -79,22 +79,22 @@ class TestLigerDetection:
             assert isinstance(result, bool)
 
     def test_get_liger_version_not_installed(self):
-        from soup_cli.utils.liger import get_liger_version
+        from ai_forge_cli.utils.liger import get_liger_version
 
-        with patch("soup_cli.utils.liger.check_liger_available", return_value=False):
+        with patch("ai_forge_cli.utils.liger.check_liger_available", return_value=False):
             # get_liger_version does its own import attempt
             result = get_liger_version()
             assert result is None or isinstance(result, str)
 
     def test_apply_liger_kernel_not_available(self):
-        from soup_cli.utils.liger import apply_liger_kernel
+        from ai_forge_cli.utils.liger import apply_liger_kernel
 
-        with patch("soup_cli.utils.liger.check_liger_available", return_value=False):
+        with patch("ai_forge_cli.utils.liger.check_liger_available", return_value=False):
             result = apply_liger_kernel("meta-llama/Llama-3.1-8B")
             assert result is False
 
     def test_apply_liger_manual_unknown_model(self):
-        from soup_cli.utils.liger import _apply_liger_manual
+        from ai_forge_cli.utils.liger import _apply_liger_manual
 
         result = _apply_liger_manual("completely-unknown-model")
         assert result is False
@@ -123,51 +123,51 @@ class TestFlashAttnDetection:
     """Test FlashAttention detection and validation."""
 
     def test_check_flash_attn_available_no_cuda(self):
-        with patch("soup_cli.utils.flash_attn.check_flash_attn_available") as mock_detect:
+        with patch("ai_forge_cli.utils.flash_attn.check_flash_attn_available") as mock_detect:
             mock_detect.return_value = None
             result = mock_detect()
             assert result is None
 
     def test_get_attn_implementation_disabled(self):
-        from soup_cli.utils.flash_attn import get_attn_implementation
+        from ai_forge_cli.utils.flash_attn import get_attn_implementation
 
         result = get_attn_implementation(use_flash_attn=False, device="cuda")
         assert result is None
 
     def test_get_attn_implementation_cpu(self):
-        from soup_cli.utils.flash_attn import get_attn_implementation
+        from ai_forge_cli.utils.flash_attn import get_attn_implementation
 
         result = get_attn_implementation(use_flash_attn=True, device="cpu")
         assert result is None
 
     def test_validate_flash_attn_disabled(self):
-        from soup_cli.utils.flash_attn import validate_flash_attn_config
+        from ai_forge_cli.utils.flash_attn import validate_flash_attn_config
 
         errors = validate_flash_attn_config(False, "transformers", "cuda")
         assert errors == []
 
     def test_validate_flash_attn_cpu_error(self):
-        from soup_cli.utils.flash_attn import validate_flash_attn_config
+        from ai_forge_cli.utils.flash_attn import validate_flash_attn_config
 
         errors = validate_flash_attn_config(True, "transformers", "cpu")
         assert any("CUDA" in err for err in errors)
 
     def test_validate_flash_attn_unsloth_no_error(self):
         """Unsloth handles FlashAttention internally — not an error."""
-        from soup_cli.utils.flash_attn import validate_flash_attn_config
+        from ai_forge_cli.utils.flash_attn import validate_flash_attn_config
 
         # Even with unsloth, the only error should be about availability (not backend)
         errors = validate_flash_attn_config(True, "unsloth", "cuda")
         assert not any("unsloth" in err.lower() for err in errors)
 
     def test_get_flash_attn_version_not_installed(self):
-        from soup_cli.utils.flash_attn import get_flash_attn_version
+        from ai_forge_cli.utils.flash_attn import get_flash_attn_version
 
         result = get_flash_attn_version()
         assert result is None or isinstance(result, str)
 
     def test_flash_attn_versions_constant(self):
-        from soup_cli.utils.flash_attn import FLASH_ATTN_VERSIONS
+        from ai_forge_cli.utils.flash_attn import FLASH_ATTN_VERSIONS
 
         assert "flash_attention_2" in FLASH_ATTN_VERSIONS
         assert "flash_attention_3" in FLASH_ATTN_VERSIONS
@@ -180,32 +180,32 @@ class TestFSDPConfig:
     """Test FSDP2 configuration and presets."""
 
     def test_fsdp_full_shard_preset(self):
-        from soup_cli.utils.fsdp import get_fsdp_config
+        from ai_forge_cli.utils.fsdp import get_fsdp_config
 
         config = get_fsdp_config("full_shard")
         assert "full_shard" in config["fsdp"]
         assert "auto_wrap" in config["fsdp"]
 
     def test_fsdp_shard_grad_preset(self):
-        from soup_cli.utils.fsdp import get_fsdp_config
+        from ai_forge_cli.utils.fsdp import get_fsdp_config
 
         config = get_fsdp_config("shard_grad")
         assert "shard_grad_op" in config["fsdp"]
 
     def test_fsdp_full_offload_preset(self):
-        from soup_cli.utils.fsdp import get_fsdp_config
+        from ai_forge_cli.utils.fsdp import get_fsdp_config
 
         config = get_fsdp_config("full_offload")
         assert "offload" in config["fsdp"]
 
     def test_fsdp_unknown_preset_raises(self):
-        from soup_cli.utils.fsdp import get_fsdp_config
+        from ai_forge_cli.utils.fsdp import get_fsdp_config
 
         with pytest.raises(ValueError, match="Unknown FSDP config"):
             get_fsdp_config("nonexistent")
 
     def test_fsdp_training_args_keys(self):
-        from soup_cli.utils.fsdp import get_fsdp_training_args
+        from ai_forge_cli.utils.fsdp import get_fsdp_training_args
 
         kwargs = get_fsdp_training_args("full_shard")
         assert "fsdp" in kwargs
@@ -213,7 +213,7 @@ class TestFSDPConfig:
 
     def test_fsdp_config_deep_copy(self):
         """get_fsdp_config should return a deep copy (no shared state)."""
-        from soup_cli.utils.fsdp import get_fsdp_config
+        from ai_forge_cli.utils.fsdp import get_fsdp_config
 
         config1 = get_fsdp_config("full_shard")
         config2 = get_fsdp_config("full_shard")
@@ -221,7 +221,7 @@ class TestFSDPConfig:
         assert config2["fsdp"] != "modified"
 
     def test_fsdp_configs_dict(self):
-        from soup_cli.utils.fsdp import FSDP_CONFIGS
+        from ai_forge_cli.utils.fsdp import FSDP_CONFIGS
 
         assert "full_shard" in FSDP_CONFIGS
         assert "shard_grad" in FSDP_CONFIGS
@@ -232,31 +232,31 @@ class TestFSDPValidation:
     """Test FSDP2 validation logic."""
 
     def test_validate_fsdp_disabled(self):
-        from soup_cli.utils.fsdp import validate_fsdp_config
+        from ai_forge_cli.utils.fsdp import validate_fsdp_config
 
         errors = validate_fsdp_config(None, None, "transformers", "cuda")
         assert errors == []
 
     def test_validate_fsdp_with_deepspeed_conflict(self):
-        from soup_cli.utils.fsdp import validate_fsdp_config
+        from ai_forge_cli.utils.fsdp import validate_fsdp_config
 
         errors = validate_fsdp_config("full_shard", "/tmp/ds.json", "transformers", "cuda")
         assert any("DeepSpeed" in err for err in errors)
 
     def test_validate_fsdp_cpu_error(self):
-        from soup_cli.utils.fsdp import validate_fsdp_config
+        from ai_forge_cli.utils.fsdp import validate_fsdp_config
 
         errors = validate_fsdp_config("full_shard", None, "transformers", "cpu")
         assert any("CUDA" in err for err in errors)
 
     def test_validate_fsdp_unsloth_error(self):
-        from soup_cli.utils.fsdp import validate_fsdp_config
+        from ai_forge_cli.utils.fsdp import validate_fsdp_config
 
         errors = validate_fsdp_config("full_shard", None, "unsloth", "cuda")
         assert any("unsloth" in err.lower() for err in errors)
 
     def test_validate_fsdp_unknown_preset(self):
-        from soup_cli.utils.fsdp import validate_fsdp_config
+        from ai_forge_cli.utils.fsdp import validate_fsdp_config
 
         errors = validate_fsdp_config("invalid_preset", None, "transformers", "cuda")
         assert any("Unknown FSDP preset" in err for err in errors)
@@ -266,7 +266,7 @@ class TestFSDPAvailability:
     """Test FSDP2 availability detection."""
 
     def test_is_fsdp_available_returns_bool(self):
-        from soup_cli.utils.fsdp import is_fsdp_available
+        from ai_forge_cli.utils.fsdp import is_fsdp_available
 
         result = is_fsdp_available()
         assert isinstance(result, bool)
@@ -295,19 +295,19 @@ class TestRingAttentionUtils:
     """Test Ring FlashAttention utility functions."""
 
     def test_get_sequence_parallel_size_single_gpu(self):
-        from soup_cli.utils.ring_attention import get_sequence_parallel_size
+        from ai_forge_cli.utils.ring_attention import get_sequence_parallel_size
 
         result = get_sequence_parallel_size(gpu_count=1, max_length=131072)
         assert result == 1
 
     def test_get_sequence_parallel_size_short_sequence(self):
-        from soup_cli.utils.ring_attention import get_sequence_parallel_size
+        from ai_forge_cli.utils.ring_attention import get_sequence_parallel_size
 
         result = get_sequence_parallel_size(gpu_count=4, max_length=2048)
         assert result == 1
 
     def test_get_sequence_parallel_size_long_sequence(self):
-        from soup_cli.utils.ring_attention import get_sequence_parallel_size
+        from ai_forge_cli.utils.ring_attention import get_sequence_parallel_size
 
         result = get_sequence_parallel_size(gpu_count=8, max_length=131072)
         assert result >= 2
@@ -315,7 +315,7 @@ class TestRingAttentionUtils:
         assert result & (result - 1) == 0
 
     def test_get_sequence_parallel_size_power_of_two(self):
-        from soup_cli.utils.ring_attention import get_sequence_parallel_size
+        from ai_forge_cli.utils.ring_attention import get_sequence_parallel_size
 
         result = get_sequence_parallel_size(gpu_count=6, max_length=131072)
         # Should be power of 2, max <= gpu_count
@@ -326,31 +326,31 @@ class TestRingAttentionValidation:
     """Test Ring FlashAttention validation."""
 
     def test_validate_disabled(self):
-        from soup_cli.utils.ring_attention import validate_ring_attention_config
+        from ai_forge_cli.utils.ring_attention import validate_ring_attention_config
 
         errors = validate_ring_attention_config(False, "cuda", 131072)
         assert errors == []
 
     def test_validate_cpu_error(self):
-        from soup_cli.utils.ring_attention import validate_ring_attention_config
+        from ai_forge_cli.utils.ring_attention import validate_ring_attention_config
 
         errors = validate_ring_attention_config(True, "cpu", 131072)
         assert any("CUDA" in err for err in errors)
 
     def test_validate_short_sequence_warning(self):
-        from soup_cli.utils.ring_attention import validate_ring_attention_config
+        from ai_forge_cli.utils.ring_attention import validate_ring_attention_config
 
         errors = validate_ring_attention_config(True, "cuda", 2048)
         assert any("8192" in err for err in errors)
 
     def test_check_ring_attention_available_returns_bool(self):
-        from soup_cli.utils.ring_attention import check_ring_attention_available
+        from ai_forge_cli.utils.ring_attention import check_ring_attention_available
 
         result = check_ring_attention_available()
         assert isinstance(result, bool)
 
     def test_get_ring_attention_version_not_installed(self):
-        from soup_cli.utils.ring_attention import get_ring_attention_version
+        from ai_forge_cli.utils.ring_attention import get_ring_attention_version
 
         result = get_ring_attention_version()
         assert result is None or isinstance(result, str)
@@ -401,7 +401,7 @@ class TestLongContextUtils:
     """Test long-context utility functions."""
 
     def test_rope_scaling_types_constant(self):
-        from soup_cli.utils.long_context import ROPE_SCALING_TYPES
+        from ai_forge_cli.utils.long_context import ROPE_SCALING_TYPES
 
         assert "linear" in ROPE_SCALING_TYPES
         assert "dynamic" in ROPE_SCALING_TYPES
@@ -409,39 +409,39 @@ class TestLongContextUtils:
         assert "longrope" in ROPE_SCALING_TYPES
 
     def test_model_default_context_llama3(self):
-        from soup_cli.utils.long_context import get_model_default_context
+        from ai_forge_cli.utils.long_context import get_model_default_context
 
         ctx = get_model_default_context("meta-llama/Llama-3.1-8B")
         assert ctx == 8192
 
     def test_model_default_context_mistral(self):
-        from soup_cli.utils.long_context import get_model_default_context
+        from ai_forge_cli.utils.long_context import get_model_default_context
 
         ctx = get_model_default_context("mistralai/Mistral-7B-v0.1")
         assert ctx == 32768
 
     def test_model_default_context_unknown(self):
-        from soup_cli.utils.long_context import get_model_default_context
+        from ai_forge_cli.utils.long_context import get_model_default_context
 
         ctx = get_model_default_context("unknown/model-xyz")
         assert ctx == 4096  # Conservative default
 
     def test_get_rope_scaling_config_linear(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         config = get_rope_scaling_config("linear", 131072, 8192)
         assert config["type"] == "linear"
         assert config["factor"] == pytest.approx(16.0)
 
     def test_get_rope_scaling_config_dynamic(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         config = get_rope_scaling_config("dynamic", 65536, 8192)
         assert config["type"] == "dynamic"
         assert config["factor"] == pytest.approx(8.0)
 
     def test_get_rope_scaling_config_yarn(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         config = get_rope_scaling_config("yarn", 32768, 8192)
         assert config["type"] == "yarn"
@@ -449,20 +449,20 @@ class TestLongContextUtils:
         assert config["original_max_position_embeddings"] == 8192
 
     def test_get_rope_scaling_config_longrope(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         config = get_rope_scaling_config("longrope", 32768, 8192)
         assert config["type"] == "longrope"
 
     def test_get_rope_scaling_config_no_scaling_needed(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         config = get_rope_scaling_config("linear", 4096, 8192)
         assert config == {}
 
     def test_get_rope_scaling_config_factor_as_target(self):
         """When target_length < original_length and > 1.0, treat as factor."""
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         config = get_rope_scaling_config("linear", 4.0, 4096)
         assert config["type"] == "linear"
@@ -470,20 +470,20 @@ class TestLongContextUtils:
 
     def test_get_rope_scaling_config_dynamic_factor(self):
         """Dynamic scaling with factor-style argument."""
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         config = get_rope_scaling_config("dynamic", 2.0, 8192)
         assert config["type"] == "dynamic"
         assert config["factor"] == pytest.approx(2.0)
 
     def test_get_rope_scaling_config_invalid_type(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         with pytest.raises(ValueError, match="Unknown RoPE scaling type"):
             get_rope_scaling_config("invalid", 131072, 8192)
 
     def test_apply_long_context_config_modifies_model(self):
-        from soup_cli.utils.long_context import apply_long_context_config
+        from ai_forge_cli.utils.long_context import apply_long_context_config
 
         model_config = MagicMock()
         model_config.max_position_embeddings = 8192
@@ -498,7 +498,7 @@ class TestLongContextUtils:
         assert model_config.max_position_embeddings == 131072
 
     def test_apply_long_context_config_no_scaling_needed(self):
-        from soup_cli.utils.long_context import apply_long_context_config
+        from ai_forge_cli.utils.long_context import apply_long_context_config
 
         model_config = MagicMock()
         model_config.max_position_embeddings = 131072
@@ -514,25 +514,25 @@ class TestLongContextValidation:
     """Test long-context validation logic."""
 
     def test_validate_no_rope_scaling(self):
-        from soup_cli.utils.long_context import validate_long_context_config
+        from ai_forge_cli.utils.long_context import validate_long_context_config
 
         errors = validate_long_context_config(2048, None, False)
         assert errors == []
 
     def test_validate_invalid_rope_type(self):
-        from soup_cli.utils.long_context import validate_long_context_config
+        from ai_forge_cli.utils.long_context import validate_long_context_config
 
         errors = validate_long_context_config(131072, "invalid_type", True)
         assert any("Unknown RoPE" in err for err in errors)
 
     def test_validate_long_context_no_gradient_checkpointing(self):
-        from soup_cli.utils.long_context import validate_long_context_config
+        from ai_forge_cli.utils.long_context import validate_long_context_config
 
         errors = validate_long_context_config(131072, "dynamic", False)
         assert any("gradient checkpointing" in err.lower() for err in errors)
 
     def test_validate_long_context_with_gradient_checkpointing(self):
-        from soup_cli.utils.long_context import validate_long_context_config
+        from ai_forge_cli.utils.long_context import validate_long_context_config
 
         errors = validate_long_context_config(131072, "dynamic", True)
         assert not any("gradient checkpointing" in err.lower() for err in errors)
@@ -600,56 +600,56 @@ class TestTrainerFSDPParam:
     """Test that all trainers accept fsdp_config parameter."""
 
     def test_sft_trainer_accepts_fsdp_config(self):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(base="test/model", data={"train": "./data.jsonl"})
         wrapper = SFTTrainerWrapper(cfg, fsdp_config={"fsdp": "full_shard auto_wrap"})
         assert wrapper.fsdp_config == {"fsdp": "full_shard auto_wrap"}
 
     def test_dpo_trainer_accepts_fsdp_config(self):
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = SoupConfig(base="test/model", task="dpo", data={"train": "./data.jsonl"})
         wrapper = DPOTrainerWrapper(cfg, fsdp_config={"fsdp": "full_shard"})
         assert wrapper.fsdp_config == {"fsdp": "full_shard"}
 
     def test_grpo_trainer_accepts_fsdp_config(self):
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = SoupConfig(base="test/model", task="grpo", data={"train": "./data.jsonl"})
         wrapper = GRPOTrainerWrapper(cfg, fsdp_config={"fsdp": "full_shard"})
         assert wrapper.fsdp_config == {"fsdp": "full_shard"}
 
     def test_kto_trainer_accepts_fsdp_config(self):
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         cfg = SoupConfig(base="test/model", task="kto", data={"train": "./data.jsonl"})
         wrapper = KTOTrainerWrapper(cfg, fsdp_config={"fsdp": "full_shard"})
         assert wrapper.fsdp_config == {"fsdp": "full_shard"}
 
     def test_orpo_trainer_accepts_fsdp_config(self):
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
 
         cfg = SoupConfig(base="test/model", task="orpo", data={"train": "./data.jsonl"})
         wrapper = ORPOTrainerWrapper(cfg, fsdp_config={"fsdp": "full_shard"})
         assert wrapper.fsdp_config == {"fsdp": "full_shard"}
 
     def test_simpo_trainer_accepts_fsdp_config(self):
-        from soup_cli.trainer.simpo import SimPOTrainerWrapper
+        from ai_forge_cli.trainer.simpo import SimPOTrainerWrapper
 
         cfg = SoupConfig(base="test/model", task="simpo", data={"train": "./data.jsonl"})
         wrapper = SimPOTrainerWrapper(cfg, fsdp_config={"fsdp": "full_shard"})
         assert wrapper.fsdp_config == {"fsdp": "full_shard"}
 
     def test_ipo_trainer_accepts_fsdp_config(self):
-        from soup_cli.trainer.ipo import IPOTrainerWrapper
+        from ai_forge_cli.trainer.ipo import IPOTrainerWrapper
 
         cfg = SoupConfig(base="test/model", task="ipo", data={"train": "./data.jsonl"})
         wrapper = IPOTrainerWrapper(cfg, fsdp_config={"fsdp": "full_shard"})
         assert wrapper.fsdp_config == {"fsdp": "full_shard"}
 
     def test_pretrain_trainer_accepts_fsdp_config(self):
-        from soup_cli.trainer.pretrain import PretrainTrainerWrapper
+        from ai_forge_cli.trainer.pretrain import PretrainTrainerWrapper
 
         cfg = SoupConfig(
             base="test/model", task="pretrain",
@@ -659,7 +659,7 @@ class TestTrainerFSDPParam:
         assert wrapper.fsdp_config == {"fsdp": "full_shard"}
 
     def test_reward_model_trainer_accepts_fsdp_config(self):
-        from soup_cli.trainer.reward_model import RewardModelTrainerWrapper
+        from ai_forge_cli.trainer.reward_model import RewardModelTrainerWrapper
 
         cfg = SoupConfig(
             base="test/model", task="reward_model",
@@ -669,14 +669,14 @@ class TestTrainerFSDPParam:
         assert wrapper.fsdp_config == {"fsdp": "full_shard"}
 
     def test_ppo_trainer_accepts_fsdp_config(self):
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(base="test/model", task="ppo", data={"train": "./data.jsonl"})
         wrapper = PPOTrainerWrapper(cfg, fsdp_config={"fsdp": "full_shard"})
         assert wrapper.fsdp_config == {"fsdp": "full_shard"}
 
     def test_sft_trainer_fsdp_config_default_none(self):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(base="test/model", data={"train": "./data.jsonl"})
         wrapper = SFTTrainerWrapper(cfg)
@@ -742,12 +742,12 @@ class TestTrainCommandFSDPFlag:
     """Test --fsdp flag in train command."""
 
     def test_fsdp_configs_accessible_from_fsdp_module(self):
-        from soup_cli.utils.fsdp import FSDP_CONFIGS
+        from ai_forge_cli.utils.fsdp import FSDP_CONFIGS
 
         assert len(FSDP_CONFIGS) == 3
 
     def test_fsdp_full_shard_has_correct_keys(self):
-        from soup_cli.utils.fsdp import FSDP_FULL_SHARD
+        from ai_forge_cli.utils.fsdp import FSDP_FULL_SHARD
 
         assert "fsdp" in FSDP_FULL_SHARD
         assert "fsdp_config" in FSDP_FULL_SHARD

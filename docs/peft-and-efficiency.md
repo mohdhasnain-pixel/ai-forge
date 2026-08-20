@@ -138,7 +138,7 @@ training:
   gradient_checkpointing: true  # required above 64k
 ```
 
-**YaRN.** Best quality for 4-8x extension. Tunables (`yarn_factor`, `yarn_attn_factor`, `yarn_beta_fast`, `yarn_beta_slow`) only apply when `rope_scaling_type=yarn`; the schema rejects them otherwise. Pure-Python math kernels are exposed at `soup_cli.utils.long_context.yarn_*` for reference / config-emit. The actual RoPE rotation runs inside HF Transformers.
+**YaRN.** Best quality for 4-8x extension. Tunables (`yarn_factor`, `yarn_attn_factor`, `yarn_beta_fast`, `yarn_beta_slow`) only apply when `rope_scaling_type=yarn`; the schema rejects them otherwise. Pure-Python math kernels are exposed at `ai_forge_cli.utils.long_context.yarn_*` for reference / config-emit. The actual RoPE rotation runs inside HF Transformers.
 
 **Llama 3.1 NTK-aware.** Use `rope_scaling_type: llama3` for the canonical Llama 3.1 frequency-band scaling (`scale_factor=8`, `low_freq_factor=1`, `high_freq_factor=4`, `old_context_len=8192`). `detect_llama3_rope_in_config` auto-detects the block in any HF model config dict. Omit `rope_scaling_type` from your YAML (so it stays `None`) on a Llama 3.1 base and `apply_long_context_config` will auto-pick `llama3` by reading `model.config.rope_scaling` at load time — explicit caller picks still win.
 
@@ -209,7 +209,7 @@ training:
 
 Catch-all friendly errors: typos in `optimizer:` are rejected at config-load with the v0.41.0 additions listed in the message; `lr_groups` patterns are validated as compilable regexes (length-capped + benign-string ReDoS probe); `load_in_8bit` mixed with `load_in_16bit` raises rather than picking one silently.
 
-See `soup_cli.utils.optimizer_zoo.SUPPORTED_OPTIMIZERS` for the complete optimizer allowlist.
+See `ai_forge_cli.utils.optimizer_zoo.SUPPORTED_OPTIMIZERS` for the complete optimizer allowlist.
 
 
 ## LoRA Quality — PiSSA, ReLoRA, Per-Pattern Rank, Surgical Patches
@@ -249,7 +249,7 @@ configs where expert FFNs need lower rank than attention. Caps: 256 keys × valu
 gated and silent on unrelated models.
 
 **Template registry** — the 21 built-in templates now live as
-`src/soup_cli/templates/*.yaml` with a `manifest.json` index. `soup init --template <name>`
+`src/ai_forge_cli/templates/*.yaml` with a `manifest.json` index. `soup init --template <name>`
 reads the YAML; the inline copies in `schema.py` stay as a back-compat fallback,
 deprecated in favour of the YAML registry.
 

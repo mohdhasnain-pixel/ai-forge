@@ -11,8 +11,8 @@ import numpy as np
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app as soup_app
-from soup_cli.utils.adapter_diff import (
+from ai_forge_cli.cli import app as soup_app
+from ai_forge_cli.utils.adapter_diff import (
     AdapterDiffReport,
     LayerDiff,
     compute_adapter_diff,
@@ -292,7 +292,7 @@ def test_compute_adapter_diff_rejects_symlinked_weights(tmp_path, monkeypatch):
 
 def test_no_top_level_torch_import():
     """Lazy-import policy: adapter_diff must not import torch at module level."""
-    src = (Path(__file__).parent.parent / "src" / "soup_cli" / "utils" / "adapter_diff.py"
+    src = (Path(__file__).parent.parent / "src" / "ai_forge_cli" / "utils" / "adapter_diff.py"
            ).read_text(encoding="utf-8")
     # Only allowed inside def bodies
     for line in src.splitlines():

@@ -24,7 +24,7 @@ class TestPruneCheckpointsTOCTOU:
     def test_prune_skips_top_level_symlink_via_lstat(self, tmp_path):
         """Top-level symlink masquerading as a checkpoint dir must be skipped
         without following the link target."""
-        from soup_cli.eval.checkpoint_intelligence import CheckpointTracker
+        from ai_forge_cli.eval.checkpoint_intelligence import CheckpointTracker
 
         # Real checkpoint to keep
         (tmp_path / "checkpoint-100").mkdir()
@@ -54,7 +54,7 @@ class TestPruneCheckpointsTOCTOU:
     def test_prune_aborts_on_symlink_inside_checkpoint(self, tmp_path):
         """If rmtree encounters a symlink mid-walk inside a doomed checkpoint,
         it must abort instead of following it (defence-in-depth)."""
-        from soup_cli.eval.checkpoint_intelligence import CheckpointTracker
+        from ai_forge_cli.eval.checkpoint_intelligence import CheckpointTracker
 
         # Two checkpoints; we'll keep the top one
         ckpt_keep = tmp_path / "checkpoint-100"
@@ -85,7 +85,7 @@ class TestPruneCheckpointsTOCTOU:
     def test_prune_uses_lstat_for_symlink_check(self, tmp_path, monkeypatch):
         """Verify prune uses os.lstat-based check, not Path.is_symlink, so a
         broken symlink (target removed mid-walk) is still rejected."""
-        from soup_cli.eval import checkpoint_intelligence as ci
+        from ai_forge_cli.eval import checkpoint_intelligence as ci
 
         # Create a broken symlink as 'checkpoint-300'
         broken = tmp_path / "checkpoint-300"
@@ -109,13 +109,13 @@ class TestPruneCheckpointsTOCTOU:
 
 class TestCodeExecIsolationStrategy:
     def test_get_isolation_strategy_returns_known_value(self):
-        from soup_cli.trainer.rewards import _get_isolation_strategy
+        from ai_forge_cli.trainer.rewards import _get_isolation_strategy
 
         strategy = _get_isolation_strategy()
         assert strategy in {"namespaces", "sandbox-exec", "best-effort"}
 
     def test_isolation_strategy_linux_with_unshare(self, monkeypatch):
-        from soup_cli.trainer import rewards
+        from ai_forge_cli.trainer import rewards
 
         # Use _compute_isolation_strategy (uncached) like the other tests so
         # the sys.platform patch actually takes effect — _get_isolation_strategy
@@ -137,7 +137,7 @@ class TestCodeExecIsolationStrategy:
     def test_isolation_strategy_macos_with_sandbox_exec(self, monkeypatch):
         import shutil as shutil_mod
 
-        from soup_cli.trainer import rewards
+        from ai_forge_cli.trainer import rewards
 
         # Force fresh evaluation
         monkeypatch.setattr(sys, "platform", "darwin")
@@ -153,7 +153,7 @@ class TestCodeExecIsolationStrategy:
     def test_isolation_strategy_macos_without_sandbox_exec(self, monkeypatch):
         import shutil as shutil_mod
 
-        from soup_cli.trainer import rewards
+        from ai_forge_cli.trainer import rewards
 
         monkeypatch.setattr(sys, "platform", "darwin")
         monkeypatch.setattr(shutil_mod, "which", lambda _name: None)
@@ -163,7 +163,7 @@ class TestCodeExecIsolationStrategy:
         assert strategy == "best-effort"
 
     def test_isolation_strategy_windows(self, monkeypatch):
-        from soup_cli.trainer import rewards
+        from ai_forge_cli.trainer import rewards
 
         monkeypatch.setattr(sys, "platform", "win32")
         if hasattr(rewards, "_ISOLATION_STRATEGY_CACHE"):
@@ -172,7 +172,7 @@ class TestCodeExecIsolationStrategy:
         assert strategy == "best-effort"
 
     def test_isolation_strategy_linux_unshare_unavailable(self, monkeypatch):
-        from soup_cli.trainer import rewards
+        from ai_forge_cli.trainer import rewards
 
         monkeypatch.setattr(sys, "platform", "linux")
         # Pretend os.unshare doesn't exist
@@ -185,7 +185,7 @@ class TestCodeExecIsolationStrategy:
 
     def test_macos_sandbox_profile_blocks_network_and_writes(self):
         """The macOS sandbox profile must deny network and writes outside /tmp."""
-        from soup_cli.trainer.rewards import MACOS_SANDBOX_PROFILE
+        from ai_forge_cli.trainer.rewards import MACOS_SANDBOX_PROFILE
 
         # Profile must default-deny then explicitly allow narrow process needs
         assert "(deny default)" in MACOS_SANDBOX_PROFILE
@@ -201,14 +201,14 @@ class TestCodeExecIsolationStrategy:
 
 class TestCodeExecRewardSmoke:
     def test_correct_code_still_scores_one(self):
-        from soup_cli.trainer.rewards import code_exec_reward
+        from ai_forge_cli.trainer.rewards import code_exec_reward
 
         completions = [[{"role": "assistant", "content": "```python\nprint(2+2)\n```"}]]
         scores = code_exec_reward(completions, expected=["4"])
         assert scores == [1.0]
 
     def test_wrong_code_still_scores_zero(self):
-        from soup_cli.trainer.rewards import code_exec_reward
+        from ai_forge_cli.trainer.rewards import code_exec_reward
 
         completions = [[{"role": "assistant", "content": "```python\nprint(3)\n```"}]]
         scores = code_exec_reward(completions, expected=["4"])

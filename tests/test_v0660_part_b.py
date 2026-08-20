@@ -34,7 +34,7 @@ def _chdir(tmp_path, monkeypatch):
 
 
 def test_module_imports_new_blame_surface():
-    from soup_cli.utils import blame
+    from ai_forge_cli.utils import blame
 
     # v0.66 lifts the stub - same module name, new surface
     for name in (
@@ -50,7 +50,7 @@ def test_module_imports_new_blame_surface():
 
 def test_run_blame_no_longer_raises_not_implemented_when_probe_supplied():
     """v0.57.0: NotImplementedError. v0.66.0: returns BlameResult."""
-    from soup_cli.utils.blame import BlameResult, run_blame
+    from ai_forge_cli.utils.blame import BlameResult, run_blame
 
     # Build minimal plan
     plan = _make_tiny_plan()
@@ -65,7 +65,7 @@ def test_run_blame_no_longer_raises_not_implemented_when_probe_supplied():
 
 
 def test_compute_row_influence_zero_when_orthogonal():
-    from soup_cli.utils.blame import compute_row_influence
+    from ai_forge_cli.utils.blame import compute_row_influence
 
     row_grad = np.array([1.0, 0.0, 0.0], dtype=np.float32)
     probe_grad = np.array([0.0, 1.0, 0.0], dtype=np.float32)
@@ -75,7 +75,7 @@ def test_compute_row_influence_zero_when_orthogonal():
 
 
 def test_compute_row_influence_positive_when_aligned():
-    from soup_cli.utils.blame import compute_row_influence
+    from ai_forge_cli.utils.blame import compute_row_influence
 
     row_grad = np.array([1.0, 2.0, 3.0], dtype=np.float32)
     probe_grad = np.array([1.0, 2.0, 3.0], dtype=np.float32)
@@ -84,7 +84,7 @@ def test_compute_row_influence_positive_when_aligned():
 
 
 def test_compute_row_influence_negative_when_opposed():
-    from soup_cli.utils.blame import compute_row_influence
+    from ai_forge_cli.utils.blame import compute_row_influence
 
     row_grad = np.array([1.0, 2.0, 3.0], dtype=np.float32)
     probe_grad = np.array([-1.0, -2.0, -3.0], dtype=np.float32)
@@ -93,7 +93,7 @@ def test_compute_row_influence_negative_when_opposed():
 
 
 def test_compute_row_influence_rejects_shape_mismatch():
-    from soup_cli.utils.blame import compute_row_influence
+    from ai_forge_cli.utils.blame import compute_row_influence
 
     a = np.zeros((5,), dtype=np.float32)
     b = np.zeros((10,), dtype=np.float32)
@@ -102,14 +102,14 @@ def test_compute_row_influence_rejects_shape_mismatch():
 
 
 def test_compute_row_influence_rejects_non_array():
-    from soup_cli.utils.blame import compute_row_influence
+    from ai_forge_cli.utils.blame import compute_row_influence
 
     with pytest.raises(TypeError):
         compute_row_influence("bad", np.zeros((5,)))
 
 
 def test_compute_row_influence_handles_zero_row_grad():
-    from soup_cli.utils.blame import compute_row_influence
+    from ai_forge_cli.utils.blame import compute_row_influence
 
     row_grad = np.zeros((3,), dtype=np.float32)
     probe_grad = np.array([1.0, 2.0, 3.0], dtype=np.float32)
@@ -119,7 +119,7 @@ def test_compute_row_influence_handles_zero_row_grad():
 
 
 def test_compute_row_influence_handles_zero_probe_grad():
-    from soup_cli.utils.blame import compute_row_influence
+    from ai_forge_cli.utils.blame import compute_row_influence
 
     row_grad = np.array([1.0, 2.0, 3.0], dtype=np.float32)
     probe_grad = np.zeros((3,), dtype=np.float32)
@@ -133,7 +133,7 @@ def test_compute_row_influence_handles_zero_probe_grad():
 
 
 def test_row_influence_frozen():
-    from soup_cli.utils.blame import RowInfluence
+    from ai_forge_cli.utils.blame import RowInfluence
 
     r = RowInfluence(row_id=0, score=0.5, shard_id=1)
     with pytest.raises((AttributeError, Exception)):
@@ -141,28 +141,28 @@ def test_row_influence_frozen():
 
 
 def test_row_influence_rejects_negative_row_id():
-    from soup_cli.utils.blame import RowInfluence
+    from ai_forge_cli.utils.blame import RowInfluence
 
     with pytest.raises(ValueError):
         RowInfluence(row_id=-1, score=0.0, shard_id=0)
 
 
 def test_row_influence_rejects_bool_score():
-    from soup_cli.utils.blame import RowInfluence
+    from ai_forge_cli.utils.blame import RowInfluence
 
     with pytest.raises(TypeError):
         RowInfluence(row_id=0, score=True, shard_id=0)
 
 
 def test_row_influence_rejects_non_finite_score():
-    from soup_cli.utils.blame import RowInfluence
+    from ai_forge_cli.utils.blame import RowInfluence
 
     with pytest.raises(ValueError):
         RowInfluence(row_id=0, score=float("inf"), shard_id=0)
 
 
 def test_blame_result_frozen():
-    from soup_cli.utils.blame import BlameResult
+    from ai_forge_cli.utils.blame import BlameResult
 
     r = BlameResult(
         adapter_dir="x",
@@ -177,7 +177,7 @@ def test_blame_result_frozen():
 
 
 def test_blame_result_rejects_negative_elapsed():
-    from soup_cli.utils.blame import BlameResult
+    from ai_forge_cli.utils.blame import BlameResult
 
     with pytest.raises(ValueError):
         BlameResult(
@@ -191,7 +191,7 @@ def test_blame_result_rejects_negative_elapsed():
 
 
 def test_blame_result_top_influencers_must_be_tuple():
-    from soup_cli.utils.blame import BlameResult, RowInfluence
+    from ai_forge_cli.utils.blame import BlameResult, RowInfluence
 
     rows = [RowInfluence(row_id=0, score=0.5, shard_id=0)]
     with pytest.raises(TypeError):
@@ -211,7 +211,7 @@ def test_blame_result_top_influencers_must_be_tuple():
 
 
 def test_run_blame_returns_top_influencers():
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     probe = _synthetic_probe(20, 4)
@@ -222,7 +222,7 @@ def test_run_blame_returns_top_influencers():
 
 def test_run_blame_sorts_by_absolute_score():
     """Top influencers are the rows with the largest |influence|."""
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     probe = _synthetic_probe(20, 4)
@@ -233,7 +233,7 @@ def test_run_blame_sorts_by_absolute_score():
 
 
 def test_run_blame_caps_top_influencers_at_default():
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     probe = _synthetic_probe(200, 4)
@@ -243,7 +243,7 @@ def test_run_blame_caps_top_influencers_at_default():
 
 
 def test_run_blame_respects_top_k():
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     probe = _synthetic_probe(100, 4)
@@ -252,14 +252,14 @@ def test_run_blame_respects_top_k():
 
 
 def test_run_blame_rejects_non_plan():
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     with pytest.raises(TypeError):
         run_blame("not a plan", probe_fn=_synthetic_probe(1, 4))
 
 
 def test_run_blame_rejects_non_callable_probe():
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     with pytest.raises(TypeError):
@@ -267,7 +267,7 @@ def test_run_blame_rejects_non_callable_probe():
 
 
 def test_run_blame_rejects_bool_top_k():
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     with pytest.raises(TypeError):
@@ -275,7 +275,7 @@ def test_run_blame_rejects_bool_top_k():
 
 
 def test_run_blame_rejects_zero_top_k():
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     with pytest.raises(ValueError):
@@ -283,7 +283,7 @@ def test_run_blame_rejects_zero_top_k():
 
 
 def test_run_blame_rejects_oversize_top_k():
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     with pytest.raises(ValueError):
@@ -292,7 +292,7 @@ def test_run_blame_rejects_oversize_top_k():
 
 def test_run_blame_assigns_shard_id_correctly():
     """Each row's shard_id matches its plan position."""
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan(num_shards=4, num_rows=20)
     probe = _synthetic_probe(20, 4)
@@ -304,7 +304,7 @@ def test_run_blame_assigns_shard_id_correctly():
 
 def test_run_blame_probe_called_once():
     """The runner calls probe_fn exactly once with the plan."""
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     call_count = {"n": 0}
@@ -321,7 +321,7 @@ def test_run_blame_probe_called_once():
 
 def test_run_blame_probe_must_return_tuple():
     """Probe must return (row_grads, probe_grad). Other shapes -> TypeError."""
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     with pytest.raises((TypeError, ValueError)):
@@ -329,7 +329,7 @@ def test_run_blame_probe_must_return_tuple():
 
 
 def test_run_blame_probe_shape_mismatch_raises():
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
 
@@ -347,7 +347,7 @@ def test_run_blame_no_probe_fn_friendly_error():
     BlameResult even without operator-supplied gradients (matches v0.54.0
     advise probe stub policy).
     """
-    from soup_cli.utils.blame import BlameResult, run_blame
+    from ai_forge_cli.utils.blame import BlameResult, run_blame
 
     plan = _make_tiny_plan()
     result = run_blame(plan)
@@ -355,7 +355,7 @@ def test_run_blame_no_probe_fn_friendly_error():
 
 
 def test_run_blame_records_elapsed_time():
-    from soup_cli.utils.blame import run_blame
+    from ai_forge_cli.utils.blame import run_blame
 
     plan = _make_tiny_plan()
     result = run_blame(plan, probe_fn=_synthetic_probe(10, 4))
@@ -368,7 +368,7 @@ def test_run_blame_records_elapsed_time():
 
 
 def test_render_blame_json_roundtrip():
-    from soup_cli.utils.blame import BlameResult, RowInfluence, render_blame_json
+    from ai_forge_cli.utils.blame import BlameResult, RowInfluence, render_blame_json
 
     result = BlameResult(
         adapter_dir="adp",
@@ -389,14 +389,14 @@ def test_render_blame_json_roundtrip():
 
 
 def test_render_blame_json_rejects_non_result():
-    from soup_cli.utils.blame import render_blame_json
+    from ai_forge_cli.utils.blame import render_blame_json
 
     with pytest.raises(TypeError):
         render_blame_json("not a result")
 
 
 def test_render_blame_markdown_has_table():
-    from soup_cli.utils.blame import BlameResult, RowInfluence, render_blame_markdown
+    from ai_forge_cli.utils.blame import BlameResult, RowInfluence, render_blame_markdown
 
     result = BlameResult(
         adapter_dir="adp",
@@ -414,7 +414,7 @@ def test_render_blame_markdown_has_table():
 
 
 def test_render_blame_markdown_empty():
-    from soup_cli.utils.blame import BlameResult, render_blame_markdown
+    from ai_forge_cli.utils.blame import BlameResult, render_blame_markdown
 
     result = BlameResult(
         adapter_dir="adp",
@@ -429,7 +429,7 @@ def test_render_blame_markdown_empty():
 
 
 def test_render_blame_markdown_rejects_non_result():
-    from soup_cli.utils.blame import render_blame_markdown
+    from ai_forge_cli.utils.blame import render_blame_markdown
 
     with pytest.raises(TypeError):
         render_blame_markdown(123)
@@ -444,7 +444,7 @@ def test_run_blame_no_longer_raises_not_implemented_in_source():
     """Source-grep: ensure the v0.57.0 stub message is gone."""
     import inspect
 
-    from soup_cli.utils import blame
+    from ai_forge_cli.utils import blame
 
     source = inspect.getsource(blame.run_blame)
     # Make sure the deferred stub marker is no longer the body of run_blame
@@ -454,7 +454,7 @@ def test_run_blame_no_longer_raises_not_implemented_in_source():
 def test_blame_no_heavy_top_level_imports():
     import inspect
 
-    from soup_cli.utils import blame
+    from ai_forge_cli.utils import blame
 
     source = inspect.getsource(blame)
     top_level_imports = [
@@ -475,7 +475,7 @@ def _make_tiny_plan(num_shards: int = 2, num_rows: int = 10):
     """Build a minimal blame plan for testing."""
     from pathlib import Path
 
-    from soup_cli.utils.blame import plan_blame
+    from ai_forge_cli.utils.blame import plan_blame
 
     # We need a real adapter dir + dataset file under cwd
     cwd = Path.cwd()

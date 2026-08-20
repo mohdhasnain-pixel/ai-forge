@@ -64,7 +64,7 @@ ai-forge/
 ├── Dockerfile                   # CUDA 12.1 setup
 ├── pyproject.toml               # Python project config
 ├── src/
-│   └── soup_cli/                # Main source code
+│   └── ai_forge_cli/                # Main source code
 ├── tests/
 │   └── test_*.py               # Test files (comprehensive)
 ├── docs/

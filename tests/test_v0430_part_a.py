@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from soup_cli.utils.trackers import (
+from ai_forge_cli.utils.trackers import (
     NEW_TRACKERS_V0_43,
     SUPPORTED_TRACKERS,
     build_telemetry_payload,
@@ -253,7 +253,7 @@ class TestResolveReportTo:
 
 class TestRegistryImmutability:
     def test_report_to_backends_immutable(self):
-        from soup_cli.utils.trackers import _REPORT_TO_BACKENDS
+        from ai_forge_cli.utils.trackers import _REPORT_TO_BACKENDS
         with pytest.raises(TypeError):
             _REPORT_TO_BACKENDS["evil"] = "evil"  # type: ignore[index]
 

@@ -24,7 +24,7 @@ import numpy as np
 import pytest
 from typer.testing import CliRunner
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "soup_cli"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli"
 
 runner = CliRunner()
 
@@ -40,13 +40,13 @@ def _torch_or_skip():
 
 class TestIsAttentionProjection:
     def test_canonical_projections(self):
-        from soup_cli.utils.advanced_precision import is_attention_projection
+        from ai_forge_cli.utils.advanced_precision import is_attention_projection
 
         for name in ("q_proj", "k_proj", "v_proj", "o_proj"):
             assert is_attention_projection(f"model.layers.0.self_attn.{name}")
 
     def test_fused_variants(self):
-        from soup_cli.utils.advanced_precision import is_attention_projection
+        from ai_forge_cli.utils.advanced_precision import is_attention_projection
 
         assert is_attention_projection("transformer.h.0.attn.c_attn")
         assert is_attention_projection("model.layers.3.self_attn.qkv_proj")
@@ -55,14 +55,14 @@ class TestIsAttentionProjection:
         )
 
     def test_mlp_projections_rejected(self):
-        from soup_cli.utils.advanced_precision import is_attention_projection
+        from ai_forge_cli.utils.advanced_precision import is_attention_projection
 
         assert not is_attention_projection("model.layers.0.mlp.gate_proj")
         assert not is_attention_projection("model.layers.0.mlp.down_proj")
         assert not is_attention_projection("lm_head")
 
     def test_defensive_inputs(self):
-        from soup_cli.utils.advanced_precision import is_attention_projection
+        from ai_forge_cli.utils.advanced_precision import is_attention_projection
 
         assert not is_attention_projection("")
         assert not is_attention_projection(None)  # type: ignore[arg-type]
@@ -71,7 +71,7 @@ class TestIsAttentionProjection:
 
     def test_substring_not_enough(self):
         """Last-component match only — 'my_q_proj_extra' is not q_proj."""
-        from soup_cli.utils.advanced_precision import is_attention_projection
+        from ai_forge_cli.utils.advanced_precision import is_attention_projection
 
         assert not is_attention_projection("model.layers.0.my_q_proj_extra")
 
@@ -79,7 +79,7 @@ class TestIsAttentionProjection:
 class TestIsBlackwellGpu:
     def test_false_without_cuda(self, monkeypatch):
         torch = _torch_or_skip()
-        from soup_cli.utils.advanced_precision import is_blackwell_gpu
+        from ai_forge_cli.utils.advanced_precision import is_blackwell_gpu
 
         monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
         assert is_blackwell_gpu() is False
@@ -90,7 +90,7 @@ class TestIsBlackwellGpu:
     )
     def test_capability_matrix(self, monkeypatch, capability, expected):
         torch = _torch_or_skip()
-        from soup_cli.utils.advanced_precision import is_blackwell_gpu
+        from ai_forge_cli.utils.advanced_precision import is_blackwell_gpu
 
         monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
         monkeypatch.setattr(
@@ -191,18 +191,18 @@ def _enable_fp8_gates(monkeypatch):
     # tests install the full fake via _install_fake_torchao_float8.
     if "torchao" not in sys.modules:
         monkeypatch.setitem(sys.modules, "torchao", types.ModuleType("torchao"))
-    monkeypatch.setattr("soup_cli.utils.fp8.is_fp8_gpu_supported", lambda: True)
+    monkeypatch.setattr("ai_forge_cli.utils.fp8.is_fp8_gpu_supported", lambda: True)
 
 
 class TestApplyFp8Attention:
     def test_none_model_rejected(self):
-        from soup_cli.utils.advanced_precision import apply_fp8_attention
+        from ai_forge_cli.utils.advanced_precision import apply_fp8_attention
 
         with pytest.raises(TypeError, match="model"):
             apply_fp8_attention(None)
 
     def test_no_torchao_friendly_gate(self, monkeypatch):
-        from soup_cli.utils.advanced_precision import apply_fp8_attention
+        from ai_forge_cli.utils.advanced_precision import apply_fp8_attention
 
         # v0.27.0 None-stub idiom — the probe must treat this as absent.
         monkeypatch.setitem(sys.modules, "torchao", None)
@@ -210,27 +210,27 @@ class TestApplyFp8Attention:
             apply_fp8_attention(_tiny_attn_model())
 
     def test_non_hopper_friendly_gate(self, monkeypatch):
-        from soup_cli.utils.advanced_precision import apply_fp8_attention
+        from ai_forge_cli.utils.advanced_precision import apply_fp8_attention
 
         monkeypatch.setitem(
             sys.modules, "torchao", types.ModuleType("torchao")
         )
         monkeypatch.setattr(
-            "soup_cli.utils.fp8.is_fp8_gpu_supported", lambda: False
+            "ai_forge_cli.utils.fp8.is_fp8_gpu_supported", lambda: False
         )
         with pytest.raises(RuntimeError, match="Hopper"):
             apply_fp8_attention(_tiny_attn_model())
 
     @pytest.mark.parametrize("recipe", [True, "", None, 123, "row\x00wise"])
     def test_bad_recipe_rejected(self, monkeypatch, recipe):
-        from soup_cli.utils.advanced_precision import apply_fp8_attention
+        from ai_forge_cli.utils.advanced_precision import apply_fp8_attention
 
         _enable_fp8_gates(monkeypatch)
         with pytest.raises((TypeError, ValueError), match="recipe"):
             apply_fp8_attention(_tiny_attn_model(), recipe=recipe)
 
     def test_converts_only_attention(self, monkeypatch):
-        from soup_cli.utils.advanced_precision import apply_fp8_attention
+        from ai_forge_cli.utils.advanced_precision import apply_fp8_attention
 
         record: dict = {}
         _install_fake_torchao_float8(monkeypatch, record)
@@ -246,7 +246,7 @@ class TestApplyFp8Attention:
         assert type(block.mlp.gate_proj).__name__ == "Linear"
 
     def test_already_converted_counted_not_reswapped(self, monkeypatch):
-        from soup_cli.utils.advanced_precision import apply_fp8_attention
+        from ai_forge_cli.utils.advanced_precision import apply_fp8_attention
 
         record: dict = {}
         f8_cls = _install_fake_torchao_float8(monkeypatch, record)
@@ -260,7 +260,7 @@ class TestApplyFp8Attention:
         assert len(record["swapped"]) == 3
 
     def test_no_attention_projections_value_error(self, monkeypatch):
-        from soup_cli.utils.advanced_precision import apply_fp8_attention
+        from ai_forge_cli.utils.advanced_precision import apply_fp8_attention
 
         record: dict = {}
         _install_fake_torchao_float8(monkeypatch, record)
@@ -295,48 +295,48 @@ def _install_fake_torchao_quant(monkeypatch, record, *, with_nvfp4=True):
 
 class TestApplyNvfp4:
     def test_none_model_rejected(self):
-        from soup_cli.utils.advanced_precision import apply_nvfp4
+        from ai_forge_cli.utils.advanced_precision import apply_nvfp4
 
         with pytest.raises(TypeError, match="model"):
             apply_nvfp4(None)
 
     def test_non_blackwell_friendly_gate(self, monkeypatch):
-        from soup_cli.utils.advanced_precision import apply_nvfp4
+        from ai_forge_cli.utils.advanced_precision import apply_nvfp4
 
         monkeypatch.setattr(
-            "soup_cli.utils.advanced_precision.is_blackwell_gpu", lambda: False
+            "ai_forge_cli.utils.advanced_precision.is_blackwell_gpu", lambda: False
         )
         with pytest.raises(RuntimeError, match="Blackwell"):
             apply_nvfp4(_tiny_attn_model())
 
     def test_missing_torchao_friendly(self, monkeypatch):
-        from soup_cli.utils.advanced_precision import apply_nvfp4
+        from ai_forge_cli.utils.advanced_precision import apply_nvfp4
 
         monkeypatch.setattr(
-            "soup_cli.utils.advanced_precision.is_blackwell_gpu", lambda: True
+            "ai_forge_cli.utils.advanced_precision.is_blackwell_gpu", lambda: True
         )
         monkeypatch.setitem(sys.modules, "torchao", None)
         with pytest.raises(RuntimeError, match="torchao"):
             apply_nvfp4(_tiny_attn_model())
 
     def test_old_torchao_missing_nvfp4config(self, monkeypatch):
-        from soup_cli.utils.advanced_precision import apply_nvfp4
+        from ai_forge_cli.utils.advanced_precision import apply_nvfp4
 
         record: dict = {}
         _install_fake_torchao_quant(monkeypatch, record, with_nvfp4=False)
         monkeypatch.setattr(
-            "soup_cli.utils.advanced_precision.is_blackwell_gpu", lambda: True
+            "ai_forge_cli.utils.advanced_precision.is_blackwell_gpu", lambda: True
         )
         with pytest.raises(RuntimeError, match="NVFP4Config"):
             apply_nvfp4(_tiny_attn_model())
 
     def test_happy_path_quantizes(self, monkeypatch):
-        from soup_cli.utils.advanced_precision import apply_nvfp4
+        from ai_forge_cli.utils.advanced_precision import apply_nvfp4
 
         record: dict = {}
         _install_fake_torchao_quant(monkeypatch, record)
         monkeypatch.setattr(
-            "soup_cli.utils.advanced_precision.is_blackwell_gpu", lambda: True
+            "ai_forge_cli.utils.advanced_precision.is_blackwell_gpu", lambda: True
         )
         model = _tiny_attn_model()
         count = apply_nvfp4(model)
@@ -362,7 +362,7 @@ class TestV028PrecisionWiring:
 
     def test_no_features_dict_unchanged(self):
         """Back-compat regression: 3-key exact dict on the no-features path."""
-        from soup_cli.utils.v028_features import apply_v028_speed_memory
+        from ai_forge_cli.utils.v028_features import apply_v028_speed_memory
 
         result = apply_v028_speed_memory(
             model=object(), tcfg=self._tcfg(), base_model="x/y",
@@ -372,7 +372,7 @@ class TestV028PrecisionWiring:
         }
 
     def test_fp8_attention_gate_failure_degrades(self, monkeypatch):
-        from soup_cli.utils.v028_features import apply_v028_speed_memory
+        from ai_forge_cli.utils.v028_features import apply_v028_speed_memory
 
         def _gate(model, **kwargs):
             raise RuntimeError("no Hopper")
@@ -380,7 +380,7 @@ class TestV028PrecisionWiring:
         # Hermetic: force the gate (review fix — the bare call passed only
         # because the host lacks torchao/Hopper).
         monkeypatch.setattr(
-            "soup_cli.utils.advanced_precision.apply_fp8_attention", _gate
+            "ai_forge_cli.utils.advanced_precision.apply_fp8_attention", _gate
         )
         result = apply_v028_speed_memory(
             model=object(),
@@ -390,10 +390,10 @@ class TestV028PrecisionWiring:
         assert result["fp8_attention"] is False
 
     def test_fp8_attention_applied(self, monkeypatch):
-        from soup_cli.utils.v028_features import apply_v028_speed_memory
+        from ai_forge_cli.utils.v028_features import apply_v028_speed_memory
 
         monkeypatch.setattr(
-            "soup_cli.utils.advanced_precision.apply_fp8_attention",
+            "ai_forge_cli.utils.advanced_precision.apply_fp8_attention",
             lambda model, recipe="tensorwise": 4,
         )
         result = apply_v028_speed_memory(
@@ -404,13 +404,13 @@ class TestV028PrecisionWiring:
         assert result["fp8_attention"] is True
 
     def test_nvfp4_gate_failure_degrades(self, monkeypatch):
-        from soup_cli.utils.v028_features import apply_v028_speed_memory
+        from ai_forge_cli.utils.v028_features import apply_v028_speed_memory
 
         def _gate(model, **kwargs):
             raise RuntimeError("no Blackwell")
 
         monkeypatch.setattr(
-            "soup_cli.utils.advanced_precision.apply_nvfp4", _gate
+            "ai_forge_cli.utils.advanced_precision.apply_nvfp4", _gate
         )
         result = apply_v028_speed_memory(
             model=object(), tcfg=self._tcfg(nvfp4=True), base_model="x/y",
@@ -418,10 +418,10 @@ class TestV028PrecisionWiring:
         assert result["nvfp4"] is False
 
     def test_nvfp4_applied(self, monkeypatch):
-        from soup_cli.utils.v028_features import apply_v028_speed_memory
+        from ai_forge_cli.utils.v028_features import apply_v028_speed_memory
 
         monkeypatch.setattr(
-            "soup_cli.utils.advanced_precision.apply_nvfp4", lambda model: 2,
+            "ai_forge_cli.utils.advanced_precision.apply_nvfp4", lambda model: 2,
         )
         result = apply_v028_speed_memory(
             model=object(), tcfg=self._tcfg(nvfp4=True), base_model="x/y",
@@ -453,26 +453,26 @@ class TestParseVersionTuple:
         ],
     )
     def test_matrix(self, raw, expected):
-        from soup_cli.utils.grpo_long_context import _parse_version_tuple
+        from ai_forge_cli.utils.grpo_long_context import _parse_version_tuple
 
         assert _parse_version_tuple(raw) == expected
 
 
 class TestVllmSupportsSleepMode:
     def test_false_when_vllm_missing(self, monkeypatch):
-        from soup_cli.utils.grpo_long_context import vllm_supports_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import vllm_supports_sleep_mode
 
         monkeypatch.setitem(sys.modules, "vllm", None)
         assert vllm_supports_sleep_mode() is False
 
     def test_true_on_modern_vllm(self, monkeypatch):
-        from soup_cli.utils.grpo_long_context import vllm_supports_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import vllm_supports_sleep_mode
 
         _install_fake_vllm(monkeypatch, "0.8.1")
         assert vllm_supports_sleep_mode() is True
 
     def test_false_on_old_vllm(self, monkeypatch):
-        from soup_cli.utils.grpo_long_context import vllm_supports_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import vllm_supports_sleep_mode
 
         _install_fake_vllm(monkeypatch, "0.6.2")
         assert vllm_supports_sleep_mode() is False
@@ -480,27 +480,27 @@ class TestVllmSupportsSleepMode:
 
 class TestApplyVllmSleepMode:
     def test_none_rejected(self):
-        from soup_cli.utils.grpo_long_context import apply_vllm_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import apply_vllm_sleep_mode
 
         with pytest.raises(TypeError, match="engine_args"):
             apply_vllm_sleep_mode(None)
 
     def test_missing_vllm_friendly(self, monkeypatch):
-        from soup_cli.utils.grpo_long_context import apply_vllm_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import apply_vllm_sleep_mode
 
         monkeypatch.setitem(sys.modules, "vllm", None)
         with pytest.raises(RuntimeError, match=r"vLLM >= 0\.7"):
             apply_vllm_sleep_mode(SimpleNamespace())
 
     def test_old_vllm_friendly(self, monkeypatch):
-        from soup_cli.utils.grpo_long_context import apply_vllm_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import apply_vllm_sleep_mode
 
         _install_fake_vllm(monkeypatch, "0.6.2")
         with pytest.raises(RuntimeError, match=r"0\.6\.2"):
             apply_vllm_sleep_mode(SimpleNamespace())
 
     def test_happy_sets_enable_sleep_mode(self, monkeypatch):
-        from soup_cli.utils.grpo_long_context import apply_vllm_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import apply_vllm_sleep_mode
 
         _install_fake_vllm(monkeypatch, "0.8.1")
         args = SimpleNamespace()
@@ -511,7 +511,7 @@ class TestApplyVllmSleepMode:
 
 class TestVllmSleepCycle:
     def test_sleep_then_wake(self):
-        from soup_cli.utils.grpo_long_context import vllm_sleep_cycle
+        from ai_forge_cli.utils.grpo_long_context import vllm_sleep_cycle
 
         calls: list = []
 
@@ -527,7 +527,7 @@ class TestVllmSleepCycle:
         assert calls == [("sleep", 1), ("body",), ("wake_up",)]
 
     def test_wakes_even_on_body_exception(self):
-        from soup_cli.utils.grpo_long_context import vllm_sleep_cycle
+        from ai_forge_cli.utils.grpo_long_context import vllm_sleep_cycle
 
         calls: list = []
 
@@ -546,9 +546,9 @@ class TestVllmSleepCycle:
     def test_engine_without_sleep_warns_not_crashes(self, caplog):
         import logging
 
-        from soup_cli.utils.grpo_long_context import vllm_sleep_cycle
+        from ai_forge_cli.utils.grpo_long_context import vllm_sleep_cycle
 
-        with caplog.at_level(logging.WARNING, logger="soup_cli.utils.grpo_long_context"):
+        with caplog.at_level(logging.WARNING, logger="ai_forge_cli.utils.grpo_long_context"):
             with vllm_sleep_cycle(object()):
                 pass
         assert any("sleep" in rec.message for rec in caplog.records)
@@ -556,7 +556,7 @@ class TestVllmSleepCycle:
 
 class TestMaybeEnableTrlSleepMode:
     def test_sets_kwarg_when_trl_exposes_it(self):
-        from soup_cli.utils.grpo_long_context import maybe_enable_trl_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import maybe_enable_trl_sleep_mode
 
         kwargs: dict = {}
         ok = maybe_enable_trl_sleep_mode(
@@ -570,7 +570,7 @@ class TestMaybeEnableTrlSleepMode:
 
         from rich.console import Console
 
-        from soup_cli.utils.grpo_long_context import maybe_enable_trl_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import maybe_enable_trl_sleep_mode
 
         buf = io.StringIO()
         kwargs: dict = {}
@@ -610,12 +610,12 @@ def _write_rollout_module(tmp_path, monkeypatch, body: str) -> str:
 
 class TestValidateRolloutFunc:
     def test_none_passthrough(self):
-        from soup_cli.utils.agent_rollout import validate_rollout_func
+        from ai_forge_cli.utils.agent_rollout import validate_rollout_func
 
         assert validate_rollout_func(None) is None
 
     def test_happy(self):
-        from soup_cli.utils.agent_rollout import validate_rollout_func
+        from ai_forge_cli.utils.agent_rollout import validate_rollout_func
 
         assert validate_rollout_func("my_mod.sub:my_fn") == "my_mod.sub:my_fn"
 
@@ -624,13 +624,13 @@ class TestValidateRolloutFunc:
         ["", "no-colon", "mod:", ":fn", "mod:fn:extra", "a b:c", "mod\x00:fn", 7],
     )
     def test_rejection_matrix(self, bad):
-        from soup_cli.utils.agent_rollout import validate_rollout_func
+        from ai_forge_cli.utils.agent_rollout import validate_rollout_func
 
         with pytest.raises(ValueError, match="rollout_func"):
             validate_rollout_func(bad)
 
     def test_oversize_rejected(self):
-        from soup_cli.utils.agent_rollout import validate_rollout_func
+        from ai_forge_cli.utils.agent_rollout import validate_rollout_func
 
         with pytest.raises(ValueError, match="rollout_func"):
             validate_rollout_func("a" * 300 + ":fn")
@@ -638,7 +638,7 @@ class TestValidateRolloutFunc:
 
 class TestResolveRolloutFunc:
     def test_resolves_callable(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import resolve_rollout_func
+        from ai_forge_cli.utils.agent_rollout import resolve_rollout_func
 
         spec = _write_rollout_module(
             tmp_path, monkeypatch, "def rollout(prompts):\n    return []\n"
@@ -647,13 +647,13 @@ class TestResolveRolloutFunc:
         assert callable(fn)
 
     def test_missing_module_friendly(self):
-        from soup_cli.utils.agent_rollout import resolve_rollout_func
+        from ai_forge_cli.utils.agent_rollout import resolve_rollout_func
 
         with pytest.raises(ValueError, match="could not be imported"):
             resolve_rollout_func("definitely_not_a_module_xyz:fn")
 
     def test_missing_attr_friendly(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import resolve_rollout_func
+        from ai_forge_cli.utils.agent_rollout import resolve_rollout_func
 
         spec = _write_rollout_module(
             tmp_path, monkeypatch, "def rollout(prompts):\n    return []\n"
@@ -663,7 +663,7 @@ class TestResolveRolloutFunc:
             resolve_rollout_func(f"{module_name}:nope")
 
     def test_non_callable_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import resolve_rollout_func
+        from ai_forge_cli.utils.agent_rollout import resolve_rollout_func
 
         spec = _write_rollout_module(tmp_path, monkeypatch, "rollout = 42\n")
         with pytest.raises(ValueError, match="not callable"):
@@ -674,32 +674,32 @@ class TestRolloutResult:
     def test_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.agent_rollout import RolloutResult
+        from ai_forge_cli.utils.agent_rollout import RolloutResult
 
         result = RolloutResult(backend="openenv", rows=({"prompt": "x"},))
         with pytest.raises(dataclasses.FrozenInstanceError):
             result.backend = "art"  # type: ignore[misc]
 
     def test_rows_must_be_tuple(self):
-        from soup_cli.utils.agent_rollout import RolloutResult
+        from ai_forge_cli.utils.agent_rollout import RolloutResult
 
         with pytest.raises(TypeError, match="tuple"):
             RolloutResult(backend="openenv", rows=[{"prompt": "x"}])  # type: ignore[arg-type]
 
     def test_unknown_backend_rejected(self):
-        from soup_cli.utils.agent_rollout import RolloutResult
+        from ai_forge_cli.utils.agent_rollout import RolloutResult
 
         with pytest.raises(ValueError, match="not supported"):
             RolloutResult(backend="trlx", rows=({"prompt": "x"},))
 
     def test_row_without_prompt_rejected(self):
-        from soup_cli.utils.agent_rollout import RolloutResult
+        from ai_forge_cli.utils.agent_rollout import RolloutResult
 
         with pytest.raises(ValueError, match="prompt"):
             RolloutResult(backend="openenv", rows=({"answer": "y"},))
 
     def test_row_cap(self):
-        from soup_cli.utils.agent_rollout import (
+        from ai_forge_cli.utils.agent_rollout import (
             _MAX_ROLLOUT_ROWS,
             RolloutResult,
         )
@@ -711,7 +711,7 @@ class TestRolloutResult:
 
 class TestLaunchRolloutOpenenv:
     def test_happy_path(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path,
@@ -731,7 +731,7 @@ class TestLaunchRolloutOpenenv:
         assert "answer" not in result.rows[2]
 
     def test_message_list_prompts_preserved(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path,
@@ -743,13 +743,13 @@ class TestLaunchRolloutOpenenv:
         assert result.rows[0]["prompt"] == [{"role": "user", "content": "hi"}]
 
     def test_openenv_requires_rollout_func(self):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         with pytest.raises(ValueError, match="rollout_func"):
             launch_rollout("openenv", prompts=["x"])
 
     def test_empty_rows_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path, monkeypatch, "def rollout(prompts):\n    return []\n"
@@ -758,7 +758,7 @@ class TestLaunchRolloutOpenenv:
             launch_rollout("openenv", prompts=["x"], rollout_func=spec)
 
     def test_non_iterable_rows_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path, monkeypatch, "def rollout(prompts):\n    return 42\n"
@@ -767,7 +767,7 @@ class TestLaunchRolloutOpenenv:
             launch_rollout("openenv", prompts=["x"], rollout_func=spec)
 
     def test_non_mapping_row_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path, monkeypatch, "def rollout(prompts):\n    return ['x']\n"
@@ -777,7 +777,7 @@ class TestLaunchRolloutOpenenv:
 
     @pytest.mark.parametrize("bad_steps", [True, 0, -3, "many"])
     def test_max_steps_validation(self, tmp_path, monkeypatch, bad_steps):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path,
@@ -791,7 +791,7 @@ class TestLaunchRolloutOpenenv:
             )
 
     def test_prompts_string_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path,
@@ -808,21 +808,21 @@ class TestLaunchRolloutExternal:
         [("art", "openpipe-art"), ("ruler", "ruler-eval"), ("nemo_gym", "nemo-gym")],
     )
     def test_missing_package_friendly(self, monkeypatch, name, pkg):
-        from soup_cli.utils import agent_rollout
+        from ai_forge_cli.utils import agent_rollout
 
         monkeypatch.setattr(agent_rollout, "_spec_exists", lambda _n: False)
         with pytest.raises(ImportError, match=pkg):
             agent_rollout.launch_rollout(name, prompts=["x"])
 
     def test_present_package_honest_gate(self, monkeypatch):
-        from soup_cli.utils import agent_rollout
+        from ai_forge_cli.utils import agent_rollout
 
         monkeypatch.setattr(agent_rollout, "_spec_exists", lambda _n: True)
         with pytest.raises(RuntimeError, match="openenv"):
             agent_rollout.launch_rollout("art", prompts=["x"])
 
     def test_runner_override_seam(self, monkeypatch):
-        from soup_cli.utils import agent_rollout
+        from ai_forge_cli.utils import agent_rollout
 
         def _fake_runner(**kwargs):
             return [{"prompt": "from-art", "answer": "ok"}]
@@ -835,7 +835,7 @@ class TestLaunchRolloutExternal:
         assert result.rows[0]["prompt"] == "from-art"
 
     def test_unknown_backend_still_validated_first(self):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         with pytest.raises(ValueError, match="not supported"):
             launch_rollout("trlx", prompts=["x"])
@@ -843,20 +843,20 @@ class TestLaunchRolloutExternal:
 
 class TestRolloutLiveWiredFlags:
     def test_openenv_live_wired(self):
-        from soup_cli.utils.agent_rollout import get_rollout_backend_spec
+        from ai_forge_cli.utils.agent_rollout import get_rollout_backend_spec
 
         assert get_rollout_backend_spec("openenv").live_wired is True
 
     @pytest.mark.parametrize("name", ["art", "ruler", "nemo_gym"])
     def test_external_backends_stay_gated(self, name):
-        from soup_cli.utils.agent_rollout import get_rollout_backend_spec
+        from ai_forge_cli.utils.agent_rollout import get_rollout_backend_spec
 
         assert get_rollout_backend_spec(name).live_wired is False
 
 
 class TestRolloutSchema:
     def test_openenv_with_func_happy(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             "base: a/b\n"
@@ -867,7 +867,7 @@ class TestRolloutSchema:
         assert cfg.training.rollout_func == "my_mod:my_fn"
 
     def test_func_without_backend_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="openenv"):
             load_config_from_string(
@@ -878,7 +878,7 @@ class TestRolloutSchema:
             )
 
     def test_openenv_without_func_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="rollout_func"):
             load_config_from_string(
@@ -889,7 +889,7 @@ class TestRolloutSchema:
             )
 
     def test_func_with_art_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="openenv"):
             load_config_from_string(
@@ -900,7 +900,7 @@ class TestRolloutSchema:
             )
 
     def test_bad_func_shape_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="rollout_func"):
             load_config_from_string(
@@ -911,7 +911,7 @@ class TestRolloutSchema:
             )
 
     def test_default_none(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         assert TrainingConfig().rollout_func is None
 
@@ -930,30 +930,30 @@ class TestRolloutGrpoWiring:
 
 class TestLoraKeyMapping:
     def test_hf_to_mlx_strips_prefix_and_lowers(self):
-        from soup_cli.utils.apple_adapter import hf_key_to_mlx
+        from ai_forge_cli.utils.apple_adapter import hf_key_to_mlx
 
         key = "base_model.model.model.layers.0.self_attn.q_proj.lora_A.weight"
         assert hf_key_to_mlx(key) == "model.layers.0.self_attn.q_proj.lora_a"
 
     def test_hf_to_mlx_lora_b(self):
-        from soup_cli.utils.apple_adapter import hf_key_to_mlx
+        from ai_forge_cli.utils.apple_adapter import hf_key_to_mlx
 
         key = "base_model.model.model.layers.2.mlp.gate_proj.lora_B.weight"
         assert hf_key_to_mlx(key) == "model.layers.2.mlp.gate_proj.lora_b"
 
     def test_non_lora_key_returns_none(self):
-        from soup_cli.utils.apple_adapter import hf_key_to_mlx
+        from ai_forge_cli.utils.apple_adapter import hf_key_to_mlx
 
         assert hf_key_to_mlx("base_model.model.model.embed_tokens.weight") is None
 
     def test_mlx_to_hf_round_trip(self):
-        from soup_cli.utils.apple_adapter import hf_key_to_mlx, mlx_key_to_hf
+        from ai_forge_cli.utils.apple_adapter import hf_key_to_mlx, mlx_key_to_hf
 
         original = "base_model.model.model.layers.0.self_attn.q_proj.lora_A.weight"
         assert mlx_key_to_hf(hf_key_to_mlx(original)) == original
 
     def test_mlx_non_lora_returns_none(self):
-        from soup_cli.utils.apple_adapter import mlx_key_to_hf
+        from ai_forge_cli.utils.apple_adapter import mlx_key_to_hf
 
         assert mlx_key_to_hf("model.layers.0.self_attn.q_proj.weight") is None
 
@@ -969,7 +969,7 @@ class TestConvertArrays:
         }
 
     def test_hf_to_mlx_transposes(self):
-        from soup_cli.utils.apple_adapter import convert_hf_to_mlx_arrays
+        from ai_forge_cli.utils.apple_adapter import convert_hf_to_mlx_arrays
 
         converted, skipped = convert_hf_to_mlx_arrays(self._hf_arrays())
         assert skipped == ()
@@ -979,7 +979,7 @@ class TestConvertArrays:
         assert lora_b.shape == (4, 16)  # [r, out]
 
     def test_non_lora_keys_skipped(self):
-        from soup_cli.utils.apple_adapter import convert_hf_to_mlx_arrays
+        from ai_forge_cli.utils.apple_adapter import convert_hf_to_mlx_arrays
 
         arrays = self._hf_arrays()
         arrays["base_model.model.model.embed_tokens.weight"] = np.zeros(
@@ -990,7 +990,7 @@ class TestConvertArrays:
         assert skipped == ("base_model.model.model.embed_tokens.weight",)
 
     def test_zero_lora_keys_rejected(self):
-        from soup_cli.utils.apple_adapter import convert_hf_to_mlx_arrays
+        from ai_forge_cli.utils.apple_adapter import convert_hf_to_mlx_arrays
 
         with pytest.raises(ValueError, match="no LoRA"):
             convert_hf_to_mlx_arrays(
@@ -998,7 +998,7 @@ class TestConvertArrays:
             )
 
     def test_mlx_to_hf_round_trip_values(self):
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             convert_hf_to_mlx_arrays,
             convert_mlx_to_hf_arrays,
         )
@@ -1047,7 +1047,7 @@ class TestConvertAppleAdapterLive:
         mlx-lm)."""
         from safetensors.numpy import load_file
 
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -1081,7 +1081,7 @@ class TestConvertAppleAdapterLive:
     def test_full_round_trip(self, tmp_path, monkeypatch):
         from safetensors.numpy import load_file
 
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -1113,7 +1113,7 @@ class TestConvertAppleAdapterLive:
         assert config["lora_alpha"] == 8
 
     def test_sign_writes_signature(self, tmp_path, monkeypatch):
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -1131,7 +1131,7 @@ class TestConvertAppleAdapterLive:
 
     @pytest.mark.parametrize("direction", ["hf-to-apple", "mlx-to-apple"])
     def test_apple_directions_upstream_gated(self, tmp_path, monkeypatch, direction):
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -1145,7 +1145,7 @@ class TestConvertAppleAdapterLive:
             convert_apple_adapter(plan)
 
     def test_missing_safetensors_friendly(self, tmp_path, monkeypatch):
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -1159,7 +1159,7 @@ class TestConvertAppleAdapterLive:
             convert_apple_adapter(plan)
 
     def test_bin_adapter_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -1175,7 +1175,7 @@ class TestConvertAppleAdapterLive:
             convert_apple_adapter(plan)
 
     def test_output_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -1193,7 +1193,7 @@ class TestConvertAppleAdapterLive:
             convert_apple_adapter(plan)
 
     def test_mlx_source_missing_files_friendly(self, tmp_path, monkeypatch):
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -1207,7 +1207,7 @@ class TestConvertAppleAdapterLive:
             convert_apple_adapter(plan)
 
     def test_non_plan_rejected(self):
-        from soup_cli.utils.apple_adapter import convert_apple_adapter
+        from ai_forge_cli.utils.apple_adapter import convert_apple_adapter
 
         with pytest.raises(TypeError, match="AppleAdapterPlan"):
             convert_apple_adapter({})  # type: ignore[arg-type]
@@ -1215,7 +1215,7 @@ class TestConvertAppleAdapterLive:
     def test_report_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.apple_adapter import ConversionReport
+        from ai_forge_cli.utils.apple_adapter import ConversionReport
 
         report = ConversionReport(
             direction="hf-to-mlx", output_dir="out",
@@ -1227,7 +1227,7 @@ class TestConvertAppleAdapterLive:
 
 class TestAppleAdapterCli:
     def test_live_conversion_exit_0(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         _write_peft_adapter(tmp_path / "adapter")
@@ -1243,7 +1243,7 @@ class TestAppleAdapterCli:
         assert (tmp_path / "out" / "adapters.safetensors").is_file()
 
     def test_apple_direction_exit_3(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         _write_peft_adapter(tmp_path / "adapter")
@@ -1258,7 +1258,7 @@ class TestAppleAdapterCli:
         assert result.exit_code == 3, (result.output, repr(result.exception))
 
     def test_missing_weights_exit_2(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "adapter").mkdir()
@@ -1288,7 +1288,7 @@ class TestIsExpertWeightKey:
         ],
     )
     def test_fused_expert_keys(self, key):
-        from soup_cli.utils.delinearize_llama4 import is_expert_weight_key
+        from ai_forge_cli.utils.delinearize_llama4 import is_expert_weight_key
 
         assert is_expert_weight_key(key)
 
@@ -1305,7 +1305,7 @@ class TestIsExpertWeightKey:
         ],
     )
     def test_non_fused_keys(self, key):
-        from soup_cli.utils.delinearize_llama4 import is_expert_weight_key
+        from ai_forge_cli.utils.delinearize_llama4 import is_expert_weight_key
 
         assert not is_expert_weight_key(key)
 
@@ -1313,7 +1313,7 @@ class TestIsExpertWeightKey:
 class TestDelinearizeTensor:
     def test_reshapes_2d_to_3d(self):
         torch = _torch_or_skip()
-        from soup_cli.utils.delinearize_llama4 import delinearize_tensor
+        from ai_forge_cli.utils.delinearize_llama4 import delinearize_tensor
 
         tensor = torch.arange(24, dtype=torch.float32).reshape(6, 4)
         out, status = delinearize_tensor(tensor, num_experts=3)
@@ -1323,7 +1323,7 @@ class TestDelinearizeTensor:
 
     def test_3d_passthrough(self):
         torch = _torch_or_skip()
-        from soup_cli.utils.delinearize_llama4 import delinearize_tensor
+        from ai_forge_cli.utils.delinearize_llama4 import delinearize_tensor
 
         tensor = torch.zeros(3, 2, 4)
         out, status = delinearize_tensor(tensor, num_experts=3)
@@ -1332,7 +1332,7 @@ class TestDelinearizeTensor:
 
     def test_not_divisible_rejected(self):
         torch = _torch_or_skip()
-        from soup_cli.utils.delinearize_llama4 import delinearize_tensor
+        from ai_forge_cli.utils.delinearize_llama4 import delinearize_tensor
 
         tensor = torch.zeros(7, 4)
         with pytest.raises(ValueError, match="divisible"):
@@ -1340,7 +1340,7 @@ class TestDelinearizeTensor:
 
     def test_1d_rejected(self):
         torch = _torch_or_skip()
-        from soup_cli.utils.delinearize_llama4 import delinearize_tensor
+        from ai_forge_cli.utils.delinearize_llama4 import delinearize_tensor
 
         with pytest.raises(ValueError, match="2-D"):
             delinearize_tensor(torch.zeros(8), num_experts=2)
@@ -1348,7 +1348,7 @@ class TestDelinearizeTensor:
 
 class TestReadNumExperts:
     def test_text_config_nested(self, tmp_path):
-        from soup_cli.utils.delinearize_llama4 import read_num_experts
+        from ai_forge_cli.utils.delinearize_llama4 import read_num_experts
 
         (tmp_path / "config.json").write_text(
             json.dumps({"text_config": {"num_local_experts": 16}}),
@@ -1357,7 +1357,7 @@ class TestReadNumExperts:
         assert read_num_experts(str(tmp_path)) == 16
 
     def test_top_level(self, tmp_path):
-        from soup_cli.utils.delinearize_llama4 import read_num_experts
+        from ai_forge_cli.utils.delinearize_llama4 import read_num_experts
 
         (tmp_path / "config.json").write_text(
             json.dumps({"num_local_experts": 8}), encoding="utf-8"
@@ -1365,18 +1365,18 @@ class TestReadNumExperts:
         assert read_num_experts(str(tmp_path)) == 8
 
     def test_missing_returns_none(self, tmp_path):
-        from soup_cli.utils.delinearize_llama4 import read_num_experts
+        from ai_forge_cli.utils.delinearize_llama4 import read_num_experts
 
         (tmp_path / "config.json").write_text("{}", encoding="utf-8")
         assert read_num_experts(str(tmp_path)) is None
 
     def test_no_config_returns_none(self, tmp_path):
-        from soup_cli.utils.delinearize_llama4 import read_num_experts
+        from ai_forge_cli.utils.delinearize_llama4 import read_num_experts
 
         assert read_num_experts(str(tmp_path)) is None
 
     def test_bool_value_rejected(self, tmp_path):
-        from soup_cli.utils.delinearize_llama4 import read_num_experts
+        from ai_forge_cli.utils.delinearize_llama4 import read_num_experts
 
         (tmp_path / "config.json").write_text(
             json.dumps({"num_local_experts": True}), encoding="utf-8"
@@ -1413,7 +1413,7 @@ class TestRunDelinearize:
         torch = _torch_or_skip()
         from safetensors.torch import load_file
 
-        from soup_cli.utils.delinearize_llama4 import (
+        from ai_forge_cli.utils.delinearize_llama4 import (
             plan_delinearize,
             run_delinearize,
         )
@@ -1441,7 +1441,7 @@ class TestRunDelinearize:
     def test_explicit_num_experts_overrides(self, tmp_path, monkeypatch):
         from safetensors.torch import load_file
 
-        from soup_cli.utils.delinearize_llama4 import (
+        from ai_forge_cli.utils.delinearize_llama4 import (
             plan_delinearize,
             run_delinearize,
         )
@@ -1462,7 +1462,7 @@ class TestRunDelinearize:
         torch = _torch_or_skip()
         from safetensors.torch import save_file
 
-        from soup_cli.utils.delinearize_llama4 import (
+        from ai_forge_cli.utils.delinearize_llama4 import (
             plan_delinearize,
             run_delinearize,
         )
@@ -1480,7 +1480,7 @@ class TestRunDelinearize:
         torch = _torch_or_skip()
         from safetensors.torch import save_file
 
-        from soup_cli.utils.delinearize_llama4 import (
+        from ai_forge_cli.utils.delinearize_llama4 import (
             plan_delinearize,
             run_delinearize,
         )
@@ -1502,7 +1502,7 @@ class TestRunDelinearize:
 
     @pytest.mark.parametrize("bad", [True, 0, -2, "four", 1_000_000])
     def test_num_experts_bounds(self, tmp_path, monkeypatch, bad):
-        from soup_cli.utils.delinearize_llama4 import (
+        from ai_forge_cli.utils.delinearize_llama4 import (
             plan_delinearize,
             run_delinearize,
         )
@@ -1515,7 +1515,7 @@ class TestRunDelinearize:
             run_delinearize(plan, num_experts=bad)
 
     def test_non_plan_rejected(self):
-        from soup_cli.utils.delinearize_llama4 import run_delinearize
+        from ai_forge_cli.utils.delinearize_llama4 import run_delinearize
 
         with pytest.raises(TypeError, match="DelinearizePlan"):
             run_delinearize({})  # type: ignore[arg-type]
@@ -1523,7 +1523,7 @@ class TestRunDelinearize:
     def test_result_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.delinearize_llama4 import DelinearizeResult
+        from ai_forge_cli.utils.delinearize_llama4 import DelinearizeResult
 
         result = DelinearizeResult(
             source_dir="a", target_dir="b", files_written=("x",),
@@ -1535,7 +1535,7 @@ class TestRunDelinearize:
 
 class TestDelinearizeCli:
     def test_live_run_exit_0(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         _write_llama4_stub(tmp_path / "src")
@@ -1547,7 +1547,7 @@ class TestDelinearizeCli:
         assert (tmp_path / "out" / "model.safetensors").is_file()
 
     def test_plan_only_writes_nothing(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         _write_llama4_stub(tmp_path / "src")
@@ -1563,7 +1563,7 @@ class TestDelinearizeCli:
         torch = _torch_or_skip()
         from safetensors.torch import save_file
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "src"
@@ -1584,9 +1584,9 @@ class TestDelinearizeCli:
 
 class TestPatchInvariants:
     def test_version_bumped(self):
-        import soup_cli
+        import ai_forge_cli
 
-        parts = tuple(int(p) for p in soup_cli.__version__.split(".")[:3])
+        parts = tuple(int(p) for p in ai_forge_cli.__version__.split(".")[:3])
         assert parts >= (0, 71, 21)
 
     @pytest.mark.parametrize(
@@ -1629,14 +1629,14 @@ class TestReviewFollowupsPrecision:
     """#141 review fixes — torchao probe, recipe NUL, partial-conversion."""
 
     def test_out_proj_and_wqkv_in_allowlist(self):
-        from soup_cli.utils.advanced_precision import is_attention_projection
+        from ai_forge_cli.utils.advanced_precision import is_attention_projection
 
         assert is_attention_projection("encoder.layers.0.self_attn.out_proj")
         assert is_attention_projection("transformer.blocks.0.attn.Wqkv")
 
     def test_is_blackwell_gpu_runtime_error_false(self, monkeypatch):
         torch = _torch_or_skip()
-        from soup_cli.utils.advanced_precision import is_blackwell_gpu
+        from ai_forge_cli.utils.advanced_precision import is_blackwell_gpu
 
         monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
 
@@ -1651,7 +1651,7 @@ class TestReviewFollowupsPrecision:
         torchao.float8 (the bare fake root has no float8 attr)."""
         torch = _torch_or_skip()
         nn = torch.nn
-        from soup_cli.utils.advanced_precision import apply_fp8_attention
+        from ai_forge_cli.utils.advanced_precision import apply_fp8_attention
 
         class _F8(nn.Linear):
             pass
@@ -1666,7 +1666,7 @@ class TestReviewFollowupsPrecision:
 
     def test_partial_conversion_failure_is_honest(self, monkeypatch):
         """torchao crashing mid-conversion surfaces 'PARTIALLY converted'."""
-        from soup_cli.utils.advanced_precision import apply_fp8_attention
+        from ai_forge_cli.utils.advanced_precision import apply_fp8_attention
 
         record: dict = {}
         _install_fake_torchao_float8(monkeypatch, record)
@@ -1680,7 +1680,7 @@ class TestReviewFollowupsPrecision:
             apply_fp8_attention(_tiny_attn_model())
 
     def test_nvfp4_missing_quantize_friendly(self, monkeypatch):
-        from soup_cli.utils.advanced_precision import apply_nvfp4
+        from ai_forge_cli.utils.advanced_precision import apply_nvfp4
 
         fake_q = types.ModuleType("torchao.quantization")
 
@@ -1693,7 +1693,7 @@ class TestReviewFollowupsPrecision:
         monkeypatch.setitem(sys.modules, "torchao", fake_root)
         monkeypatch.setitem(sys.modules, "torchao.quantization", fake_q)
         monkeypatch.setattr(
-            "soup_cli.utils.advanced_precision.is_blackwell_gpu", lambda: True
+            "ai_forge_cli.utils.advanced_precision.is_blackwell_gpu", lambda: True
         )
         with pytest.raises(RuntimeError, match="quantize_"):
             apply_nvfp4(_tiny_attn_model())
@@ -1702,8 +1702,8 @@ class TestReviewFollowupsPrecision:
         """Force the degrade path by patching the converters directly —
         environment-independent (review fix: the original test relied on
         the host lacking torchao/Hopper)."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils import advanced_precision, v028_features
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils import advanced_precision, v028_features
 
         def _gate(model, **kwargs):
             raise RuntimeError("gate fired")
@@ -1735,25 +1735,25 @@ class TestReviewFollowupsSleepMode:
     """#124 review fixes — level validation + version edge cases."""
 
     def test_parse_version_tuple_none(self):
-        from soup_cli.utils.grpo_long_context import _parse_version_tuple
+        from ai_forge_cli.utils.grpo_long_context import _parse_version_tuple
 
         assert _parse_version_tuple(None) == ()  # type: ignore[arg-type]
 
     def test_vllm_without_version_attr_false(self, monkeypatch):
-        from soup_cli.utils.grpo_long_context import vllm_supports_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import vllm_supports_sleep_mode
 
         fake = types.ModuleType("vllm")  # no __version__
         monkeypatch.setitem(sys.modules, "vllm", fake)
         assert vllm_supports_sleep_mode() is False
 
     def test_exact_floor_0_7_0_supported(self, monkeypatch):
-        from soup_cli.utils.grpo_long_context import vllm_supports_sleep_mode
+        from ai_forge_cli.utils.grpo_long_context import vllm_supports_sleep_mode
 
         _install_fake_vllm(monkeypatch, "0.7.0")
         assert vllm_supports_sleep_mode() is True
 
     def test_sleep_cycle_level_2_forwarded(self):
-        from soup_cli.utils.grpo_long_context import vllm_sleep_cycle
+        from ai_forge_cli.utils.grpo_long_context import vllm_sleep_cycle
 
         calls: list = []
         engine = SimpleNamespace(
@@ -1766,7 +1766,7 @@ class TestReviewFollowupsSleepMode:
 
     @pytest.mark.parametrize("level", [True, 0, 3, "1"])
     def test_sleep_cycle_bad_level_rejected(self, level):
-        from soup_cli.utils.grpo_long_context import vllm_sleep_cycle
+        from ai_forge_cli.utils.grpo_long_context import vllm_sleep_cycle
 
         engine = SimpleNamespace(sleep=lambda level: None, wake_up=lambda: None)
         with pytest.raises((TypeError, ValueError), match="level"):
@@ -1776,12 +1776,12 @@ class TestReviewFollowupsSleepMode:
     def test_sleep_without_wake_up_warns_and_runs(self, caplog):
         import logging
 
-        from soup_cli.utils.grpo_long_context import vllm_sleep_cycle
+        from ai_forge_cli.utils.grpo_long_context import vllm_sleep_cycle
 
         engine = SimpleNamespace(sleep=lambda level: None)  # no wake_up
         ran = []
         with caplog.at_level(
-            logging.WARNING, logger="soup_cli.utils.grpo_long_context"
+            logging.WARNING, logger="ai_forge_cli.utils.grpo_long_context"
         ):
             with vllm_sleep_cycle(engine):
                 ran.append(True)
@@ -1793,7 +1793,7 @@ class TestReviewFollowupsRollout:
     """#125 review fixes — smuggle-strip, loud answers, boundaries."""
 
     def test_extra_keys_stripped(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path,
@@ -1805,7 +1805,7 @@ class TestReviewFollowupsRollout:
         assert set(result.rows[0]) == {"prompt", "answer"}
 
     def test_non_str_answer_rejected_loudly(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path,
@@ -1817,7 +1817,7 @@ class TestReviewFollowupsRollout:
             launch_rollout("openenv", prompts=["p"], rollout_func=spec)
 
     def test_empty_prompt_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path,
@@ -1828,13 +1828,13 @@ class TestReviewFollowupsRollout:
             launch_rollout("openenv", prompts=["p"], rollout_func=spec)
 
     def test_empty_rows_result_rejected(self):
-        from soup_cli.utils.agent_rollout import RolloutResult
+        from ai_forge_cli.utils.agent_rollout import RolloutResult
 
         with pytest.raises(ValueError, match="no rows"):
             RolloutResult(backend="openenv", rows=())
 
     def test_result_stores_canonical_backend(self):
-        from soup_cli.utils.agent_rollout import RolloutResult
+        from ai_forge_cli.utils.agent_rollout import RolloutResult
 
         result = RolloutResult(backend="ART", rows=({"prompt": "x"},))
         assert result.backend == "art"
@@ -1842,7 +1842,7 @@ class TestReviewFollowupsRollout:
     def test_message_list_prompts_alias_broken(self):
         """Mutating the rollout callable's retained message dict must not
         leak into the normalised training rows (immutability policy)."""
-        from soup_cli.utils.agent_rollout import _normalise_rollout_rows
+        from ai_forge_cli.utils.agent_rollout import _normalise_rollout_rows
 
         message = {"role": "user", "content": "hi"}
         rows = _normalise_rollout_rows([{"prompt": [message]}], "openenv")
@@ -1850,7 +1850,7 @@ class TestReviewFollowupsRollout:
         assert rows[0]["prompt"][0]["content"] == "hi"
 
     def test_validate_rollout_func_bool_rejected(self):
-        from soup_cli.utils.agent_rollout import validate_rollout_func
+        from ai_forge_cli.utils.agent_rollout import validate_rollout_func
 
         # ValueError (not TypeError) so the Pydantic field_validator wraps
         # it into a ValidationError (mode="before" validators re-raise
@@ -1864,7 +1864,7 @@ class TestReviewFollowupsRollout:
     def test_max_steps_exact_boundary(
         self, tmp_path, monkeypatch, max_steps, ok
     ):
-        from soup_cli.utils.agent_rollout import launch_rollout
+        from ai_forge_cli.utils.agent_rollout import launch_rollout
 
         spec = _write_rollout_module(
             tmp_path,
@@ -1885,7 +1885,7 @@ class TestReviewFollowupsRollout:
                 )
 
     def test_external_runner_receives_all_kwargs(self, monkeypatch):
-        from soup_cli.utils import agent_rollout
+        from ai_forge_cli.utils import agent_rollout
 
         seen: dict = {}
 
@@ -1914,7 +1914,7 @@ class TestReviewFollowupsAppleAdapter:
     def test_infer_num_layers_gpt2_style(self):
         """GPT-2-style ``transformer.h.N`` paths also derive num_layers
         (caught by the real bf16 PEFT adapter smoke)."""
-        from soup_cli.utils.apple_adapter import _infer_num_layers
+        from ai_forge_cli.utils.apple_adapter import _infer_num_layers
 
         assert _infer_num_layers({
             "transformer.h.4.attn.c_attn.lora_a": None,
@@ -1924,7 +1924,7 @@ class TestReviewFollowupsAppleAdapter:
         assert _infer_num_layers({"no_layer_key.lora_a": None}) is None
 
     def test_prefixless_hf_key_mapped(self):
-        from soup_cli.utils.apple_adapter import hf_key_to_mlx, mlx_key_to_hf
+        from ai_forge_cli.utils.apple_adapter import hf_key_to_mlx, mlx_key_to_hf
 
         assert (
             hf_key_to_mlx("model.layers.0.self_attn.q_proj.lora_A.weight")
@@ -1937,7 +1937,7 @@ class TestReviewFollowupsAppleAdapter:
         )
 
     def test_lora_dropout_carried_through(self, tmp_path, monkeypatch):
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -1963,7 +1963,7 @@ class TestReviewFollowupsAppleAdapter:
     def test_legacy_npz_input_still_loads(self, tmp_path, monkeypatch):
         from safetensors.numpy import load_file
 
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -1995,7 +1995,7 @@ class TestReviewFollowupsAppleAdapter:
 
     def test_corrupt_safetensors_value_error(self, tmp_path, monkeypatch):
         pytest.importorskip("torch")
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -2011,7 +2011,7 @@ class TestReviewFollowupsAppleAdapter:
             convert_apple_adapter(plan)
 
     def test_corrupt_npz_value_error(self, tmp_path, monkeypatch):
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -2028,7 +2028,7 @@ class TestReviewFollowupsAppleAdapter:
 
     def test_npz_decompression_cap(self, tmp_path, monkeypatch):
         """The 4 GiB cap re-applies to DECOMPRESSED arrays (zip bomb)."""
-        from soup_cli.utils import apple_adapter
+        from ai_forge_cli.utils import apple_adapter
 
         monkeypatch.chdir(tmp_path)
         mlx_dir = tmp_path / "mlx"
@@ -2049,7 +2049,7 @@ class TestReviewFollowupsAppleAdapter:
             apple_adapter.convert_apple_adapter(plan)
 
     def test_adapter_size_cap_branch(self, tmp_path, monkeypatch):
-        from soup_cli.utils import apple_adapter
+        from ai_forge_cli.utils import apple_adapter
 
         monkeypatch.chdir(tmp_path)
         _write_peft_adapter(tmp_path / "adapter")
@@ -2064,7 +2064,7 @@ class TestReviewFollowupsAppleAdapter:
     def test_symlinked_weights_rejected(self, tmp_path, monkeypatch):
         import os
 
-        from soup_cli.utils.apple_adapter import (
+        from ai_forge_cli.utils.apple_adapter import (
             build_apple_adapter_plan,
             convert_apple_adapter,
         )
@@ -2094,7 +2094,7 @@ class TestReviewFollowupsAppleAdapter:
         ],
     )
     def test_conversion_report_post_init(self, field, value, exc):
-        from soup_cli.utils.apple_adapter import ConversionReport
+        from ai_forge_cli.utils.apple_adapter import ConversionReport
 
         kwargs = {
             "direction": "hf-to-mlx",
@@ -2115,7 +2115,7 @@ class TestReviewFollowupsDelinearize:
         ("value", "ok"), [(4096, True), (4097, False), (1, True), (0, False)]
     )
     def test_num_experts_exact_boundary(self, value, ok):
-        from soup_cli.utils.delinearize_llama4 import _validate_num_experts
+        from ai_forge_cli.utils.delinearize_llama4 import _validate_num_experts
 
         if ok:
             assert _validate_num_experts(value) == value
@@ -2126,7 +2126,7 @@ class TestReviewFollowupsDelinearize:
     def test_plan_direct_construction_outside_cwd_rejected(
         self, tmp_path, monkeypatch
     ):
-        from soup_cli.utils.delinearize_llama4 import DelinearizePlan
+        from ai_forge_cli.utils.delinearize_llama4 import DelinearizePlan
 
         workdir = tmp_path / "work"
         workdir.mkdir()
@@ -2140,7 +2140,7 @@ class TestReviewFollowupsDelinearize:
 
     def test_corrupt_shard_value_error(self, tmp_path, monkeypatch):
         pytest.importorskip("torch")
-        from soup_cli.utils.delinearize_llama4 import (
+        from ai_forge_cli.utils.delinearize_llama4 import (
             plan_delinearize,
             run_delinearize,
         )
@@ -2156,7 +2156,7 @@ class TestReviewFollowupsDelinearize:
 
     def test_weight_file_size_cap_branch(self, tmp_path, monkeypatch):
         pytest.importorskip("torch")
-        from soup_cli.utils import delinearize_llama4
+        from ai_forge_cli.utils import delinearize_llama4
 
         monkeypatch.chdir(tmp_path)
         _write_llama4_stub(tmp_path / "src")
@@ -2170,7 +2170,7 @@ class TestReviewFollowupsDelinearize:
         torch = _torch_or_skip()
         from safetensors.torch import save_file
 
-        from soup_cli.utils.delinearize_llama4 import (
+        from ai_forge_cli.utils.delinearize_llama4 import (
             plan_delinearize,
             run_delinearize,
         )
@@ -2199,7 +2199,7 @@ class TestReviewFollowupsDelinearize:
     def test_read_num_experts_fallbacks(
         self, tmp_path, monkeypatch, config, expected
     ):
-        from soup_cli.utils.delinearize_llama4 import read_num_experts
+        from ai_forge_cli.utils.delinearize_llama4 import read_num_experts
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "src"
@@ -2212,7 +2212,7 @@ class TestReviewFollowupsDelinearize:
         import os
 
         pytest.importorskip("torch")
-        from soup_cli.utils.delinearize_llama4 import (
+        from ai_forge_cli.utils.delinearize_llama4 import (
             plan_delinearize,
             run_delinearize,
         )
@@ -2234,7 +2234,7 @@ class TestReviewFollowupsDelinearize:
     def test_symlinked_config_json_skipped(self, tmp_path, monkeypatch):
         import os
 
-        from soup_cli.utils.delinearize_llama4 import read_num_experts
+        from ai_forge_cli.utils.delinearize_llama4 import read_num_experts
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "real"
@@ -2249,7 +2249,7 @@ class TestReviewFollowupsDelinearize:
 
     def test_cli_num_experts_flag_passthrough(self, tmp_path, monkeypatch):
         pytest.importorskip("torch")
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "src"

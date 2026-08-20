@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from soup_cli.config.schema import TrainingConfig
+from ai_forge_cli.config.schema import TrainingConfig
 
 # ---------------------------------------------------------------------------
 # Config validation
@@ -72,8 +72,8 @@ class TestWatchdogCallback:
 
     def _make_callback(self, threshold: float = 3.0, patience: int = 5):
         """Create a callback with watchdog enabled."""
-        from soup_cli.monitoring.callback import SoupTrainerCallback
-        from soup_cli.monitoring.display import TrainingDisplay
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.monitoring.display import TrainingDisplay
 
         display = MagicMock(spec=TrainingDisplay)
         cb = SoupTrainerCallback(
@@ -138,8 +138,8 @@ class TestWatchdogCallback:
 
     def test_watchdog_disabled_by_default(self):
         """Watchdog does not interfere when disabled."""
-        from soup_cli.monitoring.callback import SoupTrainerCallback
-        from soup_cli.monitoring.display import TrainingDisplay
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.monitoring.display import TrainingDisplay
 
         display = MagicMock(spec=TrainingDisplay)
         cb = SoupTrainerCallback(display=display)
@@ -199,7 +199,7 @@ class TestWatchdogSweep:
 
     def test_watchdog_threshold_in_sweep(self):
         """loss_watchdog_threshold is a valid sweep param."""
-        from soup_cli.commands.sweep import _parse_sweep_params
+        from ai_forge_cli.commands.sweep import _parse_sweep_params
 
         params = _parse_sweep_params(
             ["training.loss_watchdog_threshold=2.0,3.0,5.0"]
@@ -209,7 +209,7 @@ class TestWatchdogSweep:
 
     def test_watchdog_patience_in_sweep(self):
         """loss_watchdog_patience is a valid sweep param."""
-        from soup_cli.commands.sweep import _parse_sweep_params
+        from ai_forge_cli.commands.sweep import _parse_sweep_params
 
         params = _parse_sweep_params(
             ["training.loss_watchdog_patience=3,5,10"]

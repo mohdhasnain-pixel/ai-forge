@@ -15,7 +15,7 @@ from typer.testing import CliRunner
 
 
 def test_module_imports():
-    from soup_cli.utils import data_forge  # noqa: F401
+    from ai_forge_cli.utils import data_forge  # noqa: F401
 
     assert hasattr(data_forge, "ForgePlan")
     assert hasattr(data_forge, "ProvenanceRecord")
@@ -28,7 +28,7 @@ def test_module_imports():
 
 
 def test_forge_task_literal_constants():
-    from soup_cli.utils.data_forge import VALID_TASKS
+    from ai_forge_cli.utils.data_forge import VALID_TASKS
 
     assert frozenset(VALID_TASKS) == frozenset({"sft", "preference", "tool"})
 
@@ -41,7 +41,7 @@ def test_forge_task_literal_constants():
 def test_forge_plan_frozen():
     import dataclasses
 
-    from soup_cli.utils.data_forge import ForgePlan
+    from ai_forge_cli.utils.data_forge import ForgePlan
 
     plan = ForgePlan(task="sft", num_docs=3, target_rows=12, teacher="local-judge")
     with pytest.raises(dataclasses.FrozenInstanceError):
@@ -51,7 +51,7 @@ def test_forge_plan_frozen():
 def test_provenance_record_frozen():
     import dataclasses
 
-    from soup_cli.utils.data_forge import ProvenanceRecord
+    from ai_forge_cli.utils.data_forge import ProvenanceRecord
 
     rec = ProvenanceRecord(
         row_id="r0",
@@ -65,7 +65,7 @@ def test_provenance_record_frozen():
 
 
 def test_forge_row_to_dict_includes_provenance():
-    from soup_cli.utils.data_forge import ForgeRow, ProvenanceRecord
+    from ai_forge_cli.utils.data_forge import ForgeRow, ProvenanceRecord
 
     prov = ProvenanceRecord(
         row_id="r0",
@@ -91,7 +91,7 @@ def test_forge_row_to_dict_includes_provenance():
 
 
 def test_chunk_document_basic():
-    from soup_cli.utils.data_forge import chunk_document
+    from ai_forge_cli.utils.data_forge import chunk_document
 
     text = "para one.\n\npara two.\n\npara three."
     chunks = chunk_document(text, max_chunk_chars=20)
@@ -100,21 +100,21 @@ def test_chunk_document_basic():
 
 
 def test_chunk_document_short_returns_one():
-    from soup_cli.utils.data_forge import chunk_document
+    from ai_forge_cli.utils.data_forge import chunk_document
 
     out = chunk_document("hello", max_chunk_chars=1000)
     assert out == ["hello"]
 
 
 def test_chunk_document_empty_returns_empty():
-    from soup_cli.utils.data_forge import chunk_document
+    from ai_forge_cli.utils.data_forge import chunk_document
 
     assert chunk_document("", max_chunk_chars=100) == []
     assert chunk_document("   \n  ", max_chunk_chars=100) == []
 
 
 def test_chunk_document_rejects_invalid_max():
-    from soup_cli.utils.data_forge import chunk_document
+    from ai_forge_cli.utils.data_forge import chunk_document
 
     with pytest.raises(ValueError):
         chunk_document("hi", max_chunk_chars=0)
@@ -125,21 +125,21 @@ def test_chunk_document_rejects_invalid_max():
 
 
 def test_chunk_document_rejects_non_string():
-    from soup_cli.utils.data_forge import chunk_document
+    from ai_forge_cli.utils.data_forge import chunk_document
 
     with pytest.raises(TypeError):
         chunk_document(123, max_chunk_chars=100)  # type: ignore[arg-type]
 
 
 def test_chunk_document_rejects_null_byte():
-    from soup_cli.utils.data_forge import chunk_document
+    from ai_forge_cli.utils.data_forge import chunk_document
 
     with pytest.raises(ValueError):
         chunk_document("hi\x00there", max_chunk_chars=100)
 
 
 def test_chunk_document_respects_oversize_cap():
-    from soup_cli.utils.data_forge import _MAX_DOC_CHARS, chunk_document
+    from ai_forge_cli.utils.data_forge import _MAX_DOC_CHARS, chunk_document
 
     with pytest.raises(ValueError):
         chunk_document("x" * (_MAX_DOC_CHARS + 1), max_chunk_chars=100)
@@ -151,28 +151,28 @@ def test_chunk_document_respects_oversize_cap():
 
 
 def test_score_uncertainty_bounds():
-    from soup_cli.utils.data_forge import score_uncertainty
+    from ai_forge_cli.utils.data_forge import score_uncertainty
 
     s = score_uncertainty("a short answer", "a much longer reference answer here")
     assert 0.0 <= s <= 1.0
 
 
 def test_score_uncertainty_identical_is_zero():
-    from soup_cli.utils.data_forge import score_uncertainty
+    from ai_forge_cli.utils.data_forge import score_uncertainty
 
     s = score_uncertainty("hello world", "hello world")
     assert s == 0.0
 
 
 def test_score_uncertainty_disjoint_is_one():
-    from soup_cli.utils.data_forge import score_uncertainty
+    from ai_forge_cli.utils.data_forge import score_uncertainty
 
     s = score_uncertainty("alpha beta", "gamma delta")
     assert s == pytest.approx(1.0)
 
 
 def test_score_uncertainty_rejects_invalid():
-    from soup_cli.utils.data_forge import score_uncertainty
+    from ai_forge_cli.utils.data_forge import score_uncertainty
 
     with pytest.raises(TypeError):
         score_uncertainty(123, "x")  # type: ignore[arg-type]
@@ -181,7 +181,7 @@ def test_score_uncertainty_rejects_invalid():
 
 
 def test_score_uncertainty_empty_returns_one():
-    from soup_cli.utils.data_forge import score_uncertainty
+    from ai_forge_cli.utils.data_forge import score_uncertainty
 
     assert score_uncertainty("", "x") == 1.0
     assert score_uncertainty("x", "") == 1.0
@@ -193,7 +193,7 @@ def test_score_uncertainty_empty_returns_one():
 
 
 def test_build_forge_plan_happy(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     docs = tmp_path / "docs"
     docs.mkdir()
@@ -214,7 +214,7 @@ def test_build_forge_plan_happy(tmp_path):
 
 
 def test_build_forge_plan_rejects_unknown_task(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     docs = tmp_path / "d"
     docs.mkdir()
@@ -225,7 +225,7 @@ def test_build_forge_plan_rejects_unknown_task(tmp_path):
 
 
 def test_build_forge_plan_rejects_zero_target_rows(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     docs = tmp_path / "d"
     docs.mkdir()
@@ -236,7 +236,7 @@ def test_build_forge_plan_rejects_zero_target_rows(tmp_path):
 
 
 def test_build_forge_plan_rejects_bool_target_rows(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     docs = tmp_path / "d"
     docs.mkdir()
@@ -247,7 +247,7 @@ def test_build_forge_plan_rejects_bool_target_rows(tmp_path):
 
 
 def test_build_forge_plan_rejects_outside_cwd(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     docs = tmp_path / "out"
     docs.mkdir()
@@ -260,7 +260,7 @@ def test_build_forge_plan_rejects_outside_cwd(tmp_path):
 
 
 def test_build_forge_plan_missing_dir(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     os.chdir(tmp_path)
     with pytest.raises(FileNotFoundError):
@@ -268,7 +268,7 @@ def test_build_forge_plan_missing_dir(tmp_path):
 
 
 def test_build_forge_plan_empty_dir(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     empty = tmp_path / "empty"
     empty.mkdir()
@@ -278,7 +278,7 @@ def test_build_forge_plan_empty_dir(tmp_path):
 
 
 def test_build_forge_plan_target_rows_cap(tmp_path):
-    from soup_cli.utils.data_forge import _MAX_TARGET_ROWS, build_forge_plan
+    from ai_forge_cli.utils.data_forge import _MAX_TARGET_ROWS, build_forge_plan
 
     docs = tmp_path / "d"
     docs.mkdir()
@@ -291,7 +291,7 @@ def test_build_forge_plan_target_rows_cap(tmp_path):
 
 
 def test_build_forge_plan_teacher_null_byte_rejected(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     docs = tmp_path / "d"
     docs.mkdir()
@@ -304,7 +304,7 @@ def test_build_forge_plan_teacher_null_byte_rejected(tmp_path):
 
 
 def test_build_forge_plan_rejects_nan_threshold(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     docs = tmp_path / "d"
     docs.mkdir()
@@ -320,7 +320,7 @@ def test_build_forge_plan_rejects_nan_threshold(tmp_path):
 
 
 def test_build_forge_plan_rejects_inf_threshold(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     docs = tmp_path / "d"
     docs.mkdir()
@@ -336,7 +336,7 @@ def test_build_forge_plan_rejects_inf_threshold(tmp_path):
 
 
 def test_discover_documents_outside_cwd_rejected(tmp_path):
-    from soup_cli.utils.data_forge import discover_documents
+    from ai_forge_cli.utils.data_forge import discover_documents
 
     outside = tmp_path / "outside"
     outside.mkdir()
@@ -349,7 +349,7 @@ def test_discover_documents_outside_cwd_rejected(tmp_path):
 
 
 def test_discover_documents_rejects_empty_string(tmp_path):
-    from soup_cli.utils.data_forge import discover_documents
+    from ai_forge_cli.utils.data_forge import discover_documents
 
     os.chdir(tmp_path)
     with pytest.raises(ValueError):
@@ -359,7 +359,7 @@ def test_discover_documents_rejects_empty_string(tmp_path):
 def test_forge_row_frozen():
     import dataclasses
 
-    from soup_cli.utils.data_forge import ForgeRow, ProvenanceRecord
+    from ai_forge_cli.utils.data_forge import ForgeRow, ProvenanceRecord
 
     prov = ProvenanceRecord(
         row_id="r0", source_doc="d", judge_id="j", filter_score=0.5, chunk_id="c0",
@@ -370,7 +370,7 @@ def test_forge_row_frozen():
 
 
 def test_write_forge_dataset_rejects_non_forge_row(tmp_path):
-    from soup_cli.utils.data_forge import write_forge_dataset
+    from ai_forge_cli.utils.data_forge import write_forge_dataset
 
     os.chdir(tmp_path)
     with pytest.raises(TypeError, match="ForgeRow"):
@@ -378,7 +378,7 @@ def test_write_forge_dataset_rejects_non_forge_row(tmp_path):
 
 
 def test_build_forge_plan_teacher_oversize_rejected(tmp_path):
-    from soup_cli.utils.data_forge import build_forge_plan
+    from ai_forge_cli.utils.data_forge import build_forge_plan
 
     docs = tmp_path / "d"
     docs.mkdir()
@@ -399,7 +399,7 @@ def test_build_forge_plan_teacher_oversize_rejected(tmp_path):
 
 
 def test_discover_documents_skips_hidden(tmp_path):
-    from soup_cli.utils.data_forge import discover_documents
+    from ai_forge_cli.utils.data_forge import discover_documents
 
     (tmp_path / ".hidden.txt").write_text("x", encoding="utf-8")
     (tmp_path / "real.txt").write_text("y", encoding="utf-8")
@@ -411,7 +411,7 @@ def test_discover_documents_skips_hidden(tmp_path):
 
 
 def test_discover_documents_only_known_extensions(tmp_path):
-    from soup_cli.utils.data_forge import discover_documents
+    from ai_forge_cli.utils.data_forge import discover_documents
 
     (tmp_path / "ok.txt").write_text("a", encoding="utf-8")
     (tmp_path / "ok.md").write_text("b", encoding="utf-8")
@@ -427,7 +427,7 @@ def test_discover_documents_only_known_extensions(tmp_path):
 
 
 def test_discover_documents_rejects_symlink_dir(tmp_path):
-    from soup_cli.utils.data_forge import discover_documents
+    from ai_forge_cli.utils.data_forge import discover_documents
 
     real = tmp_path / "real"
     real.mkdir()
@@ -443,21 +443,21 @@ def test_discover_documents_rejects_symlink_dir(tmp_path):
 
 
 def test_discover_documents_cap(tmp_path):
-    from soup_cli.utils.data_forge import _MAX_DOCS
+    from ai_forge_cli.utils.data_forge import _MAX_DOCS
 
     # Just test that the cap exists and is sane; building thousands of files is slow.
     assert _MAX_DOCS >= 1
 
 
 def test_discover_documents_rejects_null_byte(tmp_path):
-    from soup_cli.utils.data_forge import discover_documents
+    from ai_forge_cli.utils.data_forge import discover_documents
 
     with pytest.raises(ValueError):
         discover_documents("foo\x00bar")
 
 
 def test_discover_documents_rejects_non_string():
-    from soup_cli.utils.data_forge import discover_documents
+    from ai_forge_cli.utils.data_forge import discover_documents
 
     with pytest.raises(TypeError):
         discover_documents(None)  # type: ignore[arg-type]
@@ -473,7 +473,7 @@ def _fake_judge(prompt: str) -> dict:
 
 
 def test_synthesise_forge_rows_basic(tmp_path):
-    from soup_cli.utils.data_forge import synthesise_forge_rows
+    from ai_forge_cli.utils.data_forge import synthesise_forge_rows
 
     docs = [str(tmp_path / "a.txt")]
     (tmp_path / "a.txt").write_text("para one.\n\npara two.", encoding="utf-8")
@@ -490,7 +490,7 @@ def test_synthesise_forge_rows_basic(tmp_path):
 
 
 def test_synthesise_forge_rows_active_pruning(tmp_path):
-    from soup_cli.utils.data_forge import synthesise_forge_rows
+    from ai_forge_cli.utils.data_forge import synthesise_forge_rows
 
     docs = [str(tmp_path / "a.txt"), str(tmp_path / "b.txt")]
     (tmp_path / "a.txt").write_text("alpha beta gamma", encoding="utf-8")
@@ -508,28 +508,28 @@ def test_synthesise_forge_rows_active_pruning(tmp_path):
 
 
 def test_synthesise_forge_rows_unknown_task(tmp_path):
-    from soup_cli.utils.data_forge import synthesise_forge_rows
+    from ai_forge_cli.utils.data_forge import synthesise_forge_rows
 
     with pytest.raises(ValueError, match="task"):
         synthesise_forge_rows([], task="bogus", target_rows=1, judge=_fake_judge)
 
 
 def test_synthesise_forge_rows_judge_must_be_callable(tmp_path):
-    from soup_cli.utils.data_forge import synthesise_forge_rows
+    from ai_forge_cli.utils.data_forge import synthesise_forge_rows
 
     with pytest.raises(TypeError, match="judge"):
         synthesise_forge_rows([], task="sft", target_rows=1, judge="not-a-fn")  # type: ignore[arg-type]
 
 
 def test_synthesise_forge_rows_bool_target_rows(tmp_path):
-    from soup_cli.utils.data_forge import synthesise_forge_rows
+    from ai_forge_cli.utils.data_forge import synthesise_forge_rows
 
     with pytest.raises(TypeError):
         synthesise_forge_rows([], task="sft", target_rows=True, judge=_fake_judge)
 
 
 def test_synthesise_forge_rows_judge_failure_swallowed(tmp_path):
-    from soup_cli.utils.data_forge import synthesise_forge_rows
+    from ai_forge_cli.utils.data_forge import synthesise_forge_rows
 
     def bad_judge(_: str) -> dict:
         raise RuntimeError("boom")
@@ -552,7 +552,7 @@ def test_synthesise_forge_rows_judge_failure_swallowed(tmp_path):
 
 
 def test_write_forge_dataset_atomic(tmp_path):
-    from soup_cli.utils.data_forge import (
+    from ai_forge_cli.utils.data_forge import (
         ForgeRow,
         ProvenanceRecord,
         write_forge_dataset,
@@ -582,7 +582,7 @@ def test_write_forge_dataset_atomic(tmp_path):
 
 
 def test_write_forge_dataset_outside_cwd_rejected(tmp_path):
-    from soup_cli.utils.data_forge import write_forge_dataset
+    from ai_forge_cli.utils.data_forge import write_forge_dataset
 
     inside = tmp_path / "inside"
     inside.mkdir()
@@ -592,7 +592,7 @@ def test_write_forge_dataset_outside_cwd_rejected(tmp_path):
 
 
 def test_write_forge_dataset_null_byte_rejected(tmp_path):
-    from soup_cli.utils.data_forge import write_forge_dataset
+    from ai_forge_cli.utils.data_forge import write_forge_dataset
 
     os.chdir(tmp_path)
     with pytest.raises(ValueError):
@@ -600,7 +600,7 @@ def test_write_forge_dataset_null_byte_rejected(tmp_path):
 
 
 def test_write_forge_dataset_non_string_rejected(tmp_path):
-    from soup_cli.utils.data_forge import write_forge_dataset
+    from ai_forge_cli.utils.data_forge import write_forge_dataset
 
     os.chdir(tmp_path)
     with pytest.raises(TypeError):
@@ -608,7 +608,7 @@ def test_write_forge_dataset_non_string_rejected(tmp_path):
 
 
 def test_write_forge_dataset_symlink_target_rejected(tmp_path):
-    from soup_cli.utils.data_forge import (
+    from ai_forge_cli.utils.data_forge import (
         ForgeRow,
         ProvenanceRecord,
         write_forge_dataset,
@@ -634,7 +634,7 @@ def test_write_forge_dataset_symlink_target_rejected(tmp_path):
 
 
 def test_write_provenance_manifest(tmp_path):
-    from soup_cli.utils.data_forge import (
+    from ai_forge_cli.utils.data_forge import (
         ForgeRow,
         ProvenanceRecord,
         write_provenance,
@@ -666,7 +666,7 @@ def test_write_provenance_manifest(tmp_path):
 
 
 def test_write_provenance_outside_cwd_rejected(tmp_path):
-    from soup_cli.utils.data_forge import write_provenance
+    from ai_forge_cli.utils.data_forge import write_provenance
 
     inside = tmp_path / "inside"
     inside.mkdir()
@@ -681,7 +681,7 @@ def test_write_provenance_outside_cwd_rejected(tmp_path):
 
 
 def _make_app():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     return app
 
 

@@ -26,8 +26,8 @@ import pytest
 from rich.console import Console
 from typer.testing import CliRunner
 
-from soup_cli import __version__
-from soup_cli.utils.ship_verdict import (
+from ai_forge_cli import __version__
+from ai_forge_cli.utils.ship_verdict import (
     DECISION_DONT_SHIP,
     DECISION_SHIP,
     FAILED_MISSING_BASELINE,
@@ -45,7 +45,7 @@ from soup_cli.utils.ship_verdict import (
     verdict_to_dict,
 )
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "soup_cli"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli"
 
 runner = CliRunner()
 
@@ -434,20 +434,20 @@ _EVIDENCE_DONT = {
 
 class TestShipCliEvidence:
     def test_help(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         res = runner.invoke(ship_cmd.app, ["--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
 
     def test_registered_in_main_app(self):
-        from soup_cli.cli import app as main_app
+        from ai_forge_cli.cli import app as main_app
 
         res = runner.invoke(main_app, ["ship", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
         assert "SHIP" in res.output or "ship" in res.output.lower()
 
     def test_evidence_ship_exit_0(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), _EVIDENCE_SHIP)
@@ -456,7 +456,7 @@ class TestShipCliEvidence:
             assert "SHIP" in res.output
 
     def test_evidence_dont_ship_exit_2_names_benchmark(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), _EVIDENCE_DONT)
@@ -466,7 +466,7 @@ class TestShipCliEvidence:
             assert "mini_mmlu" in res.output
 
     def test_evidence_leg1_tie_exit_2(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         payload = {
             "task": {"mode": "metric", "base": 0.5, "tuned": 0.5},
@@ -478,7 +478,7 @@ class TestShipCliEvidence:
             assert res.exit_code == 2, (res.output, repr(res.exception))
 
     def test_evidence_missing_baseline_refuses_exit_2(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         payload = {"task": {"mode": "metric", "base": 0.4, "tuned": 0.9}, "benchmarks": {}}
         with runner.isolated_filesystem():
@@ -524,7 +524,7 @@ class TestShipCliEvidence:
         ],
     )
     def test_malformed_evidence_exit_1(self, payload, keyword):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), payload)
@@ -533,7 +533,7 @@ class TestShipCliEvidence:
             assert keyword in res.output.lower()
 
     def test_evidence_writes_output_json(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), _EVIDENCE_SHIP)
@@ -546,7 +546,7 @@ class TestShipCliEvidence:
             assert data["soup_version"] == __version__
 
     def test_custom_forgetting_threshold_flips_decision(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         # -10% drop: regresses at 0.05 (DON'T), OK at 0.20 (SHIP, since task won).
         payload = {
@@ -566,7 +566,7 @@ class TestShipCliEvidence:
     def test_bad_threshold_rejected_usage_exit_3(self):
         # v0.71.38: usage/validation errors exit 3 (was 2), so CI can tell a
         # config typo from a DON'T-SHIP verdict.
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), _EVIDENCE_SHIP)
@@ -581,7 +581,7 @@ class TestShipCliEvidence:
         # v0.71.31 (#284): --task-mode pairwise is no longer rejected. The
         # evidence path reads mode from the file (metric here -> SHIP), so the
         # flag is simply accepted (not an exit-2 "later release" refusal).
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), _EVIDENCE_SHIP)
@@ -593,7 +593,7 @@ class TestShipCliEvidence:
             assert "later release" not in res.output.lower()
 
     def test_evidence_outside_cwd_rejected(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         res = runner.invoke(ship_cmd.app, ["--evidence", "../escape.json"])
         # Evidence read/parse problems are coded exit 1 (mirrors `soup diagnose`).
@@ -601,7 +601,7 @@ class TestShipCliEvidence:
         assert "cwd" in res.output.lower() or "outside" in res.output.lower()
 
     def test_evidence_not_a_dict_rejected(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             Path("ev.json").write_text("[1, 2, 3]", encoding="utf-8")
@@ -611,7 +611,7 @@ class TestShipCliEvidence:
 
     def test_no_args_errors(self):
         # Neither --evidence nor a live (--base + tuned) combo: refuse clearly.
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         res = runner.invoke(ship_cmd.app, [])
         assert res.exit_code == 3, (res.output, repr(res.exception))  # usage (v0.71.38)
@@ -622,7 +622,7 @@ class TestShipCliEvidence:
 # CLI — live path with injected fake generators (no GPU / no model load)
 # ---------------------------------------------------------------------------
 
-from soup_cli.eval.forgetting import MINI_BENCHMARKS, build_mcq_prompt  # noqa: E402
+from ai_forge_cli.eval.forgetting import MINI_BENCHMARKS, build_mcq_prompt  # noqa: E402
 
 
 def _gold_answer(prompt: str) -> str:
@@ -674,8 +674,8 @@ def _write_task_eval(path: Path) -> None:
 
 class TestShipCliLive:
     def test_live_ship(self, monkeypatch):
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval,
@@ -700,8 +700,8 @@ class TestShipCliLive:
             assert "SHIP" in res.output
 
     def test_live_dont_ship_on_regression(self, monkeypatch):
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import live_eval
 
         # tuned wins the task but breaks the benchmark.
         monkeypatch.setattr(
@@ -728,8 +728,8 @@ class TestShipCliLive:
             assert "mini_mmlu" in res.output
 
     def test_live_requires_task_eval(self, monkeypatch):
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval,
@@ -744,8 +744,8 @@ class TestShipCliLive:
         assert "task-eval" in res.output.lower() or "task_eval" in res.output.lower()
 
     def test_live_baseline_override_supplies_base_scores(self, monkeypatch):
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import live_eval
 
         # tuned is perfect on the benchmark; baseline file supplies the base
         # score directly (no base model run needed for leg 2).
@@ -776,8 +776,8 @@ class TestShipCliLive:
             assert "SHIP" in res.output
 
     def test_live_failure_exit_1(self, monkeypatch):
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import live_eval
 
         def boom(*args, **kwargs):
             raise RuntimeError("no model here")
@@ -799,7 +799,7 @@ class TestShipCliLive:
     def test_live_bad_baseline_is_usage_error(self):
         # A bad --baseline (outside cwd) is a USAGE error (exit 2), resolved
         # BEFORE any model load — not a runtime error (exit 1).
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_task_eval(Path("tasks.jsonl"))
@@ -820,9 +820,9 @@ class TestShipCliLive:
 class TestShipCliLmEvalRouting:
     def test_non_mini_suite_routes_through_lm_eval(self, monkeypatch):
         """A --general-suite of non-mini names uses _run_lm_eval (override)."""
-        from soup_cli.commands import eval as eval_cmd
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.commands import eval as eval_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval,
@@ -856,8 +856,8 @@ class TestShipCliLmEvalRouting:
 
     def test_lm_eval_adapter_injection_rejected(self, monkeypatch):
         """An --adapter with ',' / '=' must not smuggle lm-eval model_args."""
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval,
@@ -881,9 +881,9 @@ class TestShipCliLmEvalRouting:
 
     def test_unscored_lm_eval_benchmark_refuses(self, monkeypatch):
         """A requested benchmark that lm-eval can't score must REFUSE, not vanish."""
-        from soup_cli.commands import eval as eval_cmd
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.commands import eval as eval_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval,
@@ -915,8 +915,8 @@ class TestShipCliLmEvalRouting:
 class TestShipCliSecurity:
     def test_judge_url_ssrf_bypass_rejected(self, monkeypatch):
         """`http://localhost.attacker.com` must NOT pass the judge-URL guard."""
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval,
@@ -941,8 +941,8 @@ class TestShipCliSecurity:
 
     def test_judge_url_ollama_allowed(self, monkeypatch):
         """An allowlisted ollama:// judge URL passes the guard (reaches eval)."""
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval,
@@ -958,7 +958,7 @@ class TestShipCliSecurity:
             def evaluate_batch(self, items):
                 return type("R", (), {"overall_score": 4.0})()
 
-        from soup_cli.eval import judge as judge_mod
+        from ai_forge_cli.eval import judge as judge_mod
 
         monkeypatch.setattr(judge_mod, "JudgeEvaluator", _FakeJudge)
         with runner.isolated_filesystem():
@@ -980,7 +980,7 @@ class TestShipCliSecurity:
             assert res.exit_code in (0, 2), (res.output, repr(res.exception))
 
     def test_task_eval_outside_cwd_rejected(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         res = runner.invoke(
             ship_cmd.app,
@@ -994,7 +994,7 @@ class TestShipCliSecurity:
         assert "cwd" in res.output.lower()
 
     def test_general_suite_too_large_rejected(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         big = ",".join(f"b{i}" for i in range(60))  # > _MAX_SUITE_BENCHMARKS (50)
         with runner.isolated_filesystem():
@@ -1012,7 +1012,7 @@ class TestShipCliSecurity:
             assert "too many" in res.output.lower()
 
     def test_general_suite_long_name_rejected(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_task_eval(Path("tasks.jsonl"))

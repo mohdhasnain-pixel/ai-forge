@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.commands.doctor import _version_ok
+from ai_forge_cli.cli import app
+from ai_forge_cli.commands.doctor import _version_ok
 
 runner = CliRunner()
 
@@ -113,7 +113,7 @@ def test_doctor_checks_optional_deps():
 def test_doctor_missing_dep():
     """soup doctor reports missing required dep."""
     with patch(
-        "soup_cli.commands.doctor.DEPS",
+        "ai_forge_cli.commands.doctor.DEPS",
         [
             ("nonexistent_fake_pkg_xyz", "nonexistent-pkg", "1.0.0", True),
         ],
@@ -126,7 +126,7 @@ def test_doctor_missing_dep():
 def test_doctor_outdated_dep():
     """soup doctor reports outdated dep."""
     with patch(
-        "soup_cli.commands.doctor.DEPS",
+        "ai_forge_cli.commands.doctor.DEPS",
         [
             ("sys", "sys", "999.0.0", True),  # sys has no __version__ but import won't fail
         ],
@@ -145,7 +145,7 @@ def test_doctor_nccl_no_gpu():
         patch("torch.cuda.is_available", return_value=True),
         patch("torch.distributed.is_available", return_value=True),
         patch(
-            "soup_cli.utils.topology.detect_topology",
+            "ai_forge_cli.utils.topology.detect_topology",
             return_value={"gpu_count": 1, "nvlink_pairs": 0, "interconnect": "single"},
         ),
     ):
@@ -166,7 +166,7 @@ def test_doctor_nccl_mocked_success():
         patch("torch.cuda.is_available", return_value=True),
         patch("torch.distributed.is_available", return_value=True),
         patch(
-            "soup_cli.utils.topology.detect_topology",
+            "ai_forge_cli.utils.topology.detect_topology",
             return_value={"gpu_count": 2, "nvlink_pairs": 1, "interconnect": "nvlink"},
         ),
         patch("torch.cuda.get_device_name", return_value="NVIDIA H100 80GB HBM3"),

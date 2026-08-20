@@ -16,7 +16,7 @@ import pytest
 
 class TestEchoTrapPublicSurface:
     def test_module_imports(self):
-        from soup_cli.utils import echo_trap
+        from ai_forge_cli.utils import echo_trap
 
         assert hasattr(echo_trap, "score_trajectory_repetition")
         assert hasattr(echo_trap, "score_trajectory_repetition_tokenized")
@@ -36,7 +36,7 @@ class TestScoreTrajectoryRepetition:
     """
 
     def test_unique_trajectory_zero(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition
 
         # All unique tokens → 0 repetition.
         tokens = ["a", "b", "c", "d", "e"]
@@ -44,7 +44,7 @@ class TestScoreTrajectoryRepetition:
         assert score == 0.0
 
     def test_full_repetition(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition
 
         # Identical token throughout → near-perfect repetition.
         tokens = ["a"] * 10
@@ -52,25 +52,25 @@ class TestScoreTrajectoryRepetition:
         assert score > 0.5
 
     def test_score_bounded(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition
 
         tokens = ["a", "b", "a", "b", "a", "b"]
         score = score_trajectory_repetition(tokens, ngram_n=2)
         assert 0.0 <= score <= 1.0
 
     def test_short_returns_zero(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition
 
         # Fewer tokens than ngram_n → no n-grams possible.
         assert score_trajectory_repetition(["a"], ngram_n=2) == 0.0
 
     def test_empty_returns_zero(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition
 
         assert score_trajectory_repetition([], ngram_n=2) == 0.0
 
     def test_invalid_ngram_n_rejected(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition
 
         with pytest.raises(ValueError, match="ngram_n"):
             score_trajectory_repetition(["a", "b"], ngram_n=0)
@@ -78,25 +78,25 @@ class TestScoreTrajectoryRepetition:
             score_trajectory_repetition(["a", "b"], ngram_n=-1)
 
     def test_bool_ngram_n_rejected(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition
 
         with pytest.raises(ValueError, match="bool"):
             score_trajectory_repetition(["a", "b"], ngram_n=True)
 
     def test_ngram_n_max_cap(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition
 
         with pytest.raises(ValueError, match="32"):
             score_trajectory_repetition(["a", "b"], ngram_n=33)
 
     def test_non_string_token_rejected(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition
 
         with pytest.raises(TypeError, match="tokens"):
             score_trajectory_repetition([1, 2, 3], ngram_n=2)  # type: ignore[list-item]
 
     def test_non_list_tokens_rejected(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition
 
         with pytest.raises(TypeError):
             score_trajectory_repetition("abc", ngram_n=2)
@@ -109,7 +109,7 @@ class TestScoreEchoSignal:
     """
 
     def test_clean_trajectories(self):
-        from soup_cli.utils.echo_trap import score_echo_signal
+        from ai_forge_cli.utils.echo_trap import score_echo_signal
 
         batch = [
             ["a", "b", "c", "d"],
@@ -120,19 +120,19 @@ class TestScoreEchoSignal:
         assert 0.0 <= score < 0.1
 
     def test_collapsed_batch(self):
-        from soup_cli.utils.echo_trap import score_echo_signal
+        from ai_forge_cli.utils.echo_trap import score_echo_signal
 
         batch = [["a"] * 10, ["b"] * 10]
         score = score_echo_signal(batch, ngram_n=2)
         assert score > 0.5
 
     def test_empty_batch(self):
-        from soup_cli.utils.echo_trap import score_echo_signal
+        from ai_forge_cli.utils.echo_trap import score_echo_signal
 
         assert score_echo_signal([], ngram_n=2) == 0.0
 
     def test_mixed_batch(self):
-        from soup_cli.utils.echo_trap import score_echo_signal
+        from ai_forge_cli.utils.echo_trap import score_echo_signal
 
         batch = [["a"] * 10, ["x", "y", "z"]]
         score = score_echo_signal(batch, ngram_n=2)
@@ -140,13 +140,13 @@ class TestScoreEchoSignal:
         assert 0.0 < score < 1.0
 
     def test_non_list_batch_rejected(self):
-        from soup_cli.utils.echo_trap import score_echo_signal
+        from ai_forge_cli.utils.echo_trap import score_echo_signal
 
         with pytest.raises(TypeError):
             score_echo_signal("not a list", ngram_n=2)
 
     def test_batch_size_cap(self):
-        from soup_cli.utils.echo_trap import score_echo_signal
+        from ai_forge_cli.utils.echo_trap import score_echo_signal
 
         big = [["x"] for _ in range(100_001)]
         with pytest.raises(ValueError, match="batch"):
@@ -155,7 +155,7 @@ class TestScoreEchoSignal:
 
 class TestTokenizedEchoSignal:
     def test_tokenized_repetition_catches_subword_echo_trap(self):
-        from soup_cli.utils.echo_trap import (
+        from ai_forge_cli.utils.echo_trap import (
             classify_echo_signal,
             score_echo_signal,
             score_echo_signal_tokenized,
@@ -171,7 +171,7 @@ class TestTokenizedEchoSignal:
         assert classify_echo_signal(tokenized_score) == "TRAP"
 
     def test_tokenized_trajectory_rejects_non_int_ids(self):
-        from soup_cli.utils.echo_trap import score_trajectory_repetition_tokenized
+        from ai_forge_cli.utils.echo_trap import score_trajectory_repetition_tokenized
 
         with pytest.raises(TypeError, match="token_ids"):
             score_trajectory_repetition_tokenized([1, "2", 3], ngram_n=2)
@@ -179,7 +179,7 @@ class TestTokenizedEchoSignal:
             score_trajectory_repetition_tokenized([1, True, 3], ngram_n=2)
 
     def test_tokenized_batch_rejects_str(self):
-        from soup_cli.utils.echo_trap import score_echo_signal_tokenized
+        from ai_forge_cli.utils.echo_trap import score_echo_signal_tokenized
 
         with pytest.raises(TypeError, match="token-id"):
             score_echo_signal_tokenized("not ids", ngram_n=2)
@@ -194,28 +194,28 @@ class TestClassifyEchoSignal:
     """
 
     def test_ok(self):
-        from soup_cli.utils.echo_trap import classify_echo_signal
+        from ai_forge_cli.utils.echo_trap import classify_echo_signal
 
         assert classify_echo_signal(0.0) == "OK"
         assert classify_echo_signal(0.1) == "OK"
         assert classify_echo_signal(0.29) == "OK"
 
     def test_warn(self):
-        from soup_cli.utils.echo_trap import classify_echo_signal
+        from ai_forge_cli.utils.echo_trap import classify_echo_signal
 
         assert classify_echo_signal(0.30) == "WARN"
         assert classify_echo_signal(0.45) == "WARN"
         assert classify_echo_signal(0.59) == "WARN"
 
     def test_trap(self):
-        from soup_cli.utils.echo_trap import classify_echo_signal
+        from ai_forge_cli.utils.echo_trap import classify_echo_signal
 
         assert classify_echo_signal(0.60) == "TRAP"
         assert classify_echo_signal(0.99) == "TRAP"
         assert classify_echo_signal(1.0) == "TRAP"
 
     def test_invalid_signal_rejected(self):
-        from soup_cli.utils.echo_trap import classify_echo_signal
+        from ai_forge_cli.utils.echo_trap import classify_echo_signal
 
         with pytest.raises(ValueError, match="finite"):
             classify_echo_signal(float("nan"))
@@ -225,7 +225,7 @@ class TestClassifyEchoSignal:
             classify_echo_signal(1.5)
 
     def test_bool_rejected(self):
-        from soup_cli.utils.echo_trap import classify_echo_signal
+        from ai_forge_cli.utils.echo_trap import classify_echo_signal
 
         with pytest.raises(ValueError, match="bool"):
             classify_echo_signal(True)
@@ -233,7 +233,7 @@ class TestClassifyEchoSignal:
 
 class TestEchoTrapReport:
     def test_basic(self):
-        from soup_cli.utils.echo_trap import EchoTrapReport
+        from ai_forge_cli.utils.echo_trap import EchoTrapReport
 
         report = EchoTrapReport(
             signal=0.4,
@@ -246,7 +246,7 @@ class TestEchoTrapReport:
         assert report.verdict == "WARN"
 
     def test_frozen(self):
-        from soup_cli.utils.echo_trap import EchoTrapReport
+        from ai_forge_cli.utils.echo_trap import EchoTrapReport
 
         report = EchoTrapReport(
             signal=0.0,
@@ -259,7 +259,7 @@ class TestEchoTrapReport:
             report.signal = 1.0  # type: ignore[misc]
 
     def test_invalid_verdict_rejected(self):
-        from soup_cli.utils.echo_trap import EchoTrapReport
+        from ai_forge_cli.utils.echo_trap import EchoTrapReport
 
         with pytest.raises(ValueError, match="verdict"):
             EchoTrapReport(
@@ -271,7 +271,7 @@ class TestEchoTrapReport:
             )
 
     def test_signal_out_of_range_rejected(self):
-        from soup_cli.utils.echo_trap import EchoTrapReport
+        from ai_forge_cli.utils.echo_trap import EchoTrapReport
 
         with pytest.raises(ValueError):
             EchoTrapReport(
@@ -283,7 +283,7 @@ class TestEchoTrapReport:
             )
 
     def test_bool_step_rejected(self):
-        from soup_cli.utils.echo_trap import EchoTrapReport
+        from ai_forge_cli.utils.echo_trap import EchoTrapReport
 
         with pytest.raises(ValueError, match="bool"):
             EchoTrapReport(
@@ -295,7 +295,7 @@ class TestEchoTrapReport:
             )
 
     def test_negative_trajectories_rejected(self):
-        from soup_cli.utils.echo_trap import EchoTrapReport
+        from ai_forge_cli.utils.echo_trap import EchoTrapReport
 
         with pytest.raises(ValueError, match="trajectories"):
             EchoTrapReport(
@@ -307,7 +307,7 @@ class TestEchoTrapReport:
             )
 
     def test_details_must_be_tuple(self):
-        from soup_cli.utils.echo_trap import EchoTrapReport
+        from ai_forge_cli.utils.echo_trap import EchoTrapReport
 
         with pytest.raises(TypeError, match="tuple"):
             EchoTrapReport(
@@ -321,19 +321,19 @@ class TestEchoTrapReport:
 
 class TestBuildEchoTrapCallbackDeferred:
     def test_invalid_threshold_rejected_first(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         with pytest.raises(ValueError, match="threshold"):
             build_echo_trap_callback(threshold=2.0)
 
     def test_invalid_threshold_bool(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         with pytest.raises(ValueError, match="bool"):
             build_echo_trap_callback(threshold=True)
 
     def test_live_returns_callback(self):
-        from soup_cli.utils.echo_trap import (
+        from ai_forge_cli.utils.echo_trap import (
             EchoTrapCallback,
             build_echo_trap_callback,
         )
@@ -341,13 +341,13 @@ class TestBuildEchoTrapCallbackDeferred:
         assert isinstance(build_echo_trap_callback(threshold=0.5), EchoTrapCallback)
 
     def test_halt_must_be_bool(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         with pytest.raises(TypeError, match="halt"):
             build_echo_trap_callback(threshold=0.5, halt_on_trap="yes")  # type: ignore[arg-type]
 
     def test_tokenizer_aware_must_be_bool(self):
-        from soup_cli.utils.echo_trap import build_echo_trap_callback
+        from ai_forge_cli.utils.echo_trap import build_echo_trap_callback
 
         with pytest.raises(TypeError, match="tokenizer_aware"):
             build_echo_trap_callback(
@@ -363,7 +363,7 @@ class TestBuildEchoTrapCallbackDeferred:
 
 class TestSchemaTrainingConfig:
     def test_defaults(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig()
         assert tcfg.echo_trap_enabled is False
@@ -374,7 +374,7 @@ class TestSchemaTrainingConfig:
     def test_threshold_bounds(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig(echo_trap_threshold=0.45)
         assert tcfg.echo_trap_threshold == 0.45
@@ -402,26 +402,26 @@ training:
 """
 
     def test_grpo_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(self._yaml("grpo"))
         assert cfg.training.echo_trap_enabled is True
         assert cfg.training.echo_trap_tokenizer_aware is True
 
     def test_ppo_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(self._yaml("ppo"))
         assert cfg.training.echo_trap_enabled is True
 
     def test_sft_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="echo_trap"):
             load_config_from_string(self._yaml("sft"))
 
     def test_halt_without_enabled_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="echo_trap_enabled"):
             load_config_from_string(
@@ -437,7 +437,7 @@ training:
             )
 
     def test_tokenizer_aware_without_enabled_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="echo_trap_enabled"):
             load_config_from_string(
@@ -464,7 +464,7 @@ class TestSourceWiring:
 
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "utils"
             / "echo_trap.py"
         )

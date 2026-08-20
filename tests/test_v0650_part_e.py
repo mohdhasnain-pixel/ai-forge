@@ -13,7 +13,7 @@ import platform
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.utils.irt import (
+from ai_forge_cli.utils.irt import (
     IRT_PROFILES,
     IrtSubsetPlan,
     ItemDifficulty,
@@ -320,20 +320,20 @@ class TestLoadResponseRows:
 
 class TestIrtCli:
     def test_help_listed(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         assert "irt-subset" in result.output.lower()
 
     def test_irt_help(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, ["irt-subset", "--help"])
         assert result.exit_code == 0
 
     def test_irt_runs(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         p = tmp_path / "responses.jsonl"
         p.write_text("\n".join(
@@ -349,7 +349,7 @@ class TestIrtCli:
         assert out.exists()
 
     def test_irt_unknown_size(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         p = tmp_path / "responses.jsonl"
         p.write_text('{"item_id": "q", "correct": true}')
@@ -363,7 +363,7 @@ class TestIrtCli:
 class TestSourceWiring:
     def test_no_heavy_imports(self):
         from pathlib import Path
-        src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "utils" / "irt.py"
+        src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "utils" / "irt.py"
         text = src.read_text(encoding="utf-8")
         forbidden_imports = (
             "import torch\n",

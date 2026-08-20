@@ -8,32 +8,32 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.utils.delinearize_llama4 import (
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils.delinearize_llama4 import (
     is_llama4_model,
     plan_delinearize,
 )
-from soup_cli.utils.fetch_examples import (
+from ai_forge_cli.utils.fetch_examples import (
     CATALOG,
     fetch_examples_dir,
     get_entry,
     list_entries,
 )
-from soup_cli.utils.fsdp_consolidate import (
+from ai_forge_cli.utils.fsdp_consolidate import (
     discover_shards,
     plan_consolidation,
 )
-from soup_cli.utils.llama_proxy import (
+from ai_forge_cli.utils.llama_proxy import (
     build_argv,
     known_subcommands,
     resolve,
 )
-from soup_cli.utils.reasoning_parser import (
+from ai_forge_cli.utils.reasoning_parser import (
     known_parsers,
     parser_description,
     validate_parser_name,
 )
-from soup_cli.utils.sweep_config import (
+from ai_forge_cli.utils.sweep_config import (
     SweepSpec,
     load_sweep_yaml,
     parse_sweep_yaml,

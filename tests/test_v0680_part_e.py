@@ -18,7 +18,7 @@ from typer.testing import CliRunner
 
 class TestPublicSurface:
     def test_module_importable(self) -> None:
-        from soup_cli.utils import local_rl
+        from ai_forge_cli.utils import local_rl
 
         assert hasattr(local_rl, "SUPPORTED_LOCAL_RL_BACKENDS")
         assert hasattr(local_rl, "SUPPORTED_LOCAL_RL_TRAIN_METHODS")
@@ -33,14 +33,14 @@ class TestPublicSurface:
 
 class TestAllowlists:
     def test_backend_frozenset(self) -> None:
-        from soup_cli.utils.local_rl import SUPPORTED_LOCAL_RL_BACKENDS
+        from ai_forge_cli.utils.local_rl import SUPPORTED_LOCAL_RL_BACKENDS
 
         assert isinstance(SUPPORTED_LOCAL_RL_BACKENDS, frozenset)
         assert "ollama" in SUPPORTED_LOCAL_RL_BACKENDS
         assert "mlx" in SUPPORTED_LOCAL_RL_BACKENDS
 
     def test_train_method_frozenset(self) -> None:
-        from soup_cli.utils.local_rl import SUPPORTED_LOCAL_RL_TRAIN_METHODS
+        from ai_forge_cli.utils.local_rl import SUPPORTED_LOCAL_RL_TRAIN_METHODS
 
         assert isinstance(SUPPORTED_LOCAL_RL_TRAIN_METHODS, frozenset)
         assert "dpo" in SUPPORTED_LOCAL_RL_TRAIN_METHODS
@@ -48,7 +48,7 @@ class TestAllowlists:
         assert "orpo" in SUPPORTED_LOCAL_RL_TRAIN_METHODS
 
     def test_backend_immutable(self) -> None:
-        from soup_cli.utils.local_rl import SUPPORTED_LOCAL_RL_BACKENDS
+        from ai_forge_cli.utils.local_rl import SUPPORTED_LOCAL_RL_BACKENDS
 
         with pytest.raises(AttributeError):
             SUPPORTED_LOCAL_RL_BACKENDS.add("x")  # type: ignore[attr-defined]
@@ -56,34 +56,34 @@ class TestAllowlists:
 
 class TestValidators:
     def test_backend_happy(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_backend
+        from ai_forge_cli.utils.local_rl import validate_local_rl_backend
 
         assert validate_local_rl_backend("ollama") == "ollama"
 
     def test_backend_case_insensitive(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_backend
+        from ai_forge_cli.utils.local_rl import validate_local_rl_backend
 
         assert validate_local_rl_backend("OLLAMA") == "ollama"
 
     def test_backend_bool_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_backend
+        from ai_forge_cli.utils.local_rl import validate_local_rl_backend
 
         with pytest.raises(TypeError):
             validate_local_rl_backend(True)  # type: ignore[arg-type]
 
     def test_backend_unknown_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_backend
+        from ai_forge_cli.utils.local_rl import validate_local_rl_backend
 
         with pytest.raises(ValueError, match="unknown"):
             validate_local_rl_backend("evil")
 
     def test_train_method_happy(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_train_method
+        from ai_forge_cli.utils.local_rl import validate_local_rl_train_method
 
         assert validate_local_rl_train_method("dpo") == "dpo"
 
     def test_train_method_unknown_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_train_method
+        from ai_forge_cli.utils.local_rl import validate_local_rl_train_method
 
         with pytest.raises(ValueError, match="unknown"):
             validate_local_rl_train_method("ppo")  # PPO not in allowlist
@@ -91,7 +91,7 @@ class TestValidators:
 
 class TestLocalRLConfig:
     def test_frozen(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.local_rl import LocalRLConfig
+        from ai_forge_cli.utils.local_rl import LocalRLConfig
 
         monkeypatch.chdir(tmp_path)
         cfg = LocalRLConfig(
@@ -106,7 +106,7 @@ class TestLocalRLConfig:
     def test_invalid_backend_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import LocalRLConfig
+        from ai_forge_cli.utils.local_rl import LocalRLConfig
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError):
@@ -120,7 +120,7 @@ class TestLocalRLConfig:
     def test_invalid_train_method_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import LocalRLConfig
+        from ai_forge_cli.utils.local_rl import LocalRLConfig
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError):
@@ -138,7 +138,7 @@ class TestInitDb:
     ) -> None:
         import sqlite3
 
-        from soup_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
 
         monkeypatch.chdir(tmp_path)
         db_path = "rl.db"
@@ -155,7 +155,7 @@ class TestInitDb:
     def test_idempotent(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
 
         monkeypatch.chdir(tmp_path)
         init_local_rl_db("rl.db")
@@ -165,7 +165,7 @@ class TestInitDb:
     def test_outside_cwd_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -182,7 +182,7 @@ class TestRecordThumb:
     ) -> None:
         import sqlite3
 
-        from soup_cli.utils.local_rl import init_local_rl_db, record_thumb
+        from ai_forge_cli.utils.local_rl import init_local_rl_db, record_thumb
 
         monkeypatch.chdir(tmp_path)
         init_local_rl_db("rl.db")
@@ -199,7 +199,7 @@ class TestRecordThumb:
     def test_happy_down(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import init_local_rl_db, record_thumb
+        from ai_forge_cli.utils.local_rl import init_local_rl_db, record_thumb
 
         monkeypatch.chdir(tmp_path)
         init_local_rl_db("rl.db")
@@ -210,7 +210,7 @@ class TestRecordThumb:
     def test_invalid_thumb_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import init_local_rl_db, record_thumb
+        from ai_forge_cli.utils.local_rl import init_local_rl_db, record_thumb
 
         monkeypatch.chdir(tmp_path)
         init_local_rl_db("rl.db")
@@ -222,7 +222,7 @@ class TestRecordThumb:
     def test_null_byte_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import init_local_rl_db, record_thumb
+        from ai_forge_cli.utils.local_rl import init_local_rl_db, record_thumb
 
         monkeypatch.chdir(tmp_path)
         init_local_rl_db("rl.db")
@@ -237,7 +237,7 @@ class TestRecordThumb:
     def test_bool_thumb_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import init_local_rl_db, record_thumb
+        from ai_forge_cli.utils.local_rl import init_local_rl_db, record_thumb
 
         monkeypatch.chdir(tmp_path)
         init_local_rl_db("rl.db")
@@ -252,7 +252,7 @@ class TestRecordThumb:
     def test_oversize_prompt_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             MAX_PROMPT_LEN,
             init_local_rl_db,
             record_thumb,
@@ -271,7 +271,7 @@ class TestRecordThumb:
 
 class TestHarvestDpoPairs:
     def test_empty(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             harvest_dpo_pairs,
             init_local_rl_db,
         )
@@ -283,7 +283,7 @@ class TestHarvestDpoPairs:
     def test_pairs_from_thumbs(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             harvest_dpo_pairs,
             init_local_rl_db,
             record_thumb,
@@ -314,7 +314,7 @@ class TestHarvestDpoPairs:
     def test_returns_tuple(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             harvest_dpo_pairs,
             init_local_rl_db,
         )
@@ -330,7 +330,7 @@ class TestNightlyTrainDeferred:
     ) -> None:
         # v0.71.13 #229: live runner; an empty DB harvests 0 pairs and skips
         # (no NotImplementedError, no train call).
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             LocalRLConfig,
             init_local_rl_db,
             run_nightly_train,
@@ -350,7 +350,7 @@ class TestNightlyTrainDeferred:
         assert res.status == "skipped_insufficient_pairs"
 
     def test_non_config_rejected(self) -> None:
-        from soup_cli.utils.local_rl import run_nightly_train
+        from ai_forge_cli.utils.local_rl import run_nightly_train
 
         with pytest.raises(TypeError):
             run_nightly_train({})  # type: ignore[arg-type]
@@ -358,7 +358,7 @@ class TestNightlyTrainDeferred:
 
 class TestCli:
     def test_help(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["local-rl", "--help"])
@@ -367,7 +367,7 @@ class TestCli:
     def test_init_command(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -381,7 +381,7 @@ class TestCli:
     def test_record_command(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -406,7 +406,7 @@ class TestCli:
     def test_status_command(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -417,7 +417,7 @@ class TestCli:
     def test_harvest_command(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -432,7 +432,7 @@ class TestCli:
     ) -> None:
         # v0.71.13 #229: `train` (no --once) renders the systemd/launchd
         # scaffold and exits 0 (no systemctl call).
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -460,7 +460,7 @@ class TestSourceWiring:
     def test_no_top_level_heavy_imports(self) -> None:
         path = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "utils"
             / "local_rl.py"
         )
@@ -474,7 +474,7 @@ class TestSourceWiring:
             assert token not in text
 
     def test_cli_registered(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         names = [t.name for t in app.registered_groups]
         assert "local-rl" in names

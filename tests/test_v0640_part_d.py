@@ -13,7 +13,7 @@ import pytest
 
 
 def test_module_imports():
-    from soup_cli.utils import hardware_fit
+    from ai_forge_cli.utils import hardware_fit
 
     assert hasattr(hardware_fit, "HardwareFitInput")
     assert hasattr(hardware_fit, "VRAMBreakdown")
@@ -31,7 +31,7 @@ def test_module_imports():
 
 
 def test_safety_margin_is_10pct():
-    from soup_cli.utils.hardware_fit import VRAM_SAFETY_MARGIN
+    from ai_forge_cli.utils.hardware_fit import VRAM_SAFETY_MARGIN
 
     assert VRAM_SAFETY_MARGIN == pytest.approx(0.10, abs=1e-6)
 
@@ -43,14 +43,14 @@ def test_safety_margin_is_10pct():
 
 @pytest.mark.parametrize("v", [64, 1024, 8192, 1_048_576])
 def test_validate_seq_len_happy(v):
-    from soup_cli.utils.hardware_fit import validate_seq_len
+    from ai_forge_cli.utils.hardware_fit import validate_seq_len
 
     assert validate_seq_len(v) == v
 
 
 @pytest.mark.parametrize("bad", [True, False, "1024", -1, 0, 63, 1_048_577, 1.5])
 def test_validate_seq_len_rejects(bad):
-    from soup_cli.utils.hardware_fit import validate_seq_len
+    from ai_forge_cli.utils.hardware_fit import validate_seq_len
 
     with pytest.raises((TypeError, ValueError)):
         validate_seq_len(bad)
@@ -63,14 +63,14 @@ def test_validate_seq_len_rejects(bad):
 
 @pytest.mark.parametrize("v", [1, 4, 64, 1024])
 def test_validate_batch_size_happy(v):
-    from soup_cli.utils.hardware_fit import validate_batch_size
+    from ai_forge_cli.utils.hardware_fit import validate_batch_size
 
     assert validate_batch_size(v) == v
 
 
 @pytest.mark.parametrize("bad", [True, False, "4", -1, 0, 1025, 1.5])
 def test_validate_batch_size_rejects(bad):
-    from soup_cli.utils.hardware_fit import validate_batch_size
+    from ai_forge_cli.utils.hardware_fit import validate_batch_size
 
     with pytest.raises((TypeError, ValueError)):
         validate_batch_size(bad)
@@ -82,7 +82,7 @@ def test_validate_batch_size_rejects(bad):
 
 
 def test_input_frozen():
-    from soup_cli.utils.hardware_fit import HardwareFitInput
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput
 
     inp = HardwareFitInput(
         params_b=7.0, seq_len=2048, batch_size=4,
@@ -94,7 +94,7 @@ def test_input_frozen():
 
 
 def test_input_rejects_negative_params():
-    from soup_cli.utils.hardware_fit import HardwareFitInput
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput
 
     with pytest.raises(ValueError, match="params"):
         HardwareFitInput(
@@ -105,7 +105,7 @@ def test_input_rejects_negative_params():
 
 
 def test_input_rejects_invalid_quant():
-    from soup_cli.utils.hardware_fit import HardwareFitInput
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput
 
     with pytest.raises(ValueError, match="quant"):
         HardwareFitInput(
@@ -116,7 +116,7 @@ def test_input_rejects_invalid_quant():
 
 
 def test_input_rejects_invalid_peft():
-    from soup_cli.utils.hardware_fit import HardwareFitInput
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput
 
     with pytest.raises(ValueError, match="peft"):
         HardwareFitInput(
@@ -127,7 +127,7 @@ def test_input_rejects_invalid_peft():
 
 
 def test_input_rejects_bool_params():
-    from soup_cli.utils.hardware_fit import HardwareFitInput
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput
 
     with pytest.raises(TypeError, match="bool"):
         HardwareFitInput(
@@ -138,7 +138,7 @@ def test_input_rejects_bool_params():
 
 
 def test_input_rejects_non_bool_gradient_ckpt():
-    from soup_cli.utils.hardware_fit import HardwareFitInput
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput
 
     with pytest.raises(TypeError, match="gradient_checkpointing"):
         HardwareFitInput(
@@ -154,7 +154,7 @@ def test_input_rejects_non_bool_gradient_ckpt():
 
 
 def test_vram_breakdown_frozen():
-    from soup_cli.utils.hardware_fit import VRAMBreakdown
+    from ai_forge_cli.utils.hardware_fit import VRAMBreakdown
 
     v = VRAMBreakdown(
         weights_gb=2.0,
@@ -168,7 +168,7 @@ def test_vram_breakdown_frozen():
 
 
 def test_vram_breakdown_rejects_negative():
-    from soup_cli.utils.hardware_fit import VRAMBreakdown
+    from ai_forge_cli.utils.hardware_fit import VRAMBreakdown
 
     with pytest.raises(ValueError, match="negative"):
         VRAMBreakdown(
@@ -181,7 +181,7 @@ def test_vram_breakdown_rejects_negative():
 
 
 def test_vram_breakdown_total():
-    from soup_cli.utils.hardware_fit import VRAMBreakdown
+    from ai_forge_cli.utils.hardware_fit import VRAMBreakdown
 
     v = VRAMBreakdown(
         weights_gb=2.0,
@@ -199,7 +199,7 @@ def test_vram_breakdown_total():
 
 
 def test_estimate_peak_vram_returns_breakdown():
-    from soup_cli.utils.hardware_fit import HardwareFitInput, VRAMBreakdown, estimate_peak_vram_gb
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, VRAMBreakdown, estimate_peak_vram_gb
 
     inp = HardwareFitInput(
         params_b=7.0, seq_len=2048, batch_size=4,
@@ -213,7 +213,7 @@ def test_estimate_peak_vram_returns_breakdown():
 
 
 def test_estimate_peak_vram_4bit_smaller_than_fp16():
-    from soup_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
 
     base = dict(params_b=7.0, seq_len=1024, batch_size=1,
                 optimizer="adamw_torch", peft="lora",
@@ -224,7 +224,7 @@ def test_estimate_peak_vram_4bit_smaller_than_fp16():
 
 
 def test_estimate_peak_vram_lora_smaller_than_full():
-    from soup_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
 
     base = dict(params_b=7.0, seq_len=1024, batch_size=1,
                 optimizer="adamw_torch", quant="4bit",
@@ -235,7 +235,7 @@ def test_estimate_peak_vram_lora_smaller_than_full():
 
 
 def test_estimate_peak_vram_seq_len_scales_activations():
-    from soup_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
 
     base = dict(params_b=1.0, batch_size=1,
                 optimizer="adamw_torch", quant="4bit", peft="lora",
@@ -246,7 +246,7 @@ def test_estimate_peak_vram_seq_len_scales_activations():
 
 
 def test_estimate_peak_vram_grad_ckpt_reduces_activations():
-    from soup_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
 
     base = dict(params_b=7.0, seq_len=4096, batch_size=1,
                 optimizer="adamw_torch", quant="4bit", peft="lora")
@@ -256,7 +256,7 @@ def test_estimate_peak_vram_grad_ckpt_reduces_activations():
 
 
 def test_estimate_peak_vram_finite():
-    from soup_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, estimate_peak_vram_gb
 
     inp = HardwareFitInput(
         params_b=70.0, seq_len=8192, batch_size=8,
@@ -268,7 +268,7 @@ def test_estimate_peak_vram_finite():
 
 
 def test_estimate_peak_vram_rejects_non_input():
-    from soup_cli.utils.hardware_fit import estimate_peak_vram_gb
+    from ai_forge_cli.utils.hardware_fit import estimate_peak_vram_gb
 
     with pytest.raises(TypeError):
         estimate_peak_vram_gb("not an input")  # type: ignore[arg-type]
@@ -280,7 +280,7 @@ def test_estimate_peak_vram_rejects_non_input():
 
 
 def test_decide_hardware_fit_ok(tmp_path):
-    from soup_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
 
     inp = HardwareFitInput(
         params_b=1.0, seq_len=1024, batch_size=1,
@@ -295,7 +295,7 @@ def test_decide_hardware_fit_ok(tmp_path):
 
 
 def test_decide_hardware_fit_oom():
-    from soup_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
 
     inp = HardwareFitInput(
         params_b=70.0, seq_len=8192, batch_size=8,
@@ -309,7 +309,7 @@ def test_decide_hardware_fit_oom():
 
 
 def test_decide_hardware_fit_rejects_negative_vram():
-    from soup_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
 
     inp = HardwareFitInput(
         params_b=1.0, seq_len=1024, batch_size=1,
@@ -321,7 +321,7 @@ def test_decide_hardware_fit_rejects_negative_vram():
 
 
 def test_decide_hardware_fit_rejects_bool_vram():
-    from soup_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
 
     inp = HardwareFitInput(
         params_b=1.0, seq_len=1024, batch_size=1,
@@ -333,7 +333,7 @@ def test_decide_hardware_fit_rejects_bool_vram():
 
 
 def test_decide_hardware_fit_rejects_non_finite_vram():
-    from soup_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
+    from ai_forge_cli.utils.hardware_fit import HardwareFitInput, decide_hardware_fit
 
     inp = HardwareFitInput(
         params_b=1.0, seq_len=1024, batch_size=1,
@@ -345,7 +345,7 @@ def test_decide_hardware_fit_rejects_non_finite_vram():
 
 
 def test_hardware_fit_report_frozen():
-    from soup_cli.utils.hardware_fit import HardwareFitReport, VRAMBreakdown
+    from ai_forge_cli.utils.hardware_fit import HardwareFitReport, VRAMBreakdown
 
     bd = VRAMBreakdown(
         weights_gb=1.0, optimizer_gb=0.5, gradients_gb=0.5,
@@ -371,7 +371,7 @@ def test_hardware_fit_report_frozen():
 def test_no_heavy_top_level_imports():
     from pathlib import Path
 
-    src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "utils" / "hardware_fit.py"
+    src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "utils" / "hardware_fit.py"
     text = src.read_text(encoding="utf-8")
     import re
     for bad in ["^import torch", "^from torch", "^import transformers", "^from transformers"]:

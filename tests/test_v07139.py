@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.utils.ship_verdict import (
+from ai_forge_cli.utils.ship_verdict import (
     TASK_MODES,
     build_task_win,
     compute_benchmark_deltas,
@@ -31,7 +31,7 @@ from soup_cli.utils.ship_verdict import (
     verdict_to_evidence,
 )
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "soup_cli"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli"
 
 runner = CliRunner()
 
@@ -131,7 +131,7 @@ class TestVerdictToEvidence:
 class TestEmitEvidenceCli:
     def test_emit_from_evidence_round_trips_through_cli(self):
         """`ship --evidence A --emit-evidence B` then `ship --evidence B` agree."""
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("a.json"), _ship_evidence())
@@ -156,7 +156,7 @@ class TestEmitEvidenceCli:
             assert v1 == v2
 
     def test_emit_dont_ship_round_trips_exit_2(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("a.json"), _dont_ship_evidence())
@@ -168,7 +168,7 @@ class TestEmitEvidenceCli:
             assert res2.exit_code == 2
 
     def test_emit_evidence_outside_cwd_rejected(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("a.json"), _ship_evidence())
@@ -196,7 +196,7 @@ _CONFIG_LENIENT = (
 
 class TestShipConfigSchema:
     def test_defaults(self):
-        from soup_cli.config.schema import ShipConfig
+        from ai_forge_cli.config.schema import ShipConfig
 
         cfg = ShipConfig()
         assert cfg.task_mode == "metric"
@@ -207,7 +207,7 @@ class TestShipConfigSchema:
         assert cfg.baseline is None
 
     def test_parses_under_eval(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_CONFIG_LENIENT)
         assert cfg.eval is not None
@@ -218,14 +218,14 @@ class TestShipConfigSchema:
     @pytest.mark.parametrize("mode", TASK_MODES)
     def test_task_mode_accepts_every_ship_mode(self, mode):
         """Every ship_verdict.TASK_MODES value must be accepted (no drift)."""
-        from soup_cli.config.schema import ShipConfig
+        from ai_forge_cli.config.schema import ShipConfig
 
         assert ShipConfig(task_mode=mode).task_mode == mode
 
     def test_rejects_bad_task_mode(self):
         import pydantic
 
-        from soup_cli.config.schema import ShipConfig
+        from ai_forge_cli.config.schema import ShipConfig
 
         with pytest.raises(pydantic.ValidationError):
             ShipConfig(task_mode="bogus")
@@ -234,20 +234,20 @@ class TestShipConfigSchema:
     def test_rejects_out_of_bounds_threshold(self, bad):
         import pydantic
 
-        from soup_cli.config.schema import ShipConfig
+        from ai_forge_cli.config.schema import ShipConfig
 
         with pytest.raises(pydantic.ValidationError):
             ShipConfig(forgetting_threshold=bad)
 
     def test_noise_floor_default_is_none(self):
         # #406 — the field exists and defaults to None (unset = no floor).
-        from soup_cli.config.schema import ShipConfig
+        from ai_forge_cli.config.schema import ShipConfig
 
         assert ShipConfig().noise_floor is None
 
     def test_parses_noise_floor_under_eval(self):
         # #406 — a committed eval.ship.noise_floor is honoured, not dropped.
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_CONFIG_LENIENT + "    noise_floor: 3\n")
         assert cfg.eval.ship.noise_floor == 3
@@ -258,7 +258,7 @@ class TestShipConfigSchema:
         # validator enforces, imported from ship_verdict so they cannot drift.
         import pydantic
 
-        from soup_cli.config.schema import ShipConfig
+        from ai_forge_cli.config.schema import ShipConfig
 
         with pytest.raises(pydantic.ValidationError):
             ShipConfig(noise_floor=bad)
@@ -268,7 +268,7 @@ class TestShipConfigSchema:
         # #406 — bool subclasses int; reject it like stream_buffers does.
         import pydantic
 
-        from soup_cli.config.schema import ShipConfig
+        from ai_forge_cli.config.schema import ShipConfig
 
         with pytest.raises(pydantic.ValidationError):
             ShipConfig(noise_floor=bad)
@@ -284,7 +284,7 @@ class TestShipConfigReader:
 
     def test_config_threshold_flips_offline_verdict(self):
         """A 0.10 drop is DON'T SHIP at the 0.05 default, SHIP at config's 0.20."""
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), self._ev_010_bound())
@@ -299,7 +299,7 @@ class TestShipConfigReader:
             assert with_cfg.exit_code == 0, (with_cfg.output, repr(with_cfg.exception))
 
     def test_explicit_flag_overrides_config(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), self._ev_010_bound())
@@ -313,7 +313,7 @@ class TestShipConfigReader:
             assert res.exit_code == 2, (res.output, repr(res.exception))
 
     def test_bad_config_file_is_usage_error(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), _ship_evidence())
@@ -325,7 +325,7 @@ class TestShipConfigReader:
 
     def test_config_fills_every_live_leg_flag(self, monkeypatch):
         """task_eval/task_mode/general_suite/judge_model/baseline thread from config."""
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         captured = {}
 
@@ -358,7 +358,7 @@ class TestShipConfigReader:
 
     def _capture_live(self, monkeypatch):
         """Patch _verdict_live to a SHIP verdict and record its kwargs."""
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         captured: dict = {}
 
@@ -400,7 +400,7 @@ class TestShipConfigReader:
     def test_config_noise_floor_refused_under_evidence(self):
         """#406 — a config floor under --evidence is refused, exactly as the CLI
         flag is (nothing to re-run offline), not silently ignored."""
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         cfg = _CONFIG_MIN + "eval:\n  ship:\n    noise_floor: 3\n"
         with runner.isolated_filesystem():
@@ -436,14 +436,14 @@ def _make_verdict(payload: dict, threshold: float = 0.05):
 
 class TestRenderShipPrMarkdown:
     def test_heading_names_decision(self):
-        from soup_cli.utils.ship_verdict import render_ship_pr_markdown
+        from ai_forge_cli.utils.ship_verdict import render_ship_pr_markdown
 
         md = render_ship_pr_markdown(_make_verdict(_ship_evidence()))
         assert "SHIP" in md
         assert md.lstrip().startswith("## soup ship")
 
     def test_body_is_fenced(self):
-        from soup_cli.utils.ship_verdict import render_ship_pr_markdown
+        from ai_forge_cli.utils.ship_verdict import render_ship_pr_markdown
 
         md = render_ship_pr_markdown(_make_verdict(_ship_evidence()))
         assert "```" in md
@@ -451,7 +451,7 @@ class TestRenderShipPrMarkdown:
 
     def test_hostile_benchmark_name_cannot_break_fence(self):
         """A benchmark name containing ``` must not close the fence early."""
-        from soup_cli.utils.ship_verdict import render_ship_pr_markdown
+        from ai_forge_cli.utils.ship_verdict import render_ship_pr_markdown
 
         payload = {
             "task": {"mode": "metric", "base": 0.5, "tuned": 0.7},
@@ -467,7 +467,7 @@ class TestRenderShipPrMarkdown:
 
     def test_dont_ship_heading_and_emoji(self):
         """The DON'T-SHIP branch must render its own heading + ❌ (not a false ✅)."""
-        from soup_cli.utils.ship_verdict import render_ship_pr_markdown
+        from ai_forge_cli.utils.ship_verdict import render_ship_pr_markdown
 
         md = render_ship_pr_markdown(_make_verdict(_dont_ship_evidence()))
         heading = md.split("\n", 1)[0]
@@ -475,7 +475,7 @@ class TestRenderShipPrMarkdown:
         assert "❌" in md and "✅" not in md
 
     def test_rejects_non_verdict(self):
-        from soup_cli.utils.ship_verdict import render_ship_pr_markdown
+        from ai_forge_cli.utils.ship_verdict import render_ship_pr_markdown
 
         with pytest.raises(TypeError):
             render_ship_pr_markdown({"nope": 1})
@@ -483,8 +483,8 @@ class TestRenderShipPrMarkdown:
 
 class TestShipPushCli:
     def test_push_posts_comment_and_preserves_exit_code(self, monkeypatch):
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import adapter_pr
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import adapter_pr
 
         calls = {}
 
@@ -504,8 +504,8 @@ class TestShipPushCli:
             assert "soup ship" in calls["body"]
 
     def test_push_on_dont_ship_still_posts_and_exits_2(self, monkeypatch):
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import adapter_pr
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import adapter_pr
 
         posted = {}
         monkeypatch.setattr(
@@ -521,7 +521,7 @@ class TestShipPushCli:
             assert posted["t"] == "owner/repo#2"
 
     def test_push_bad_target_is_usage_error(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), _ship_evidence())
@@ -532,8 +532,8 @@ class TestShipPushCli:
 
     def test_push_transport_failure_warns_but_preserves_verdict_exit(self, monkeypatch):
         """A missing token / gh failure must NOT flip a real SHIP into exit 1."""
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import adapter_pr
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import adapter_pr
 
         def _raise(target, body, **kwargs):
             raise RuntimeError("no GitHub token found")
@@ -549,8 +549,8 @@ class TestShipPushCli:
             assert "could not post" in res.output.lower()
 
     def test_push_transport_failure_preserves_dont_ship_exit(self, monkeypatch):
-        from soup_cli.commands import ship as ship_cmd
-        from soup_cli.utils import adapter_pr
+        from ai_forge_cli.commands import ship as ship_cmd
+        from ai_forge_cli.utils import adapter_pr
 
         def _raise(target, body, **kwargs):
             raise RuntimeError("gh api failed")
@@ -574,8 +574,8 @@ _CONFIG_MIN = "base: sshleifer/tiny-gpt2\ndata:\n  train: train.jsonl\n"
 def _config_sha(text: str) -> str:
     # Delegate to the production fingerprint so test + prod cannot drift (it
     # excludes the eval.ship gate policy from the recipe hash).
-    from soup_cli.commands.ship import _config_sha_of
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.commands.ship import _config_sha_of
+    from ai_forge_cli.config.loader import load_config_from_string
 
     return _config_sha_of(load_config_from_string(text))
 
@@ -588,8 +588,8 @@ def _ship_with_provenance(config_sha: str) -> dict:
 
 class TestComputeProvenance:
     def test_provenance_shape(self):
-        from soup_cli.commands.ship import _compute_provenance
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.commands.ship import _compute_provenance
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_CONFIG_MIN)
         prov = _compute_provenance(cfg)
@@ -652,7 +652,7 @@ class TestComputeProvenance:
 
 class TestStalenessGate:
     def test_matching_provenance_passes(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             Path("soup.yaml").write_text(_CONFIG_MIN, encoding="utf-8")
@@ -665,7 +665,7 @@ class TestStalenessGate:
             assert res.exit_code == 0, (res.output, repr(res.exception))
 
     def test_mismatched_config_sha_is_stale(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             Path("soup.yaml").write_text(_CONFIG_MIN, encoding="utf-8")
@@ -677,7 +677,7 @@ class TestStalenessGate:
             assert "stale" in res.output.lower()
 
     def test_missing_provenance_refused(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             Path("soup.yaml").write_text(_CONFIG_MIN, encoding="utf-8")
@@ -690,7 +690,7 @@ class TestStalenessGate:
 
     def test_no_config_means_no_staleness_check(self):
         """Back-compat: --evidence alone (no --config) never staleness-checks."""
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), _ship_evidence())  # no provenance
@@ -699,7 +699,7 @@ class TestStalenessGate:
 
     def test_empty_config_fails_loud_not_silent(self):
         """`--config ""` must fail loud (exit 3), not silently skip the gate."""
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             _write_evidence(Path("ev.json"), _ship_evidence())  # no provenance
@@ -713,7 +713,7 @@ class TestStalenessGate:
         provenance yet, so the staleness gate must NOT fire when emitting — it
         must stamp the config's provenance so the downstream GATE then accepts it.
         """
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             Path("soup.yaml").write_text(_CONFIG_MIN, encoding="utf-8")
@@ -734,7 +734,7 @@ class TestStalenessGate:
             assert gate.exit_code == 0, (gate.output, repr(gate.exception))
 
     def test_bound_evidence_reemits_with_provenance(self):
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             Path("soup.yaml").write_text(_CONFIG_MIN, encoding="utf-8")
@@ -752,7 +752,7 @@ class TestStalenessGate:
 
 class TestCiInitV2:
     def test_render_without_config_has_no_config_flag(self):
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         yaml_text = render_soup_gate_workflow(
             data_path="data/train.jsonl",
@@ -766,7 +766,7 @@ class TestCiInitV2:
         """The --config must land on the ship `run:` STEP, not just a comment."""
         import yaml
 
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         yaml_text = render_soup_gate_workflow(
             data_path="data/train.jsonl",
@@ -780,7 +780,7 @@ class TestCiInitV2:
     def test_ci_init_with_config_writes_bound_workflow(self):
         import yaml
 
-        from soup_cli.cli import app as main_app
+        from ai_forge_cli.cli import app as main_app
 
         with runner.isolated_filesystem():
             Path("soup.yaml").write_text(_CONFIG_MIN, encoding="utf-8")
@@ -791,7 +791,7 @@ class TestCiInitV2:
             assert "--config" in run and "soup.yaml" in run
 
     def test_render_config_outside_cwd_rejected(self):
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         with runner.isolated_filesystem():
             with pytest.raises(ValueError):
@@ -806,7 +806,7 @@ class TestCiInitV2:
 class TestSecurityHardening:
     def test_malformed_config_sha_not_echoed_to_terminal(self):
         """An ESC-laden provenance.config_sha must be rejected without echoing it."""
-        from soup_cli.commands import ship as ship_cmd
+        from ai_forge_cli.commands import ship as ship_cmd
 
         with runner.isolated_filesystem():
             Path("soup.yaml").write_text(_CONFIG_MIN, encoding="utf-8")
@@ -825,8 +825,8 @@ class TestSecurityHardening:
         """A symlinked data.train must not be followed when computing data_sha."""
         import os
 
-        from soup_cli.commands.ship import _compute_provenance
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.commands.ship import _compute_provenance
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with runner.isolated_filesystem():
             outside = tmp_path / "secret.txt"
@@ -842,8 +842,8 @@ class TestSecurityHardening:
             assert "data_sha" not in prov
 
     def test_data_train_real_file_is_hashed(self):
-        from soup_cli.commands.ship import _compute_provenance
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.commands.ship import _compute_provenance
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with runner.isolated_filesystem():
             Path("train.jsonl").write_text('{"x": 1}\n', encoding="utf-8")
@@ -853,7 +853,7 @@ class TestSecurityHardening:
 
     @pytest.mark.parametrize("bad", ["a #comment", "a\x85b", "path#frag"])
     def test_ci_workflow_rejects_comment_and_linebreak_paths(self, bad):
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         with pytest.raises(ValueError, match="single line|must not contain '#'"):
             render_soup_gate_workflow(
@@ -863,7 +863,7 @@ class TestSecurityHardening:
             )
 
     def test_safe_read_text_enforces_byte_cap(self):
-        from soup_cli.commands.ship import _safe_read_text
+        from ai_forge_cli.commands.ship import _safe_read_text
 
         with runner.isolated_filesystem():
             Path("big.txt").write_text("x" * 100, encoding="utf-8")
@@ -871,7 +871,7 @@ class TestSecurityHardening:
                 _safe_read_text("big.txt", "big", 10)
 
     def test_safe_hash_file_skips_oversize(self):
-        from soup_cli.commands.ship import _safe_hash_file
+        from ai_forge_cli.commands.ship import _safe_hash_file
 
         with runner.isolated_filesystem():
             Path("big.bin").write_bytes(b"x" * 100)
@@ -882,7 +882,7 @@ class TestSecurityHardening:
         """The generated workflow (with --config) must be valid YAML."""
         import yaml
 
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         text = render_soup_gate_workflow(
             data_path="data/train.jsonl",

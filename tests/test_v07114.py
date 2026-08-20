@@ -24,7 +24,7 @@ from types import MappingProxyType
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -49,7 +49,7 @@ class TestConsolidateShards:
         import torch
         from safetensors.torch import load_file
 
-        from soup_cli.utils.fsdp_consolidate import (
+        from ai_forge_cli.utils.fsdp_consolidate import (
             consolidate_shards,
             plan_consolidation,
         )
@@ -80,7 +80,7 @@ class TestConsolidateShards:
         """Memory-friendly: torch.load is called exactly once per shard."""
         import torch
 
-        from soup_cli.utils.fsdp_consolidate import (
+        from ai_forge_cli.utils.fsdp_consolidate import (
             consolidate_shards,
             plan_consolidation,
         )
@@ -109,7 +109,7 @@ class TestConsolidateShards:
     def test_shape_conflict_rejected(self, tmp_path, monkeypatch):
         import torch
 
-        from soup_cli.utils.fsdp_consolidate import (
+        from ai_forge_cli.utils.fsdp_consolidate import (
             consolidate_shards,
             plan_consolidation,
         )
@@ -126,7 +126,7 @@ class TestConsolidateShards:
     def test_duplicate_key_same_shape_kept_once(self, tmp_path, monkeypatch):
         import torch
 
-        from soup_cli.utils.fsdp_consolidate import (
+        from ai_forge_cli.utils.fsdp_consolidate import (
             consolidate_shards,
             plan_consolidation,
         )
@@ -146,7 +146,7 @@ class TestConsolidateShards:
 
         import torch
 
-        from soup_cli.utils.fsdp_consolidate import (
+        from ai_forge_cli.utils.fsdp_consolidate import (
             consolidate_shards,
             plan_consolidation,
         )
@@ -158,7 +158,7 @@ class TestConsolidateShards:
         _write_shard(shards / "pytorch_model_fsdp_1.bin", {"w": torch.zeros(2, 3)})
         plan = plan_consolidation(str(shards), str(tmp_path / "m.safetensors"))
         with caplog.at_level(
-            logging.WARNING, logger="soup_cli.utils.fsdp_consolidate"
+            logging.WARNING, logger="ai_forge_cli.utils.fsdp_consolidate"
         ):
             consolidate_shards(plan)
         assert any(
@@ -168,7 +168,7 @@ class TestConsolidateShards:
     def test_non_dict_shard_rejected(self, tmp_path, monkeypatch):
         import torch
 
-        from soup_cli.utils.fsdp_consolidate import (
+        from ai_forge_cli.utils.fsdp_consolidate import (
             consolidate_shards,
             plan_consolidation,
         )
@@ -183,7 +183,7 @@ class TestConsolidateShards:
             consolidate_shards(plan)
 
     def test_empty_merged_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.fsdp_consolidate import (
+        from ai_forge_cli.utils.fsdp_consolidate import (
             consolidate_shards,
             plan_consolidation,
         )
@@ -199,7 +199,7 @@ class TestConsolidateShards:
     def test_result_frozen(self, tmp_path, monkeypatch):
         import torch
 
-        from soup_cli.utils.fsdp_consolidate import (
+        from ai_forge_cli.utils.fsdp_consolidate import (
             consolidate_shards,
             plan_consolidation,
         )
@@ -214,7 +214,7 @@ class TestConsolidateShards:
             result.num_tensors = 99  # type: ignore[misc]
 
     def test_non_plan_rejected(self):
-        from soup_cli.utils.fsdp_consolidate import consolidate_shards
+        from ai_forge_cli.utils.fsdp_consolidate import consolidate_shards
 
         with pytest.raises(TypeError):
             consolidate_shards({"not": "a plan"})  # type: ignore[arg-type]
@@ -227,7 +227,7 @@ class TestConsolidateShards:
         # the output and rejects an out-of-cwd target as "outside cwd".
         import torch
 
-        from soup_cli.utils.fsdp_consolidate import (
+        from ai_forge_cli.utils.fsdp_consolidate import (
             consolidate_shards,
             plan_consolidation,
         )
@@ -248,7 +248,7 @@ class TestConsolidateShards:
         src = (
             Path(__file__).resolve().parent.parent
             / "src"
-            / "soup_cli"
+            / "ai_forge_cli"
             / "utils"
             / "fsdp_consolidate.py"
         ).read_text(encoding="utf-8")
@@ -347,13 +347,13 @@ class TestMergeShardedCli:
 
 class TestApplyKvCacheType:
     def test_no_longer_raises_notimplemented(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         rt = apply_kv_cache_type("bf16", backend="transformers")
         assert rt.kv_cache_type == "bf16"
 
     def test_bf16_model_dtype(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         rt = apply_kv_cache_type("bf16", backend="transformers")
         assert rt.model_dtype == "bfloat16"
@@ -361,14 +361,14 @@ class TestApplyKvCacheType:
         assert rt.requires_quant_backend is False
 
     def test_f16_model_dtype(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         rt = apply_kv_cache_type("f16", backend="transformers")
         assert rt.model_dtype == "float16"
         assert dict(rt.generate_kwargs) == {}
 
     def test_q8_0_quantized_cache_kwargs(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         rt = apply_kv_cache_type("q8_0", backend="transformers")
         gk = dict(rt.generate_kwargs)
@@ -380,13 +380,13 @@ class TestApplyKvCacheType:
         assert rt.requires_quant_backend is True
 
     def test_case_insensitive(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         rt = apply_kv_cache_type("Q8_0", backend="transformers")
         assert rt.kv_cache_type == "q8_0"
 
     def test_fp8_non_hopper_friendly_error(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(RuntimeError, match="Hopper"):
             apply_kv_cache_type(
@@ -394,7 +394,7 @@ class TestApplyKvCacheType:
             )
 
     def test_fp8_hopper_still_unsupported_on_transformers(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(RuntimeError, match="vLLM"):
             apply_kv_cache_type(
@@ -402,7 +402,7 @@ class TestApplyKvCacheType:
             )
 
     def test_fp8_unknown_cc_raises(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(RuntimeError):
             apply_kv_cache_type(
@@ -410,55 +410,55 @@ class TestApplyKvCacheType:
             )
 
     def test_vllm_backend_deferred(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(NotImplementedError, match="vLLM|transformers"):
             apply_kv_cache_type("q8_0", backend="vllm")
 
     def test_sglang_backend_deferred(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(NotImplementedError):
             apply_kv_cache_type("bf16", backend="sglang")
 
     def test_invalid_type_rejected(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(ValueError, match="not supported"):
             apply_kv_cache_type("wat", backend="transformers")
 
     def test_oversize_type_rejected(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(ValueError, match="too long"):
             apply_kv_cache_type("x" * 17, backend="transformers")
 
     def test_null_byte_type_rejected(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(ValueError, match="null byte"):
             apply_kv_cache_type("bf\x0016", backend="transformers")
 
     def test_bool_type_rejected(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(TypeError):
             apply_kv_cache_type(True, backend="transformers")  # type: ignore[arg-type]
 
     def test_bool_backend_rejected(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(TypeError):
             apply_kv_cache_type("bf16", backend=True)  # type: ignore[arg-type]
 
     def test_non_str_backend_rejected(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises(TypeError):
             apply_kv_cache_type("bf16", backend=123)  # type: ignore[arg-type]
 
     def test_bad_compute_capability_shape_rejected(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         with pytest.raises((TypeError, ValueError)):
             apply_kv_cache_type(
@@ -466,14 +466,14 @@ class TestApplyKvCacheType:
             )
 
     def test_runtime_frozen(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         rt = apply_kv_cache_type("bf16", backend="transformers")
         with pytest.raises(dataclasses.FrozenInstanceError):
             rt.kv_cache_type = "f16"  # type: ignore[misc]
 
     def test_generate_kwargs_immutable(self):
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         rt = apply_kv_cache_type("q8_0", backend="transformers")
         assert isinstance(rt.generate_kwargs, MappingProxyType)
@@ -481,7 +481,7 @@ class TestApplyKvCacheType:
             rt.generate_kwargs["x"] = 1  # type: ignore[index]
 
     def test_quantized_cache_backend_available(self):
-        from soup_cli.utils.kv_cache import quantized_cache_backend_available
+        from ai_forge_cli.utils.kv_cache import quantized_cache_backend_available
 
         # On this box neither hqq nor quanto is installed → None. The return
         # type is Optional[str]; assert it's None-or-str without asserting a
@@ -492,7 +492,7 @@ class TestApplyKvCacheType:
 
 class TestPlainKvKwargs:
     def test_deep_converts_nested_mappingproxy(self):
-        from soup_cli.commands.serve import _plain_kv_kwargs
+        from ai_forge_cli.commands.serve import _plain_kv_kwargs
 
         nested = MappingProxyType(
             {"cache_implementation": "quantized",
@@ -509,13 +509,13 @@ class TestPlainKvKwargs:
         }
 
     def test_empty_mapping(self):
-        from soup_cli.commands.serve import _plain_kv_kwargs
+        from ai_forge_cli.commands.serve import _plain_kv_kwargs
 
         assert _plain_kv_kwargs(MappingProxyType({})) == {}
 
     def test_q8_0_runtime_round_trips_to_plain(self):
-        from soup_cli.commands.serve import _plain_kv_kwargs
-        from soup_cli.utils.kv_cache import apply_kv_cache_type
+        from ai_forge_cli.commands.serve import _plain_kv_kwargs
+        from ai_forge_cli.utils.kv_cache import apply_kv_cache_type
 
         rt = apply_kv_cache_type("q8_0", backend="transformers")
         plain = _plain_kv_kwargs(rt.generate_kwargs)
@@ -598,16 +598,16 @@ class TestOnnxQaLog:
 
 class TestPatchInvariants:
     def test_version_bumped(self):
-        import soup_cli
+        import ai_forge_cli
 
-        parts = tuple(int(x) for x in soup_cli.__version__.split(".")[:3])
+        parts = tuple(int(x) for x in ai_forge_cli.__version__.split(".")[:3])
         assert parts >= (0, 71, 14)
 
     def test_no_top_level_torch_in_kv_cache(self):
         src = (
             Path(__file__).resolve().parent.parent
             / "src"
-            / "soup_cli"
+            / "ai_forge_cli"
             / "utils"
             / "kv_cache.py"
         ).read_text(encoding="utf-8")

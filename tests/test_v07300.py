@@ -303,8 +303,8 @@ def _sft_wrapper(tmp_path, monkeypatch, **training):
     import yaml
     from test_v07202 import _tiny_llama_dir, _write_tiny_tokenizer
 
-    from soup_cli.config.loader import load_config_from_string
-    from soup_cli.trainer.sft import SFTTrainerWrapper
+    from ai_forge_cli.config.loader import load_config_from_string
+    from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
     weights, _, _ = _tiny_llama_dir(tmp_path)
     _write_tiny_tokenizer(weights)
@@ -418,7 +418,7 @@ class TestSglangDecodesItsRuntimeResponse:
     def test_a_json_string_is_decoded(self):
         import json
 
-        from soup_cli.utils.sglang import decode_sglang_response
+        from ai_forge_cli.utils.sglang import decode_sglang_response
 
         payload = {"text": " Paris.", "meta_info": {"prompt_tokens": 17}}
         out = decode_sglang_response(json.dumps(payload))
@@ -428,13 +428,13 @@ class TestSglangDecodesItsRuntimeResponse:
     def test_a_dict_still_works(self):
         """CONTROL. The older sglang shape must keep working — a fix that only
         handled strings would break every previously-working version."""
-        from soup_cli.utils.sglang import decode_sglang_response
+        from ai_forge_cli.utils.sglang import decode_sglang_response
 
         payload = {"text": " Paris.", "meta_info": {"prompt_tokens": 17}}
         assert decode_sglang_response(payload) is payload
 
     def test_an_undecodable_response_raises_something_actionable(self):
-        from soup_cli.utils.sglang import decode_sglang_response
+        from ai_forge_cli.utils.sglang import decode_sglang_response
 
         with pytest.raises(ValueError, match="SGLang"):
             decode_sglang_response("not json at all")
@@ -462,18 +462,18 @@ class TestMultiGpuLaunchArgvIsRunnable:
     def test_the_python_dash_m_form_becomes_accelerates_module_flag(self):
         import sys as _sys
 
-        from soup_cli.utils.launcher import build_accelerate_argv
+        from ai_forge_cli.utils.launcher import build_accelerate_argv
 
         argv = build_accelerate_argv(
             num_processes=4,
-            script_args=[_sys.executable, "-m", "soup_cli.cli", "train", "-c", "s.yaml"],
+            script_args=[_sys.executable, "-m", "ai_forge_cli.cli", "train", "-c", "s.yaml"],
         )
         assert _sys.executable not in argv, (
             "the Python interpreter is still being passed where accelerate expects "
             "a training script; accelerate will parse the ELF binary as source"
         )
         assert "--module" in argv
-        assert argv[argv.index("--module") + 1] == "soup_cli.cli"
+        assert argv[argv.index("--module") + 1] == "ai_forge_cli.cli"
         assert argv[-3:] == ["train", "-c", "s.yaml"]
         assert argv[:2] == ["accelerate", "launch"]
 
@@ -481,7 +481,7 @@ class TestMultiGpuLaunchArgvIsRunnable:
         """CONTROL. Translating unconditionally would break the documented
         ``accelerate launch train.py`` form, which is a script path and must stay
         positional."""
-        from soup_cli.utils.launcher import build_accelerate_argv
+        from ai_forge_cli.utils.launcher import build_accelerate_argv
 
         argv = build_accelerate_argv(
             num_processes=2, script_args=["train.py", "--config", "s.yaml"]
@@ -495,12 +495,12 @@ class TestMultiGpuLaunchArgvIsRunnable:
         into ``--module`` there would produce a command with no program to run."""
         import sys as _sys
 
-        from soup_cli.utils.launcher import build_accelerate_argv
+        from ai_forge_cli.utils.launcher import build_accelerate_argv
 
         argv = build_accelerate_argv(
-            num_processes=1, script_args=[_sys.executable, "-m", "soup_cli.cli", "train"]
+            num_processes=1, script_args=[_sys.executable, "-m", "ai_forge_cli.cli", "train"]
         )
-        assert argv == [_sys.executable, "-m", "soup_cli.cli", "train"]
+        assert argv == [_sys.executable, "-m", "ai_forge_cli.cli", "train"]
 
 
 # ==========================================================================
@@ -549,7 +549,7 @@ class TestCompiledAdapterKeysAreCanonical:
     def test_the_compile_prefix_is_stripped(self, tmp_path):
         from safetensors.torch import load_file
 
-        from soup_cli.utils.peft_wiring import strip_compile_prefix
+        from ai_forge_cli.utils.peft_wiring import strip_compile_prefix
 
         path = _write_adapter(tmp_path / "a", prefix="_orig_mod.")
         changed = strip_compile_prefix(str(tmp_path / "a"))
@@ -564,7 +564,7 @@ class TestCompiledAdapterKeysAreCanonical:
         same bug with a different mechanism."""
         from safetensors.torch import load_file
 
-        from soup_cli.utils.peft_wiring import strip_compile_prefix
+        from ai_forge_cli.utils.peft_wiring import strip_compile_prefix
 
         path = _write_adapter(tmp_path / "a", prefix="_orig_mod.")
         strip_compile_prefix(str(tmp_path / "a"))
@@ -578,7 +578,7 @@ class TestCompiledAdapterKeysAreCanonical:
         users who never enabled compile."""
         from safetensors.torch import load_file
 
-        from soup_cli.utils.peft_wiring import strip_compile_prefix
+        from ai_forge_cli.utils.peft_wiring import strip_compile_prefix
 
         path = _write_adapter(tmp_path / "a")
         before = set(load_file(str(path)))
@@ -588,7 +588,7 @@ class TestCompiledAdapterKeysAreCanonical:
     def test_a_missing_adapter_file_is_not_an_error(self, tmp_path):
         """Full fine-tuning writes no adapter; the normaliser must not turn that
         into a crash at the end of a completed run."""
-        from soup_cli.utils.peft_wiring import strip_compile_prefix
+        from ai_forge_cli.utils.peft_wiring import strip_compile_prefix
 
         (tmp_path / "empty").mkdir()
         assert strip_compile_prefix(str(tmp_path / "empty")) == 0
@@ -640,7 +640,7 @@ class TestCheckpointAdaptersAreCanonicalToo:
     def test_a_checkpoint_written_under_compile_is_normalised(self, tmp_path):
         from safetensors.torch import load_file
 
-        from soup_cli.utils.peft_wiring import build_compile_prefix_callback
+        from ai_forge_cli.utils.peft_wiring import build_compile_prefix_callback
 
         path = _write_adapter(tmp_path / "checkpoint-100", prefix="_orig_mod.")
         _fire_on_save(build_compile_prefix_callback(), tmp_path, 100)
@@ -654,7 +654,7 @@ class TestCheckpointAdaptersAreCanonicalToo:
         numbers is the same defect wearing a different mechanism."""
         from safetensors.torch import load_file
 
-        from soup_cli.utils.peft_wiring import build_compile_prefix_callback
+        from ai_forge_cli.utils.peft_wiring import build_compile_prefix_callback
 
         path = _write_adapter(tmp_path / "checkpoint-100", prefix="_orig_mod.")
         _fire_on_save(build_compile_prefix_callback(), tmp_path, 100)
@@ -676,7 +676,7 @@ class TestCheckpointAdaptersAreCanonicalToo:
         """
         from safetensors.torch import load_file
 
-        from soup_cli.utils.peft_wiring import build_compile_prefix_callback
+        from ai_forge_cli.utils.peft_wiring import build_compile_prefix_callback
 
         repaired = _write_adapter(tmp_path / "checkpoint-100", prefix="_orig_mod.")
         _fire_on_save(build_compile_prefix_callback(), tmp_path, 100)
@@ -694,7 +694,7 @@ class TestCheckpointAdaptersAreCanonicalToo:
         of the run this was measured on would all rewrite one file at once."""
         from safetensors.torch import load_file
 
-        from soup_cli.utils.peft_wiring import build_compile_prefix_callback
+        from ai_forge_cli.utils.peft_wiring import build_compile_prefix_callback
 
         path = _write_adapter(tmp_path / "checkpoint-100", prefix="_orig_mod.")
         before = set(load_file(str(path)))
@@ -716,7 +716,7 @@ class TestCheckpointAdaptersAreCanonicalToo:
         """
         from safetensors.torch import load_file
 
-        from soup_cli.utils.peft_wiring import build_compile_prefix_callback
+        from ai_forge_cli.utils.peft_wiring import build_compile_prefix_callback
 
         path = _write_adapter(tmp_path / "checkpoint-100", prefix="_orig_mod.")
         _fire_on_save(
@@ -733,7 +733,7 @@ class TestCheckpointAdaptersAreCanonicalToo:
     def test_a_checkpoint_without_an_adapter_is_not_an_error(self, tmp_path):
         """Full fine-tuning checkpoints carry no adapter file. Mid-run is a worse
         place to raise than the end of a run, so this must stay a no-op."""
-        from soup_cli.utils.peft_wiring import build_compile_prefix_callback
+        from ai_forge_cli.utils.peft_wiring import build_compile_prefix_callback
 
         (tmp_path / "checkpoint-100").mkdir()
         _fire_on_save(build_compile_prefix_callback(), tmp_path, 100)
@@ -744,7 +744,7 @@ class TestCheckpointAdaptersAreCanonicalToo:
         """A broken rewrite must not kill a multi-hour run, but it must not pass
         in silence either, because a checkpoint left with the prefix is a dead
         adapter and that is the whole bug."""
-        from soup_cli.utils import peft_wiring
+        from ai_forge_cli.utils import peft_wiring
 
         _write_adapter(tmp_path / "checkpoint-100", prefix="_orig_mod.")
 
@@ -764,7 +764,7 @@ class TestCheckpointAdaptersAreCanonicalToo:
         time. Inheriting ``TrainerCallback`` is what supplies the no-op stubs."""
         from transformers import TrainerCallback
 
-        from soup_cli.utils.peft_wiring import build_compile_prefix_callback
+        from ai_forge_cli.utils.peft_wiring import build_compile_prefix_callback
 
         callback = build_compile_prefix_callback()
         assert isinstance(callback, TrainerCallback)
@@ -775,7 +775,7 @@ class TestCheckpointAdaptersAreCanonicalToo:
     def test_it_is_wired_only_when_compile_is_on(self):
         """CONTROL. Every ordinary run would otherwise carry a callback that
         reopens each checkpoint for nothing."""
-        from soup_cli.utils.peft_wiring import attach_compile_prefix_callback
+        from ai_forge_cli.utils.peft_wiring import attach_compile_prefix_callback
 
         class FakeTrainer:
             def __init__(self):
@@ -815,8 +815,8 @@ class TestNoReexecHintKeepsTheUsersFlags:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.utils import topology as topo_mod
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.utils import topology as topo_mod
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "soup.yaml").write_text(
@@ -907,7 +907,7 @@ class TestLigerDetectsArchitectureFromTheConfig:
     ):
         from test_v07202 import _tiny_llama_dir
 
-        from soup_cli.utils import liger as liger_mod
+        from ai_forge_cli.utils import liger as liger_mod
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         assert "llama" not in weights.lower(), (
@@ -927,7 +927,7 @@ class TestLigerDetectsArchitectureFromTheConfig:
         caller keeps printing its warning and does not set the TRL flag."""
         import json
 
-        from soup_cli.utils import liger as liger_mod
+        from ai_forge_cli.utils import liger as liger_mod
 
         directory = tmp_path / "weird"
         directory.mkdir()

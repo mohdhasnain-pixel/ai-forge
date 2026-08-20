@@ -5,14 +5,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import LoraConfig, SoupConfig, TrainingConfig
-from soup_cli.utils.block_expansion import (
+from ai_forge_cli.config.schema import LoraConfig, SoupConfig, TrainingConfig
+from ai_forge_cli.utils.block_expansion import (
     _count_layers,
     expand_model_blocks,
     validate_expand_layers,
     validate_freeze_trainable_layers,
 )
-from soup_cli.utils.loftq_init import (
+from ai_forge_cli.utils.loftq_init import (
     build_loftq_config,
     validate_loftq_bits,
     validate_loftq_iter,

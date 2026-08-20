@@ -12,11 +12,11 @@ from pathlib import Path
 
 import pytest
 
-import soup_cli
+import ai_forge_cli
 
 
 def _src(rel: str) -> str:
-    return (Path(soup_cli.__file__).parent / rel).read_text(encoding="utf-8")
+    return (Path(ai_forge_cli.__file__).parent / rel).read_text(encoding="utf-8")
 
 
 # ── Path.resolve()+relative_to() containment holdouts → is_under / is_under_cwd ──
@@ -42,7 +42,7 @@ def test_containment_holdouts_migrated_to_commonpath_helper():
 
 
 def test_migrate_output_path_containment_still_works(tmp_path, monkeypatch):
-    from soup_cli.migrate.common import validate_output_path
+    from ai_forge_cli.migrate.common import validate_output_path
 
     monkeypatch.chdir(tmp_path)
     ok = validate_output_path(Path("out.yaml"))
@@ -52,7 +52,7 @@ def test_migrate_output_path_containment_still_works(tmp_path, monkeypatch):
 
 
 def test_generate_path_within_cwd_behaviour(tmp_path, monkeypatch):
-    from soup_cli.commands.generate import _path_within_cwd
+    from ai_forge_cli.commands.generate import _path_within_cwd
 
     proj = tmp_path / "project"
     proj.mkdir()
@@ -92,7 +92,7 @@ def test_active_sampler_writes_selected_rows(tmp_path, monkeypatch):
     """Behavioural check: the atomic write still produces the JSONL output."""
     import json
 
-    from soup_cli.utils.active_sampler import sample_uncertain_rows
+    from ai_forge_cli.utils.active_sampler import sample_uncertain_rows
 
     monkeypatch.chdir(tmp_path)
     rows = [

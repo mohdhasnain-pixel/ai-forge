@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from soup_cli.utils.jinja_analyzer import (
+from ai_forge_cli.utils.jinja_analyzer import (
     DEFAULT_MESSAGE_FIELDS,
     JinjaTemplateAnalyzer,
     extract_message_fields,

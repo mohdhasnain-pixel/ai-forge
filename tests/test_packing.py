@@ -3,7 +3,7 @@
 from io import StringIO
 from unittest.mock import MagicMock
 
-from soup_cli.config.schema import SoupConfig, TrainingConfig
+from ai_forge_cli.config.schema import SoupConfig, TrainingConfig
 
 # ─── Config Tests ─────────────────────────────────────────────────────────
 
@@ -66,7 +66,7 @@ class TestPackingYamlConfig:
 
     def test_load_config_with_packing(self):
         """YAML with packing: true should load correctly."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: test-model
@@ -80,7 +80,7 @@ training:
 
     def test_load_config_without_packing(self):
         """YAML without packing should default to False."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: test-model
@@ -139,7 +139,7 @@ class TestPackingSweep:
 
     def test_packing_in_sweep_params(self):
         """packing should be a valid sweep parameter."""
-        from soup_cli.commands.sweep import _parse_sweep_params
+        from ai_forge_cli.commands.sweep import _parse_sweep_params
 
         params = _parse_sweep_params(["training.packing=true,false"])
         assert "training.packing" in params

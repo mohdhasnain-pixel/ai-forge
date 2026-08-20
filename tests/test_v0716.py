@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 
 def _write(path: Path, text: str) -> Path:
@@ -42,13 +42,13 @@ def _write_jsonl(path: Path, rows: list) -> Path:
 
 class TestBuiltinTransforms:
     def test_builtin_registry_immutable(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         with pytest.raises(TypeError):
             build_dag.BUILTIN_TRANSFORMS["x"] = lambda r, c: r  # type: ignore[index]
 
     def test_identity_returns_copy(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         fn = build_dag.BUILTIN_TRANSFORMS["identity"]
         row = {"id": "a", "text": "hello"}
@@ -57,7 +57,7 @@ class TestBuiltinTransforms:
         assert out is not row  # must not mutate the input
 
     def test_drop_empty(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         fn = build_dag.BUILTIN_TRANSFORMS["drop_empty"]
         assert fn({"id": "a", "text": "x"}, {}) is not None
@@ -65,41 +65,41 @@ class TestBuiltinTransforms:
         assert fn({"id": "c"}, {}) is None
 
     def test_lowercase(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         fn = build_dag.BUILTIN_TRANSFORMS["lowercase"]
         out = fn({"id": "a", "text": "Hello WORLD"}, {})
         assert out["text"] == "hello world"
 
     def test_lowercase_custom_field(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         fn = build_dag.BUILTIN_TRANSFORMS["lowercase"]
         out = fn({"id": "a", "content": "ABC"}, {"field": "content"})
         assert out["content"] == "abc"
 
     def test_add_field(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         fn = build_dag.BUILTIN_TRANSFORMS["add_field"]
         out = fn({"id": "a", "text": "x"}, {"field": "split", "value": "train"})
         assert out["split"] == "train"
 
     def test_token_count(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         fn = build_dag.BUILTIN_TRANSFORMS["token_count"]
         out = fn({"id": "a", "text": "one two three"}, {})
         assert out["n_tokens"] == 3
 
     def test_resolve_transform_unknown(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         with pytest.raises(ValueError, match="unknown transform"):
             build_dag.resolve_transform("nope", {})
 
     def test_resolve_transform_extra_overrides(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         sentinel = lambda r, c: {"id": r.get("id"), "x": 1}  # noqa: E731
         fn = build_dag.resolve_transform("custom", {"custom": sentinel})
@@ -108,14 +108,14 @@ class TestBuiltinTransforms:
 
 class TestRunBuild:
     def _plan(self, raw: dict):
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         return build_dag.parse_build_plan(raw)
 
     def test_table_seed_materializes_jsonl(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         _write_jsonl(
@@ -148,7 +148,7 @@ class TestRunBuild:
     def test_drop_empty_reduces_rows(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         _write_jsonl(
@@ -174,7 +174,7 @@ class TestRunBuild:
     def test_derived_model_consumes_refs(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         _write_jsonl(
@@ -207,7 +207,7 @@ class TestRunBuild:
     def test_view_not_written_but_feeds_downstream(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         _write_jsonl(tmp_path / "data" / "raw.jsonl", [{"id": "1", "text": "X"}])
@@ -248,7 +248,7 @@ class TestRunBuild:
     def test_incremental_only_retransforms_changed(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         calls: list = []
@@ -299,7 +299,7 @@ class TestRunBuild:
     def test_incremental_removes_dropped_rows(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "data" / "raw.jsonl"
@@ -330,7 +330,7 @@ class TestRunBuild:
     def test_seed_rows_without_id_get_assigned(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         _write_jsonl(tmp_path / "data" / "raw.jsonl", [{"text": "a"}, {"text": "b"}])
@@ -356,7 +356,7 @@ class TestRunBuild:
         assert all("id" in r for r in rows)
 
     def test_run_build_validates_plan_type(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         with pytest.raises(TypeError):
             build_dag.run_build({"models": []}, output_dir="out")  # type: ignore[arg-type]
@@ -364,7 +364,7 @@ class TestRunBuild:
     def test_output_dir_outside_cwd_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         work = tmp_path / "work"
         work.mkdir()
@@ -388,7 +388,7 @@ class TestRunBuild:
     def test_missing_source_file(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         plan = self._plan(
@@ -409,7 +409,7 @@ class TestRunBuild:
     def test_transform_error_names_model(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         _write_jsonl(tmp_path / "data" / "raw.jsonl", [{"id": "1", "text": "a"}])
@@ -435,7 +435,7 @@ class TestRunBuild:
     def test_build_result_frozen(self) -> None:
         import dataclasses
 
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         result = build_dag.BuildResult(models=(), output_dir="out")
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -522,36 +522,36 @@ def _constant_generate_fn():
 
 class TestMagpiePrefix:
     def test_default_is_chatml(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         assert "user" in magpie.magpie_prefix_for("some-unknown-model")
 
     def test_llama3_family(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         prefix = magpie.magpie_prefix_for("meta-llama/Llama-3.1-8B-Instruct")
         assert "start_header_id" in prefix
 
     def test_gemma_family(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         prefix = magpie.magpie_prefix_for("google/gemma-2-2b-it")
         assert "start_of_turn" in prefix
 
     def test_qwen_chatml(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         prefix = magpie.magpie_prefix_for("Qwen/Qwen2.5-0.5B-Instruct")
         assert "im_start" in prefix
 
     def test_assistant_opener(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         opener = magpie.magpie_assistant_opener("Qwen/Qwen2.5-0.5B-Instruct")
         assert "assistant" in opener
 
     def test_prefix_rejects_bad_base(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         with pytest.raises((TypeError, ValueError)):
             magpie.magpie_prefix_for("")
@@ -559,7 +559,7 @@ class TestMagpiePrefix:
 
 class TestMagpieHarvest:
     def test_clean_cuts_at_stop_marker(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         out = magpie._clean_generation(
             "  Hello there<|im_end|>extra junk", ["<|im_end|>"]
@@ -567,7 +567,7 @@ class TestMagpieHarvest:
         assert out == "Hello there"
 
     def test_harvest_instruction(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         gen = _varied_generate_fn()
         instr = magpie.harvest_instruction(gen, "<|im_start|>user\n", ["<|im_end|>"])
@@ -575,7 +575,7 @@ class TestMagpieHarvest:
         assert "<|im_end|>" not in instr
 
     def test_harvest_empty_generation(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         instr = magpie.harvest_instruction(lambda p: "", "<|im_start|>user\n", [])
         assert instr == ""
@@ -583,7 +583,7 @@ class TestMagpieHarvest:
 
 class TestMagpieQualityFilter:
     def test_keeps_clean(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         assert magpie.default_quality_fn(
             "Explain how photosynthesis converts sunlight into chemical energy.",
@@ -591,14 +591,14 @@ class TestMagpieQualityFilter:
         ) is True
 
     def test_drops_empty_response(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         assert magpie.default_quality_fn("good instruction here", "") is False
 
 
 class TestRunMagpie:
     def _cfg(self, **kw):
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         defaults = dict(
             base_model="Qwen/Qwen2.5-0.5B-Instruct",
@@ -612,7 +612,7 @@ class TestRunMagpie:
     def test_produces_target_rows(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         monkeypatch.chdir(tmp_path)
         cfg = self._cfg(target_rows=3)
@@ -632,7 +632,7 @@ class TestRunMagpie:
     def test_dedup_collapses_constant_instruction(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         monkeypatch.chdir(tmp_path)
         cfg = self._cfg(target_rows=5)
@@ -645,7 +645,7 @@ class TestRunMagpie:
     def test_quality_filter_drops(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         monkeypatch.chdir(tmp_path)
         cfg = self._cfg(target_rows=2, quality_filter=True)
@@ -663,7 +663,7 @@ class TestRunMagpie:
     def test_quality_filter_empty_response_skipped_not_filtered(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         monkeypatch.chdir(tmp_path)
         cfg = self._cfg(target_rows=2, quality_filter=True)
@@ -679,7 +679,7 @@ class TestRunMagpie:
         assert result.rows_filtered == 0
 
     def test_validates_config_type(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         with pytest.raises(TypeError):
             magpie.run_magpie({"base": "m"}, output_path="out.jsonl")  # type: ignore[arg-type]
@@ -687,7 +687,7 @@ class TestRunMagpie:
     def test_output_outside_cwd_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         work = tmp_path / "work"
         work.mkdir()
@@ -709,7 +709,7 @@ class TestRunMagpie:
     ) -> None:
         import os
 
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "real").mkdir()
@@ -723,7 +723,7 @@ class TestRunMagpie:
     def test_result_frozen(self) -> None:
         import dataclasses
 
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         res = magpie.MagpieResult(
             rows_kept=1, rows_filtered=0, duplicates=0, attempts=1, output_path="x"
@@ -734,13 +734,13 @@ class TestRunMagpie:
 
 class TestMakeMagpieGenerateFn:
     def test_anthropic_rejected(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         with pytest.raises(ValueError, match="raw"):
             magpie.make_magpie_generate_fn("anthropic", model="claude")
 
     def test_unknown_provider(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         with pytest.raises(ValueError):
             magpie.make_magpie_generate_fn("openai", model="gpt")
@@ -748,7 +748,7 @@ class TestMakeMagpieGenerateFn:
     def test_ollama_generation_mocked(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         class FakeResp:
             status_code = 200
@@ -764,7 +764,7 @@ class TestMakeMagpieGenerateFn:
         assert gen("<|im_start|>user\n") == "What is 2+2?"
 
     def test_vllm_generation_mocked(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         class FakeResp:
             status_code = 200
@@ -784,7 +784,7 @@ class TestMagpieCliLive:
     def test_live_run_writes_output(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(
@@ -877,25 +877,25 @@ class _CharTokenizer:
 
 class TestResolveTokenizer:
     def test_duck_typed_object_returned_as_is(self) -> None:
-        from soup_cli.utils.diagnose import _common
+        from ai_forge_cli.utils.diagnose import _common
 
         tok = _CharTokenizer()
         assert _common.resolve_tokenizer(tok) is tok
 
     def test_non_string_non_tokenizer_rejected(self) -> None:
-        from soup_cli.utils.diagnose import _common
+        from ai_forge_cli.utils.diagnose import _common
 
         with pytest.raises(TypeError):
             _common.resolve_tokenizer(123)  # type: ignore[arg-type]
 
     def test_empty_string_rejected(self) -> None:
-        from soup_cli.utils.diagnose import _common
+        from ai_forge_cli.utils.diagnose import _common
 
         with pytest.raises(ValueError):
             _common.resolve_tokenizer("")
 
     def test_subword_tokens(self) -> None:
-        from soup_cli.utils.diagnose import _common
+        from ai_forge_cli.utils.diagnose import _common
 
         toks = _common.subword_tokens(_CharTokenizer(), "ab")
         assert toks == ["a", "b"]
@@ -903,14 +903,14 @@ class TestResolveTokenizer:
 
 class TestSplitPrefixTokenizer:
     def test_whitespace_default_unchanged(self) -> None:
-        from soup_cli.utils.diagnose.memorization import split_prefix
+        from ai_forge_cli.utils.diagnose.memorization import split_prefix
 
         prefix, suffix = split_prefix("hello world foo bar", fraction=0.5)
         assert prefix == "hello world"
         assert suffix == "foo bar"
 
     def test_tokenizer_splits_on_token_boundary(self) -> None:
-        from soup_cli.utils.diagnose.memorization import split_prefix
+        from ai_forge_cli.utils.diagnose.memorization import split_prefix
 
         # char tokenizer: 11 chars, fraction 0.5 -> cut at 5 chars.
         prefix, suffix = split_prefix(
@@ -920,12 +920,12 @@ class TestSplitPrefixTokenizer:
         assert suffix == " world"
 
     def test_tokenizer_empty_text(self) -> None:
-        from soup_cli.utils.diagnose.memorization import split_prefix
+        from ai_forge_cli.utils.diagnose.memorization import split_prefix
 
         assert split_prefix("", tokenizer=_CharTokenizer()) == ("", "")
 
     def test_tokenizer_round_trips(self) -> None:
-        from soup_cli.utils.diagnose.memorization import split_prefix
+        from ai_forge_cli.utils.diagnose.memorization import split_prefix
 
         text = "The quick brown fox"
         prefix, suffix = split_prefix(text, fraction=0.3, tokenizer=_CharTokenizer())
@@ -934,7 +934,7 @@ class TestSplitPrefixTokenizer:
 
 class TestScoreMemorizationTokenizer:
     def test_exact_echo_subword_flags_memorization(self) -> None:
-        from soup_cli.utils.diagnose.memorization import score_memorization
+        from ai_forge_cli.utils.diagnose.memorization import score_memorization
 
         rows = [{"text": "alpha beta gamma delta epsilon"}]
         # adapter echoes the held-out suffix verbatim -> high overlap.
@@ -950,7 +950,7 @@ class TestScoreMemorizationTokenizer:
         assert score.verdict in {"MINOR", "MAJOR"}
 
     def test_no_echo_subword_is_ok(self) -> None:
-        from soup_cli.utils.diagnose.memorization import score_memorization
+        from ai_forge_cli.utils.diagnose.memorization import score_memorization
 
         rows = [{"text": "alpha beta gamma delta epsilon"}]
         score = score_memorization(
@@ -962,7 +962,7 @@ class TestScoreMemorizationTokenizer:
         assert score.verdict == "OK"
 
     def test_backcompat_no_tokenizer_still_works(self) -> None:
-        from soup_cli.utils.diagnose.memorization import score_memorization
+        from ai_forge_cli.utils.diagnose.memorization import score_memorization
 
         rows = [{"text": "alpha beta gamma delta epsilon"}]
         score = score_memorization(rows, lambda prefix: "unrelated text here")
@@ -970,7 +970,7 @@ class TestScoreMemorizationTokenizer:
         assert score.verdict == "OK"
 
     def test_tokenizer_resolved_once(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.diagnose import _common, memorization
+        from ai_forge_cli.utils.diagnose import _common, memorization
 
         calls = {"n": 0}
         real = _common.resolve_tokenizer
@@ -1013,7 +1013,7 @@ class TestItemParameters:
     def test_frozen(self) -> None:
         import dataclasses
 
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         p = irt.ItemParameters(
             item_id="a", difficulty=0.0, discrimination=1.0, guessing=0.0, info=0.25
@@ -1022,7 +1022,7 @@ class TestItemParameters:
             p.difficulty = 1.0  # type: ignore[misc]
 
     def test_discrimination_must_be_positive(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         with pytest.raises(ValueError):
             irt.ItemParameters(
@@ -1030,7 +1030,7 @@ class TestItemParameters:
             )
 
     def test_guessing_bounds(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         with pytest.raises(ValueError):
             irt.ItemParameters(
@@ -1038,7 +1038,7 @@ class TestItemParameters:
             )
 
     def test_bool_discrimination_rejected(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         with pytest.raises(ValueError):
             irt.ItemParameters(
@@ -1046,7 +1046,7 @@ class TestItemParameters:
             )
 
     def test_non_finite_rejected(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         with pytest.raises(ValueError):
             irt.ItemParameters(
@@ -1060,7 +1060,7 @@ class TestItemParameters:
 
 class TestFitIrt:
     def test_2pl_shape(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         params = irt.fit_irt(_response_matrix_rows(), model="2pl")
         assert len(params) == 3
@@ -1075,7 +1075,7 @@ class TestFitIrt:
             assert math.isfinite(p.info)
 
     def test_discriminating_item_carries_more_info(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         by_id = {p.item_id: p for p in irt.fit_irt(_response_matrix_rows(), model="2pl")}
         # A constant (always-correct) item carries near-zero information; a
@@ -1083,7 +1083,7 @@ class TestFitIrt:
         assert by_id["split"].info > by_id["const"].info
 
     def test_deterministic(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         rows = _response_matrix_rows()
         a = irt.fit_irt(rows, model="2pl")
@@ -1093,14 +1093,14 @@ class TestFitIrt:
         ]
 
     def test_3pl_guessing_bounded(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         params = irt.fit_irt(_response_matrix_rows(), model="3pl")
         for p in params:
             assert 0.0 <= p.guessing <= irt.MAX_GUESSING
 
     def test_1pl_fixes_discrimination(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         params = irt.fit_irt(_response_matrix_rows(), model="1pl")
         for p in params:
@@ -1108,33 +1108,33 @@ class TestFitIrt:
             assert p.guessing == 0.0
 
     def test_unknown_model_rejected(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         with pytest.raises(ValueError, match="model"):
             irt.fit_irt(_response_matrix_rows(), model="4pl")
 
     def test_missing_respondent_id_rejected(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         rows = [{"item_id": "a", "correct": True}]
         with pytest.raises(ValueError, match="respondent_id"):
             irt.fit_irt(rows, model="2pl")
 
     def test_non_bool_correct_rejected(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         rows = [{"respondent_id": "r0", "item_id": "a", "correct": 1}]
         with pytest.raises(ValueError):
             irt.fit_irt(rows, model="2pl")
 
     def test_empty_rejected(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         with pytest.raises(ValueError):
             irt.fit_irt([], model="2pl")
 
     def test_pick_subset_accepts_item_parameters(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         params = irt.fit_irt(_response_matrix_rows(), model="2pl")
         plan = irt.pick_irt_subset(params, size="small")
@@ -1208,7 +1208,7 @@ class TestIrtSubsetCliModels:
 class TestAugmentProviderFix:
     def test_ollama_provider_constructs(self) -> None:
         # Regression: previously raised ImportError (OllamaProvider missing).
-        from soup_cli.commands.data import _load_augment_provider
+        from ai_forge_cli.commands.data import _load_augment_provider
 
         prov = _load_augment_provider("ollama", 60, model="qwen2.5:0.5b")
         assert hasattr(prov, "generate")
@@ -1216,26 +1216,26 @@ class TestAugmentProviderFix:
     def test_anthropic_provider_constructs(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.commands.data import _load_augment_provider
+        from ai_forge_cli.commands.data import _load_augment_provider
 
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
         prov = _load_augment_provider("anthropic", 60)
         assert hasattr(prov, "generate")
 
     def test_vllm_provider_constructs(self) -> None:
-        from soup_cli.commands.data import _load_augment_provider
+        from ai_forge_cli.commands.data import _load_augment_provider
 
         prov = _load_augment_provider("vllm", 60)
         assert hasattr(prov, "generate")
 
     def test_unknown_provider_rejected(self) -> None:
-        from soup_cli.commands.data import _load_augment_provider
+        from ai_forge_cli.commands.data import _load_augment_provider
 
         with pytest.raises(ValueError, match="Unknown provider"):
             _load_augment_provider("openai", 60)
 
     def test_generate_unwraps_text(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.commands.data import _load_augment_provider
+        from ai_forge_cli.commands.data import _load_augment_provider
 
         class FakeResp:
             status_code = 200
@@ -1250,7 +1250,7 @@ class TestAugmentProviderFix:
         assert prov.generate("hello") == "rephrased!"
 
     def test_generate_non_string_safe(self) -> None:
-        from soup_cli.commands.data import _AugmentProvider
+        from ai_forge_cli.commands.data import _AugmentProvider
 
         prov = _AugmentProvider(lambda p: "not a mapping")
         assert prov.generate("x") == ""
@@ -1271,12 +1271,12 @@ class TestAugmentProviderFix:
 
 class TestValidateBuildSource:
     def test_none_passthrough(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         assert build_dag.validate_build_source(None) is None
 
     def test_under_cwd_ok(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "f.jsonl").write_text("{}\n", encoding="utf-8")
@@ -1285,7 +1285,7 @@ class TestValidateBuildSource:
     def test_outside_cwd_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         work = tmp_path / "work"
         work.mkdir()
@@ -1294,7 +1294,7 @@ class TestValidateBuildSource:
             build_dag.validate_build_source(str(tmp_path / "x.jsonl"))
 
     def test_non_string_rejected(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         with pytest.raises((TypeError, ValueError)):
             build_dag.validate_build_source(123)  # type: ignore[arg-type]
@@ -1307,7 +1307,7 @@ class TestValidateBuildSource:
     ) -> None:
         import os
 
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "real.jsonl").write_text("{}\n", encoding="utf-8")
@@ -1318,14 +1318,14 @@ class TestValidateBuildSource:
 
 class TestRunBuildReviewFixes:
     def _plan(self, raw: dict):
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         return build_dag.parse_build_plan(raw)
 
     def test_incremental_dropped_row_stays_dropped_no_retransform(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         _write_jsonl(
@@ -1355,7 +1355,7 @@ class TestRunBuildReviewFixes:
     def test_incremental_duplicate_id_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         _write_jsonl(
@@ -1380,7 +1380,7 @@ class TestRunBuildReviewFixes:
     def test_incremental_config_change_retransforms(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         _write_jsonl(tmp_path / "data" / "raw.jsonl", [{"id": "1", "text": "x"}])
@@ -1414,7 +1414,7 @@ class TestRunBuildReviewFixes:
     def test_unknown_transform_fails_before_any_write(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         monkeypatch.chdir(tmp_path)
         _write_jsonl(tmp_path / "data" / "raw.jsonl", [{"id": "1", "text": "x"}])
@@ -1442,7 +1442,7 @@ class TestRunBuildReviewFixes:
         assert not (tmp_path / "out" / "raw.jsonl").exists()
 
     def test_build_model_config_frozen_on_direct_construction(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         m = build_dag.BuildModel(
             name="m",
@@ -1456,7 +1456,7 @@ class TestRunBuildReviewFixes:
             m.config["b"] = 2  # type: ignore[index]
 
     def test_resolve_transform_non_callable_extra_rejected(self) -> None:
-        from soup_cli.utils import build_dag
+        from ai_forge_cli.utils import build_dag
 
         with pytest.raises(TypeError):
             build_dag.resolve_transform("x", {"x": "not callable"})
@@ -1464,7 +1464,7 @@ class TestRunBuildReviewFixes:
 
 class TestMagpieReviewFixes:
     def _cfg(self, **kw):
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         defaults = dict(
             base_model="Qwen/Qwen2.5-0.5B-Instruct",
@@ -1478,7 +1478,7 @@ class TestMagpieReviewFixes:
     def test_empty_instruction_exhausts_attempts(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         monkeypatch.chdir(tmp_path)
         result = magpie.run_magpie(
@@ -1493,7 +1493,7 @@ class TestMagpieReviewFixes:
     def test_dedup_false_keeps_duplicates(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         monkeypatch.chdir(tmp_path)
         result = magpie.run_magpie(
@@ -1510,7 +1510,7 @@ class TestMagpieReviewFixes:
     ) -> None:
         import logging
 
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         monkeypatch.chdir(tmp_path)
 
@@ -1559,7 +1559,7 @@ class TestMagpieReviewFixes:
         ],
     )
     def test_make_generate_fn_validator_matrix(self, kwargs) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         base = {"model": "m"}
         base.update(kwargs)
@@ -1569,7 +1569,7 @@ class TestMagpieReviewFixes:
     def test_ollama_non_200_returns_empty(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         class FakeResp:
             status_code = 500
@@ -1587,7 +1587,7 @@ class TestMagpieReviewFixes:
     def test_ollama_parse_failure_returns_empty(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         class FakeResp:
             status_code = 200
@@ -1603,7 +1603,7 @@ class TestMagpieReviewFixes:
         assert gen("prefix") == ""
 
     def test_ssrf_remote_base_url_rejected(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         with pytest.raises(ValueError):
             magpie.make_magpie_generate_fn(
@@ -1611,7 +1611,7 @@ class TestMagpieReviewFixes:
             )
 
     def test_ssrf_zero_host_rejected(self) -> None:
-        from soup_cli.utils import magpie
+        from ai_forge_cli.utils import magpie
 
         # 0.0.0.0 is bind-any, not loopback (v0.71.6 #232 hardening).
         with pytest.raises(ValueError):
@@ -1622,7 +1622,7 @@ class TestMagpieReviewFixes:
 
 class TestIrtReviewFixes:
     def test_3pl_deterministic(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         rows = _response_matrix_rows()
         a = irt.fit_irt(rows, model="3pl")
@@ -1634,7 +1634,7 @@ class TestIrtReviewFixes:
         ]
 
     def test_null_byte_respondent_id_rejected(self) -> None:
-        from soup_cli.utils import irt
+        from ai_forge_cli.utils import irt
 
         rows = [{"respondent_id": "r\x000", "item_id": "a", "correct": True}]
         with pytest.raises(ValueError):
@@ -1643,7 +1643,7 @@ class TestIrtReviewFixes:
 
 class TestCommonReviewFixes:
     def test_subword_tokens_fallback_without_convert(self) -> None:
-        from soup_cli.utils.diagnose import _common
+        from ai_forge_cli.utils.diagnose import _common
 
         class NoConvert:
             def encode(self, text, add_special_tokens=False):
@@ -1658,7 +1658,7 @@ class TestCommonReviewFixes:
 
 class TestAugmentProviderReviewFixes:
     def test_generate_non_string_text_field_safe(self) -> None:
-        from soup_cli.commands.data import _AugmentProvider
+        from ai_forge_cli.commands.data import _AugmentProvider
 
         prov = _AugmentProvider(lambda p: {"text": 123})
         assert prov.generate("x") == ""
@@ -1697,7 +1697,7 @@ class TestAugmentProviderReviewFixes:
 
 class TestPatchInvariants:
     def test_version_bumped(self) -> None:
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
 
         major_minor = tuple(int(x) for x in __version__.split(".")[:3])
         assert major_minor >= (0, 71, 6)
@@ -1705,7 +1705,7 @@ class TestPatchInvariants:
     def test_no_heavy_top_level_imports(self) -> None:
         import pathlib
 
-        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "soup_cli"
+        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli"
         for rel in (
             "utils/build_dag.py",
             "utils/magpie.py",

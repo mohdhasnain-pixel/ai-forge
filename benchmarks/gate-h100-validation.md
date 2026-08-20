@@ -1190,7 +1190,7 @@ defaults `rotational` to 1.
 **What Soup decides:**
 
 ```
->>> from soup_cli.utils.layer_stream import detect_disk_kind
+>>> from ai_forge_cli.utils.layer_stream import detect_disk_kind
 >>> detect_disk_kind()
 'hdd'
 ```
@@ -2218,11 +2218,11 @@ proceeding into torch's `meta` error.
 **Verified on the real eight cards**, which is the point of doing it here:
 
 ```
-$ python -m soup_cli.cli train --config stream05b.yaml --yes      # 8 visible
+$ python -m ai_forge_cli.cli train --config stream05b.yaml --yes      # 8 visible
 Error: ValueError: training.stream_layers=true, but 8 CUDA devices are visible.
 ... with one card visible, e.g. CUDA_VISIBLE_DEVICES=0, or set stream_layers=false
 
-$ CUDA_VISIBLE_DEVICES=6 python -m soup_cli.cli train --config stream05b.yaml --yes
+$ CUDA_VISIBLE_DEVICES=6 python -m ai_forge_cli.cli train --config stream05b.yaml --yes
 Layer streaming ready: 24 layers, 0.18 GB pinned RAM store, 2 x 8 MB VRAM buffers
 {'train_runtime': 14.6791, ..., 'train_loss': 0.47571421414613724, ...}
 ```
@@ -2411,7 +2411,7 @@ cards — why would I stream on one instead of sharding across eight?"*
 The first attempt died on every rank before training started:
 
 ```
-$ torchrun --nproc_per_node 8 -m soup_cli.cli train --config b_ds.yaml --deepspeed ...
+$ torchrun --nproc_per_node 8 -m ai_forge_cli.cli train --config b_ds.yaml --deepspeed ...
 Error: ValueError: You can't train a model that has been loaded with
 `device_map='auto'` in any distributed mode.
 ```
@@ -2725,7 +2725,7 @@ vacuous M=2048 numerics run, the negative control that rounded away, and this.
   sequence length and buffer count.
 
 Script: `variant2_gate.py`. Result: `/root/results/variant2_gate_32b.json`.
-Shipped as `install_dequant_forward` in `src/soup_cli/utils/layer_stream_runtime.py`,
+Shipped as `install_dequant_forward` in `src/ai_forge_cli/utils/layer_stream_runtime.py`,
 with a CI test asserting the streamed path makes zero `MatMul4Bit` calls and a
 resident control asserting the counter can see such calls at all.
 
@@ -3369,7 +3369,7 @@ and "the flag was accepted".
 ### The blocker: `soup train --gpus N` had never launched
 
 ```
-accelerate launch --num_processes 4 /root/venv/bin/python -m soup_cli.cli train ...
+accelerate launch --num_processes 4 /root/venv/bin/python -m ai_forge_cli.cli train ...
   File "/root/venv/bin/python", line 1
     ELF
 SyntaxError: source code cannot contain null bytes
@@ -3627,7 +3627,7 @@ rather than assumed at the start.
 decide whether to pass `reward_model=`. Those two facts had decoupled: **trl dropped
 `reward_model=` at 0.25.0 and kept `BasePairwiseJudge` exported through 0.28.0.** So
 the probe answered yes for every trl in the supported `<0.27` range — including
-0.26.2, which is what `pip install "soup-cli[train]"` resolves today and what this box
+0.26.2, which is what `pip install "ai-forge[train]"` resolves today and what this box
 runs — and the wrapper passed a keyword removed five releases earlier.
 
 Measured on 0.26.2: **`TypeError` before step 0, no adapter written.** Not a
@@ -4236,7 +4236,7 @@ Caveat: n=3, one model, one dataset. It sizes the effect; it does not calibrate 
 Three of this session's monitors were shell loops of the form:
 
 ```bash
-until ! pgrep -f "soup_cli.cli train"; do sleep 10; done
+until ! pgrep -f "ai_forge_cli.cli train"; do sleep 10; done
 ```
 
 **They never terminate.** `pgrep -f` matches against full command lines, and the
@@ -5009,7 +5009,7 @@ and self-contained:
 | `issue328_min.py` / `issue328_probe.py` / `issue328_control.py` | STEP 15 — six arms in one process, RMSNorm device instrumentation, and the 2x2 gradient-checkpointing control |
 | `issue327/measure327.py` | STEP 16 — the 72-run predicted-vs-measured VRAM grid, with the observed tensor shape recorded per run |
 
-All of them import `soup_cli` unmodified: every measurement above the
+All of them import `ai_forge_cli` unmodified: every measurement above the
 measurement/fix boundary was taken against untouched Soup. The two `src/` changes
 made afterwards (STEP 10's guard, STEP 12's `device_map` fix) are commits in
 their own right, each with tests, and neither is exercised by the harnesses

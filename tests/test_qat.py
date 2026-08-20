@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from soup_cli.config.schema import SoupConfig
+from ai_forge_cli.config.schema import SoupConfig
 
 # ─── Config Tests ───────────────────────────────────────────────────────────
 
@@ -128,7 +128,7 @@ class TestQATValidation:
 
     def test_validate_qat_with_unsloth_returns_error(self):
         """QAT should not be compatible with unsloth backend."""
-        from soup_cli.utils.qat import validate_qat_config
+        from ai_forge_cli.utils.qat import validate_qat_config
 
         errors = validate_qat_config(
             quantization="4bit", backend="unsloth", modality="text",
@@ -137,7 +137,7 @@ class TestQATValidation:
 
     def test_validate_qat_with_transformers_no_backend_error(self):
         """QAT with transformers backend should have no backend errors."""
-        from soup_cli.utils.qat import validate_qat_config
+        from ai_forge_cli.utils.qat import validate_qat_config
 
         errors = validate_qat_config(
             quantization="4bit", backend="transformers", modality="text",
@@ -146,7 +146,7 @@ class TestQATValidation:
 
     def test_validate_qat_with_8bit_warns(self):
         """QAT with 8bit quantization should warn."""
-        from soup_cli.utils.qat import validate_qat_config
+        from ai_forge_cli.utils.qat import validate_qat_config
 
         errors = validate_qat_config(
             quantization="8bit", backend="transformers", modality="text",
@@ -155,7 +155,7 @@ class TestQATValidation:
 
     def test_validate_qat_with_4bit_no_quant_warning(self):
         """QAT with 4bit should not warn about quantization level."""
-        from soup_cli.utils.qat import validate_qat_config
+        from ai_forge_cli.utils.qat import validate_qat_config
 
         errors = validate_qat_config(
             quantization="4bit", backend="transformers", modality="text",
@@ -165,7 +165,7 @@ class TestQATValidation:
 
     def test_validate_qat_with_none_no_quant_warning(self):
         """QAT with none quantization should not warn about quantization level."""
-        from soup_cli.utils.qat import validate_qat_config
+        from ai_forge_cli.utils.qat import validate_qat_config
 
         errors = validate_qat_config(
             quantization="none", backend="transformers", modality="text",
@@ -174,7 +174,7 @@ class TestQATValidation:
 
     def test_validate_qat_torchao_not_installed(self):
         """Should warn when torchao is not installed."""
-        from soup_cli.utils.qat import validate_qat_config
+        from ai_forge_cli.utils.qat import validate_qat_config
 
         errors = validate_qat_config(
             quantization="4bit", backend="transformers", modality="text",
@@ -186,7 +186,7 @@ class TestQATValidation:
 
     def test_validate_qat_with_vision_modality(self):
         """QAT should work with vision modality."""
-        from soup_cli.utils.qat import validate_qat_config
+        from ai_forge_cli.utils.qat import validate_qat_config
 
         errors = validate_qat_config(
             quantization="4bit", backend="transformers", modality="vision",
@@ -203,7 +203,7 @@ class TestQATUtils:
 
     def test_is_qat_available_returns_bool(self):
         """is_qat_available should return a boolean."""
-        from soup_cli.utils.qat import is_qat_available
+        from ai_forge_cli.utils.qat import is_qat_available
 
         result = is_qat_available()
         assert isinstance(result, bool)
@@ -224,10 +224,10 @@ class TestQATUtils:
         }):
             import importlib
 
-            import soup_cli.utils.qat
+            import ai_forge_cli.utils.qat
 
-            importlib.reload(soup_cli.utils.qat)
-            result = soup_cli.utils.qat.prepare_model_for_qat(mock_model)
+            importlib.reload(ai_forge_cli.utils.qat)
+            result = ai_forge_cli.utils.qat.prepare_model_for_qat(mock_model)
             mock_quantize.assert_called_once_with(mock_model, mock_config)
             assert result is mock_model
 
@@ -243,10 +243,10 @@ class TestQATUtils:
         }):
             import importlib
 
-            import soup_cli.utils.qat
+            import ai_forge_cli.utils.qat
 
-            importlib.reload(soup_cli.utils.qat)
-            result = soup_cli.utils.qat.get_qat_config()
+            importlib.reload(ai_forge_cli.utils.qat)
+            result = ai_forge_cli.utils.qat.get_qat_config()
             assert result is mock_config
 
 
@@ -258,7 +258,7 @@ class TestSFTQATIntegration:
 
     def test_sft_wrapper_init_with_qat(self):
         """SFTTrainerWrapper should accept QAT config."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -270,7 +270,7 @@ class TestSFTQATIntegration:
 
     def test_sft_setup_transformers_calls_qat(self):
         """_setup_transformers should call prepare_model_for_qat when QAT enabled."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -292,19 +292,19 @@ class TestSFTQATIntegration:
         wrapper.tokenizer = mock_tokenizer
 
         # Only test that QAT gets called when quantization_aware is True
-        with patch("soup_cli.utils.qat.prepare_model_for_qat",
+        with patch("ai_forge_cli.utils.qat.prepare_model_for_qat",
                    return_value=mock_model) as mock_qat:
             # The QAT call happens at the end of _setup_transformers,
             # after LoRA. We test it directly since mocking the full
             # transformers pipeline is fragile.
-            from soup_cli.utils.qat import prepare_model_for_qat
+            from ai_forge_cli.utils.qat import prepare_model_for_qat
             if cfg.training.quantization_aware:
                 wrapper.model = prepare_model_for_qat(wrapper.model)
             mock_qat.assert_called_once_with(mock_model)
 
     def test_sft_setup_transformers_no_qat_when_disabled(self):
         """_setup_transformers should not call QAT when disabled."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -318,10 +318,10 @@ class TestSFTQATIntegration:
         wrapper = SFTTrainerWrapper(cfg, device="cuda")
 
         # Test the QAT guard condition directly
-        with patch("soup_cli.utils.qat.prepare_model_for_qat") as mock_qat:
+        with patch("ai_forge_cli.utils.qat.prepare_model_for_qat") as mock_qat:
             # Simulate what _setup_transformers does at the end
             if cfg.training.quantization_aware:
-                from soup_cli.utils.qat import prepare_model_for_qat
+                from ai_forge_cli.utils.qat import prepare_model_for_qat
                 wrapper.model = prepare_model_for_qat(wrapper.model)
             mock_qat.assert_not_called()
 
@@ -331,7 +331,7 @@ class TestDPOQATIntegration:
 
     def test_dpo_wrapper_init_with_qat(self):
         """DPOTrainerWrapper should accept QAT config."""
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -344,7 +344,7 @@ class TestDPOQATIntegration:
 
     def test_dpo_setup_transformers_calls_qat(self):
         """DPO trainer should call prepare_model_for_qat when QAT is enabled."""
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -360,10 +360,10 @@ class TestDPOQATIntegration:
         mock_model = MagicMock()
         wrapper.model = mock_model
 
-        with patch("soup_cli.utils.qat.prepare_model_for_qat",
+        with patch("ai_forge_cli.utils.qat.prepare_model_for_qat",
                    return_value=mock_model) as mock_qat:
             if cfg.training.quantization_aware:
-                from soup_cli.utils.qat import prepare_model_for_qat
+                from ai_forge_cli.utils.qat import prepare_model_for_qat
                 wrapper.model = prepare_model_for_qat(wrapper.model)
             mock_qat.assert_called_once_with(mock_model)
 
@@ -373,7 +373,7 @@ class TestGRPOQATIntegration:
 
     def test_grpo_wrapper_init_with_qat(self):
         """GRPOTrainerWrapper should accept QAT config."""
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -386,7 +386,7 @@ class TestGRPOQATIntegration:
 
     def test_grpo_setup_transformers_calls_qat(self):
         """GRPO trainer should call prepare_model_for_qat when QAT is enabled."""
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -402,10 +402,10 @@ class TestGRPOQATIntegration:
         mock_model = MagicMock()
         wrapper.model = mock_model
 
-        with patch("soup_cli.utils.qat.prepare_model_for_qat",
+        with patch("ai_forge_cli.utils.qat.prepare_model_for_qat",
                    return_value=mock_model) as mock_qat:
             if cfg.training.quantization_aware:
-                from soup_cli.utils.qat import prepare_model_for_qat
+                from ai_forge_cli.utils.qat import prepare_model_for_qat
                 wrapper.model = prepare_model_for_qat(wrapper.model)
             mock_qat.assert_called_once_with(mock_model)
 
@@ -437,7 +437,7 @@ class TestQATExportCompatibility:
 
     def test_qat_config_does_not_affect_export(self):
         """QAT is a training-time feature — export should work the same."""
-        from soup_cli.commands.export import GGUF_QUANT_TYPES, SUPPORTED_FORMATS
+        from ai_forge_cli.commands.export import GGUF_QUANT_TYPES, SUPPORTED_FORMATS
 
         # QAT models produce standard LoRA adapters, so all export
         # paths should remain unchanged
@@ -478,7 +478,7 @@ class TestTrainCommandQAT:
 
     def test_qat_with_unsloth_validation_fails(self):
         """QAT + unsloth should produce validation errors."""
-        from soup_cli.utils.qat import validate_qat_config
+        from ai_forge_cli.utils.qat import validate_qat_config
 
         errors = validate_qat_config(
             quantization="4bit", backend="unsloth", modality="text",
@@ -494,7 +494,7 @@ class TestQATSweepParam:
     """Test quantization_aware parameter in sweep shortcuts."""
 
     def test_qat_sweep_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"quantization_aware": False}}
         _set_nested_param(config, "training.quantization_aware", True)
@@ -508,13 +508,13 @@ class TestDoctorQAT:
     """Test that doctor checks for torchao (QAT dependency)."""
 
     def test_torchao_in_deps_list(self):
-        from soup_cli.commands.doctor import DEPS
+        from ai_forge_cli.commands.doctor import DEPS
 
         pkg_names = [pkg_name for _, pkg_name, _, _ in DEPS]
         assert "torchao" in pkg_names
 
     def test_torchao_is_optional(self):
-        from soup_cli.commands.doctor import DEPS
+        from ai_forge_cli.commands.doctor import DEPS
 
         for import_name, pkg_name, _, required in DEPS:
             if pkg_name == "torchao":

@@ -23,9 +23,9 @@ import re
 
 import pytest
 
-from soup_cli.utils.gpu import resolve_device_map
+from ai_forge_cli.utils.gpu import resolve_device_map
 
-_TRAINER_DIR = pathlib.Path(__file__).resolve().parents[1] / "src" / "soup_cli" / "trainer"
+_TRAINER_DIR = pathlib.Path(__file__).resolve().parents[1] / "src" / "ai_forge_cli" / "trainer"
 _TRAINER_SOURCES = sorted(_TRAINER_DIR.glob("*.py"))
 
 #: The exact idiom this fix replaces: ``dev_map = "cpu" if <cond> else "auto"``.

@@ -6,7 +6,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Config Tests ───────────────────────────────────────────────────────────
 
@@ -148,28 +148,28 @@ class TestPlaintextDataFormat:
 
     def test_format_signature_exists(self):
         """plaintext format signature should be registered."""
-        from soup_cli.data.formats import FORMAT_SIGNATURES
+        from ai_forge_cli.data.formats import FORMAT_SIGNATURES
 
         assert "plaintext" in FORMAT_SIGNATURES
         assert FORMAT_SIGNATURES["plaintext"] == {"text"}
 
     def test_detect_plaintext_format(self):
         """Should auto-detect plaintext format from data keys."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"text": "This is a document."}]
         assert detect_format(data) == "plaintext"
 
     def test_detect_plaintext_with_extra_keys(self):
         """Should detect plaintext format even with extra keys."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"text": "Document content.", "id": 1, "source": "web"}]
         assert detect_format(data) == "plaintext"
 
     def test_convert_plaintext(self):
         """Should convert plaintext row correctly."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"text": "This is raw text for pre-training."}
         result = format_to_messages(row, "plaintext")
@@ -177,7 +177,7 @@ class TestPlaintextDataFormat:
 
     def test_convert_plaintext_preserves_text_only(self):
         """Output should have exactly the 'text' key."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"text": "content", "id": 42, "source": "web"}
         result = format_to_messages(row, "plaintext")
@@ -185,7 +185,7 @@ class TestPlaintextDataFormat:
 
     def test_convert_plaintext_empty_text_returns_none(self):
         """Empty text should cause conversion to return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"text": ""}
         result = format_to_messages(row, "plaintext")
@@ -193,7 +193,7 @@ class TestPlaintextDataFormat:
 
     def test_convert_plaintext_whitespace_only_returns_none(self):
         """Whitespace-only text should cause conversion to return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"text": "   \n  "}
         result = format_to_messages(row, "plaintext")
@@ -201,7 +201,7 @@ class TestPlaintextDataFormat:
 
     def test_convert_plaintext_missing_text_returns_none(self):
         """Row missing 'text' key should return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"content": "some text"}
         result = format_to_messages(row, "plaintext")
@@ -209,14 +209,14 @@ class TestPlaintextDataFormat:
 
     def test_plaintext_not_confused_with_chatml(self):
         """Data with only 'text' key should not be detected as chatml."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"text": "plain content"}]
         assert detect_format(data) == "plaintext"
 
     def test_chatml_not_detected_as_plaintext(self):
         """Data with 'messages' key should be detected as chatml, not plaintext."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"messages": [{"role": "user", "content": "hello"}]}]
         assert detect_format(data) == "chatml"
@@ -230,7 +230,7 @@ class TestTxtFileLoading:
 
     def test_load_txt_file(self, tmp_path):
         """Should load .txt file as list of {text: ...} dicts."""
-        from soup_cli.data.loader import load_raw_data
+        from ai_forge_cli.data.loader import load_raw_data
 
         txt_file = tmp_path / "corpus.txt"
         txt_file.write_text("Line one\nLine two\nLine three\n", encoding="utf-8")
@@ -242,7 +242,7 @@ class TestTxtFileLoading:
 
     def test_load_txt_skips_empty_lines(self, tmp_path):
         """Empty lines should be skipped."""
-        from soup_cli.data.loader import load_raw_data
+        from ai_forge_cli.data.loader import load_raw_data
 
         txt_file = tmp_path / "corpus.txt"
         txt_file.write_text("Line one\n\n\nLine two\n", encoding="utf-8")
@@ -253,7 +253,7 @@ class TestTxtFileLoading:
 
     def test_load_txt_empty_file(self, tmp_path):
         """Empty .txt file should return empty list."""
-        from soup_cli.data.loader import load_raw_data
+        from ai_forge_cli.data.loader import load_raw_data
 
         txt_file = tmp_path / "empty.txt"
         txt_file.write_text("", encoding="utf-8")
@@ -262,13 +262,13 @@ class TestTxtFileLoading:
 
     def test_txt_extension_supported(self):
         """'.txt' should be in SUPPORTED_EXTENSIONS."""
-        from soup_cli.data.loader import SUPPORTED_EXTENSIONS
+        from ai_forge_cli.data.loader import SUPPORTED_EXTENSIONS
 
         assert ".txt" in SUPPORTED_EXTENSIONS
 
     def test_load_txt_strips_whitespace(self, tmp_path):
         """Lines should have leading/trailing whitespace stripped."""
-        from soup_cli.data.loader import load_raw_data
+        from ai_forge_cli.data.loader import load_raw_data
 
         txt_file = tmp_path / "corpus.txt"
         txt_file.write_text("  hello  \n  world  \n", encoding="utf-8")
@@ -328,13 +328,13 @@ class TestPretrainTrainRouting:
 
     def test_pretrain_import_exists(self):
         """PretrainTrainerWrapper should be importable."""
-        from soup_cli.trainer.pretrain import PretrainTrainerWrapper
+        from ai_forge_cli.trainer.pretrain import PretrainTrainerWrapper
 
         assert PretrainTrainerWrapper is not None
 
     def test_pretrain_wrapper_init(self):
         """PretrainTrainerWrapper should initialize without error."""
-        from soup_cli.trainer.pretrain import PretrainTrainerWrapper
+        from ai_forge_cli.trainer.pretrain import PretrainTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -349,7 +349,7 @@ class TestPretrainTrainRouting:
 
     def test_pretrain_wrapper_init_with_options(self):
         """PretrainTrainerWrapper should accept all constructor options."""
-        from soup_cli.trainer.pretrain import PretrainTrainerWrapper
+        from ai_forge_cli.trainer.pretrain import PretrainTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -370,21 +370,21 @@ class TestPretrainSweepParams:
     """Test pretrain/MoE parameter shortcuts in sweep."""
 
     def test_moe_lora_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"moe_lora": False}}
         _set_nested_param(config, "moe_lora", True)
         assert config["training"]["moe_lora"] is True
 
     def test_moe_aux_loss_coeff_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"moe_aux_loss_coeff": 0.01}}
         _set_nested_param(config, "moe_aux_loss_coeff", 0.05)
         assert config["training"]["moe_aux_loss_coeff"] == pytest.approx(0.05)
 
     def test_moe_lora_shortcut_creates_nested_key(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "moe_lora", True)
@@ -392,7 +392,7 @@ class TestPretrainSweepParams:
 
     def test_sweep_run_single_routes_to_pretrain_trainer(self):
         """_run_single should instantiate PretrainTrainerWrapper for pretrain task."""
-        from soup_cli.commands.sweep import _run_single
+        from ai_forge_cli.commands.sweep import _run_single
 
         cfg = SoupConfig(
             base="some-model",
@@ -413,14 +413,14 @@ class TestPretrainSweepParams:
         }
 
         fake_gpu_info = {"memory_total": "0 MB", "memory_total_bytes": 0}
-        with mock_patch("soup_cli.data.loader.load_dataset", return_value=fake_dataset), \
-             mock_patch("soup_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
-             mock_patch("soup_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
-             mock_patch("soup_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
-             mock_patch("soup_cli.monitoring.display.TrainingDisplay"), \
-             mock_patch("soup_cli.trainer.pretrain.PretrainTrainerWrapper.setup"), \
+        with mock_patch("ai_forge_cli.data.loader.load_dataset", return_value=fake_dataset), \
+             mock_patch("ai_forge_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
+             mock_patch("ai_forge_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
+             mock_patch("ai_forge_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
+             mock_patch("ai_forge_cli.monitoring.display.TrainingDisplay"), \
+             mock_patch("ai_forge_cli.trainer.pretrain.PretrainTrainerWrapper.setup"), \
              mock_patch(
-                 "soup_cli.trainer.pretrain.PretrainTrainerWrapper.train",
+                 "ai_forge_cli.trainer.pretrain.PretrainTrainerWrapper.train",
                  return_value=fake_result,
              ) as mock_train:
             mock_tracker = MagicMock()
@@ -441,7 +441,7 @@ class TestPretrainTrainGuard:
 
     def test_train_before_setup_raises_runtime_error(self):
         """Calling train() before setup() should raise RuntimeError."""
-        from soup_cli.trainer.pretrain import PretrainTrainerWrapper
+        from ai_forge_cli.trainer.pretrain import PretrainTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -454,7 +454,7 @@ class TestPretrainTrainGuard:
 
     def test_train_error_message_mentions_setup(self):
         """RuntimeError message should mention setup()."""
-        from soup_cli.trainer.pretrain import PretrainTrainerWrapper
+        from ai_forge_cli.trainer.pretrain import PretrainTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -475,7 +475,7 @@ class TestPretrainTrainResults:
 
     def _make_wrapper_with_mock_trainer(self, log_history=None, global_step=20):
         """Helper: return a PretrainTrainerWrapper with trainer pre-injected."""
-        from soup_cli.trainer.pretrain import PretrainTrainerWrapper
+        from ai_forge_cli.trainer.pretrain import PretrainTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -575,7 +575,7 @@ class TestPretrainTrainResults:
             call_count[0] += 1
             return 0 if call_count[0] == 1 else 90
 
-        with mock_patch("soup_cli.trainer.pretrain.time.time", side_effect=fake_time):
+        with mock_patch("ai_forge_cli.trainer.pretrain.time.time", side_effect=fake_time):
             result = wrapper.train()
 
         assert result["duration"] == "1m"
@@ -592,7 +592,7 @@ class TestPretrainTrainResults:
             call_count[0] += 1
             return 0 if call_count[0] == 1 else 3720  # 1h 2m
 
-        with mock_patch("soup_cli.trainer.pretrain.time.time", side_effect=fake_time):
+        with mock_patch("ai_forge_cli.trainer.pretrain.time.time", side_effect=fake_time):
             result = wrapper.train()
 
         assert result["duration"] == "1h 2m"
@@ -608,7 +608,7 @@ class TestPretrainInitTemplate:
         """soup init --template pretrain should write a file with pretrain task."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -627,8 +627,8 @@ class TestPretrainInitTemplate:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.config.loader import load_config
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.config.loader import load_config
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -643,7 +643,7 @@ class TestPretrainInitTemplate:
         """soup init --template moe should write a file with moe_lora."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -663,9 +663,9 @@ class TestPretrainWizardPath:
 
     def test_wizard_pretrain_task_sets_plaintext_format(self):
         """When the wizard receives task=pretrain, data format should be 'plaintext'."""
-        from soup_cli.commands.init import _interactive_wizard
+        from ai_forge_cli.commands.init import _interactive_wizard
 
-        with mock_patch("soup_cli.commands.init.Prompt.ask", side_effect=[
+        with mock_patch("ai_forge_cli.commands.init.Prompt.ask", side_effect=[
             "some-model",
             "pretrain",
             "./corpus.txt",
@@ -679,7 +679,7 @@ class TestPretrainWizardPath:
 
     def test_wizard_pretrain_does_not_prompt_for_format(self):
         """The wizard should NOT ask for data format when task=pretrain."""
-        from soup_cli.commands.init import _interactive_wizard
+        from ai_forge_cli.commands.init import _interactive_wizard
 
         prompt_calls = []
 
@@ -694,7 +694,7 @@ class TestPretrainWizardPath:
             }
             return answers.get(question, kwargs.get("default", ""))
 
-        with mock_patch("soup_cli.commands.init.Prompt.ask", side_effect=record_prompt):
+        with mock_patch("ai_forge_cli.commands.init.Prompt.ask", side_effect=record_prompt):
             config_text = _interactive_wizard()
 
         # "Data format" prompt should not appear when task is pretrain
@@ -710,7 +710,7 @@ class TestPretrainConfigLoaderRoundTrip:
 
     def test_pretrain_template_round_trip(self):
         """TEMPLATES['pretrain'] should parse via load_config_from_string."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(TEMPLATES["pretrain"])
         assert cfg.task == "pretrain"
@@ -718,7 +718,7 @@ class TestPretrainConfigLoaderRoundTrip:
 
     def test_moe_template_round_trip(self):
         """TEMPLATES['moe'] should parse via load_config_from_string."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(TEMPLATES["moe"])
         assert cfg.training.moe_lora is True
@@ -726,7 +726,7 @@ class TestPretrainConfigLoaderRoundTrip:
 
     def test_pretrain_custom_yaml_round_trip(self):
         """Custom pretrain YAML string should round-trip correctly."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: custom-model/llama-7b
@@ -776,13 +776,13 @@ class TestPretrainMoEIntegration:
              mock_patch("peft.LoraConfig"), \
              mock_patch("peft.prepare_model_for_kbit_training"), \
              mock_patch(
-                 "soup_cli.utils.moe.detect_moe_model", return_value=True
+                 "ai_forge_cli.utils.moe.detect_moe_model", return_value=True
              ), \
              mock_patch(
-                 "soup_cli.utils.moe.get_moe_target_modules",
+                 "ai_forge_cli.utils.moe.get_moe_target_modules",
                  return_value=["q_proj", "v_proj", "gate_proj", "up_proj"],
              ) as mock_moe_targets:
-            from soup_cli.trainer.pretrain import PretrainTrainerWrapper
+            from ai_forge_cli.trainer.pretrain import PretrainTrainerWrapper
 
             wrapper = PretrainTrainerWrapper(cfg, device="cpu")
             wrapper._setup_transformers(cfg, cfg.training)
@@ -810,11 +810,11 @@ class TestPretrainMoEIntegration:
              mock_patch("peft.LoraConfig"), \
              mock_patch("peft.prepare_model_for_kbit_training"), \
              mock_patch(
-                 "soup_cli.utils.moe.detect_moe_model", return_value=True
+                 "ai_forge_cli.utils.moe.detect_moe_model", return_value=True
              ), \
-             mock_patch("soup_cli.utils.moe.get_moe_target_modules",
+             mock_patch("ai_forge_cli.utils.moe.get_moe_target_modules",
                         return_value=None):
-            from soup_cli.trainer.pretrain import PretrainTrainerWrapper
+            from ai_forge_cli.trainer.pretrain import PretrainTrainerWrapper
 
             wrapper = PretrainTrainerWrapper(cfg, device="cpu")
             wrapper._setup_transformers(cfg, cfg.training)
@@ -841,13 +841,13 @@ class TestPretrainMoEIntegration:
              mock_patch("peft.LoraConfig"), \
              mock_patch("peft.prepare_model_for_kbit_training"), \
              mock_patch(
-                 "soup_cli.utils.moe.detect_moe_model", return_value=False
+                 "ai_forge_cli.utils.moe.detect_moe_model", return_value=False
              ), \
              mock_patch(
-                 "soup_cli.utils.moe.get_moe_target_modules",
+                 "ai_forge_cli.utils.moe.get_moe_target_modules",
                  return_value=None,
              ) as mock_moe_targets:
-            from soup_cli.trainer.pretrain import PretrainTrainerWrapper
+            from ai_forge_cli.trainer.pretrain import PretrainTrainerWrapper
 
             wrapper = PretrainTrainerWrapper(cfg, device="cpu")
             wrapper._setup_transformers(cfg, cfg.training)
@@ -864,7 +864,7 @@ class TestPlaintextLineChunking:
 
     def test_double_newlines_produce_separate_line_docs(self, tmp_path):
         """Double newlines are skipped — each non-empty line is a separate doc."""
-        from soup_cli.data.loader import load_raw_data
+        from ai_forge_cli.data.loader import load_raw_data
 
         txt_file = tmp_path / "corpus.txt"
         txt_file.write_text(
@@ -877,7 +877,7 @@ class TestPlaintextLineChunking:
 
     def test_unicode_text_loading(self, tmp_path):
         """Unicode content should load correctly."""
-        from soup_cli.data.loader import load_raw_data
+        from ai_forge_cli.data.loader import load_raw_data
 
         txt_file = tmp_path / "unicode.txt"
         txt_file.write_text("日本語テスト\n中文测试\nعربي\n", encoding="utf-8")

@@ -20,14 +20,14 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 # ---------- Module surface ----------
 
 
 class TestModuleSurface:
     def test_imports(self):
-        from soup_cli.utils.unlearning_eval import (
+        from ai_forge_cli.utils.unlearning_eval import (
             BENCHMARKS,
             VERDICTS,
             UnlearnMetric,
@@ -51,12 +51,12 @@ class TestModuleSurface:
         assert isinstance(VERDICTS, tuple)
 
     def test_benchmarks_exact(self):
-        from soup_cli.utils.unlearning_eval import BENCHMARKS
+        from ai_forge_cli.utils.unlearning_eval import BENCHMARKS
 
         assert BENCHMARKS == frozenset({"tofu", "muse", "wmdp"})
 
     def test_verdicts_exact(self):
-        from soup_cli.utils.unlearning_eval import VERDICTS
+        from ai_forge_cli.utils.unlearning_eval import VERDICTS
 
         assert VERDICTS == ("OK", "MINOR", "MAJOR")
 
@@ -66,31 +66,31 @@ class TestModuleSurface:
 
 class TestClassifyUnlearnScore:
     def test_ok_boundary(self):
-        from soup_cli.utils.unlearning_eval import classify_unlearn_score
+        from ai_forge_cli.utils.unlearning_eval import classify_unlearn_score
 
         assert classify_unlearn_score(0.85) == "OK"
         assert classify_unlearn_score(1.0) == "OK"
 
     def test_minor_band(self):
-        from soup_cli.utils.unlearning_eval import classify_unlearn_score
+        from ai_forge_cli.utils.unlearning_eval import classify_unlearn_score
 
         assert classify_unlearn_score(0.60) == "MINOR"
         assert classify_unlearn_score(0.84) == "MINOR"
 
     def test_major_band(self):
-        from soup_cli.utils.unlearning_eval import classify_unlearn_score
+        from ai_forge_cli.utils.unlearning_eval import classify_unlearn_score
 
         assert classify_unlearn_score(0.0) == "MAJOR"
         assert classify_unlearn_score(0.59) == "MAJOR"
 
     def test_bool_rejected(self):
-        from soup_cli.utils.unlearning_eval import classify_unlearn_score
+        from ai_forge_cli.utils.unlearning_eval import classify_unlearn_score
 
         with pytest.raises(TypeError):
             classify_unlearn_score(True)
 
     def test_non_finite_rejected(self):
-        from soup_cli.utils.unlearning_eval import classify_unlearn_score
+        from ai_forge_cli.utils.unlearning_eval import classify_unlearn_score
 
         with pytest.raises(ValueError):
             classify_unlearn_score(float("nan"))
@@ -99,7 +99,7 @@ class TestClassifyUnlearnScore:
             classify_unlearn_score(float("inf"))
 
     def test_out_of_range_rejected(self):
-        from soup_cli.utils.unlearning_eval import classify_unlearn_score
+        from ai_forge_cli.utils.unlearning_eval import classify_unlearn_score
 
         with pytest.raises(ValueError):
             classify_unlearn_score(-0.1)
@@ -113,38 +113,38 @@ class TestClassifyUnlearnScore:
 
 class TestValidateBenchmarkName:
     def test_happy_path(self):
-        from soup_cli.utils.unlearning_eval import validate_benchmark_name
+        from ai_forge_cli.utils.unlearning_eval import validate_benchmark_name
 
         assert validate_benchmark_name("tofu") == "tofu"
         assert validate_benchmark_name("MUSE") == "muse"
         assert validate_benchmark_name("WMDP") == "wmdp"
 
     def test_unknown_rejected(self):
-        from soup_cli.utils.unlearning_eval import validate_benchmark_name
+        from ai_forge_cli.utils.unlearning_eval import validate_benchmark_name
 
         with pytest.raises(ValueError, match="unknown"):
             validate_benchmark_name("zzz")
 
     def test_bool_rejected(self):
-        from soup_cli.utils.unlearning_eval import validate_benchmark_name
+        from ai_forge_cli.utils.unlearning_eval import validate_benchmark_name
 
         with pytest.raises(TypeError):
             validate_benchmark_name(True)
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.unlearning_eval import validate_benchmark_name
+        from ai_forge_cli.utils.unlearning_eval import validate_benchmark_name
 
         with pytest.raises(ValueError):
             validate_benchmark_name("tofu\x00")
 
     def test_oversize_rejected(self):
-        from soup_cli.utils.unlearning_eval import validate_benchmark_name
+        from ai_forge_cli.utils.unlearning_eval import validate_benchmark_name
 
         with pytest.raises(ValueError):
             validate_benchmark_name("a" * 100)
 
     def test_empty_rejected(self):
-        from soup_cli.utils.unlearning_eval import validate_benchmark_name
+        from ai_forge_cli.utils.unlearning_eval import validate_benchmark_name
 
         with pytest.raises(ValueError):
             validate_benchmark_name("")
@@ -157,26 +157,26 @@ class TestComputeForgetQuality:
     def test_perfect_forget(self):
         # If post-unlearn loss on forget set is HIGH and pre was LOW,
         # forget quality = 1.0.
-        from soup_cli.utils.unlearning_eval import compute_forget_quality
+        from ai_forge_cli.utils.unlearning_eval import compute_forget_quality
 
         score = compute_forget_quality(pre_loss=0.5, post_loss=5.0)
         assert score == 1.0
 
     def test_no_forget(self):
         # If post-loss == pre-loss, quality is 0.
-        from soup_cli.utils.unlearning_eval import compute_forget_quality
+        from ai_forge_cli.utils.unlearning_eval import compute_forget_quality
 
         score = compute_forget_quality(pre_loss=2.0, post_loss=2.0)
         assert score == 0.0
 
     def test_partial_forget(self):
-        from soup_cli.utils.unlearning_eval import compute_forget_quality
+        from ai_forge_cli.utils.unlearning_eval import compute_forget_quality
 
         score = compute_forget_quality(pre_loss=1.0, post_loss=2.0)
         assert 0.0 < score < 1.0
 
     def test_bool_rejected(self):
-        from soup_cli.utils.unlearning_eval import compute_forget_quality
+        from ai_forge_cli.utils.unlearning_eval import compute_forget_quality
 
         with pytest.raises(TypeError):
             compute_forget_quality(pre_loss=True, post_loss=2.0)
@@ -185,13 +185,13 @@ class TestComputeForgetQuality:
             compute_forget_quality(pre_loss=1.0, post_loss=True)
 
     def test_non_finite_rejected(self):
-        from soup_cli.utils.unlearning_eval import compute_forget_quality
+        from ai_forge_cli.utils.unlearning_eval import compute_forget_quality
 
         with pytest.raises(ValueError):
             compute_forget_quality(pre_loss=float("nan"), post_loss=1.0)
 
     def test_negative_loss_rejected(self):
-        from soup_cli.utils.unlearning_eval import compute_forget_quality
+        from ai_forge_cli.utils.unlearning_eval import compute_forget_quality
 
         with pytest.raises(ValueError):
             compute_forget_quality(pre_loss=-0.5, post_loss=1.0)
@@ -200,32 +200,32 @@ class TestComputeForgetQuality:
 class TestComputeModelUtility:
     def test_perfect_utility(self):
         # If retain accuracy is preserved (post == pre), utility = 1.0.
-        from soup_cli.utils.unlearning_eval import compute_model_utility
+        from ai_forge_cli.utils.unlearning_eval import compute_model_utility
 
         score = compute_model_utility(pre_acc=0.8, post_acc=0.8)
         assert score == 1.0
 
     def test_no_utility(self):
         # If retain accuracy drops to 0, utility = 0.
-        from soup_cli.utils.unlearning_eval import compute_model_utility
+        from ai_forge_cli.utils.unlearning_eval import compute_model_utility
 
         score = compute_model_utility(pre_acc=0.8, post_acc=0.0)
         assert score == 0.0
 
     def test_partial_drop(self):
-        from soup_cli.utils.unlearning_eval import compute_model_utility
+        from ai_forge_cli.utils.unlearning_eval import compute_model_utility
 
         score = compute_model_utility(pre_acc=0.8, post_acc=0.6)
         assert 0.0 < score < 1.0
 
     def test_bool_rejected(self):
-        from soup_cli.utils.unlearning_eval import compute_model_utility
+        from ai_forge_cli.utils.unlearning_eval import compute_model_utility
 
         with pytest.raises(TypeError):
             compute_model_utility(pre_acc=True, post_acc=0.5)
 
     def test_out_of_range_rejected(self):
-        from soup_cli.utils.unlearning_eval import compute_model_utility
+        from ai_forge_cli.utils.unlearning_eval import compute_model_utility
 
         with pytest.raises(ValueError):
             compute_model_utility(pre_acc=1.5, post_acc=0.5)
@@ -237,47 +237,47 @@ class TestComputeModelUtility:
 class TestComputePrivLeak:
     def test_no_leak(self):
         # Membership-inference AUC ≈ 0.5 → no leak.
-        from soup_cli.utils.unlearning_eval import compute_priv_leak
+        from ai_forge_cli.utils.unlearning_eval import compute_priv_leak
 
         score = compute_priv_leak(mia_auc=0.5)
         assert score >= 0.95  # very high "privacy preserved"
 
     def test_full_leak(self):
         # MIA AUC = 1.0 → adversary can perfectly distinguish forget vs holdout.
-        from soup_cli.utils.unlearning_eval import compute_priv_leak
+        from ai_forge_cli.utils.unlearning_eval import compute_priv_leak
 
         score = compute_priv_leak(mia_auc=1.0)
         assert score == 0.0
 
     def test_below_random(self):
         # AUC < 0.5 is still leak (adversary can invert).
-        from soup_cli.utils.unlearning_eval import compute_priv_leak
+        from ai_forge_cli.utils.unlearning_eval import compute_priv_leak
 
         score = compute_priv_leak(mia_auc=0.0)
         assert score == 0.0
 
     def test_bool_rejected(self):
-        from soup_cli.utils.unlearning_eval import compute_priv_leak
+        from ai_forge_cli.utils.unlearning_eval import compute_priv_leak
 
         with pytest.raises(TypeError):
             compute_priv_leak(mia_auc=True)
 
     def test_out_of_range_rejected(self):
-        from soup_cli.utils.unlearning_eval import compute_priv_leak
+        from ai_forge_cli.utils.unlearning_eval import compute_priv_leak
 
         with pytest.raises(ValueError):
             compute_priv_leak(mia_auc=1.5)
 
     def test_boundary_zero_accepted(self):
         """Review L3 — exact lower boundary."""
-        from soup_cli.utils.unlearning_eval import compute_priv_leak
+        from ai_forge_cli.utils.unlearning_eval import compute_priv_leak
 
         # AUC=0.0 is in [0, 1] but reads as max distinguishable inverse.
         assert compute_priv_leak(mia_auc=0.0) == 0.0
 
     def test_boundary_one_accepted(self):
         """Review L3 — exact upper boundary."""
-        from soup_cli.utils.unlearning_eval import compute_priv_leak
+        from ai_forge_cli.utils.unlearning_eval import compute_priv_leak
 
         assert compute_priv_leak(mia_auc=1.0) == 0.0
 
@@ -287,7 +287,7 @@ class TestComputePrivLeak:
 
 class TestUnlearnMetric:
     def test_construct(self):
-        from soup_cli.utils.unlearning_eval import UnlearnMetric
+        from ai_forge_cli.utils.unlearning_eval import UnlearnMetric
 
         m = UnlearnMetric(
             name="forget_quality",
@@ -300,7 +300,7 @@ class TestUnlearnMetric:
         assert m.verdict == "OK"
 
     def test_frozen(self):
-        from soup_cli.utils.unlearning_eval import UnlearnMetric
+        from ai_forge_cli.utils.unlearning_eval import UnlearnMetric
 
         m = UnlearnMetric(
             name="forget_quality",
@@ -312,7 +312,7 @@ class TestUnlearnMetric:
             m.score = 0.5  # type: ignore
 
     def test_verdict_must_match_score(self):
-        from soup_cli.utils.unlearning_eval import UnlearnMetric
+        from ai_forge_cli.utils.unlearning_eval import UnlearnMetric
 
         with pytest.raises(ValueError, match="disagrees"):
             UnlearnMetric(
@@ -325,7 +325,7 @@ class TestUnlearnMetric:
 
 class TestUnlearnReport:
     def test_construct(self):
-        from soup_cli.utils.unlearning_eval import UnlearnMetric, UnlearnReport
+        from ai_forge_cli.utils.unlearning_eval import UnlearnMetric, UnlearnReport
 
         report = UnlearnReport(
             run_id="test-run",
@@ -344,7 +344,7 @@ class TestUnlearnReport:
         assert report.overall == "OK"
 
     def test_frozen(self):
-        from soup_cli.utils.unlearning_eval import UnlearnMetric, UnlearnReport
+        from ai_forge_cli.utils.unlearning_eval import UnlearnMetric, UnlearnReport
 
         report = UnlearnReport(
             run_id="r",
@@ -359,7 +359,7 @@ class TestUnlearnReport:
             report.overall = "MAJOR"  # type: ignore
 
     def test_to_dict(self):
-        from soup_cli.utils.unlearning_eval import UnlearnMetric, UnlearnReport
+        from ai_forge_cli.utils.unlearning_eval import UnlearnMetric, UnlearnReport
 
         report = UnlearnReport(
             run_id="r",
@@ -385,7 +385,7 @@ class TestUnlearnReport:
 
 class TestRunUnlearnEval:
     def test_happy_path(self):
-        from soup_cli.utils.unlearning_eval import run_unlearn_eval
+        from ai_forge_cli.utils.unlearning_eval import run_unlearn_eval
 
         report = run_unlearn_eval(
             run_id="test-run",
@@ -401,7 +401,7 @@ class TestRunUnlearnEval:
         assert report.overall in ("OK", "MINOR", "MAJOR")
 
     def test_unknown_benchmark_rejected(self):
-        from soup_cli.utils.unlearning_eval import run_unlearn_eval
+        from ai_forge_cli.utils.unlearning_eval import run_unlearn_eval
 
         with pytest.raises(ValueError, match="unknown"):
             run_unlearn_eval(run_id="r", benchmark="zzz", evidence={})
@@ -409,14 +409,14 @@ class TestRunUnlearnEval:
     def test_missing_evidence_neutral(self):
         # Missing-evidence policy: neutral OK score (matches v0.56.0
         # diagnose-runner neutral_score policy).
-        from soup_cli.utils.unlearning_eval import run_unlearn_eval
+        from ai_forge_cli.utils.unlearning_eval import run_unlearn_eval
 
         report = run_unlearn_eval(run_id="r", benchmark="tofu", evidence={})
         # All metrics neutral OK
         assert report.overall == "OK"
 
     def test_overall_worst_case(self):
-        from soup_cli.utils.unlearning_eval import run_unlearn_eval
+        from ai_forge_cli.utils.unlearning_eval import run_unlearn_eval
 
         report = run_unlearn_eval(
             run_id="r",
@@ -432,7 +432,7 @@ class TestRunUnlearnEval:
     def test_invalid_evidence_raises_loudly(self):
         """Review HIGH H3 — present-but-invalid evidence must raise
         instead of silently scoring OK."""
-        from soup_cli.utils.unlearning_eval import run_unlearn_eval
+        from ai_forge_cli.utils.unlearning_eval import run_unlearn_eval
 
         with pytest.raises(ValueError):
             run_unlearn_eval(
@@ -445,7 +445,7 @@ class TestRunUnlearnEval:
 
     def test_partial_evidence_neutral_on_missing(self):
         """Review HIGH H3 — missing keys still produce neutral OK."""
-        from soup_cli.utils.unlearning_eval import run_unlearn_eval
+        from ai_forge_cli.utils.unlearning_eval import run_unlearn_eval
 
         report = run_unlearn_eval(
             run_id="r",
@@ -513,7 +513,7 @@ class TestLoadEvidenceFile:
     """v0.71.1 — cover the `soup eval unlearning --evidence` loader."""
 
     def test_happy_returns_dict(self, tmp_path, monkeypatch):
-        from soup_cli.utils.unlearning_eval import load_evidence_file
+        from ai_forge_cli.utils.unlearning_eval import load_evidence_file
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "ev.json").write_text(
@@ -525,32 +525,32 @@ class TestLoadEvidenceFile:
         assert "forget_quality" in data
 
     def test_missing_file_raises(self, tmp_path, monkeypatch):
-        from soup_cli.utils.unlearning_eval import load_evidence_file
+        from ai_forge_cli.utils.unlearning_eval import load_evidence_file
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
             load_evidence_file("nope.json")
 
     def test_non_string_path_rejected(self):
-        from soup_cli.utils.unlearning_eval import load_evidence_file
+        from ai_forge_cli.utils.unlearning_eval import load_evidence_file
 
         with pytest.raises(ValueError):
             load_evidence_file(123)  # type: ignore[arg-type]
 
     def test_empty_path_rejected(self):
-        from soup_cli.utils.unlearning_eval import load_evidence_file
+        from ai_forge_cli.utils.unlearning_eval import load_evidence_file
 
         with pytest.raises(ValueError):
             load_evidence_file("")
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.unlearning_eval import load_evidence_file
+        from ai_forge_cli.utils.unlearning_eval import load_evidence_file
 
         with pytest.raises(ValueError, match="null"):
             load_evidence_file("a\x00b.json")
 
     def test_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.unlearning_eval import load_evidence_file
+        from ai_forge_cli.utils.unlearning_eval import load_evidence_file
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -562,7 +562,7 @@ class TestLoadEvidenceFile:
             load_evidence_file(str(outside / "ev.json"))
 
     def test_non_dict_root_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.unlearning_eval import load_evidence_file
+        from ai_forge_cli.utils.unlearning_eval import load_evidence_file
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "arr.json").write_text("[]", encoding="utf-8")
@@ -573,7 +573,7 @@ class TestLoadEvidenceFile:
         sys.platform == "win32", reason="symlink creation needs admin on Windows"
     )
     def test_symlink_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.unlearning_eval import load_evidence_file
+        from ai_forge_cli.utils.unlearning_eval import load_evidence_file
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "real.json").write_text("{}", encoding="utf-8")
@@ -585,40 +585,40 @@ class TestLoadEvidenceFile:
 
 class TestFixtures:
     def test_tofu_fixture_exists(self):
-        from soup_cli.utils.unlearning_eval import get_fixture_path
+        from ai_forge_cli.utils.unlearning_eval import get_fixture_path
 
         # TOFU should be bundled.
         p = get_fixture_path("tofu")
         assert p is not None
 
     def test_unknown_fixture_returns_none(self):
-        from soup_cli.utils.unlearning_eval import get_fixture_path
+        from ai_forge_cli.utils.unlearning_eval import get_fixture_path
 
         assert get_fixture_path("zzz") is None
 
     # v0.71.1 #195 — MUSE + WMDP bundled mini-fixtures.
     def test_muse_fixture_exists(self):
-        from soup_cli.utils.unlearning_eval import get_fixture_path
+        from ai_forge_cli.utils.unlearning_eval import get_fixture_path
 
         p = get_fixture_path("muse")
         assert p is not None
         assert p.is_file()
 
     def test_wmdp_fixture_exists(self):
-        from soup_cli.utils.unlearning_eval import get_fixture_path
+        from ai_forge_cli.utils.unlearning_eval import get_fixture_path
 
         p = get_fixture_path("wmdp")
         assert p is not None
         assert p.is_file()
 
     def test_all_benchmarks_resolve_a_fixture(self):
-        from soup_cli.utils.unlearning_eval import BENCHMARKS, get_fixture_path
+        from ai_forge_cli.utils.unlearning_eval import BENCHMARKS, get_fixture_path
 
         for bench in BENCHMARKS:
             assert get_fixture_path(bench) is not None, bench
 
     def test_muse_fixture_is_valid_jsonl(self):
-        from soup_cli.utils.unlearning_eval import get_fixture_path
+        from ai_forge_cli.utils.unlearning_eval import get_fixture_path
 
         p = get_fixture_path("muse")
         assert p is not None
@@ -634,7 +634,7 @@ class TestFixtures:
             assert isinstance(row["response"], str) and row["response"]
 
     def test_wmdp_fixture_is_valid_jsonl(self):
-        from soup_cli.utils.unlearning_eval import get_fixture_path
+        from ai_forge_cli.utils.unlearning_eval import get_fixture_path
 
         p = get_fixture_path("wmdp")
         assert p is not None
@@ -658,7 +658,7 @@ class TestFixtures:
             assert "[redacted]" in row["prompt"]
 
     def test_metadata_fixtures_are_filenames_not_paths(self):
-        from soup_cli.utils.unlearning_eval import _BENCHMARK_METADATA
+        from ai_forge_cli.utils.unlearning_eval import _BENCHMARK_METADATA
 
         for name, meta in _BENCHMARK_METADATA.items():
             fixture = meta["fixture"]

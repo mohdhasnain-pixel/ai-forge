@@ -52,31 +52,31 @@ def _symlinks_available() -> bool:
 
 class TestValidateStudentIdParity:
     def test_oversize_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_student_id
+        from ai_forge_cli.utils.prompt_distill import validate_student_id
 
         with pytest.raises(ValueError):
             validate_student_id("a" * 513)
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_student_id
+        from ai_forge_cli.utils.prompt_distill import validate_student_id
 
         with pytest.raises(ValueError):
             validate_student_id("a\x00b")
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_student_id
+        from ai_forge_cli.utils.prompt_distill import validate_student_id
 
         with pytest.raises(TypeError):
             validate_student_id(True)  # type: ignore[arg-type]
 
     def test_empty_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_student_id
+        from ai_forge_cli.utils.prompt_distill import validate_student_id
 
         with pytest.raises(ValueError):
             validate_student_id("")
 
     def test_non_string_rejected(self) -> None:
-        from soup_cli.utils.prompt_distill import validate_student_id
+        from ai_forge_cli.utils.prompt_distill import validate_student_id
 
         with pytest.raises(TypeError):
             validate_student_id(42)  # type: ignore[arg-type]
@@ -89,7 +89,7 @@ class TestValidateStudentIdParity:
 
 class TestPartCUnknownOptimizerCli:
     def test_exits_2(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         spec = tmp_path / "spec.json"
@@ -121,7 +121,7 @@ class TestHarvestEdgeCases:
     def test_one_up_no_down_returns_empty(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             harvest_dpo_pairs,
             init_local_rl_db,
             record_thumb,
@@ -137,7 +137,7 @@ class TestHarvestEdgeCases:
     def test_one_down_no_up_returns_empty(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             harvest_dpo_pairs,
             init_local_rl_db,
             record_thumb,
@@ -153,7 +153,7 @@ class TestHarvestEdgeCases:
     def test_multiple_prompts_independent(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             harvest_dpo_pairs,
             init_local_rl_db,
             record_thumb,
@@ -175,7 +175,7 @@ class TestHarvestEdgeCases:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Duplicate thumbs for the same prompt collapse to one DPO pair."""
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             harvest_dpo_pairs,
             init_local_rl_db,
             record_thumb,
@@ -199,7 +199,7 @@ class TestHarvestEdgeCases:
 
 class TestCompileResultBoundaries:
     def test_positive_inf_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import CompileResult
+        from ai_forge_cli.utils.prompt_compile import CompileResult
 
         with pytest.raises(ValueError):
             CompileResult(
@@ -210,7 +210,7 @@ class TestCompileResultBoundaries:
             )
 
     def test_negative_inf_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import CompileResult
+        from ai_forge_cli.utils.prompt_compile import CompileResult
 
         with pytest.raises(ValueError):
             CompileResult(
@@ -221,7 +221,7 @@ class TestCompileResultBoundaries:
             )
 
     def test_bool_score_rejected(self) -> None:
-        from soup_cli.utils.prompt_compile import CompileResult
+        from ai_forge_cli.utils.prompt_compile import CompileResult
 
         with pytest.raises(TypeError):
             CompileResult(
@@ -232,7 +232,7 @@ class TestCompileResultBoundaries:
             )
 
     def test_zero_iterations_accepted(self) -> None:
-        from soup_cli.utils.prompt_compile import CompileResult
+        from ai_forge_cli.utils.prompt_compile import CompileResult
 
         result = CompileResult(
             program_text="# x", score=0.5, iterations=0, converged=False
@@ -250,7 +250,7 @@ class TestEvalSuitePathSymlink:
     def test_symlink_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.prompt_compile import validate_eval_suite_path
+        from ai_forge_cli.utils.prompt_compile import validate_eval_suite_path
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "suite.json"
@@ -271,13 +271,13 @@ class TestEvalSuitePathSymlink:
 
 class TestValidateToolOptimizerExtras:
     def test_empty_rejected(self) -> None:
-        from soup_cli.utils.compile_tools import validate_tool_optimizer
+        from ai_forge_cli.utils.compile_tools import validate_tool_optimizer
 
         with pytest.raises(ValueError):
             validate_tool_optimizer("")
 
     def test_oversize_rejected(self) -> None:
-        from soup_cli.utils.compile_tools import validate_tool_optimizer
+        from ai_forge_cli.utils.compile_tools import validate_tool_optimizer
 
         with pytest.raises(ValueError):
             validate_tool_optimizer("a" * 33)
@@ -290,7 +290,7 @@ class TestValidateToolOptimizerExtras:
 
 class TestValidateSpecPathExtras:
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.compile_tools import validate_spec_path
+        from ai_forge_cli.utils.compile_tools import validate_spec_path
 
         with pytest.raises(ValueError):
             validate_spec_path("spec\x00.json")
@@ -299,7 +299,7 @@ class TestValidateSpecPathExtras:
     def test_symlink_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.compile_tools import validate_spec_path
+        from ai_forge_cli.utils.compile_tools import validate_spec_path
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "real.json"
@@ -320,7 +320,7 @@ class TestValidateSpecPathExtras:
 
 class TestBuildToolCompilePlan:
     def test_happy(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.compile_tools import build_tool_compile_plan
+        from ai_forge_cli.utils.compile_tools import build_tool_compile_plan
 
         monkeypatch.chdir(tmp_path)
         spec = tmp_path / "spec.json"
@@ -343,13 +343,13 @@ class TestBuildToolCompilePlan:
 
 class TestValidateDirectionExtras:
     def test_non_string_rejected(self) -> None:
-        from soup_cli.utils.apple_adapter import validate_direction
+        from ai_forge_cli.utils.apple_adapter import validate_direction
 
         with pytest.raises(TypeError):
             validate_direction(42)  # type: ignore[arg-type]
 
     def test_oversize_rejected(self) -> None:
-        from soup_cli.utils.apple_adapter import validate_direction
+        from ai_forge_cli.utils.apple_adapter import validate_direction
 
         with pytest.raises(ValueError):
             validate_direction("a" * 33)
@@ -362,7 +362,7 @@ class TestValidateDirectionExtras:
 
 class TestBuildAppleAdapterPlan:
     def test_happy(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.utils.apple_adapter import build_apple_adapter_plan
+        from ai_forge_cli.utils.apple_adapter import build_apple_adapter_plan
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "adapter"
@@ -386,7 +386,7 @@ class TestAppleAdapterOutputDirValidation:
     def test_empty_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.apple_adapter import AppleAdapterPlan
+        from ai_forge_cli.utils.apple_adapter import AppleAdapterPlan
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "a"
@@ -403,7 +403,7 @@ class TestAppleAdapterOutputDirValidation:
     def test_null_byte_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.apple_adapter import AppleAdapterPlan
+        from ai_forge_cli.utils.apple_adapter import AppleAdapterPlan
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "a"
@@ -420,7 +420,7 @@ class TestAppleAdapterOutputDirValidation:
     def test_bool_output_dir_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.apple_adapter import AppleAdapterPlan
+        from ai_forge_cli.utils.apple_adapter import AppleAdapterPlan
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "a"
@@ -442,55 +442,55 @@ class TestAppleAdapterOutputDirValidation:
 
 class TestPartEValidatorParity:
     def test_backend_null_byte_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_backend
+        from ai_forge_cli.utils.local_rl import validate_local_rl_backend
 
         with pytest.raises(ValueError):
             validate_local_rl_backend("ollama\x00")
 
     def test_backend_empty_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_backend
+        from ai_forge_cli.utils.local_rl import validate_local_rl_backend
 
         with pytest.raises(ValueError):
             validate_local_rl_backend("")
 
     def test_backend_oversize_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_backend
+        from ai_forge_cli.utils.local_rl import validate_local_rl_backend
 
         with pytest.raises(ValueError):
             validate_local_rl_backend("a" * 33)
 
     def test_backend_non_string_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_backend
+        from ai_forge_cli.utils.local_rl import validate_local_rl_backend
 
         with pytest.raises(TypeError):
             validate_local_rl_backend(42)  # type: ignore[arg-type]
 
     def test_train_method_null_byte_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_train_method
+        from ai_forge_cli.utils.local_rl import validate_local_rl_train_method
 
         with pytest.raises(ValueError):
             validate_local_rl_train_method("dpo\x00")
 
     def test_train_method_empty_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_train_method
+        from ai_forge_cli.utils.local_rl import validate_local_rl_train_method
 
         with pytest.raises(ValueError):
             validate_local_rl_train_method("")
 
     def test_train_method_oversize_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_train_method
+        from ai_forge_cli.utils.local_rl import validate_local_rl_train_method
 
         with pytest.raises(ValueError):
             validate_local_rl_train_method("a" * 33)
 
     def test_train_method_non_string_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_train_method
+        from ai_forge_cli.utils.local_rl import validate_local_rl_train_method
 
         with pytest.raises(TypeError):
             validate_local_rl_train_method(42)  # type: ignore[arg-type]
 
     def test_train_method_bool_rejected(self) -> None:
-        from soup_cli.utils.local_rl import validate_local_rl_train_method
+        from ai_forge_cli.utils.local_rl import validate_local_rl_train_method
 
         with pytest.raises(TypeError):
             validate_local_rl_train_method(True)  # type: ignore[arg-type]
@@ -505,7 +505,7 @@ class TestRecordThumbResponseValidation:
     def test_response_null_byte_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import init_local_rl_db, record_thumb
+        from ai_forge_cli.utils.local_rl import init_local_rl_db, record_thumb
 
         monkeypatch.chdir(tmp_path)
         init_local_rl_db("rl.db")
@@ -517,7 +517,7 @@ class TestRecordThumbResponseValidation:
     def test_response_oversize_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import (
+        from ai_forge_cli.utils.local_rl import (
             MAX_RESPONSE_LEN,
             init_local_rl_db,
             record_thumb,
@@ -536,7 +536,7 @@ class TestRecordThumbResponseValidation:
     def test_response_empty_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import init_local_rl_db, record_thumb
+        from ai_forge_cli.utils.local_rl import init_local_rl_db, record_thumb
 
         monkeypatch.chdir(tmp_path)
         init_local_rl_db("rl.db")
@@ -553,7 +553,7 @@ class TestRecordThumbResponseValidation:
 
 class TestTrainMethodAllowlistImmutability:
     def test_immutable(self) -> None:
-        from soup_cli.utils.local_rl import SUPPORTED_LOCAL_RL_TRAIN_METHODS
+        from ai_forge_cli.utils.local_rl import SUPPORTED_LOCAL_RL_TRAIN_METHODS
 
         with pytest.raises(AttributeError):
             SUPPORTED_LOCAL_RL_TRAIN_METHODS.add("ppo")  # type: ignore[attr-defined]
@@ -568,7 +568,7 @@ class TestInitDbColumnLevel:
     def test_thumbs_columns(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
 
         monkeypatch.chdir(tmp_path)
         init_local_rl_db("rl.db")
@@ -582,7 +582,7 @@ class TestInitDbColumnLevel:
     def test_interactions_columns(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import init_local_rl_db
+        from ai_forge_cli.utils.local_rl import init_local_rl_db
 
         monkeypatch.chdir(tmp_path)
         init_local_rl_db("rl.db")
@@ -600,21 +600,21 @@ class TestInitDbColumnLevel:
 
 class TestValidateDbPathPublic:
     def test_importable(self) -> None:
-        from soup_cli.utils.local_rl import validate_db_path  # noqa: F401
+        from ai_forge_cli.utils.local_rl import validate_db_path  # noqa: F401
 
     def test_in_all(self) -> None:
-        from soup_cli.utils import local_rl
+        from ai_forge_cli.utils import local_rl
 
         assert "validate_db_path" in local_rl.__all__
 
     def test_rejects_null_byte(self) -> None:
-        from soup_cli.utils.local_rl import validate_db_path
+        from ai_forge_cli.utils.local_rl import validate_db_path
 
         with pytest.raises(ValueError):
             validate_db_path("db\x00.db")
 
     def test_rejects_bool(self) -> None:
-        from soup_cli.utils.local_rl import validate_db_path
+        from ai_forge_cli.utils.local_rl import validate_db_path
 
         with pytest.raises(TypeError):
             validate_db_path(True)  # type: ignore[arg-type]
@@ -627,7 +627,7 @@ class TestValidateDbPathPublic:
 
 class TestDpoPairFrozen:
     def test_frozen(self) -> None:
-        from soup_cli.utils.local_rl import DpoPair
+        from ai_forge_cli.utils.local_rl import DpoPair
 
         pair = DpoPair(prompt="p", chosen="c", rejected="r")
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -643,7 +643,7 @@ class TestHarvestMissingFile:
     def test_missing_db_raises(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.local_rl import harvest_dpo_pairs
+        from ai_forge_cli.utils.local_rl import harvest_dpo_pairs
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
@@ -667,7 +667,7 @@ class TestSourceGuards:
         ):
             path = (
                 Path(__file__).resolve().parent.parent
-                / "src" / "soup_cli"
+                / "src" / "ai_forge_cli"
                 / "utils"
                 / f"{stem}.py"
             )
@@ -685,7 +685,7 @@ class TestSourceGuards:
         ):
             path = (
                 Path(__file__).resolve().parent.parent
-                / "src" / "soup_cli"
+                / "src" / "ai_forge_cli"
                 / "utils"
                 / f"{stem}.py"
             )
@@ -698,7 +698,7 @@ class TestSourceGuards:
         """CLI must import the public `validate_db_path`, not the private one."""
         path = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "commands"
             / "local_rl.py"
         )
@@ -719,7 +719,7 @@ class TestSourceGuards:
         ):
             path = (
                 Path(__file__).resolve().parent.parent
-                / "src" / "soup_cli"
+                / "src" / "ai_forge_cli"
                 / "commands"
                 / f"{stem}.py"
             )
@@ -727,7 +727,7 @@ class TestSourceGuards:
             assert "typer.Exit" in text, f"{stem}.py missing typer.Exit"
 
     def test_version_bumped(self) -> None:
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
 
         # Floor-check: must be at or above the v0.68.0 release.
         major, minor, patch = (int(x) for x in __version__.split("."))

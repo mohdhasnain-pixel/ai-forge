@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.config.loader import load_config
-from soup_cli.config.schema import SoupConfig
+from ai_forge_cli.config.loader import load_config
+from ai_forge_cli.config.schema import SoupConfig
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONFIGS_DIR = REPO_ROOT / "examples" / "configs"

@@ -1,6 +1,6 @@
 """v0.67.0 Part B — VeRA / VB-LoRA vector-bank storage format.
 
-Tests for ``soup_cli/utils/vector_bank.py``:
+Tests for ``ai_forge_cli/utils/vector_bank.py``:
 
 - Frozen ``VectorBank`` / ``BankEntry`` dataclasses (shared random
   projection matrix + per-user MB-sized scaling vectors)
@@ -25,7 +25,7 @@ import pytest
 
 class TestPublicSurface:
     def test_module_importable(self) -> None:
-        from soup_cli.utils import vector_bank
+        from ai_forge_cli.utils import vector_bank
 
         assert hasattr(vector_bank, "VectorBank")
         assert hasattr(vector_bank, "BankEntry")
@@ -43,48 +43,48 @@ class TestPublicSurface:
 
 class TestValidateBankName:
     def test_happy(self) -> None:
-        from soup_cli.utils.vector_bank import validate_bank_name
+        from ai_forge_cli.utils.vector_bank import validate_bank_name
 
         assert validate_bank_name("my-bank") == "my-bank"
 
     def test_case_insensitive(self) -> None:
-        from soup_cli.utils.vector_bank import validate_bank_name
+        from ai_forge_cli.utils.vector_bank import validate_bank_name
 
         # Canonical: kebab-case, normalise to lowercase
         assert validate_bank_name("MY-BANK") == "my-bank"
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_bank_name
+        from ai_forge_cli.utils.vector_bank import validate_bank_name
 
         with pytest.raises(ValueError):
             validate_bank_name("bad\x00name")
 
     def test_empty_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_bank_name
+        from ai_forge_cli.utils.vector_bank import validate_bank_name
 
         with pytest.raises(ValueError):
             validate_bank_name("")
 
     def test_oversize_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_bank_name
+        from ai_forge_cli.utils.vector_bank import validate_bank_name
 
         with pytest.raises(ValueError):
             validate_bank_name("a" * 200)
 
     def test_non_string_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_bank_name
+        from ai_forge_cli.utils.vector_bank import validate_bank_name
 
         with pytest.raises(TypeError):
             validate_bank_name(123)  # type: ignore[arg-type]
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_bank_name
+        from ai_forge_cli.utils.vector_bank import validate_bank_name
 
         with pytest.raises(TypeError):
             validate_bank_name(True)  # type: ignore[arg-type]
 
     def test_invalid_chars_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_bank_name
+        from ai_forge_cli.utils.vector_bank import validate_bank_name
 
         with pytest.raises(ValueError):
             validate_bank_name("path/traversal")
@@ -101,24 +101,24 @@ class TestValidateBankName:
 
 class TestValidateUserId:
     def test_happy(self) -> None:
-        from soup_cli.utils.vector_bank import validate_user_id
+        from ai_forge_cli.utils.vector_bank import validate_user_id
 
         assert validate_user_id("user-1234") == "user-1234"
 
     def test_oversize_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_user_id
+        from ai_forge_cli.utils.vector_bank import validate_user_id
 
         with pytest.raises(ValueError):
             validate_user_id("u" * 300)
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_user_id
+        from ai_forge_cli.utils.vector_bank import validate_user_id
 
         with pytest.raises(ValueError):
             validate_user_id("u\x00")
 
     def test_non_string_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_user_id
+        from ai_forge_cli.utils.vector_bank import validate_user_id
 
         with pytest.raises(TypeError):
             validate_user_id(42)  # type: ignore[arg-type]
@@ -131,31 +131,31 @@ class TestValidateUserId:
 
 class TestValidateScalingVector:
     def test_happy(self) -> None:
-        from soup_cli.utils.vector_bank import validate_scaling_vector
+        from ai_forge_cli.utils.vector_bank import validate_scaling_vector
 
         v = validate_scaling_vector([0.1, 0.2, -0.3])
         assert v == (0.1, 0.2, -0.3)
 
     def test_returns_tuple(self) -> None:
-        from soup_cli.utils.vector_bank import validate_scaling_vector
+        from ai_forge_cli.utils.vector_bank import validate_scaling_vector
 
         v = validate_scaling_vector([1.0, 2.0])
         assert isinstance(v, tuple)
 
     def test_empty_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_scaling_vector
+        from ai_forge_cli.utils.vector_bank import validate_scaling_vector
 
         with pytest.raises(ValueError):
             validate_scaling_vector([])
 
     def test_non_iterable_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_scaling_vector
+        from ai_forge_cli.utils.vector_bank import validate_scaling_vector
 
         with pytest.raises(TypeError):
             validate_scaling_vector(42)  # type: ignore[arg-type]
 
     def test_non_finite_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_scaling_vector
+        from ai_forge_cli.utils.vector_bank import validate_scaling_vector
 
         with pytest.raises(ValueError):
             validate_scaling_vector([1.0, math.nan])
@@ -163,13 +163,13 @@ class TestValidateScalingVector:
             validate_scaling_vector([math.inf, 1.0])
 
     def test_bool_in_vector_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_scaling_vector
+        from ai_forge_cli.utils.vector_bank import validate_scaling_vector
 
         with pytest.raises(TypeError):
             validate_scaling_vector([True, 0.5])
 
     def test_oversize_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import MAX_VECTOR_DIM, validate_scaling_vector
+        from ai_forge_cli.utils.vector_bank import MAX_VECTOR_DIM, validate_scaling_vector
 
         with pytest.raises(ValueError):
             validate_scaling_vector([0.1] * (MAX_VECTOR_DIM + 1))
@@ -182,14 +182,14 @@ class TestValidateScalingVector:
 
 class TestBankEntry:
     def test_construct(self) -> None:
-        from soup_cli.utils.vector_bank import BankEntry
+        from ai_forge_cli.utils.vector_bank import BankEntry
 
         entry = BankEntry(user_id="alice", scaling=(0.1, 0.2, 0.3))
         assert entry.user_id == "alice"
         assert entry.scaling == (0.1, 0.2, 0.3)
 
     def test_frozen(self) -> None:
-        from soup_cli.utils.vector_bank import BankEntry
+        from ai_forge_cli.utils.vector_bank import BankEntry
 
         entry = BankEntry(user_id="bob", scaling=(0.5,))
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -198,7 +198,7 @@ class TestBankEntry:
 
 class TestVectorBank:
     def test_construct(self) -> None:
-        from soup_cli.utils.vector_bank import BankEntry, VectorBank
+        from ai_forge_cli.utils.vector_bank import BankEntry, VectorBank
 
         bank = VectorBank(
             name="mybank",
@@ -211,7 +211,7 @@ class TestVectorBank:
         assert bank.vector_dim == 2
 
     def test_frozen(self) -> None:
-        from soup_cli.utils.vector_bank import VectorBank
+        from ai_forge_cli.utils.vector_bank import VectorBank
 
         bank = VectorBank(
             name="b",
@@ -224,7 +224,7 @@ class TestVectorBank:
             bank.vector_dim = 99  # type: ignore[misc]
 
     def test_invalid_seed(self) -> None:
-        from soup_cli.utils.vector_bank import VectorBank
+        from ai_forge_cli.utils.vector_bank import VectorBank
 
         with pytest.raises(TypeError):
             VectorBank(
@@ -236,7 +236,7 @@ class TestVectorBank:
             )
 
     def test_invalid_vector_dim(self) -> None:
-        from soup_cli.utils.vector_bank import VectorBank
+        from ai_forge_cli.utils.vector_bank import VectorBank
 
         with pytest.raises(ValueError):
             VectorBank(
@@ -248,7 +248,7 @@ class TestVectorBank:
             )
 
     def test_entries_must_be_tuple(self) -> None:
-        from soup_cli.utils.vector_bank import VectorBank
+        from ai_forge_cli.utils.vector_bank import VectorBank
 
         with pytest.raises(TypeError):
             VectorBank(
@@ -260,7 +260,7 @@ class TestVectorBank:
             )
 
     def test_max_entries_enforced(self) -> None:
-        from soup_cli.utils.vector_bank import (
+        from ai_forge_cli.utils.vector_bank import (
             MAX_ENTRIES_PER_BANK,
             BankEntry,
             VectorBank,
@@ -280,7 +280,7 @@ class TestVectorBank:
             )
 
     def test_base_model_validation(self) -> None:
-        from soup_cli.utils.vector_bank import VectorBank
+        from ai_forge_cli.utils.vector_bank import VectorBank
 
         with pytest.raises(ValueError):
             VectorBank(
@@ -292,7 +292,7 @@ class TestVectorBank:
             )
 
     def test_per_entry_vector_dim_mismatch(self) -> None:
-        from soup_cli.utils.vector_bank import BankEntry, VectorBank
+        from ai_forge_cli.utils.vector_bank import BankEntry, VectorBank
 
         with pytest.raises(ValueError):
             VectorBank(
@@ -311,7 +311,7 @@ class TestVectorBank:
 
 class TestEstimateBankSize:
     def test_basic(self) -> None:
-        from soup_cli.utils.vector_bank import estimate_bank_size
+        from ai_forge_cli.utils.vector_bank import estimate_bank_size
 
         # 1000 users × 128 fp32 scaling vectors ≈ 512 KB + projection
         # matrix (128×128×4 = 64 KB)
@@ -319,20 +319,20 @@ class TestEstimateBankSize:
         assert 400_000 < size_bytes < 1_000_000
 
     def test_zero_users(self) -> None:
-        from soup_cli.utils.vector_bank import estimate_bank_size
+        from ai_forge_cli.utils.vector_bank import estimate_bank_size
 
         # Only projection matrix
         size_bytes = estimate_bank_size(num_users=0, vector_dim=128)
         assert size_bytes > 0  # projection still allocated
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import estimate_bank_size
+        from ai_forge_cli.utils.vector_bank import estimate_bank_size
 
         with pytest.raises(TypeError):
             estimate_bank_size(num_users=True, vector_dim=128)  # type: ignore[arg-type]
 
     def test_negative_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import estimate_bank_size
+        from ai_forge_cli.utils.vector_bank import estimate_bank_size
 
         with pytest.raises(ValueError):
             estimate_bank_size(num_users=-1, vector_dim=128)
@@ -347,7 +347,7 @@ class TestEstimateBankSize:
 
 class TestWriteLoadBank:
     def test_roundtrip(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.vector_bank import (
+        from ai_forge_cli.utils.vector_bank import (
             BankEntry,
             VectorBank,
             load_bank,
@@ -372,7 +372,7 @@ class TestWriteLoadBank:
         assert loaded.entries == bank.entries
 
     def test_outside_cwd_rejected(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.vector_bank import VectorBank, write_bank
+        from ai_forge_cli.utils.vector_bank import VectorBank, write_bank
 
         cwd = tmp_path / "work"
         cwd.mkdir()
@@ -389,7 +389,7 @@ class TestWriteLoadBank:
             write_bank(bank, str(tmp_path / "outside.json"))
 
     def test_load_missing_file(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.vector_bank import load_bank
+        from ai_forge_cli.utils.vector_bank import load_bank
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
@@ -397,7 +397,7 @@ class TestWriteLoadBank:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX-only symlink test")
     def test_load_symlink_rejected(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.vector_bank import load_bank
+        from ai_forge_cli.utils.vector_bank import load_bank
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "real.json"
@@ -417,7 +417,7 @@ class TestApplyBankToServe:
     def test_live_returns_loaded_bank(self) -> None:
         # v0.71.12 #221 — the v0.67.1 deferred stub is lifted: apply_bank_to_serve
         # now returns a runtime LoadedVectorBank (reconstructed P + per-user vecs).
-        from soup_cli.utils.vector_bank import (
+        from ai_forge_cli.utils.vector_bank import (
             BankEntry,
             LoadedVectorBank,
             VectorBank,
@@ -436,7 +436,7 @@ class TestApplyBankToServe:
         assert loaded.has_user("alice")
 
     def test_non_bank_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         with pytest.raises(TypeError):
             apply_bank_to_serve("not-a-bank")  # type: ignore[arg-type]
@@ -452,7 +452,7 @@ class TestSourceWiring:
         from pathlib import Path
 
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "utils" / "vector_bank.py").read_text(
+        src = (root / "src" / "ai_forge_cli" / "utils" / "vector_bank.py").read_text(
             encoding="utf-8"
         )
         head_lines = [
@@ -468,7 +468,7 @@ class TestSourceWiring:
         from pathlib import Path
 
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "utils" / "vector_bank.py").read_text(
+        src = (root / "src" / "ai_forge_cli" / "utils" / "vector_bank.py").read_text(
             encoding="utf-8"
         )
         assert "atomic_write_text" in src

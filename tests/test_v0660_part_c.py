@@ -32,7 +32,7 @@ import pytest
 
 
 def test_module_imports():
-    from soup_cli.utils import sleeper_probe
+    from ai_forge_cli.utils import sleeper_probe
 
     for name in (
         "SleeperProbeSpec",
@@ -52,7 +52,7 @@ def test_module_imports():
 def test_bundled_probes_immutable():
     from types import MappingProxyType
 
-    from soup_cli.utils.sleeper_probe import BUNDLED_PROBES
+    from ai_forge_cli.utils.sleeper_probe import BUNDLED_PROBES
 
     assert isinstance(BUNDLED_PROBES, MappingProxyType)
     with pytest.raises(TypeError):
@@ -60,7 +60,7 @@ def test_bundled_probes_immutable():
 
 
 def test_bundled_probes_contains_known_bases():
-    from soup_cli.utils.sleeper_probe import BUNDLED_PROBES
+    from ai_forge_cli.utils.sleeper_probe import BUNDLED_PROBES
 
     # Should cover at least Llama / Mistral / Qwen / Gemma families
     joined = " ".join(BUNDLED_PROBES).lower()
@@ -69,7 +69,7 @@ def test_bundled_probes_contains_known_bases():
 
 
 def test_defection_verdicts_closed():
-    from soup_cli.utils.sleeper_probe import DEFECTION_VERDICTS
+    from ai_forge_cli.utils.sleeper_probe import DEFECTION_VERDICTS
 
     assert isinstance(DEFECTION_VERDICTS, frozenset)
     assert DEFECTION_VERDICTS == {"OK", "MINOR", "MAJOR"}
@@ -81,49 +81,49 @@ def test_defection_verdicts_closed():
 
 
 def test_validate_base_happy():
-    from soup_cli.utils.sleeper_probe import BUNDLED_PROBES, validate_base_for_probe
+    from ai_forge_cli.utils.sleeper_probe import BUNDLED_PROBES, validate_base_for_probe
 
     name = next(iter(BUNDLED_PROBES))
     assert validate_base_for_probe(name) == name
 
 
 def test_validate_base_case_insensitive():
-    from soup_cli.utils.sleeper_probe import BUNDLED_PROBES, validate_base_for_probe
+    from ai_forge_cli.utils.sleeper_probe import BUNDLED_PROBES, validate_base_for_probe
 
     name = next(iter(BUNDLED_PROBES))
     assert validate_base_for_probe(name.upper()) == name
 
 
 def test_validate_base_unknown_raises():
-    from soup_cli.utils.sleeper_probe import validate_base_for_probe
+    from ai_forge_cli.utils.sleeper_probe import validate_base_for_probe
 
     with pytest.raises(ValueError, match="no bundled probe"):
         validate_base_for_probe("unknown/model")
 
 
 def test_validate_base_bool_rejected():
-    from soup_cli.utils.sleeper_probe import validate_base_for_probe
+    from ai_forge_cli.utils.sleeper_probe import validate_base_for_probe
 
     with pytest.raises(TypeError):
         validate_base_for_probe(True)
 
 
 def test_validate_base_non_string_rejected():
-    from soup_cli.utils.sleeper_probe import validate_base_for_probe
+    from ai_forge_cli.utils.sleeper_probe import validate_base_for_probe
 
     with pytest.raises(TypeError):
         validate_base_for_probe(42)
 
 
 def test_validate_base_empty_rejected():
-    from soup_cli.utils.sleeper_probe import validate_base_for_probe
+    from ai_forge_cli.utils.sleeper_probe import validate_base_for_probe
 
     with pytest.raises(ValueError):
         validate_base_for_probe("")
 
 
 def test_validate_base_null_byte_rejected():
-    from soup_cli.utils.sleeper_probe import BUNDLED_PROBES, validate_base_for_probe
+    from ai_forge_cli.utils.sleeper_probe import BUNDLED_PROBES, validate_base_for_probe
 
     name = next(iter(BUNDLED_PROBES))
     with pytest.raises(ValueError, match="null"):
@@ -131,7 +131,7 @@ def test_validate_base_null_byte_rejected():
 
 
 def test_validate_base_oversize_rejected():
-    from soup_cli.utils.sleeper_probe import validate_base_for_probe
+    from ai_forge_cli.utils.sleeper_probe import validate_base_for_probe
 
     with pytest.raises(ValueError):
         validate_base_for_probe("a" * 1000)
@@ -143,7 +143,7 @@ def test_validate_base_oversize_rejected():
 
 
 def test_probe_spec_frozen():
-    from soup_cli.utils.sleeper_probe import SleeperProbeSpec
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeSpec
 
     s = SleeperProbeSpec(
         base="x", hidden_dim=4, threshold=0.5, description="d"
@@ -153,21 +153,21 @@ def test_probe_spec_frozen():
 
 
 def test_probe_spec_rejects_invalid_hidden_dim():
-    from soup_cli.utils.sleeper_probe import SleeperProbeSpec
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeSpec
 
     with pytest.raises(ValueError):
         SleeperProbeSpec(base="x", hidden_dim=0, threshold=0.5, description="d")
 
 
 def test_probe_spec_rejects_bool_threshold():
-    from soup_cli.utils.sleeper_probe import SleeperProbeSpec
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeSpec
 
     with pytest.raises(TypeError):
         SleeperProbeSpec(base="x", hidden_dim=4, threshold=True, description="d")
 
 
 def test_probe_spec_rejects_non_finite_threshold():
-    from soup_cli.utils.sleeper_probe import SleeperProbeSpec
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeSpec
 
     with pytest.raises(ValueError):
         SleeperProbeSpec(
@@ -176,14 +176,14 @@ def test_probe_spec_rejects_non_finite_threshold():
 
 
 def test_probe_spec_rejects_out_of_range_threshold():
-    from soup_cli.utils.sleeper_probe import SleeperProbeSpec
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeSpec
 
     with pytest.raises(ValueError):
         SleeperProbeSpec(base="x", hidden_dim=4, threshold=10.0, description="d")
 
 
 def test_probe_spec_rejects_empty_base():
-    from soup_cli.utils.sleeper_probe import SleeperProbeSpec
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeSpec
 
     with pytest.raises(ValueError):
         SleeperProbeSpec(base="", hidden_dim=4, threshold=0.5, description="d")
@@ -195,7 +195,7 @@ def test_probe_spec_rejects_empty_base():
 
 
 def test_apply_sleeper_probe_returns_per_token_scores():
-    from soup_cli.utils.sleeper_probe import apply_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import apply_sleeper_probe
 
     # 4 tokens × 8-dim hidden state
     activations = np.random.RandomState(0).randn(4, 8).astype(np.float32)
@@ -206,7 +206,7 @@ def test_apply_sleeper_probe_returns_per_token_scores():
 
 def test_apply_sleeper_probe_aligned_direction_high():
     """A probe aligned with the input gives a high score."""
-    from soup_cli.utils.sleeper_probe import apply_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import apply_sleeper_probe
 
     probe_w = np.array([1.0, 0.0, 0.0], dtype=np.float32)
     activations = np.array([[1.0, 0.0, 0.0]], dtype=np.float32)
@@ -215,7 +215,7 @@ def test_apply_sleeper_probe_aligned_direction_high():
 
 
 def test_apply_sleeper_probe_opposed_direction_low():
-    from soup_cli.utils.sleeper_probe import apply_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import apply_sleeper_probe
 
     probe_w = np.array([1.0, 0.0, 0.0], dtype=np.float32)
     activations = np.array([[-1.0, 0.0, 0.0]], dtype=np.float32)
@@ -224,7 +224,7 @@ def test_apply_sleeper_probe_opposed_direction_low():
 
 
 def test_apply_sleeper_probe_shape_mismatch_rejected():
-    from soup_cli.utils.sleeper_probe import apply_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import apply_sleeper_probe
 
     activations = np.zeros((4, 8), dtype=np.float32)
     probe_w = np.zeros((10,), dtype=np.float32)
@@ -233,7 +233,7 @@ def test_apply_sleeper_probe_shape_mismatch_rejected():
 
 
 def test_apply_sleeper_probe_rejects_non_2d_activations():
-    from soup_cli.utils.sleeper_probe import apply_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import apply_sleeper_probe
 
     activations = np.zeros((4,), dtype=np.float32)
     probe_w = np.zeros((4,), dtype=np.float32)
@@ -242,7 +242,7 @@ def test_apply_sleeper_probe_rejects_non_2d_activations():
 
 
 def test_apply_sleeper_probe_rejects_non_1d_probe():
-    from soup_cli.utils.sleeper_probe import apply_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import apply_sleeper_probe
 
     activations = np.zeros((4, 8), dtype=np.float32)
     probe_w = np.zeros((8, 8), dtype=np.float32)
@@ -251,7 +251,7 @@ def test_apply_sleeper_probe_rejects_non_1d_probe():
 
 
 def test_apply_sleeper_probe_threshold_bool_rejected():
-    from soup_cli.utils.sleeper_probe import apply_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import apply_sleeper_probe
 
     activations = np.zeros((1, 4), dtype=np.float32)
     probe_w = np.zeros((4,), dtype=np.float32)
@@ -260,7 +260,7 @@ def test_apply_sleeper_probe_threshold_bool_rejected():
 
 
 def test_apply_sleeper_probe_threshold_non_finite_rejected():
-    from soup_cli.utils.sleeper_probe import apply_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import apply_sleeper_probe
 
     activations = np.zeros((1, 4), dtype=np.float32)
     probe_w = np.zeros((4,), dtype=np.float32)
@@ -274,28 +274,28 @@ def test_apply_sleeper_probe_threshold_non_finite_rejected():
 
 
 def test_classify_low_rate_is_ok():
-    from soup_cli.utils.sleeper_probe import classify_sleeper_score
+    from ai_forge_cli.utils.sleeper_probe import classify_sleeper_score
 
     # < 1% defection rate -> OK
     assert classify_sleeper_score(0.005) == "OK"
 
 
 def test_classify_minor_band():
-    from soup_cli.utils.sleeper_probe import classify_sleeper_score
+    from ai_forge_cli.utils.sleeper_probe import classify_sleeper_score
 
     # 1% to 5% -> MINOR
     assert classify_sleeper_score(0.03) == "MINOR"
 
 
 def test_classify_major_band():
-    from soup_cli.utils.sleeper_probe import classify_sleeper_score
+    from ai_forge_cli.utils.sleeper_probe import classify_sleeper_score
 
     # > 5% -> MAJOR
     assert classify_sleeper_score(0.10) == "MAJOR"
 
 
 def test_classify_exact_boundaries():
-    from soup_cli.utils.sleeper_probe import classify_sleeper_score
+    from ai_forge_cli.utils.sleeper_probe import classify_sleeper_score
 
     # 1% boundary
     assert classify_sleeper_score(0.01) == "MINOR"
@@ -304,21 +304,21 @@ def test_classify_exact_boundaries():
 
 
 def test_classify_rejects_bool():
-    from soup_cli.utils.sleeper_probe import classify_sleeper_score
+    from ai_forge_cli.utils.sleeper_probe import classify_sleeper_score
 
     with pytest.raises(TypeError):
         classify_sleeper_score(True)
 
 
 def test_classify_rejects_non_finite():
-    from soup_cli.utils.sleeper_probe import classify_sleeper_score
+    from ai_forge_cli.utils.sleeper_probe import classify_sleeper_score
 
     with pytest.raises(ValueError):
         classify_sleeper_score(float("nan"))
 
 
 def test_classify_rejects_out_of_range():
-    from soup_cli.utils.sleeper_probe import classify_sleeper_score
+    from ai_forge_cli.utils.sleeper_probe import classify_sleeper_score
 
     with pytest.raises(ValueError):
         classify_sleeper_score(-0.1)
@@ -332,7 +332,7 @@ def test_classify_rejects_out_of_range():
 
 
 def test_result_frozen():
-    from soup_cli.utils.sleeper_probe import SleeperProbeResult
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeResult
 
     r = SleeperProbeResult(
         base="b",
@@ -346,7 +346,7 @@ def test_result_frozen():
 
 
 def test_result_rejects_invalid_verdict():
-    from soup_cli.utils.sleeper_probe import SleeperProbeResult
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeResult
 
     with pytest.raises(ValueError):
         SleeperProbeResult(
@@ -359,7 +359,7 @@ def test_result_rejects_invalid_verdict():
 
 
 def test_result_rejects_negative_num_tokens():
-    from soup_cli.utils.sleeper_probe import SleeperProbeResult
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeResult
 
     with pytest.raises(ValueError):
         SleeperProbeResult(
@@ -372,7 +372,7 @@ def test_result_rejects_negative_num_tokens():
 
 
 def test_result_rejects_out_of_range_rate():
-    from soup_cli.utils.sleeper_probe import SleeperProbeResult
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeResult
 
     with pytest.raises(ValueError):
         SleeperProbeResult(
@@ -385,7 +385,7 @@ def test_result_rejects_out_of_range_rate():
 
 
 def test_result_rejects_non_finite_max_score():
-    from soup_cli.utils.sleeper_probe import SleeperProbeResult
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeResult
 
     with pytest.raises(ValueError):
         SleeperProbeResult(
@@ -403,7 +403,7 @@ def test_result_rejects_non_finite_max_score():
 
 
 def test_run_sleeper_probe_happy():
-    from soup_cli.utils.sleeper_probe import (
+    from ai_forge_cli.utils.sleeper_probe import (
         BUNDLED_PROBES,
         SleeperProbeResult,
         run_sleeper_probe,
@@ -421,7 +421,7 @@ def test_run_sleeper_probe_happy():
 
 
 def test_run_sleeper_probe_unknown_base_rejected():
-    from soup_cli.utils.sleeper_probe import run_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import run_sleeper_probe
 
     activations = np.zeros((10, 4), dtype=np.float32)
     with pytest.raises(ValueError, match="no bundled probe"):
@@ -429,7 +429,7 @@ def test_run_sleeper_probe_unknown_base_rejected():
 
 
 def test_run_sleeper_probe_hidden_dim_mismatch():
-    from soup_cli.utils.sleeper_probe import BUNDLED_PROBES, run_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import BUNDLED_PROBES, run_sleeper_probe
 
     base = next(iter(BUNDLED_PROBES))
     spec = BUNDLED_PROBES[base]
@@ -441,7 +441,7 @@ def test_run_sleeper_probe_hidden_dim_mismatch():
 
 def test_run_sleeper_probe_handles_pure_zero_activations():
     """All-zero activations -> 0% defection rate, OK verdict."""
-    from soup_cli.utils.sleeper_probe import BUNDLED_PROBES, run_sleeper_probe
+    from ai_forge_cli.utils.sleeper_probe import BUNDLED_PROBES, run_sleeper_probe
 
     base = next(iter(BUNDLED_PROBES))
     spec = BUNDLED_PROBES[base]
@@ -459,7 +459,7 @@ def test_run_sleeper_probe_high_signal_triggers_major():
     activations in the direction of the probe weights themselves
     (guaranteed positive dot product, above threshold).
     """
-    from soup_cli.utils.sleeper_probe import (
+    from ai_forge_cli.utils.sleeper_probe import (
         BUNDLED_PROBES,
         _probe_weights,
         run_sleeper_probe,
@@ -481,7 +481,7 @@ def test_run_sleeper_probe_high_signal_triggers_major():
 
 
 def test_render_sleeper_json_roundtrip():
-    from soup_cli.utils.sleeper_probe import SleeperProbeResult, render_sleeper_json
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeResult, render_sleeper_json
 
     r = SleeperProbeResult(
         base="b",
@@ -498,14 +498,14 @@ def test_render_sleeper_json_roundtrip():
 
 
 def test_render_sleeper_json_rejects_non_result():
-    from soup_cli.utils.sleeper_probe import render_sleeper_json
+    from ai_forge_cli.utils.sleeper_probe import render_sleeper_json
 
     with pytest.raises(TypeError):
         render_sleeper_json("not a result")
 
 
 def test_render_sleeper_markdown_has_verdict():
-    from soup_cli.utils.sleeper_probe import SleeperProbeResult, render_sleeper_markdown
+    from ai_forge_cli.utils.sleeper_probe import SleeperProbeResult, render_sleeper_markdown
 
     r = SleeperProbeResult(
         base="meta-llama/Llama-3-8B",
@@ -520,7 +520,7 @@ def test_render_sleeper_markdown_has_verdict():
 
 
 def test_render_sleeper_markdown_rejects_non_result():
-    from soup_cli.utils.sleeper_probe import render_sleeper_markdown
+    from ai_forge_cli.utils.sleeper_probe import render_sleeper_markdown
 
     with pytest.raises(TypeError):
         render_sleeper_markdown(None)
@@ -534,7 +534,7 @@ def test_render_sleeper_markdown_rejects_non_result():
 def test_no_heavy_top_level_imports():
     import inspect
 
-    from soup_cli.utils import sleeper_probe
+    from ai_forge_cli.utils import sleeper_probe
 
     source = inspect.getsource(sleeper_probe)
     top_level_imports = [

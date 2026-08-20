@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 
 def _make_adapter(tmp_path: Path, name: str = "adapter") -> Path:
@@ -33,7 +33,7 @@ def _make_adapter(tmp_path: Path, name: str = "adapter") -> Path:
 
 class TestManifest:
     def test_imports(self):
-        from soup_cli.utils.adapter_sign import (
+        from ai_forge_cli.utils.adapter_sign import (
             AdapterManifest,
             SignatureRecord,
             compute_adapter_manifest,
@@ -49,7 +49,7 @@ class TestManifest:
     def test_manifest_deterministic(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import compute_adapter_manifest
+        from ai_forge_cli.utils.adapter_sign import compute_adapter_manifest
 
         m1 = compute_adapter_manifest(str(adapter))
         m2 = compute_adapter_manifest(str(adapter))
@@ -62,14 +62,14 @@ class TestManifest:
     def test_manifest_outside_cwd_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         outside = tmp_path.parent / "outside_adapter"
-        from soup_cli.utils.adapter_sign import compute_adapter_manifest
+        from ai_forge_cli.utils.adapter_sign import compute_adapter_manifest
 
         with pytest.raises(ValueError):
             compute_adapter_manifest(str(outside))
 
     def test_manifest_missing_dir(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import compute_adapter_manifest
+        from ai_forge_cli.utils.adapter_sign import compute_adapter_manifest
 
         with pytest.raises(FileNotFoundError):
             compute_adapter_manifest(str(tmp_path / "nope"))
@@ -77,7 +77,7 @@ class TestManifest:
     def test_manifest_frozen(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import compute_adapter_manifest
+        from ai_forge_cli.utils.adapter_sign import compute_adapter_manifest
 
         manifest = compute_adapter_manifest(str(adapter))
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -86,7 +86,7 @@ class TestManifest:
     def test_manifest_changes_when_weights_change(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import compute_adapter_manifest
+        from ai_forge_cli.utils.adapter_sign import compute_adapter_manifest
 
         m1 = compute_adapter_manifest(str(adapter))
         # Mutate weights file
@@ -97,7 +97,7 @@ class TestManifest:
     def test_manifest_includes_all_files(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import compute_adapter_manifest
+        from ai_forge_cli.utils.adapter_sign import compute_adapter_manifest
 
         manifest = compute_adapter_manifest(str(adapter))
         names = {entry.name for entry in manifest.files}
@@ -111,7 +111,7 @@ class TestManifest:
         target.mkdir()
         link = tmp_path / "linked"
         os.symlink(str(target), str(link))
-        from soup_cli.utils.adapter_sign import compute_adapter_manifest
+        from ai_forge_cli.utils.adapter_sign import compute_adapter_manifest
 
         with pytest.raises(ValueError):
             compute_adapter_manifest(str(link))
@@ -121,7 +121,7 @@ class TestSign:
     def test_sign_unsigned_backend(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         record = sign_adapter(str(adapter), backend="unsigned")
         assert record.backend == "unsigned"
@@ -137,7 +137,7 @@ class TestSign:
         # network); it stays a NotImplementedError after v0.71.2 #185.
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         with pytest.raises(NotImplementedError, match="sigstore|infra-blocked"):
             sign_adapter(str(adapter), backend="sigstore")
@@ -148,7 +148,7 @@ class TestSign:
         monkeypatch.chdir(tmp_path)
         monkeypatch.delenv("SOUP_SIGNING_KEY", raising=False)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         with pytest.raises(ValueError, match="private key"):
             sign_adapter(str(adapter), backend="ed25519")
@@ -156,7 +156,7 @@ class TestSign:
     def test_sign_unknown_backend(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         with pytest.raises(ValueError):
             sign_adapter(str(adapter), backend="weird_unknown")
@@ -164,7 +164,7 @@ class TestSign:
     def test_sign_signature_record_frozen(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter
 
         record = sign_adapter(str(adapter), backend="unsigned")
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -175,7 +175,7 @@ class TestVerify:
     def test_verify_signed_adapter_passes(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         sign_adapter(str(adapter), backend="unsigned")
         report = verify_adapter(str(adapter))
@@ -185,7 +185,7 @@ class TestVerify:
     def test_verify_unsigned_adapter_lenient(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import verify_adapter
+        from ai_forge_cli.utils.adapter_sign import verify_adapter
 
         report = verify_adapter(str(adapter), strict=False)
         assert report.valid is False
@@ -195,7 +195,7 @@ class TestVerify:
     def test_verify_unsigned_adapter_strict_raises(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import verify_adapter
+        from ai_forge_cli.utils.adapter_sign import verify_adapter
 
         with pytest.raises(ValueError, match="(?i)signed|signature"):
             verify_adapter(str(adapter), strict=True)
@@ -203,7 +203,7 @@ class TestVerify:
     def test_verify_tampered_weights_fails(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import sign_adapter, verify_adapter
+        from ai_forge_cli.utils.adapter_sign import sign_adapter, verify_adapter
 
         sign_adapter(str(adapter), backend="unsigned")
         # Tamper with weights AFTER signing
@@ -216,7 +216,7 @@ class TestVerify:
 
     def test_verify_outside_cwd_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.adapter_sign import verify_adapter
+        from ai_forge_cli.utils.adapter_sign import verify_adapter
 
         with pytest.raises(ValueError):
             verify_adapter(str(tmp_path.parent / "outside_adapter"))
@@ -225,7 +225,7 @@ class TestVerify:
         """Strict mode message must explicitly mention 'signed' (CI grep)."""
         monkeypatch.chdir(tmp_path)
         adapter = _make_adapter(tmp_path)
-        from soup_cli.utils.adapter_sign import verify_adapter
+        from ai_forge_cli.utils.adapter_sign import verify_adapter
 
         try:
             verify_adapter(str(adapter), strict=True)
@@ -276,7 +276,7 @@ class TestSecurityReviewFixes:
         # Write a 17 MiB JSON-shaped string — over the 16 MiB cap.
         big = '{"x": "' + ("a" * (17 * 1024 * 1024)) + '"}'
         sig.write_text(big, encoding="utf-8")
-        from soup_cli.utils.adapter_sign import verify_adapter
+        from ai_forge_cli.utils.adapter_sign import verify_adapter
 
         with pytest.raises(ValueError, match="(?i)exceeds"):
             verify_adapter(str(adapter))
@@ -289,7 +289,7 @@ class TestSecurityReviewFixes:
         target = tmp_path / "outside.json"
         target.write_text('{"backend": "evil"}', encoding="utf-8")
         os.symlink(str(target), str(adapter / ".soup-signature.json"))
-        from soup_cli.utils.adapter_sign import verify_adapter
+        from ai_forge_cli.utils.adapter_sign import verify_adapter
 
         with pytest.raises(ValueError, match="(?i)symlink"):
             verify_adapter(str(adapter))
@@ -297,13 +297,13 @@ class TestSecurityReviewFixes:
 
 class TestSourceWiring:
     def test_module_imports_clean(self):
-        import soup_cli.utils.adapter_sign as m
+        import ai_forge_cli.utils.adapter_sign as m
 
         assert hasattr(m, "sign_adapter")
         assert hasattr(m, "verify_adapter")
         assert hasattr(m, "AdapterManifest")
 
     def test_signature_filename_constant(self):
-        from soup_cli.utils.adapter_sign import _SIGNATURE_FILENAME
+        from ai_forge_cli.utils.adapter_sign import _SIGNATURE_FILENAME
 
         assert _SIGNATURE_FILENAME == ".soup-signature.json"

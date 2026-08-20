@@ -15,7 +15,7 @@ import pytest
 
 class TestExportAdvancedGguf:
     def test_not_implemented_error_gone(self):
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         # Old stub had no args. New live function should accept kwargs.
         # Calling without args should now raise TypeError, not
@@ -24,7 +24,7 @@ class TestExportAdvancedGguf:
             export_advanced_gguf()  # type: ignore[call-arg]
 
     def test_unknown_flavour_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         monkeypatch.chdir(tmp_path)
         model = tmp_path / "model"
@@ -39,7 +39,7 @@ class TestExportAdvancedGguf:
             )
 
     def test_outside_cwd_model_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         monkeypatch.chdir(tmp_path)
         outside = tmp_path.parent / "outside_model_gguf"
@@ -54,7 +54,7 @@ class TestExportAdvancedGguf:
             )
 
     def test_outside_cwd_output_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         monkeypatch.chdir(tmp_path)
         model = tmp_path / "model"
@@ -69,7 +69,7 @@ class TestExportAdvancedGguf:
             )
 
     def test_ud_requires_calibration(self, tmp_path, monkeypatch):
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         monkeypatch.chdir(tmp_path)
         model = tmp_path / "model"
@@ -87,7 +87,7 @@ class TestExportAdvancedGguf:
             )
 
     def test_apple_arm_no_calibration_ok(self, tmp_path, monkeypatch):
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         monkeypatch.chdir(tmp_path)
         model = tmp_path / "model"
@@ -104,8 +104,8 @@ class TestExportAdvancedGguf:
             # Simulate llama-quantize writing the output file
             Path(kwargs["output_path"]).write_bytes(b"FAKEGGUF")
 
-        with patch("soup_cli.utils.gguf_quant._run_convert_to_f16") as mock_conv, \
-             patch("soup_cli.utils.gguf_quant._run_quantize_binary",
+        with patch("ai_forge_cli.utils.gguf_quant._run_convert_to_f16") as mock_conv, \
+             patch("ai_forge_cli.utils.gguf_quant._run_quantize_binary",
                    side_effect=fake_quant) as mock_quant:
             mock_conv.return_value = None
             export_advanced_gguf(
@@ -121,7 +121,7 @@ class TestExportAdvancedGguf:
             assert out_path.is_file()
 
     def test_ud_with_calibration_invokes_imatrix(self, tmp_path, monkeypatch):
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         monkeypatch.chdir(tmp_path)
         model = tmp_path / "model"
@@ -141,9 +141,9 @@ class TestExportAdvancedGguf:
         def fake_quant(**kwargs):
             Path(kwargs["output_path"]).write_bytes(b"FAKEGGUF")
 
-        with patch("soup_cli.utils.gguf_quant._run_convert_to_f16") as mock_conv, \
-             patch("soup_cli.utils.gguf_quant._run_imatrix") as mock_imat, \
-             patch("soup_cli.utils.gguf_quant._run_quantize_binary",
+        with patch("ai_forge_cli.utils.gguf_quant._run_convert_to_f16") as mock_conv, \
+             patch("ai_forge_cli.utils.gguf_quant._run_imatrix") as mock_imat, \
+             patch("ai_forge_cli.utils.gguf_quant._run_quantize_binary",
                    side_effect=fake_quant) as mock_quant:
             mock_conv.return_value = None
             mock_imat.return_value = None
@@ -159,7 +159,7 @@ class TestExportAdvancedGguf:
             assert out_path.is_file()
 
     def test_missing_llama_cpp_dir(self, tmp_path, monkeypatch):
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         monkeypatch.chdir(tmp_path)
         model = tmp_path / "model"
@@ -178,7 +178,7 @@ class TestExportAdvancedGguf:
             )
 
     def test_missing_convert_script(self, tmp_path, monkeypatch):
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         monkeypatch.chdir(tmp_path)
         model = tmp_path / "model"
@@ -197,7 +197,7 @@ class TestExportAdvancedGguf:
     def test_calibration_symlink_rejected(self, tmp_path, monkeypatch):
         if sys.platform == "win32":
             pytest.skip("symlink rejection POSIX-only")
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         monkeypatch.chdir(tmp_path)
         model = tmp_path / "model"
@@ -219,7 +219,7 @@ class TestExportAdvancedGguf:
 
     def test_run_imatrix_argv_shape(self, tmp_path):
         """Verify _run_imatrix builds a list-args subprocess call (no shell)."""
-        from soup_cli.utils.gguf_quant import _run_imatrix
+        from ai_forge_cli.utils.gguf_quant import _run_imatrix
 
         # Drop a fake binary so the resolver finds it
         fake_bin = tmp_path / "llama-imatrix"
@@ -247,7 +247,7 @@ class TestExportAdvancedGguf:
                 assert isinstance(arg, str)
 
     def test_run_quantize_argv_shape(self, tmp_path):
-        from soup_cli.utils.gguf_quant import _run_quantize_binary
+        from ai_forge_cli.utils.gguf_quant import _run_quantize_binary
 
         fake_bin = tmp_path / "llama-quantize"
         fake_bin.write_bytes(b"#!/bin/sh\nexit 0\n")
@@ -278,7 +278,7 @@ class TestExportAdvancedGguf:
 
 class TestPrepareCalibrationText:
     def test_jsonl_with_text_field(self, tmp_path):
-        from soup_cli.utils.gguf_quant import _prepare_calibration_text
+        from ai_forge_cli.utils.gguf_quant import _prepare_calibration_text
 
         src = tmp_path / "calib.jsonl"
         src.write_text(
@@ -291,7 +291,7 @@ class TestPrepareCalibrationText:
         assert "foo bar" in content
 
     def test_jsonl_with_prompt_alias(self, tmp_path):
-        from soup_cli.utils.gguf_quant import _prepare_calibration_text
+        from ai_forge_cli.utils.gguf_quant import _prepare_calibration_text
 
         src = tmp_path / "calib.jsonl"
         src.write_text('{"prompt": "via prompt"}\n', encoding="utf-8")
@@ -299,7 +299,7 @@ class TestPrepareCalibrationText:
         assert "via prompt" in out.read_text(encoding="utf-8")
 
     def test_jsonl_with_content_alias(self, tmp_path):
-        from soup_cli.utils.gguf_quant import _prepare_calibration_text
+        from ai_forge_cli.utils.gguf_quant import _prepare_calibration_text
 
         src = tmp_path / "calib.jsonl"
         src.write_text('{"content": "via content"}\n', encoding="utf-8")
@@ -307,7 +307,7 @@ class TestPrepareCalibrationText:
         assert "via content" in out.read_text(encoding="utf-8")
 
     def test_null_bytes_stripped(self, tmp_path):
-        from soup_cli.utils.gguf_quant import _prepare_calibration_text
+        from ai_forge_cli.utils.gguf_quant import _prepare_calibration_text
 
         src = tmp_path / "calib.jsonl"
         # JSON-escape the null byte; json.loads turns \u0000 into a real NUL
@@ -320,7 +320,7 @@ class TestPrepareCalibrationText:
         assert "evil" in content  # null byte stripped, neighbours preserved
 
     def test_newlines_collapsed_to_spaces(self, tmp_path):
-        from soup_cli.utils.gguf_quant import _prepare_calibration_text
+        from ai_forge_cli.utils.gguf_quant import _prepare_calibration_text
 
         src = tmp_path / "calib.jsonl"
         src.write_text('{"text": "line1\\nline2"}\n', encoding="utf-8")
@@ -333,7 +333,7 @@ class TestPrepareCalibrationText:
         assert "line1 line2" in lines[0]
 
     def test_raw_text_fallback(self, tmp_path):
-        from soup_cli.utils.gguf_quant import _prepare_calibration_text
+        from ai_forge_cli.utils.gguf_quant import _prepare_calibration_text
 
         # Input must NOT be named `calib.txt` because the helper writes
         # its output to `<staged_dir>/calib.txt`. Use a different name.
@@ -347,7 +347,7 @@ class TestPrepareCalibrationText:
         assert "neither is this" in content
 
     def test_zero_usable_rows_raises(self, tmp_path):
-        from soup_cli.utils.gguf_quant import _prepare_calibration_text
+        from ai_forge_cli.utils.gguf_quant import _prepare_calibration_text
 
         src = tmp_path / "calib.jsonl"
         # All rows are JSON but lack a usable text field
@@ -359,7 +359,7 @@ class TestPrepareCalibrationText:
             _prepare_calibration_text(str(src), tmp_path)
 
     def test_missing_calib_file_raises(self, tmp_path):
-        from soup_cli.utils.gguf_quant import _prepare_calibration_text
+        from ai_forge_cli.utils.gguf_quant import _prepare_calibration_text
 
         with pytest.raises(FileNotFoundError):
             _prepare_calibration_text(str(tmp_path / "nope.jsonl"), tmp_path)

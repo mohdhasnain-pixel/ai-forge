@@ -15,7 +15,7 @@ from typer.testing import CliRunner
 
 
 def test_module_imports():
-    from soup_cli.utils import data_score  # noqa: F401
+    from ai_forge_cli.utils import data_score  # noqa: F401
 
     for name in (
         "ScoreReport",
@@ -36,7 +36,7 @@ def test_module_imports():
 def test_benchmarks_immutable():
     from types import MappingProxyType
 
-    from soup_cli.utils.data_score import BENCHMARKS
+    from ai_forge_cli.utils.data_score import BENCHMARKS
 
     assert isinstance(BENCHMARKS, MappingProxyType)
     assert "mmlu" in BENCHMARKS
@@ -47,7 +47,7 @@ def test_benchmarks_immutable():
 def test_score_report_frozen():
     import dataclasses
 
-    from soup_cli.utils.data_score import ScoreReport
+    from ai_forge_cli.utils.data_score import ScoreReport
 
     rep = ScoreReport(
         total=10,
@@ -67,20 +67,20 @@ def test_score_report_frozen():
 
 
 def test_ngram_set_basic():
-    from soup_cli.utils.data_score import ngram_set
+    from ai_forge_cli.utils.data_score import ngram_set
 
     s = ngram_set("hello world how are you", n=3)
     assert ("hello", "world", "how") in s
 
 
 def test_ngram_set_short_returns_empty():
-    from soup_cli.utils.data_score import ngram_set
+    from ai_forge_cli.utils.data_score import ngram_set
 
     assert ngram_set("hi", n=5) == set()
 
 
 def test_ngram_set_rejects_invalid_n():
-    from soup_cli.utils.data_score import ngram_set
+    from ai_forge_cli.utils.data_score import ngram_set
 
     with pytest.raises(ValueError):
         ngram_set("hi", n=0)
@@ -91,40 +91,40 @@ def test_ngram_set_rejects_invalid_n():
 
 
 def test_ngram_set_rejects_non_string():
-    from soup_cli.utils.data_score import ngram_set
+    from ai_forge_cli.utils.data_score import ngram_set
 
     with pytest.raises(TypeError):
         ngram_set(None, n=3)  # type: ignore[arg-type]
 
 
 def test_ngram_set_oversize_rejected():
-    from soup_cli.utils.data_score import _MAX_TEXT_CHARS, ngram_set
+    from ai_forge_cli.utils.data_score import _MAX_TEXT_CHARS, ngram_set
 
     with pytest.raises(ValueError):
         ngram_set("x " * (_MAX_TEXT_CHARS), n=3)
 
 
 def test_ngram_overlap_ratio_identical_is_one():
-    from soup_cli.utils.data_score import ngram_overlap_ratio
+    from ai_forge_cli.utils.data_score import ngram_overlap_ratio
 
     assert ngram_overlap_ratio("a b c d e", "a b c d e", n=3) == 1.0
 
 
 def test_ngram_overlap_ratio_disjoint_is_zero():
-    from soup_cli.utils.data_score import ngram_overlap_ratio
+    from ai_forge_cli.utils.data_score import ngram_overlap_ratio
 
     assert ngram_overlap_ratio("a b c d e", "x y z w v", n=3) == 0.0
 
 
 def test_ngram_overlap_ratio_partial():
-    from soup_cli.utils.data_score import ngram_overlap_ratio
+    from ai_forge_cli.utils.data_score import ngram_overlap_ratio
 
     r = ngram_overlap_ratio("a b c d e f", "a b c x y z", n=3)
     assert 0.0 < r < 1.0
 
 
 def test_ngram_overlap_ratio_empty_returns_zero():
-    from soup_cli.utils.data_score import ngram_overlap_ratio
+    from ai_forge_cli.utils.data_score import ngram_overlap_ratio
 
     assert ngram_overlap_ratio("", "a b c", n=3) == 0.0
     assert ngram_overlap_ratio("a b c", "", n=3) == 0.0
@@ -136,7 +136,7 @@ def test_ngram_overlap_ratio_empty_returns_zero():
 
 
 def test_decontaminate_rows_removes_overlap():
-    from soup_cli.utils.data_score import decontaminate_rows
+    from ai_forge_cli.utils.data_score import decontaminate_rows
 
     rows = [
         {"text": "The capital of France is Paris and known for art."},
@@ -149,7 +149,7 @@ def test_decontaminate_rows_removes_overlap():
 
 
 def test_decontaminate_rows_threshold_bounds():
-    from soup_cli.utils.data_score import decontaminate_rows
+    from ai_forge_cli.utils.data_score import decontaminate_rows
 
     with pytest.raises(ValueError):
         decontaminate_rows([], [], n=3, threshold=1.5)
@@ -160,7 +160,7 @@ def test_decontaminate_rows_threshold_bounds():
 
 
 def test_decontaminate_rows_empty_benchmark_keeps_all():
-    from soup_cli.utils.data_score import decontaminate_rows
+    from ai_forge_cli.utils.data_score import decontaminate_rows
 
     rows = [{"text": "anything"}, {"text": "more"}]
     kept, removed = decontaminate_rows(rows, [], n=3, threshold=0.5)
@@ -169,7 +169,7 @@ def test_decontaminate_rows_empty_benchmark_keeps_all():
 
 
 def test_decontaminate_rows_non_dict_row_skipped():
-    from soup_cli.utils.data_score import decontaminate_rows
+    from ai_forge_cli.utils.data_score import decontaminate_rows
 
     rows = [{"text": "a b c"}, "not-a-dict", {"text": "x y z"}]  # type: ignore[list-item]
     kept, _ = decontaminate_rows(rows, ["x y z"], n=2, threshold=0.5)
@@ -184,28 +184,28 @@ def test_decontaminate_rows_non_dict_row_skipped():
 
 
 def test_detect_pii_email():
-    from soup_cli.utils.data_score import detect_pii
+    from ai_forge_cli.utils.data_score import detect_pii
 
     hits = detect_pii("Contact me at user@example.com please")
     assert any(h["kind"] == "email" for h in hits)
 
 
 def test_detect_pii_phone():
-    from soup_cli.utils.data_score import detect_pii
+    from ai_forge_cli.utils.data_score import detect_pii
 
     hits = detect_pii("Call me at +1-415-555-0123 if you can")
     assert any(h["kind"] == "phone" for h in hits)
 
 
 def test_detect_pii_ssn_like():
-    from soup_cli.utils.data_score import detect_pii
+    from ai_forge_cli.utils.data_score import detect_pii
 
     hits = detect_pii("SSN 123-45-6789 is sensitive")
     assert any(h["kind"] == "ssn" for h in hits)
 
 
 def test_detect_pii_credit_card_like():
-    from soup_cli.utils.data_score import detect_pii
+    from ai_forge_cli.utils.data_score import detect_pii
 
     # 16-digit-like sequence — basic regex match
     hits = detect_pii("Card: 4111 1111 1111 1111 expires soon")
@@ -213,20 +213,20 @@ def test_detect_pii_credit_card_like():
 
 
 def test_detect_pii_no_match():
-    from soup_cli.utils.data_score import detect_pii
+    from ai_forge_cli.utils.data_score import detect_pii
 
     assert detect_pii("hello world how are you today friend") == []
 
 
 def test_detect_pii_rejects_non_string():
-    from soup_cli.utils.data_score import detect_pii
+    from ai_forge_cli.utils.data_score import detect_pii
 
     with pytest.raises(TypeError):
         detect_pii(123)  # type: ignore[arg-type]
 
 
 def test_detect_pii_caps_text_size():
-    from soup_cli.utils.data_score import _MAX_TEXT_CHARS, detect_pii
+    from ai_forge_cli.utils.data_score import _MAX_TEXT_CHARS, detect_pii
 
     with pytest.raises(ValueError):
         detect_pii("x " * (_MAX_TEXT_CHARS))
@@ -238,28 +238,28 @@ def test_detect_pii_caps_text_size():
 
 
 def test_detect_language_english_heuristic():
-    from soup_cli.utils.data_score import detect_language
+    from ai_forge_cli.utils.data_score import detect_language
 
     lang = detect_language("the quick brown fox jumps over the lazy dog")
     assert lang == "en"
 
 
 def test_detect_language_empty_returns_unknown():
-    from soup_cli.utils.data_score import detect_language
+    from ai_forge_cli.utils.data_score import detect_language
 
     assert detect_language("") == "unknown"
     assert detect_language("   ") == "unknown"
 
 
 def test_detect_language_non_string_rejected():
-    from soup_cli.utils.data_score import detect_language
+    from ai_forge_cli.utils.data_score import detect_language
 
     with pytest.raises(TypeError):
         detect_language(123)  # type: ignore[arg-type]
 
 
 def test_detect_language_returns_string():
-    from soup_cli.utils.data_score import detect_language
+    from ai_forge_cli.utils.data_score import detect_language
 
     result = detect_language("Hola mundo, esto es una prueba en español muy clara.")
     # Heuristic might return "es" or "unknown" — just check it's a string label
@@ -273,14 +273,14 @@ def test_detect_language_returns_string():
 
 
 def test_score_toxicity_bounds():
-    from soup_cli.utils.data_score import score_toxicity
+    from ai_forge_cli.utils.data_score import score_toxicity
 
     s = score_toxicity("a perfectly normal sentence")
     assert 0.0 <= s <= 1.0
 
 
 def test_score_toxicity_keyword_baseline():
-    from soup_cli.utils.data_score import score_toxicity
+    from ai_forge_cli.utils.data_score import score_toxicity
 
     clean = score_toxicity("good morning sunshine flowers garden")
     bad = score_toxicity("i hate kill destroy violence attack")
@@ -288,13 +288,13 @@ def test_score_toxicity_keyword_baseline():
 
 
 def test_score_toxicity_empty_zero():
-    from soup_cli.utils.data_score import score_toxicity
+    from ai_forge_cli.utils.data_score import score_toxicity
 
     assert score_toxicity("") == 0.0
 
 
 def test_score_toxicity_rejects_non_string():
-    from soup_cli.utils.data_score import score_toxicity
+    from ai_forge_cli.utils.data_score import score_toxicity
 
     with pytest.raises(TypeError):
         score_toxicity(None)  # type: ignore[arg-type]
@@ -306,20 +306,20 @@ def test_score_toxicity_rejects_non_string():
 
 
 def test_score_educational_value_bounds():
-    from soup_cli.utils.data_score import score_educational_value
+    from ai_forge_cli.utils.data_score import score_educational_value
 
     s = score_educational_value("Photosynthesis converts sunlight into chemical energy.")
     assert 0.0 <= s <= 1.0
 
 
 def test_score_educational_value_empty_zero():
-    from soup_cli.utils.data_score import score_educational_value
+    from ai_forge_cli.utils.data_score import score_educational_value
 
     assert score_educational_value("") == 0.0
 
 
 def test_score_educational_value_short_low():
-    from soup_cli.utils.data_score import score_educational_value
+    from ai_forge_cli.utils.data_score import score_educational_value
 
     short = score_educational_value("yo")
     longer = score_educational_value(
@@ -330,7 +330,7 @@ def test_score_educational_value_short_low():
 
 
 def test_score_educational_value_rejects_non_string():
-    from soup_cli.utils.data_score import score_educational_value
+    from ai_forge_cli.utils.data_score import score_educational_value
 
     with pytest.raises(TypeError):
         score_educational_value(123)  # type: ignore[arg-type]
@@ -342,7 +342,7 @@ def test_score_educational_value_rejects_non_string():
 
 
 def test_compute_scorecard_full():
-    from soup_cli.utils.data_score import compute_scorecard
+    from ai_forge_cli.utils.data_score import compute_scorecard
 
     rows = [
         {"text": "the quick brown fox jumps over"},
@@ -359,7 +359,7 @@ def test_compute_scorecard_full():
 
 
 def test_compute_scorecard_handles_non_dict_rows():
-    from soup_cli.utils.data_score import compute_scorecard
+    from ai_forge_cli.utils.data_score import compute_scorecard
 
     rep = compute_scorecard([{"text": "hello"}, "garbage", 42])  # type: ignore[list-item]
     # Non-dict rows excluded from total
@@ -367,7 +367,7 @@ def test_compute_scorecard_handles_non_dict_rows():
 
 
 def test_compute_scorecard_with_benchmarks():
-    from soup_cli.utils.data_score import compute_scorecard
+    from ai_forge_cli.utils.data_score import compute_scorecard
 
     rows = [
         {"text": "The capital of France is Paris and known for art."},
@@ -388,14 +388,14 @@ def test_compute_scorecard_with_benchmarks():
 
 
 def test_compute_scorecard_rejects_nan_threshold():
-    from soup_cli.utils.data_score import compute_scorecard
+    from ai_forge_cli.utils.data_score import compute_scorecard
 
     with pytest.raises(ValueError, match="finite"):
         compute_scorecard([], decontaminate_threshold=float("nan"))
 
 
 def test_require_str_rejects_null_byte():
-    from soup_cli.utils.data_score import detect_pii
+    from ai_forge_cli.utils.data_score import detect_pii
 
     with pytest.raises(ValueError, match="null byte"):
         detect_pii("hi\x00there")
@@ -403,7 +403,7 @@ def test_require_str_rejects_null_byte():
 
 def test_pii_redos_phone_pattern_is_bounded():
     """Confirm pathological near-miss inputs return promptly (ReDoS guard)."""
-    from soup_cli.utils.data_score import detect_pii
+    from ai_forge_cli.utils.data_score import detect_pii
 
     # Pre-cap means even a 100k pathological input is bounded to 50k.
     pathological = "1 " * 50_000 + "x"
@@ -414,7 +414,7 @@ def test_pii_redos_phone_pattern_is_bounded():
 
 
 def test_load_jsonl_rows_basic(tmp_path):
-    from soup_cli.utils.data_score import load_jsonl_rows
+    from ai_forge_cli.utils.data_score import load_jsonl_rows
 
     p = tmp_path / "rows.jsonl"
     p.write_text(
@@ -427,7 +427,7 @@ def test_load_jsonl_rows_basic(tmp_path):
 
 
 def test_load_jsonl_rows_outside_cwd(tmp_path):
-    from soup_cli.utils.data_score import load_jsonl_rows
+    from ai_forge_cli.utils.data_score import load_jsonl_rows
 
     inside = tmp_path / "inside"
     inside.mkdir()
@@ -439,7 +439,7 @@ def test_load_jsonl_rows_outside_cwd(tmp_path):
 
 
 def test_load_jsonl_rows_missing(tmp_path):
-    from soup_cli.utils.data_score import load_jsonl_rows
+    from ai_forge_cli.utils.data_score import load_jsonl_rows
 
     os.chdir(tmp_path)
     with pytest.raises(FileNotFoundError):
@@ -447,7 +447,7 @@ def test_load_jsonl_rows_missing(tmp_path):
 
 
 def test_load_jsonl_rows_skips_malformed(tmp_path):
-    from soup_cli.utils.data_score import load_jsonl_rows
+    from ai_forge_cli.utils.data_score import load_jsonl_rows
 
     p = tmp_path / "rows.jsonl"
     p.write_text(
@@ -460,7 +460,7 @@ def test_load_jsonl_rows_skips_malformed(tmp_path):
 
 
 def test_load_jsonl_rows_symlink_rejected(tmp_path):
-    from soup_cli.utils.data_score import load_jsonl_rows
+    from ai_forge_cli.utils.data_score import load_jsonl_rows
 
     if os.name == "nt":
         pytest.skip("symlink test POSIX-only")
@@ -474,7 +474,7 @@ def test_load_jsonl_rows_symlink_rejected(tmp_path):
 
 
 def test_load_jsonl_rows_cap(tmp_path):
-    from soup_cli.utils.data_score import _MAX_ROWS
+    from ai_forge_cli.utils.data_score import _MAX_ROWS
 
     # Just confirm cap is defined
     assert _MAX_ROWS >= 1
@@ -486,7 +486,7 @@ def test_load_jsonl_rows_cap(tmp_path):
 
 
 def _make_app():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     return app
 
 

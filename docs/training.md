@@ -585,7 +585,7 @@ with `rollout_backend=openenv`:
 ```yaml
 training:
   rollout_backend: openenv
-  rollout_func: soup_cli.envs.calculator:rollout   # or retrieval_qa / guess_number
+  rollout_func: ai_forge_cli.envs.calculator:rollout   # or retrieval_qa / guess_number
   reward_fn: verifiable
   verifiable_domain: math
 ```
@@ -677,7 +677,7 @@ Fine-tune vision-language models (LLaMA-3.2-Vision, Qwen2-VL, Pixtral) on image+
 
 ```bash
 # Install vision support
-pip install "soup-cli[vision]"
+pip install "ai-forge[vision]"
 
 # Create a vision config
 soup init --template vision
@@ -727,7 +727,7 @@ Fine-tune audio-language models (Qwen2-Audio, Whisper) on audio+text data:
 
 ```bash
 # Install audio support
-pip install "soup-cli[audio]"
+pip install "ai-forge[audio]"
 
 # Create an audio config
 soup init --template audio
@@ -1304,7 +1304,7 @@ soup recipes use raft-llama3-8b
 Citation scoring is exposed as a pure kernel for the eval gate:
 
 ```python
-from soup_cli.utils.citation_faithful import score_citations
+from ai_forge_cli.utils.citation_faithful import score_citations
 
 score = score_citations(
     predicted="The answer is 1991 [doc-1].",

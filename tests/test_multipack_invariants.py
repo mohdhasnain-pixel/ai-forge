@@ -26,12 +26,12 @@ import random
 import numpy as np
 import pytest
 
-from soup_cli.utils.jinja_analyzer import extract_message_fields
-from soup_cli.utils.multipack_sampler import (
+from ai_forge_cli.utils.jinja_analyzer import extract_message_fields
+from ai_forge_cli.utils.multipack_sampler import (
     MultipackBatchSampler,
     ffd_bin_pack,
 )
-from soup_cli.utils.neat_packing import (
+from ai_forge_cli.utils.neat_packing import (
     build_4d_attention_mask,
     tag_sub_sequences,
 )

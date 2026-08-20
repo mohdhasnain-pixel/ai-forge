@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.loader import load_config_from_string
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -90,34 +90,34 @@ class TestMiniLLMOnPolicySchema:
 
 class TestMiniLLMConfigOnPolicy:
     def test_on_policy_field_default(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         cfg = MiniLLMConfig()
         assert cfg.on_policy is False
         assert cfg.rollout_length == 16
 
     def test_on_policy_accepts(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         cfg = MiniLLMConfig(on_policy=True, rollout_length=8)
         assert cfg.on_policy is True
         assert cfg.rollout_length == 8
 
     def test_on_policy_must_be_bool(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         with pytest.raises((TypeError, ValueError), match="on_policy"):
             MiniLLMConfig(on_policy=1)
 
     @pytest.mark.parametrize("bad", [0, -1, 513, True])
     def test_rollout_length_bounds(self, bad):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         with pytest.raises((TypeError, ValueError), match="rollout_length"):
             MiniLLMConfig(rollout_length=bad)
 
     def test_rollout_length_upper_boundary_accepted(self):
-        from soup_cli.utils.minillm import MiniLLMConfig
+        from ai_forge_cli.utils.minillm import MiniLLMConfig
 
         # 512 is the documented max — must be accepted (513 is rejected above).
         cfg = MiniLLMConfig(rollout_length=512)
@@ -186,7 +186,7 @@ class TestMiniLLMRolloutLengthSchema:
     def test_distill_trainer_threads_explicit_length(self):
         # Source-grep regression guard: the distill trainer reads
         # tcfg.minillm_rollout_length (not just the auto-derived 32).
-        src = (REPO_ROOT / "src" / "soup_cli" / "trainer" / "distill.py").read_text(
+        src = (REPO_ROOT / "src" / "ai_forge_cli" / "trainer" / "distill.py").read_text(
             encoding="utf-8"
         )
         assert "tcfg.minillm_rollout_length is not None" in src
@@ -198,7 +198,7 @@ class TestMiniLLMOnPolicyRollout:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
 
         student = _make_fake_lm(seed=1)
         teacher = _make_fake_lm(seed=2)
@@ -228,7 +228,7 @@ class TestMiniLLMOnPolicyRollout:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
 
         student = _make_fake_lm(seed=1)
         teacher = _make_fake_lm(seed=2)
@@ -257,7 +257,7 @@ class TestMiniLLMOnPolicyRollout:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
 
         student = _make_fake_lm(seed=3)
         teacher = _make_fake_lm(seed=4)
@@ -284,7 +284,7 @@ class TestMiniLLMOnPolicyRollout:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.minillm import minillm_on_policy_rollout
+        from ai_forge_cli.utils.minillm import minillm_on_policy_rollout
 
         student = _make_fake_lm()
         with pytest.raises(TypeError, match="MiniLLMConfig"):
@@ -298,7 +298,7 @@ class TestMiniLLMOnPolicyRollout:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
 
         student = _make_fake_lm()
         with pytest.raises(ValueError, match="max_new_tokens"):
@@ -311,7 +311,7 @@ class TestMiniLLMOnPolicyRollout:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
 
         student = _make_fake_lm()
         with pytest.raises(ValueError, match="temperature"):
@@ -324,7 +324,7 @@ class TestMiniLLMOnPolicyRollout:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, minillm_on_policy_rollout
 
         student = _make_fake_lm()
         with pytest.raises(TypeError, match="temperature"):
@@ -339,7 +339,7 @@ class TestMiniLLMCallbackOnPolicy:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.minillm import MiniLLMConfig, build_minillm_callback
+        from ai_forge_cli.utils.minillm import MiniLLMConfig, build_minillm_callback
 
         cb = build_minillm_callback(
             MiniLLMConfig(teacher_mix_ratio=0.4, on_policy=True, rollout_length=3),
@@ -359,12 +359,12 @@ class TestMiniLLMCallbackOnPolicy:
 
 class TestDistillOnPolicyWiring:
     def test_distill_routes_on_policy(self):
-        src = (REPO_ROOT / "src/soup_cli/trainer/distill.py").read_text(encoding="utf-8")
+        src = (REPO_ROOT / "src/ai_forge_cli/trainer/distill.py").read_text(encoding="utf-8")
         assert "on_policy" in src
         assert "on_policy_term" in src
 
     def test_minillm_no_top_level_torch(self):
-        src = (REPO_ROOT / "src/soup_cli/utils/minillm.py").read_text(encoding="utf-8")
+        src = (REPO_ROOT / "src/ai_forge_cli/utils/minillm.py").read_text(encoding="utf-8")
         assert "\nimport torch" not in src
         assert "\nfrom torch" not in src
 
@@ -375,7 +375,7 @@ class TestTrainCliMinillmOnPolicy:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(app, ["train", "--help"])
         # Rich + FORCE_COLOR on CI inject ANSI codes between the flag's dashes
@@ -392,13 +392,13 @@ class TestTrainCliMinillmOnPolicy:
 # ===========================================================================
 class TestULDAlignedStrategy:
     def test_strategy_registered(self):
-        from soup_cli.utils.uld import SUPPORTED_ULD_STRATEGIES, validate_uld_strategy
+        from ai_forge_cli.utils.uld import SUPPORTED_ULD_STRATEGIES, validate_uld_strategy
 
         assert "wasserstein_aligned" in SUPPORTED_ULD_STRATEGIES
         assert validate_uld_strategy("Wasserstein_Aligned") == "wasserstein_aligned"
 
     def test_aligned_does_not_require_top_k(self):
-        from soup_cli.utils.uld import ULDConfig
+        from ai_forge_cli.utils.uld import ULDConfig
 
         cfg = ULDConfig(
             strategy="wasserstein_aligned",
@@ -408,7 +408,7 @@ class TestULDAlignedStrategy:
         assert cfg.top_k is None
 
     def test_aligned_rejects_top_k(self):
-        from soup_cli.utils.uld import ULDConfig
+        from ai_forge_cli.utils.uld import ULDConfig
 
         with pytest.raises(ValueError, match="top_k"):
             ULDConfig(
@@ -434,30 +434,30 @@ class TestULDAlignedStrategy:
 
 class TestAlignTokenSequences:
     def test_identical_tokenization(self):
-        from soup_cli.utils.uld import align_token_sequences
+        from ai_forge_cli.utils.uld import align_token_sequences
 
         assert align_token_sequences(["a", "b", "c"], ["a", "b", "c"]) == [
             [0], [1], [2]
         ]
 
     def test_disjoint_tokenization_same_text(self):
-        from soup_cli.utils.uld import align_token_sequences
+        from ai_forge_cli.utils.uld import align_token_sequences
 
         # "hello" tokenised differently → char-overlap alignment.
         assert align_token_sequences(["he", "llo"], ["hel", "lo"]) == [[0], [0, 1]]
 
     def test_empty_student(self):
-        from soup_cli.utils.uld import align_token_sequences
+        from ai_forge_cli.utils.uld import align_token_sequences
 
         assert align_token_sequences([], ["a"]) == []
 
     def test_empty_teacher(self):
-        from soup_cli.utils.uld import align_token_sequences
+        from ai_forge_cli.utils.uld import align_token_sequences
 
         assert align_token_sequences(["a", "b"], []) == [[], []]
 
     def test_different_text_falls_back(self):
-        from soup_cli.utils.uld import align_token_sequences
+        from ai_forge_cli.utils.uld import align_token_sequences
 
         # Decode artifacts: a typo / extra char — alignment still produced.
         out = align_token_sequences(["hel", "lo"], ["he", "llo", "!"])
@@ -469,7 +469,7 @@ class TestAlignTokenSequences:
         assert any(e for e in out)
 
     def test_difflib_fallback_specific_alignment(self):
-        from soup_cli.utils.uld import align_token_sequences
+        from ai_forge_cli.utils.uld import align_token_sequences
 
         # Student text "abXc" (X is a decode artefact) vs teacher "ab","c".
         # The difflib path (texts differ) must still map the shared chars:
@@ -480,7 +480,7 @@ class TestAlignTokenSequences:
         assert 1 in out[1]   # the "c" in "Xc" aligns to teacher "c"
 
     def test_char_cap_truncates_difflib_branch(self):
-        from soup_cli.utils.uld import _MAX_ALIGN_TOKENS, align_token_sequences
+        from ai_forge_cli.utils.uld import _MAX_ALIGN_TOKENS, align_token_sequences
 
         # Disjoint texts (forces the difflib branch) AND oversize → token cap.
         student = ["s"] * (_MAX_ALIGN_TOKENS + 50)
@@ -489,14 +489,14 @@ class TestAlignTokenSequences:
         assert len(out) <= _MAX_ALIGN_TOKENS
 
     def test_char_cap_truncates(self):
-        from soup_cli.utils.uld import _MAX_ALIGN_TOKENS, align_token_sequences
+        from ai_forge_cli.utils.uld import _MAX_ALIGN_TOKENS, align_token_sequences
 
         big = ["x"] * (_MAX_ALIGN_TOKENS + 50)
         out = align_token_sequences(big, big)
         assert len(out) <= _MAX_ALIGN_TOKENS
 
     def test_non_string_tokens_coerced(self):
-        from soup_cli.utils.uld import align_token_sequences
+        from ai_forge_cli.utils.uld import align_token_sequences
 
         # Robust to non-str entries (defensive str() coercion).
         out = align_token_sequences(["a", 1], ["a", "1"])
@@ -508,7 +508,7 @@ class TestAggregateAlignedLogits:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.uld import aggregate_aligned_logits
+        from ai_forge_cli.utils.uld import aggregate_aligned_logits
 
         teacher = torch.tensor(
             [[1.0, 0.0], [3.0, 0.0], [5.0, 0.0]]
@@ -523,7 +523,7 @@ class TestAggregateAlignedLogits:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.uld import aggregate_aligned_logits
+        from ai_forge_cli.utils.uld import aggregate_aligned_logits
 
         teacher = torch.ones((2, 3))
         out = aggregate_aligned_logits(teacher, [[], [0]])
@@ -534,7 +534,7 @@ class TestAggregateAlignedLogits:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.uld import aggregate_aligned_logits
+        from ai_forge_cli.utils.uld import aggregate_aligned_logits
 
         teacher = torch.ones((2, 3))
         out = aggregate_aligned_logits(teacher, [[0, 99]])
@@ -548,7 +548,7 @@ class TestUldAlignedLoss:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.uld import ULDConfig, uld_aligned_loss
+        from ai_forge_cli.utils.uld import ULDConfig, uld_aligned_loss
 
         cfg = ULDConfig(
             strategy="wasserstein_aligned",
@@ -572,7 +572,7 @@ class TestUldAlignedLoss:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.uld import uld_aligned_loss
+        from ai_forge_cli.utils.uld import uld_aligned_loss
 
         with pytest.raises(TypeError, match="ULDConfig"):
             uld_aligned_loss(
@@ -584,7 +584,7 @@ class TestUldAlignedLoss:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.uld import ULDConfig, uld_aligned_loss
+        from ai_forge_cli.utils.uld import ULDConfig, uld_aligned_loss
 
         cfg = ULDConfig(
             strategy="wasserstein_aligned",
@@ -602,7 +602,7 @@ class TestUldAlignedLoss:
         pytest.importorskip("torch")
         import torch
 
-        from soup_cli.utils.uld import ULDConfig, uld_aligned_loss
+        from ai_forge_cli.utils.uld import ULDConfig, uld_aligned_loss
 
         cfg = ULDConfig(
             strategy="wasserstein_aligned",
@@ -621,12 +621,12 @@ class TestUldAlignedLoss:
 
 class TestDistillUldAlignedWiring:
     def test_distill_routes_aligned(self):
-        src = (REPO_ROOT / "src/soup_cli/trainer/distill.py").read_text(encoding="utf-8")
+        src = (REPO_ROOT / "src/ai_forge_cli/trainer/distill.py").read_text(encoding="utf-8")
         assert "wasserstein_aligned" in src
         assert "uld_aligned_loss" in src
 
     def test_uld_no_top_level_torch(self):
-        src = (REPO_ROOT / "src/soup_cli/utils/uld.py").read_text(encoding="utf-8")
+        src = (REPO_ROOT / "src/ai_forge_cli/utils/uld.py").read_text(encoding="utf-8")
         assert "\nimport torch" not in src
         assert "\nfrom torch" not in src
 
@@ -643,7 +643,7 @@ def _strip_ansi(text: str) -> str:
 
 class TestBuildEvalStub:
     def test_stub_is_python_and_b64_only(self):
-        from soup_cli.utils.agent_sandbox import build_eval_stub
+        from ai_forge_cli.utils.agent_sandbox import build_eval_stub
 
         stub = build_eval_stub(
             tool="get_user",
@@ -657,7 +657,7 @@ class TestBuildEvalStub:
         assert "user_id" not in stub.replace("import base64, json", "")
 
     def test_required_params_extracted(self):
-        from soup_cli.utils.agent_sandbox import _required_path_params
+        from ai_forge_cli.utils.agent_sandbox import _required_path_params
 
         assert _required_path_params("/users/{user_id}/posts/{post_id}") == [
             "user_id",
@@ -667,7 +667,7 @@ class TestBuildEvalStub:
         assert _required_path_params(None) == []
 
     def test_non_mapping_arguments_rejected(self):
-        from soup_cli.utils.agent_sandbox import build_eval_stub
+        from ai_forge_cli.utils.agent_sandbox import build_eval_stub
 
         with pytest.raises(ValueError, match="mapping"):
             build_eval_stub(tool="t", parameters=[], path="/x", arguments=[1, 2])
@@ -675,27 +675,27 @@ class TestBuildEvalStub:
 
 class TestClassifySandboxOutcome:
     def test_timeout(self):
-        from soup_cli.utils.agent_sandbox import classify_sandbox_outcome
+        from ai_forge_cli.utils.agent_sandbox import classify_sandbox_outcome
 
         assert classify_sandbox_outcome(None, "", True) == "timeout"
 
     def test_tool_error_nonzero(self):
-        from soup_cli.utils.agent_sandbox import classify_sandbox_outcome
+        from ai_forge_cli.utils.agent_sandbox import classify_sandbox_outcome
 
         assert classify_sandbox_outcome(1, "", False) == "tool_error"
 
     def test_tool_error_empty_output(self):
-        from soup_cli.utils.agent_sandbox import classify_sandbox_outcome
+        from ai_forge_cli.utils.agent_sandbox import classify_sandbox_outcome
 
         assert classify_sandbox_outcome(0, "", False) == "tool_error"
 
     def test_tool_error_unparseable_output(self):
-        from soup_cli.utils.agent_sandbox import classify_sandbox_outcome
+        from ai_forge_cli.utils.agent_sandbox import classify_sandbox_outcome
 
         assert classify_sandbox_outcome(0, "not json", False) == "tool_error"
 
     def test_ok(self):
-        from soup_cli.utils.agent_sandbox import classify_sandbox_outcome
+        from ai_forge_cli.utils.agent_sandbox import classify_sandbox_outcome
 
         ok_json = json.dumps({"url": "/x"})
         assert classify_sandbox_outcome(0, ok_json, False) == "ok"
@@ -706,7 +706,7 @@ class TestRunEvalInSandbox:
     isolation primitives are POSIX-only and skipped on Windows)."""
 
     def test_run_ok_stub(self):
-        from soup_cli.utils.agent_sandbox import build_eval_stub, run_eval_in_sandbox
+        from ai_forge_cli.utils.agent_sandbox import build_eval_stub, run_eval_in_sandbox
 
         stub = build_eval_stub(
             tool="get_user",
@@ -720,7 +720,7 @@ class TestRunEvalInSandbox:
         assert json.loads(out)["url"] == "/users/42"
 
     def test_run_missing_required_param(self):
-        from soup_cli.utils.agent_sandbox import build_eval_stub, run_eval_in_sandbox
+        from ai_forge_cli.utils.agent_sandbox import build_eval_stub, run_eval_in_sandbox
 
         stub = build_eval_stub(
             tool="get_user",
@@ -735,7 +735,7 @@ class TestRunEvalInSandbox:
 
 class TestScoreSandbox:
     def test_score_ok(self):
-        from soup_cli.utils.agent_sandbox import score_sandbox
+        from ai_forge_cli.utils.agent_sandbox import score_sandbox
 
         cls = score_sandbox(
             tool="get_user",
@@ -746,7 +746,7 @@ class TestScoreSandbox:
         assert cls == "ok"
 
     def test_score_tool_error(self):
-        from soup_cli.utils.agent_sandbox import score_sandbox
+        from ai_forge_cli.utils.agent_sandbox import score_sandbox
 
         cls = score_sandbox(
             tool="get_user",
@@ -757,7 +757,7 @@ class TestScoreSandbox:
         assert cls == "tool_error"
 
     def test_score_uses_override(self, monkeypatch):
-        import soup_cli.utils.agent_sandbox as m
+        import ai_forge_cli.utils.agent_sandbox as m
 
         monkeypatch.setattr(
             m, "_AGENT_SANDBOX_RUN_OVERRIDE", lambda stub: (None, "", True)
@@ -805,7 +805,7 @@ class TestAgentEvalSandboxCli:
     def test_flag_in_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(app, ["agent", "eval", "--help"])
         assert "sandbox" in _strip_ansi(result.stdout).replace(" ", "")
@@ -815,7 +815,7 @@ class TestAgentEvalSandboxCli:
         _write_sandbox_fixture(tmp_path)
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(
             app,
@@ -836,14 +836,14 @@ class TestAgentEvalSandboxCli:
     def test_sandbox_timeout_via_override(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         _write_sandbox_fixture(tmp_path)
-        import soup_cli.utils.agent_sandbox as m
+        import ai_forge_cli.utils.agent_sandbox as m
 
         monkeypatch.setattr(
             m, "_AGENT_SANDBOX_RUN_OVERRIDE", lambda stub: (None, "", True)
         )
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(
             app,
@@ -861,12 +861,12 @@ class TestAgentEvalSandboxCli:
 
 class TestAgentSandboxNoTopLevelHeavyImport:
     def test_no_top_level_torch(self):
-        src = (REPO_ROOT / "src/soup_cli/utils/agent_sandbox.py").read_text(
+        src = (REPO_ROOT / "src/ai_forge_cli/utils/agent_sandbox.py").read_text(
             encoding="utf-8"
         )
         assert "\nimport torch" not in src
         # rewards.py is imported lazily inside run_eval_in_sandbox (not at top).
-        assert "\nfrom soup_cli.trainer.rewards import" not in src
+        assert "\nfrom ai_forge_cli.trainer.rewards import" not in src
 
 
 # ===========================================================================
@@ -882,20 +882,20 @@ _SOUP_YAML = (
 
 class TestValidateCloud:
     def test_modal(self):
-        from soup_cli.cloud.modal import validate_cloud
+        from ai_forge_cli.cloud.modal import validate_cloud
 
         assert validate_cloud("modal") == "modal"
         assert validate_cloud("MODAL") == "modal"
 
     @pytest.mark.parametrize("bad", ["", "runpod", "x" * 40])
     def test_rejects(self, bad):
-        from soup_cli.cloud.modal import validate_cloud
+        from ai_forge_cli.cloud.modal import validate_cloud
 
         with pytest.raises(ValueError):
             validate_cloud(bad)
 
     def test_rejects_bool_and_nul(self):
-        from soup_cli.cloud.modal import validate_cloud
+        from ai_forge_cli.cloud.modal import validate_cloud
 
         with pytest.raises(ValueError):
             validate_cloud(True)
@@ -908,13 +908,13 @@ class TestValidateGpu:
         "gpu", ["t4", "l4", "a10g", "a100", "a100-80gb", "l40s", "h100", "A100"]
     )
     def test_known(self, gpu):
-        from soup_cli.cloud.modal import validate_gpu
+        from ai_forge_cli.cloud.modal import validate_gpu
 
         assert validate_gpu(gpu) == gpu.lower()
 
     @pytest.mark.parametrize("bad", ["", "v100", "gpu\x00", True])
     def test_rejects(self, bad):
-        from soup_cli.cloud.modal import validate_gpu
+        from ai_forge_cli.cloud.modal import validate_gpu
 
         with pytest.raises(ValueError):
             validate_gpu(bad)
@@ -922,7 +922,7 @@ class TestValidateGpu:
 
 class TestRenderModalStub:
     def test_structure(self):
-        from soup_cli.cloud.modal import render_modal_stub
+        from ai_forge_cli.cloud.modal import render_modal_stub
 
         stub = render_modal_stub(
             _SOUP_YAML, gpu="a100", output_dir="./out", soup_version="0.71.18"
@@ -930,11 +930,11 @@ class TestRenderModalStub:
         assert "import modal" in stub
         assert "modal.App" in stub
         assert 'gpu="A100"' in stub
-        assert "soup-cli[train]==0.71.18" in stub
+        assert "ai-forge[train]==0.71.18" in stub
         assert "base64.b64decode" in stub
 
     def test_no_raw_config_injection(self):
-        from soup_cli.cloud.modal import render_modal_stub
+        from ai_forge_cli.cloud.modal import render_modal_stub
 
         secret_yaml = _SOUP_YAML + "INJECT_SENTINEL: pwned\n"
         stub = render_modal_stub(
@@ -946,7 +946,7 @@ class TestRenderModalStub:
         assert 'gpu="H100"' in stub
 
     def test_oversize_config_rejected(self):
-        from soup_cli.cloud.modal import _MAX_CONFIG_BYTES, render_modal_stub
+        from ai_forge_cli.cloud.modal import _MAX_CONFIG_BYTES, render_modal_stub
 
         with pytest.raises(ValueError, match="exceeds"):
             render_modal_stub(
@@ -955,7 +955,7 @@ class TestRenderModalStub:
             )
 
     def test_bad_gpu_rejected(self):
-        from soup_cli.cloud.modal import render_modal_stub
+        from ai_forge_cli.cloud.modal import render_modal_stub
 
         with pytest.raises(ValueError):
             render_modal_stub(
@@ -963,7 +963,7 @@ class TestRenderModalStub:
             )
 
     def test_bad_output_dir_rejected(self):
-        from soup_cli.cloud.modal import render_modal_stub
+        from ai_forge_cli.cloud.modal import render_modal_stub
 
         with pytest.raises(ValueError):
             render_modal_stub(
@@ -976,7 +976,7 @@ class TestRenderModalStub:
         ['1"; import os; os.system("x")  #', "1\\", '0.1"x', "ver with space"],
     )
     def test_soup_version_injection_rejected(self, bad_version):
-        from soup_cli.cloud.modal import render_modal_stub
+        from ai_forge_cli.cloud.modal import render_modal_stub
 
         with pytest.raises(ValueError, match="soup_version"):
             render_modal_stub(
@@ -985,7 +985,7 @@ class TestRenderModalStub:
             )
 
     def test_soup_version_length_capped(self):
-        from soup_cli.cloud.modal import _MAX_VERSION_LEN, render_modal_stub
+        from ai_forge_cli.cloud.modal import _MAX_VERSION_LEN, render_modal_stub
 
         with pytest.raises(ValueError, match="soup_version"):
             render_modal_stub(
@@ -994,21 +994,21 @@ class TestRenderModalStub:
             )
 
     def test_soup_version_pep440ish_accepted(self):
-        from soup_cli.cloud.modal import render_modal_stub
+        from ai_forge_cli.cloud.modal import render_modal_stub
 
         # Real-world version shapes must pass (dev / rc / local-version).
         stub = render_modal_stub(
             _SOUP_YAML, gpu="a100", output_dir="./out",
             soup_version="0.71.18.dev0+gabc123",
         )
-        assert "soup-cli[train]==0.71.18.dev0+gabc123" in stub
+        assert "ai-forge[train]==0.71.18.dev0+gabc123" in stub
 
 
 class TestPlanModalRun:
     def test_plan(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         (tmp_path / "soup.yaml").write_text(_SOUP_YAML, encoding="utf-8")
-        from soup_cli.cloud.modal import CloudPlan, plan_modal_run
+        from ai_forge_cli.cloud.modal import CloudPlan, plan_modal_run
 
         plan = plan_modal_run(
             "soup.yaml", gpu="a100", output_dir="./out", soup_version="0.71.18"
@@ -1021,7 +1021,7 @@ class TestPlanModalRun:
 
     def test_outside_cwd_config_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.cloud.modal import plan_modal_run
+        from ai_forge_cli.cloud.modal import plan_modal_run
 
         with pytest.raises(ValueError):
             plan_modal_run(
@@ -1031,7 +1031,7 @@ class TestPlanModalRun:
 
     def test_missing_config(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.cloud.modal import plan_modal_run
+        from ai_forge_cli.cloud.modal import plan_modal_run
 
         with pytest.raises((FileNotFoundError, ValueError, OSError)):
             plan_modal_run(
@@ -1044,7 +1044,7 @@ class TestWriteStub:
     def test_writes_under_cwd(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         (tmp_path / "soup.yaml").write_text(_SOUP_YAML, encoding="utf-8")
-        from soup_cli.cloud.modal import plan_modal_run, write_stub
+        from ai_forge_cli.cloud.modal import plan_modal_run, write_stub
 
         plan = plan_modal_run(
             "soup.yaml", gpu="t4", output_dir="./out", soup_version="0.71.18"
@@ -1056,7 +1056,7 @@ class TestWriteStub:
 
 class TestSubmitModalRun:
     def test_override_seam(self, monkeypatch):
-        import soup_cli.cloud.modal as m
+        import ai_forge_cli.cloud.modal as m
 
         plan = m.CloudPlan(
             cloud="modal", gpu="a100", output_dir="./out",
@@ -1066,7 +1066,7 @@ class TestSubmitModalRun:
         assert m.submit_modal_run(plan) == 7
 
     def test_no_token_raises(self, monkeypatch):
-        import soup_cli.cloud.modal as m
+        import ai_forge_cli.cloud.modal as m
 
         plan = m.CloudPlan(
             cloud="modal", gpu="a100", output_dir="./out",
@@ -1078,7 +1078,7 @@ class TestSubmitModalRun:
             m.submit_modal_run(plan, env={})
 
     def test_non_plan_rejected(self):
-        from soup_cli.cloud.modal import submit_modal_run
+        from ai_forge_cli.cloud.modal import submit_modal_run
 
         with pytest.raises(TypeError, match="CloudPlan"):
             submit_modal_run({"stub_path": "x"})
@@ -1086,7 +1086,7 @@ class TestSubmitModalRun:
     def test_modal_sdk_missing_raises(self, monkeypatch):
         import sys
 
-        import soup_cli.cloud.modal as m
+        import ai_forge_cli.cloud.modal as m
 
         plan = m.CloudPlan(
             cloud="modal", gpu="a100", output_dir="./out",
@@ -1104,7 +1104,7 @@ class TestTrainCloudCli:
     def test_flags_in_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         out = _strip_ansi(CliRunner().invoke(app, ["train", "--help"]).stdout)
         flat = out.replace(" ", "")
@@ -1117,7 +1117,7 @@ class TestTrainCloudCli:
         (tmp_path / "soup.yaml").write_text(_SOUP_YAML, encoding="utf-8")
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(
             app, ["train", "--config", "soup.yaml", "--cloud", "modal", "--gpu", "a100"]
@@ -1133,7 +1133,7 @@ class TestTrainCloudCli:
         (tmp_path / "soup.yaml").write_text(_SOUP_YAML, encoding="utf-8")
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(
             app, ["train", "--config", "soup.yaml", "--cloud", "aws"]
@@ -1145,7 +1145,7 @@ class TestTrainCloudCli:
         (tmp_path / "soup.yaml").write_text(_SOUP_YAML, encoding="utf-8")
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(
             app, ["train", "--config", "soup.yaml", "--cloud", "modal", "--gpu", "v100"]
@@ -1155,12 +1155,12 @@ class TestTrainCloudCli:
     def test_cloud_submit_via_override(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         (tmp_path / "soup.yaml").write_text(_SOUP_YAML, encoding="utf-8")
-        import soup_cli.cloud.modal as m
+        import ai_forge_cli.cloud.modal as m
 
         monkeypatch.setattr(m, "_MODAL_SUBMIT_OVERRIDE", lambda plan: 0)
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = CliRunner().invoke(
             app,
@@ -1172,7 +1172,7 @@ class TestTrainCloudCli:
 
 class TestCloudNoTopLevelModal:
     def test_no_top_level_modal_import(self):
-        src = (REPO_ROOT / "src/soup_cli/cloud/modal.py").read_text(encoding="utf-8")
+        src = (REPO_ROOT / "src/ai_forge_cli/cloud/modal.py").read_text(encoding="utf-8")
         assert "\nimport modal" not in src
 
     def test_modal_extra_in_pyproject(self):

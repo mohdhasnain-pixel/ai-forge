@@ -27,24 +27,24 @@ class _Cfg:
 
 class TestStreamArchAllowlist:
     def test_llama_family_supported(self):
-        from soup_cli.utils.layer_stream import stream_arch_of
+        from ai_forge_cli.utils.layer_stream import stream_arch_of
 
         assert stream_arch_of(_Cfg("llama")) == "llama"
 
     def test_qwen2_and_qwen3_supported(self):
-        from soup_cli.utils.layer_stream import stream_arch_of
+        from ai_forge_cli.utils.layer_stream import stream_arch_of
 
         assert stream_arch_of(_Cfg("qwen2")) == "qwen2"
         assert stream_arch_of(_Cfg("qwen3")) == "qwen3"
 
     def test_case_insensitive(self):
-        from soup_cli.utils.layer_stream import stream_arch_of
+        from ai_forge_cli.utils.layer_stream import stream_arch_of
 
         assert stream_arch_of(_Cfg("LLaMA")) == "llama"
 
     def test_unsupported_arch_names_the_allowlist(self):
         """v0.72.0 scope is Llama/Qwen. The refusal must say what IS allowed."""
-        from soup_cli.utils.layer_stream import stream_arch_of
+        from ai_forge_cli.utils.layer_stream import stream_arch_of
 
         with pytest.raises(ValueError, match="llama"):
             stream_arch_of(_Cfg("gpt2"))
@@ -56,14 +56,14 @@ class TestStreamArchAllowlist:
         silent mis-train the allowlist exists to prevent, so the pair is pinned
         together — the accepted half is the control that makes the refusal
         meaningful rather than a spelling accident."""
-        from soup_cli.utils.layer_stream import stream_arch_of
+        from ai_forge_cli.utils.layer_stream import stream_arch_of
 
         assert stream_arch_of(_Cfg("gemma3_text")) == "gemma3_text"
         with pytest.raises(ValueError, match="gemma3"):
             stream_arch_of(_Cfg("gemma3"))
 
     def test_missing_model_type_raises(self):
-        from soup_cli.utils.layer_stream import stream_arch_of
+        from ai_forge_cli.utils.layer_stream import stream_arch_of
 
         with pytest.raises(ValueError, match="model_type"):
             stream_arch_of(_Cfg())
@@ -71,37 +71,37 @@ class TestStreamArchAllowlist:
 
 class TestChooseTier:
     def test_fits_in_ram_returns_ram(self):
-        from soup_cli.utils.layer_stream import TIER_RAM, choose_tier
+        from ai_forge_cli.utils.layer_stream import TIER_RAM, choose_tier
 
         assert choose_tier(1_000, 10_000, "nvme") == TIER_RAM
 
     def test_headroom_is_strict_at_the_boundary(self):
         """model_bytes < free*0.7 — exactly at 0.7 is NOT ram (plan 5.1)."""
-        from soup_cli.utils.layer_stream import TIER_DISK, choose_tier
+        from ai_forge_cli.utils.layer_stream import TIER_DISK, choose_tier
 
         assert choose_tier(7_000, 10_000, "nvme") == TIER_DISK
         assert choose_tier(6_999, 10_000, "nvme") == "ram"
 
     def test_too_big_for_ram_falls_to_nvme(self):
-        from soup_cli.utils.layer_stream import TIER_DISK, choose_tier
+        from ai_forge_cli.utils.layer_stream import TIER_DISK, choose_tier
 
         assert choose_tier(9_000, 10_000, "nvme") == TIER_DISK
 
     def test_hdd_is_refused_loudly(self):
         """plan P11: 80 shards x 2 reads = 160 seeks per step."""
-        from soup_cli.utils.layer_stream import choose_tier
+        from ai_forge_cli.utils.layer_stream import choose_tier
 
         with pytest.raises(ValueError, match="NVMe"):
             choose_tier(9_000, 10_000, "hdd")
 
     def test_sata_ssd_is_refused(self):
-        from soup_cli.utils.layer_stream import choose_tier
+        from ai_forge_cli.utils.layer_stream import choose_tier
 
         with pytest.raises(ValueError, match="NVMe"):
             choose_tier(9_000, 10_000, "sata")
 
     def test_unknown_disk_kind_is_refused(self):
-        from soup_cli.utils.layer_stream import choose_tier
+        from ai_forge_cli.utils.layer_stream import choose_tier
 
         with pytest.raises(ValueError, match="NVMe"):
             choose_tier(9_000, 10_000, "wat")
@@ -113,20 +113,20 @@ class TestDecidePinning:
     store AND say the utilisation cost out loud."""
 
     def test_store_within_limit_is_pinned(self):
-        from soup_cli.utils.layer_stream import decide_pinning
+        from ai_forge_cli.utils.layer_stream import decide_pinning
 
         decision = decide_pinning(2 * 10**9, 7 * 10**9)
         assert decision.pinned is True
 
     def test_store_above_limit_falls_back_to_pageable(self):
-        from soup_cli.utils.layer_stream import decide_pinning
+        from ai_forge_cli.utils.layer_stream import decide_pinning
 
         decision = decide_pinning(8 * 10**9, 7 * 10**9)
         assert decision.pinned is False
 
     def test_fallback_reason_states_the_utilisation_cost(self):
         """Silently taking the 97% -> 79% hit is the failure mode."""
-        from soup_cli.utils.layer_stream import decide_pinning
+        from ai_forge_cli.utils.layer_stream import decide_pinning
 
         decision = decide_pinning(8 * 10**9, 7 * 10**9)
         assert "utilisation" in decision.reason.lower()
@@ -134,43 +134,43 @@ class TestDecidePinning:
 
     def test_unknown_limit_attempts_pinning(self):
         """No probe result -> try pinned; the runtime falls back on failure."""
-        from soup_cli.utils.layer_stream import decide_pinning
+        from ai_forge_cli.utils.layer_stream import decide_pinning
 
         assert decide_pinning(8 * 10**9, None).pinned is True
 
     def test_boundary_equal_is_pinned(self):
-        from soup_cli.utils.layer_stream import decide_pinning
+        from ai_forge_cli.utils.layer_stream import decide_pinning
 
         assert decide_pinning(7 * 10**9, 7 * 10**9).pinned is True
 
 
 class TestBufferValidation:
     def test_default_is_two(self):
-        from soup_cli.utils.layer_stream import DEFAULT_STREAM_BUFFERS
+        from ai_forge_cli.utils.layer_stream import DEFAULT_STREAM_BUFFERS
 
         assert DEFAULT_STREAM_BUFFERS == 2
 
     def test_valid_range_accepted(self):
-        from soup_cli.utils.layer_stream import validate_stream_buffers
+        from ai_forge_cli.utils.layer_stream import validate_stream_buffers
 
         for n in (2, 3, 8):
             assert validate_stream_buffers(n) == n
 
     def test_one_buffer_is_a_scheduler_bug_not_a_config(self):
         """plan 8: '1 is a scheduler bug, not a config'."""
-        from soup_cli.utils.layer_stream import validate_stream_buffers
+        from ai_forge_cli.utils.layer_stream import validate_stream_buffers
 
         with pytest.raises(ValueError, match="2"):
             validate_stream_buffers(1)
 
     def test_above_max_rejected(self):
-        from soup_cli.utils.layer_stream import validate_stream_buffers
+        from ai_forge_cli.utils.layer_stream import validate_stream_buffers
 
         with pytest.raises(ValueError, match="8"):
             validate_stream_buffers(9)
 
     def test_bool_rejected(self):
-        from soup_cli.utils.layer_stream import validate_stream_buffers
+        from ai_forge_cli.utils.layer_stream import validate_stream_buffers
 
         with pytest.raises(ValueError, match="bool"):
             validate_stream_buffers(True)
@@ -180,12 +180,12 @@ class TestThroughputEstimate:
     def test_uses_c_equals_six_for_gradient_checkpointing(self):
         """plan 4.3: C=6 WITH checkpointing (2 fwd + 2 recompute + 2 dL/dx).
         The source docs used C=4 while also mandating checkpointing."""
-        from soup_cli.utils.layer_stream import FLOPS_PER_PARAM_PER_TOKEN
+        from ai_forge_cli.utils.layer_stream import FLOPS_PER_PARAM_PER_TOKEN
 
         assert FLOPS_PER_PARAM_PER_TOKEN == 6
 
     def test_hand_computed_rate(self):
-        from soup_cli.utils.layer_stream import estimate_stream_tokens_per_sec
+        from ai_forge_cli.utils.layer_stream import estimate_stream_tokens_per_sec
 
         # 4.9 TFLOPS effective / (6 * 1.5437e9) = 529.1 tok/s
         got = estimate_stream_tokens_per_sec(1_543_714_304, 4.9)
@@ -194,24 +194,24 @@ class TestThroughputEstimate:
     def test_matches_the_measured_15b_number_within_10pct(self):
         """Calibration: the dev box measured 525.0 tok/s on Qwen2.5-1.5B at
         4.86 TFLOPS effective. The model must reproduce it."""
-        from soup_cli.utils.layer_stream import estimate_stream_tokens_per_sec
+        from ai_forge_cli.utils.layer_stream import estimate_stream_tokens_per_sec
 
         got = estimate_stream_tokens_per_sec(1_543_714_304, 4.86)
         assert 0.9 * 525.0 <= got <= 1.1 * 525.0
 
     def test_zero_params_rejected(self):
-        from soup_cli.utils.layer_stream import estimate_stream_tokens_per_sec
+        from ai_forge_cli.utils.layer_stream import estimate_stream_tokens_per_sec
 
         with pytest.raises(ValueError):
             estimate_stream_tokens_per_sec(0, 4.9)
 
     def test_epoch_seconds(self):
-        from soup_cli.utils.layer_stream import estimate_epoch_seconds
+        from ai_forge_cli.utils.layer_stream import estimate_epoch_seconds
 
         assert estimate_epoch_seconds(1_000_000, 143.1) == pytest.approx(6987.0, rel=0.01)
 
     def test_epoch_seconds_rejects_non_positive_rate(self):
-        from soup_cli.utils.layer_stream import estimate_epoch_seconds
+        from ai_forge_cli.utils.layer_stream import estimate_epoch_seconds
 
         with pytest.raises(ValueError):
             estimate_epoch_seconds(1000, 0.0)
@@ -219,7 +219,7 @@ class TestThroughputEstimate:
 
 class TestVramEstimate:
     def test_sums_the_plan_41_terms(self):
-        from soup_cli.utils.layer_stream import estimate_stream_vram
+        from ai_forge_cli.utils.layer_stream import estimate_stream_vram
 
         got = estimate_stream_vram(
             layer_bytes=100,
@@ -233,7 +233,7 @@ class TestVramEstimate:
         assert got == 2 * 100 + 50 + 10 + 5 + 20 + 1000
 
     def test_buffer_count_scales_the_layer_term(self):
-        from soup_cli.utils.layer_stream import estimate_stream_vram
+        from ai_forge_cli.utils.layer_stream import estimate_stream_vram
 
         two = estimate_stream_vram(layer_bytes=100, buffers=2, embed_bytes=0, workspace_bytes=0)
         three = estimate_stream_vram(layer_bytes=100, buffers=3, embed_bytes=0, workspace_bytes=0)
@@ -247,13 +247,13 @@ class TestVramEstimate:
         because ``ForCausalLMLoss`` also holds log-softmax's fp32 output and the
         fp32 gradient live at the same time. The old figure under-predicted this
         term by 2.33x — ~5 GB on a 152k-vocab model at batch 8."""
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         got = estimate_logits_bytes(vocab_size=151936, seq_len=512, batch_size=1)
         assert got == 512 * 151936 * 14
 
     def test_logits_budget_without_upcast(self):
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         got = estimate_logits_bytes(
             vocab_size=1000, seq_len=10, batch_size=1, upcast_fp32=False
@@ -263,7 +263,7 @@ class TestVramEstimate:
 
 class TestLayerSpec:
     def test_nbytes_from_shape_and_dtype(self):
-        from soup_cli.utils.layer_stream import LayerSpec
+        from ai_forge_cli.utils.layer_stream import LayerSpec
 
         spec = LayerSpec(name="self_attn.q_proj.weight", shape=(2048, 2048), dtype="bfloat16")
         assert spec.nbytes == 2048 * 2048 * 2
@@ -271,14 +271,14 @@ class TestLayerSpec:
     def test_is_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.layer_stream import LayerSpec
+        from ai_forge_cli.utils.layer_stream import LayerSpec
 
         spec = LayerSpec(name="w", shape=(2, 2), dtype="bfloat16")
         with pytest.raises(dataclasses.FrozenInstanceError):
             spec.name = "other"
 
     def test_unsupported_dtype_rejected(self):
-        from soup_cli.utils.layer_stream import LayerSpec
+        from ai_forge_cli.utils.layer_stream import LayerSpec
 
         with pytest.raises(ValueError, match="dtype"):
             LayerSpec(name="w", shape=(2, 2), dtype="int4").nbytes
@@ -286,7 +286,7 @@ class TestLayerSpec:
 
 class TestStreamPlan:
     def test_build_plan_reports_tier_and_pinning(self):
-        from soup_cli.utils.layer_stream import build_stream_plan
+        from ai_forge_cli.utils.layer_stream import build_stream_plan
 
         plan = build_stream_plan(
             arch="qwen2",
@@ -305,7 +305,7 @@ class TestStreamPlan:
         assert plan.pinned is True
 
     def test_plan_falls_back_to_pageable_and_records_a_note(self):
-        from soup_cli.utils.layer_stream import build_stream_plan
+        from ai_forge_cli.utils.layer_stream import build_stream_plan
 
         plan = build_stream_plan(
             arch="qwen2",
@@ -323,7 +323,7 @@ class TestStreamPlan:
     def test_plan_is_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.layer_stream import build_stream_plan
+        from ai_forge_cli.utils.layer_stream import build_stream_plan
 
         plan = build_stream_plan(
             arch="llama", n_layers=2, layer_bytes=10, embed_bytes=10,
@@ -336,7 +336,7 @@ class TestStreamPlan:
         from rich.console import Console
         from rich.panel import Panel
 
-        from soup_cli.utils.layer_stream import build_stream_plan, render_stream_panel
+        from ai_forge_cli.utils.layer_stream import build_stream_plan, render_stream_panel
 
         plan = build_stream_plan(
             arch="llama", n_layers=2, layer_bytes=10, embed_bytes=10,
@@ -358,7 +358,7 @@ class TestNoTopLevelTorch:
     would put torch on the light CLI's import path."""
 
     def test_layer_stream_has_no_top_level_torch(self):
-        import soup_cli.utils.layer_stream as mod
+        import ai_forge_cli.utils.layer_stream as mod
 
         source = open(mod.__file__, encoding="utf-8").read()
         tree = ast.parse(source)
@@ -378,11 +378,11 @@ class TestNoTopLevelTorch:
         for key in list(saved):
             sys.modules[key] = None
         try:
-            importlib.reload(importlib.import_module("soup_cli.utils.layer_stream"))
+            importlib.reload(importlib.import_module("ai_forge_cli.utils.layer_stream"))
         finally:
             for key, val in saved.items():
                 sys.modules[key] = val
-            importlib.reload(importlib.import_module("soup_cli.utils.layer_stream"))
+            importlib.reload(importlib.import_module("ai_forge_cli.utils.layer_stream"))
 
 
 # ==========================================================================
@@ -434,7 +434,7 @@ class TestShardRoundTrip:
         import torch
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
 
         src, layer, _ = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -450,7 +450,7 @@ class TestShardRoundTrip:
     def test_extras_are_separated_from_layers(self, tmp_path):
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import extras_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import extras_shard_path, shard_checkpoint
 
         src, _, extras = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -463,7 +463,7 @@ class TestShardRoundTrip:
         import torch
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
 
         src, layer, _ = _fake_weights_dir(tmp_path, split=True)
         out = str(tmp_path / "shards")
@@ -485,7 +485,7 @@ class TestShardRoundTrip:
         import torch
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -495,7 +495,7 @@ class TestShardRoundTrip:
         assert blob["self_attn.q_proj.weight"].dtype == torch.bfloat16
 
     def test_index_round_trips(self, tmp_path):
-        from soup_cli.utils.layer_shard import read_shard_index, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import read_shard_index, shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -507,7 +507,7 @@ class TestShardRoundTrip:
         assert "self_attn.q_proj.weight" in read.layer_keys
 
     def test_second_call_reuses_the_cache(self, tmp_path):
-        from soup_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -517,7 +517,7 @@ class TestShardRoundTrip:
         assert os.path.getmtime(layer_shard_path(out, 0)) == before
 
     def test_force_reshards(self, tmp_path):
-        from soup_cli.utils.layer_shard import read_shard_index, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import read_shard_index, shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -529,7 +529,7 @@ class TestShardRoundTrip:
     def test_dtype_change_invalidates_a_stale_cache(self, tmp_path):
         """Reusing float32 shards for a bfloat16 request would stream the wrong
         dtype into the pool and silently mis-train."""
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -540,7 +540,7 @@ class TestShardRoundTrip:
 
 class TestShardGuards:
     def test_no_safetensors_refuses(self, tmp_path):
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         empty = tmp_path / "empty"
         empty.mkdir()
@@ -550,7 +550,7 @@ class TestShardGuards:
     def test_no_decoder_layers_refuses(self, tmp_path):
         import torch
 
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src = tmp_path / "weights"
         src.mkdir()
@@ -565,7 +565,7 @@ class TestShardGuards:
         """Mirrors spectrum_scan._discover_safetensors."""
         import torch
 
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         outside = tmp_path / "outside.safetensors"
@@ -577,7 +577,7 @@ class TestShardGuards:
         assert index.n_layers == 3  # the symlinked layer 9 was not picked up
 
     def test_too_many_layers_refused(self, tmp_path, monkeypatch):
-        import soup_cli.utils.layer_shard as mod
+        import ai_forge_cli.utils.layer_shard as mod
 
         src, _, _ = _fake_weights_dir(tmp_path)
         monkeypatch.setattr(mod, "_MAX_LAYERS", 2)
@@ -585,7 +585,7 @@ class TestShardGuards:
             mod.shard_checkpoint(src, str(tmp_path / "out"), dtype="float32")
 
     def test_oversized_tensor_refused(self, tmp_path, monkeypatch):
-        import soup_cli.utils.layer_shard as mod
+        import ai_forge_cli.utils.layer_shard as mod
 
         src, _, _ = _fake_weights_dir(tmp_path)
         monkeypatch.setattr(mod, "_MAX_TENSOR_ELEMENTS", 4)
@@ -593,14 +593,14 @@ class TestShardGuards:
             mod.shard_checkpoint(src, str(tmp_path / "out"), dtype="float32")
 
     def test_unsupported_dtype_refused(self, tmp_path):
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         with pytest.raises(ValueError, match="dtype"):
             shard_checkpoint(src, str(tmp_path / "out"), dtype="int4")
 
     def test_corrupt_index_reshards_instead_of_crashing(self, tmp_path):
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -613,24 +613,24 @@ class TestShardGuards:
 
 class TestShardCacheDir:
     def test_slug_is_traversal_safe(self):
-        from soup_cli.utils.layer_shard import model_slug
+        from ai_forge_cli.utils.layer_shard import model_slug
 
         slug = model_slug("../../etc/passwd")
         assert "/" not in slug and "\\" not in slug and ".." not in slug
 
     def test_slug_maps_org_slash_name(self):
-        from soup_cli.utils.layer_shard import model_slug
+        from ai_forge_cli.utils.layer_shard import model_slug
 
         assert model_slug("Qwen/Qwen2.5-1.5B") == "Qwen__Qwen2.5-1.5B"
 
     def test_slug_rejects_empty(self):
-        from soup_cli.utils.layer_shard import model_slug
+        from ai_forge_cli.utils.layer_shard import model_slug
 
         with pytest.raises(ValueError):
             model_slug("   ")
 
     def test_env_override_inside_tmp_is_honoured(self, tmp_path, monkeypatch):
-        from soup_cli.utils.layer_shard import resolve_shard_dir
+        from ai_forge_cli.utils.layer_shard import resolve_shard_dir
 
         monkeypatch.setenv("SOUP_LAYER_STREAM_CACHE_DIR", str(tmp_path))
         got = resolve_shard_dir("Qwen/Qwen2.5-1.5B")
@@ -638,7 +638,7 @@ class TestShardCacheDir:
 
     def test_env_override_outside_bounds_falls_back(self, monkeypatch):
         """An env var is operator config, not API input — silent fall-through."""
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             default_layer_stream_cache_dir,
             resolve_shard_dir,
         )
@@ -657,7 +657,7 @@ class TestShardCacheDir:
         the control character is the ONLY reason it can be refused. Drop the
         `ord(ch) < 0x20` guard and this test goes red.
         """
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             default_layer_stream_cache_dir,
             resolve_shard_dir,
         )
@@ -669,7 +669,7 @@ class TestShardCacheDir:
 
 class TestShardNoTopLevelTorch:
     def test_layer_shard_has_no_top_level_torch(self):
-        import soup_cli.utils.layer_shard as mod
+        import ai_forge_cli.utils.layer_shard as mod
 
         tree = ast.parse(open(mod.__file__, encoding="utf-8").read())
         for node in tree.body:
@@ -687,7 +687,7 @@ class TestShardUniformity:
     def test_non_uniform_layer_parameter_set_refused(self, tmp_path):
         import torch
 
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src = tmp_path / "weights"
         src.mkdir()
@@ -706,7 +706,7 @@ class TestShardUniformity:
     def test_non_contiguous_layer_indices_refused(self, tmp_path):
         import torch
 
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src = tmp_path / "weights"
         src.mkdir()
@@ -749,7 +749,7 @@ def _stream_yaml(training=None, **top):
 
 
 def _load(yaml_text):
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     return load_config_from_string(yaml_text)
 
@@ -1013,8 +1013,8 @@ def _tiny_lora():
 
 
 def _build_streamed_cpu(tmp_path, n_layers=2, tie=True, buffers=2):
-    from soup_cli.utils.layer_shard import shard_checkpoint
-    from soup_cli.utils.layer_stream_runtime import build_streamed_model
+    from ai_forge_cli.utils.layer_shard import shard_checkpoint
+    from ai_forge_cli.utils.layer_stream_runtime import build_streamed_model
 
     weights, resident, _ = _tiny_llama_dir(tmp_path, n_layers=n_layers, tie=tie)
     shards = str(tmp_path / "shards")
@@ -1031,7 +1031,7 @@ class TestDecoderOwner:
     def test_finds_the_module_that_owns_layers(self, tmp_path):
         from peft import get_peft_model
 
-        from soup_cli.utils.layer_stream_runtime import decoder_owner
+        from ai_forge_cli.utils.layer_stream_runtime import decoder_owner
 
         _, resident, _ = _tiny_llama_dir(tmp_path)
         peft_model = get_peft_model(resident, _tiny_lora())
@@ -1042,7 +1042,7 @@ class TestDecoderOwner:
     def test_raises_when_no_layer_container(self):
         import torch.nn as nn
 
-        from soup_cli.utils.layer_stream_runtime import decoder_owner
+        from ai_forge_cli.utils.layer_stream_runtime import decoder_owner
 
         with pytest.raises(ValueError, match="layers"):
             decoder_owner(nn.Linear(2, 2))
@@ -1067,7 +1067,7 @@ class TestRegressionPrefetchHookAttachPoint:
         )
 
     def test_hook_is_registered_on_the_layer_owner(self, tmp_path):
-        from soup_cli.utils.layer_stream_runtime import decoder_owner
+        from ai_forge_cli.utils.layer_stream_runtime import decoder_owner
 
         model, runtime, _, _ = _build_streamed_cpu(tmp_path)
         owner = decoder_owner(model)
@@ -1083,7 +1083,7 @@ class TestRegressionAttributeTransparency:
 
     def test_wrapper_forwards_unknown_attributes_to_the_wrapped_layer(self, tmp_path):
         model, _, _, _ = _build_streamed_cpu(tmp_path)
-        from soup_cli.utils.layer_stream_runtime import decoder_owner
+        from ai_forge_cli.utils.layer_stream_runtime import decoder_owner
 
         layer = decoder_owner(model).layers[0]
         assert layer.__class__.__name__ == "StreamedDecoderLayer"
@@ -1093,7 +1093,7 @@ class TestRegressionAttributeTransparency:
     def test_attention_type_is_visible_when_the_inner_layer_has_it(self, tmp_path):
         import torch.nn as nn
 
-        from soup_cli.utils.layer_stream_runtime import StreamedDecoderLayer
+        from ai_forge_cli.utils.layer_stream_runtime import StreamedDecoderLayer
 
         class _Inner(nn.Module):
             attention_type = "full_attention"
@@ -1107,7 +1107,7 @@ class TestRegressionAttributeTransparency:
     def test_genuinely_missing_attribute_still_raises(self, tmp_path):
         import torch.nn as nn
 
-        from soup_cli.utils.layer_stream_runtime import StreamedDecoderLayer
+        from ai_forge_cli.utils.layer_stream_runtime import StreamedDecoderLayer
 
         class _Inner(nn.Module):
             def forward(self, x, **kw):
@@ -1172,8 +1172,8 @@ class TestRegressionAllocateOnceThenCopy:
     def test_ram_source_never_calls_tensor_pin_memory(self, tmp_path, monkeypatch):
         import torch
 
-        from soup_cli.utils.layer_shard import shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import RamSource
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import RamSource
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         shards = str(tmp_path / "shards")
@@ -1193,8 +1193,8 @@ class TestRegressionAllocateOnceThenCopy:
         import torch
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import RamSource
+        from ai_forge_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import RamSource
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         shards = str(tmp_path / "shards")
@@ -1208,7 +1208,7 @@ class TestRegressionAllocateOnceThenCopy:
 
 class TestBufferPool:
     def test_slot_round_robin(self):
-        from soup_cli.utils.layer_stream_runtime import LayerBufferPool
+        from ai_forge_cli.utils.layer_stream_runtime import LayerBufferPool
 
         pool = LayerBufferPool({"w": ((2, 2), "float32")}, n_buffers=2, device="cpu")
         assert [pool.slot_for(i) for i in range(5)] == [0, 1, 0, 1, 0]
@@ -1216,15 +1216,15 @@ class TestBufferPool:
     def test_wait_on_an_unloaded_slot_is_the_p1_tripwire(self):
         """plan P1: a buffer overwritten early yields silently wrong gradients,
         not a crash. The ownership assert is what makes it loud."""
-        from soup_cli.utils.layer_stream_runtime import LayerBufferPool
+        from ai_forge_cli.utils.layer_stream_runtime import LayerBufferPool
 
         pool = LayerBufferPool({"w": ((2, 2), "float32")}, n_buffers=2, device="cpu")
         with pytest.raises(RuntimeError, match="scheduler"):
             pool.wait(0)
 
     def test_wait_after_load_returns_the_buffer(self, tmp_path):
-        from soup_cli.utils.layer_shard import shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import LayerBufferPool, RamSource
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import LayerBufferPool, RamSource
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         shards = str(tmp_path / "shards")
@@ -1238,8 +1238,8 @@ class TestBufferPool:
 
     def test_early_overwrite_is_detected(self, tmp_path):
         """Layer 2 recycles slot 0 (2 % 2 == 0) while layer 0 still owns it."""
-        from soup_cli.utils.layer_shard import shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import LayerBufferPool, RamSource
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import LayerBufferPool, RamSource
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=3)
         shards = str(tmp_path / "shards")
@@ -1271,7 +1271,7 @@ class TestPrefetcherDirection:
             self.loaded.append(idx)
 
     def test_forward_prefetches_ascending(self):
-        from soup_cli.utils.layer_stream_runtime import StreamPrefetcher
+        from ai_forge_cli.utils.layer_stream_runtime import StreamPrefetcher
 
         pool = self._FakePool()
         pre = StreamPrefetcher(pool, source=None, n_layers=4)
@@ -1281,7 +1281,7 @@ class TestPrefetcherDirection:
         assert pool.loaded == [0, 1, 2, 3]
 
     def test_backward_prefetches_descending(self):
-        from soup_cli.utils.layer_stream_runtime import StreamPrefetcher
+        from ai_forge_cli.utils.layer_stream_runtime import StreamPrefetcher
 
         pool = self._FakePool()
         pre = StreamPrefetcher(pool, source=None, n_layers=4)
@@ -1293,7 +1293,7 @@ class TestPrefetcherDirection:
         assert pool.loaded[-2:] == [1, 0]
 
     def test_does_not_reload_a_layer_already_owned(self):
-        from soup_cli.utils.layer_stream_runtime import StreamPrefetcher
+        from ai_forge_cli.utils.layer_stream_runtime import StreamPrefetcher
 
         pool = self._FakePool()
         pre = StreamPrefetcher(pool, source=None, n_layers=4)
@@ -1311,14 +1311,14 @@ class TestExpandableSegments:
     and never claim it is active when it is not."""
 
     def test_returns_a_bool(self):
-        from soup_cli.utils.layer_stream_runtime import probe_expandable_segments
+        from ai_forge_cli.utils.layer_stream_runtime import probe_expandable_segments
 
         assert isinstance(probe_expandable_segments(), bool)
 
     def test_reports_false_on_windows(self):
         import sys
 
-        from soup_cli.utils.layer_stream_runtime import probe_expandable_segments
+        from ai_forge_cli.utils.layer_stream_runtime import probe_expandable_segments
 
         if sys.platform.startswith("win"):
             assert probe_expandable_segments() is False
@@ -1392,8 +1392,8 @@ class TestStreamedTrainingParityCuda:
         import torch
         from peft import get_peft_model
 
-        from soup_cli.utils.layer_shard import shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import build_streamed_model
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import build_streamed_model
 
         weights, resident, _ = _tiny_llama_dir(tmp_path, n_layers=3)
         shards = str(tmp_path / "shards")
@@ -1426,8 +1426,8 @@ class TestStreamedTrainingParityCuda:
         """Catches stream races: a racy prefetch is non-deterministic."""
         import torch
 
-        from soup_cli.utils.layer_shard import shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import build_streamed_model
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import build_streamed_model
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=3)
         shards = str(tmp_path / "shards")
@@ -1459,7 +1459,7 @@ class TestStreamedTrainingParityCuda:
 
 class TestRuntimeNoTopLevelTorch:
     def test_runtime_is_torch_lazy(self):
-        import soup_cli.utils.layer_stream_runtime as mod
+        import ai_forge_cli.utils.layer_stream_runtime as mod
 
         tree = ast.parse(open(mod.__file__, encoding="utf-8").read())
         for node in tree.body:
@@ -1488,7 +1488,7 @@ class _StubTokenizer:
 def _stream_config(base_dir, **training):
     import yaml
 
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     cfg = {
         "base": base_dir,
@@ -1514,22 +1514,22 @@ class TestHfGradientCheckpointingInteraction:
     run still converges, it is just silently ~1.5x slower."""
 
     def test_streaming_disables_hf_gradient_checkpointing(self):
-        from soup_cli.utils.layer_stream import should_enable_hf_gradient_checkpointing
+        from ai_forge_cli.utils.layer_stream import should_enable_hf_gradient_checkpointing
 
         assert should_enable_hf_gradient_checkpointing(True, stream_layers=True) is False
 
     def test_non_streaming_keeps_hf_gradient_checkpointing(self):
-        from soup_cli.utils.layer_stream import should_enable_hf_gradient_checkpointing
+        from ai_forge_cli.utils.layer_stream import should_enable_hf_gradient_checkpointing
 
         assert should_enable_hf_gradient_checkpointing(True, stream_layers=False) is True
 
     def test_tier_string_also_disabled_under_streaming(self):
-        from soup_cli.utils.layer_stream import should_enable_hf_gradient_checkpointing
+        from ai_forge_cli.utils.layer_stream import should_enable_hf_gradient_checkpointing
 
         assert should_enable_hf_gradient_checkpointing("auto", stream_layers=True) is False
 
     def test_off_stays_off(self):
-        from soup_cli.utils.layer_stream import should_enable_hf_gradient_checkpointing
+        from ai_forge_cli.utils.layer_stream import should_enable_hf_gradient_checkpointing
 
         assert should_enable_hf_gradient_checkpointing(False, stream_layers=False) is False
 
@@ -1538,7 +1538,7 @@ class TestHfGradientCheckpointingInteraction:
         tcfg.gradient_checkpointing."""
         import inspect
 
-        from soup_cli.trainer import sft
+        from ai_forge_cli.trainer import sft
 
         source = inspect.getsource(sft)
         assert "should_enable_hf_gradient_checkpointing" in source
@@ -1546,7 +1546,7 @@ class TestHfGradientCheckpointingInteraction:
 
 class TestStreamingDispatch:
     def test_setup_routes_to_the_streaming_branch(self, tmp_path, monkeypatch):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         cfg = _stream_config(weights)
@@ -1572,7 +1572,7 @@ class TestStreamingDispatch:
         assert calls == ["streaming"]
 
     def test_setup_uses_the_plain_branch_when_streaming_is_off(self, tmp_path, monkeypatch):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         cfg = _stream_config(weights, stream_layers=False)
@@ -1605,7 +1605,7 @@ class TestStreamingSetupIntegration:
     def _run(self, tmp_path, monkeypatch, n_layers=2):
         import transformers
 
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=n_layers)
         monkeypatch.setenv("SOUP_LAYER_STREAM_CACHE_DIR", str(tmp_path / "cache"))
@@ -1651,7 +1651,7 @@ class TestStreamingSetupIntegration:
         from safetensors.torch import save_file
         from transformers import GPT2Config, GPT2LMHeadModel
 
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         config = GPT2Config(n_layer=2, n_embd=32, n_head=4, vocab_size=64)
         model = GPT2LMHeadModel(config)
@@ -1690,7 +1690,7 @@ class TestStreamingResumeAccepted:
         import yaml
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         row = {
@@ -1797,7 +1797,7 @@ class TestPrefetchDirectionIsExplicit:
     stall or a hazard."""
 
     def test_turnaround_resets_state(self):
-        from soup_cli.utils.layer_stream_runtime import StreamPrefetcher
+        from ai_forge_cli.utils.layer_stream_runtime import StreamPrefetcher
 
         class _Pool:
             n = 2
@@ -1834,7 +1834,7 @@ class TestShardCacheIdentityBinding:
     describes a different model."""
 
     def test_index_records_a_source_fingerprint(self, tmp_path):
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         index = shard_checkpoint(src, str(tmp_path / "shards"), dtype="float32")
@@ -1844,7 +1844,7 @@ class TestShardCacheIdentityBinding:
         import torch
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
 
         src, layer, extras = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -1863,7 +1863,7 @@ class TestShardCacheIdentityBinding:
         assert index.source_fingerprint
 
     def test_identical_source_still_hits_the_cache(self, tmp_path):
-        from soup_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -1876,7 +1876,7 @@ class TestShardCacheIdentityBinding:
 class TestShardWriteContainment:
     def test_out_dir_outside_the_allowed_roots_is_refused(self, tmp_path):
         """shard_checkpoint must bound its OWN writes, not rely on its caller."""
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         outside = (
@@ -1889,7 +1889,7 @@ class TestShardWriteContainment:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX symlink semantics")
     def test_symlinked_ancestor_is_resolved_not_followed_blindly(self, tmp_path):
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         real = tmp_path / "real"
@@ -1902,7 +1902,7 @@ class TestShardWriteContainment:
         assert index.n_layers == 3
 
     def test_total_tensor_count_is_capped(self, tmp_path, monkeypatch):
-        import soup_cli.utils.layer_shard as mod
+        import ai_forge_cli.utils.layer_shard as mod
 
         src, _, _ = _fake_weights_dir(tmp_path)
         monkeypatch.setattr(mod, "_MAX_TOTAL_TENSORS", 3)
@@ -1914,13 +1914,13 @@ class TestSourceSizeProbe:
     """Refuse an obviously-too-big base BEFORE spending minutes sharding it."""
 
     def test_reports_the_source_byte_size(self, tmp_path):
-        from soup_cli.utils.layer_shard import source_weight_bytes
+        from ai_forge_cli.utils.layer_shard import source_weight_bytes
 
         src, _, _ = _fake_weights_dir(tmp_path)
         assert source_weight_bytes(src) > 0
 
     def test_missing_dir_raises(self, tmp_path):
-        from soup_cli.utils.layer_shard import source_weight_bytes
+        from ai_forge_cli.utils.layer_shard import source_weight_bytes
 
         with pytest.raises(FileNotFoundError):
             source_weight_bytes(str(tmp_path / "nope"))
@@ -1967,8 +1967,8 @@ class TestStreamingEndToEndSetup:
     def _wrapper(self, tmp_path, monkeypatch):
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=2)
         _write_tiny_tokenizer(weights)
@@ -2049,8 +2049,8 @@ class TestInstallStreamingGuards:
     def test_layer_count_mismatch_is_refused(self, tmp_path):
         import dataclasses
 
-        from soup_cli.utils.layer_shard import shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import build_streamed_model
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import build_streamed_model
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=2)
         shards = str(tmp_path / "shards")
@@ -2066,8 +2066,8 @@ class TestInstallStreamingGuards:
     def test_shard_missing_a_decoder_weight_is_refused(self, tmp_path):
         from safetensors.torch import load_file, save_file
 
-        from soup_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import build_streamed_model
+        from ai_forge_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import build_streamed_model
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=2)
         shards = str(tmp_path / "shards")
@@ -2092,8 +2092,8 @@ class TestPinnedFallbackRuntime:
     catches a failed page-lock and downgrades to a pageable store."""
 
     def test_pin_failure_falls_back_and_warns(self, tmp_path, monkeypatch):
-        import soup_cli.utils.layer_stream_runtime as rt
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        import ai_forge_cli.utils.layer_stream_runtime as rt
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         shards = str(tmp_path / "shards")
@@ -2127,7 +2127,7 @@ class TestPinnedFallbackRuntime:
 
 class TestCachedIndexInvalidation:
     def _prepare(self, tmp_path):
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src, _, _ = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -2135,7 +2135,7 @@ class TestCachedIndexInvalidation:
         return src, out
 
     def test_missing_extras_shard_reshards(self, tmp_path):
-        from soup_cli.utils.layer_shard import extras_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import extras_shard_path, shard_checkpoint
 
         src, out = self._prepare(tmp_path)
         os.unlink(extras_shard_path(out))
@@ -2143,7 +2143,7 @@ class TestCachedIndexInvalidation:
         assert os.path.exists(extras_shard_path(out))
 
     def test_missing_layer_shard_reshards(self, tmp_path):
-        from soup_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import layer_shard_path, shard_checkpoint
 
         src, out = self._prepare(tmp_path)
         os.unlink(layer_shard_path(out, 1))
@@ -2153,7 +2153,7 @@ class TestCachedIndexInvalidation:
     def test_index_with_missing_keys_reshards(self, tmp_path):
         import json as _json
 
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src, out = self._prepare(tmp_path)
         with open(os.path.join(out, "index.json"), "w", encoding="utf-8") as fh:
@@ -2168,8 +2168,8 @@ class TestMaterializeExtrasGuard:
         """A corrupt extras shard must fail loudly, not leave meta embeddings."""
         from safetensors.torch import load_file, save_file
 
-        from soup_cli.utils.layer_shard import extras_shard_path, shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import build_meta_skeleton, materialize_extras
+        from ai_forge_cli.utils.layer_shard import extras_shard_path, shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import build_meta_skeleton, materialize_extras
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         shards = str(tmp_path / "shards")
@@ -2195,7 +2195,7 @@ class TestHardwareFitGateIsStreamingAware:
     def _cfg(self, stream: bool):
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         body = {
             "base": "Qwen/Qwen2.5-3B",
@@ -2218,14 +2218,14 @@ class TestHardwareFitGateIsStreamingAware:
         otherwise this test proves nothing about the streaming branch."""
         import typer
 
-        from soup_cli.commands.train import _hardware_fit_preflight
+        from ai_forge_cli.commands.train import _hardware_fit_preflight
 
         gpu = {"memory_total_bytes": 4 * 10**9}
         with pytest.raises(typer.Exit):
             _hardware_fit_preflight(self._cfg(False), gpu, allow_oom_attempt=False)
 
     def test_streaming_run_is_not_blocked_by_the_resident_prediction(self):
-        from soup_cli.commands.train import _hardware_fit_preflight
+        from ai_forge_cli.commands.train import _hardware_fit_preflight
 
         gpu = {"memory_total_bytes": 4 * 10**9}
         _hardware_fit_preflight(self._cfg(True), gpu, allow_oom_attempt=False)

@@ -1,6 +1,6 @@
 """Subprocess CLI tests — real process execution to catch platform-specific bugs.
 
-These tests run `soup` (or `python -m soup_cli`) as a real subprocess,
+These tests run `soup` (or `python -m ai_forge_cli`) as a real subprocess,
 catching issues that in-process CliRunner misses:
   - encoding bugs (cp1251/cp1252 on Windows)
   - path separator issues
@@ -18,9 +18,9 @@ import sys
 
 import pytest
 
-# Use `python -m soup_cli` for reliability across platforms (no need for
+# Use `python -m ai_forge_cli` for reliability across platforms (no need for
 # the entry-point script to be installed or on PATH).
-SOUP_CMD = [sys.executable, "-m", "soup_cli"]
+SOUP_CMD = [sys.executable, "-m", "ai_forge_cli"]
 
 # Timeout for all subprocess calls (seconds).  Tests should be fast —
 # these are smoke-level checks, not training runs.
@@ -69,7 +69,7 @@ class TestEntryPoint:
         assert "Fine-tune" in result.stdout
 
     def test_version(self):
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
 
         result = run_soup("version")
         assert result.returncode == 0

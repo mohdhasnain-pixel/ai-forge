@@ -13,7 +13,7 @@ runner = CliRunner()
 
 
 def test_module_imports():
-    from soup_cli.utils import active_sampler
+    from ai_forge_cli.utils import active_sampler
 
     assert hasattr(active_sampler, "ActiveLearningPlan")
     assert hasattr(active_sampler, "score_uncertainty")
@@ -29,14 +29,14 @@ def test_module_imports():
 
 @pytest.mark.parametrize("value", [1, 10, 100, 10_000])
 def test_validate_budget_happy(value):
-    from soup_cli.utils.active_sampler import validate_budget
+    from ai_forge_cli.utils.active_sampler import validate_budget
 
     assert validate_budget(value) == value
 
 
 @pytest.mark.parametrize("bad", [True, False, None, "10", -5, 0, 100_001, 1.5])
 def test_validate_budget_rejects(bad):
-    from soup_cli.utils.active_sampler import validate_budget
+    from ai_forge_cli.utils.active_sampler import validate_budget
 
     with pytest.raises((TypeError, ValueError)):
         validate_budget(bad)
@@ -49,7 +49,7 @@ def test_validate_budget_rejects(bad):
 
 def test_score_uncertainty_max_entropy():
     """Single-RM: uncertainty = 1 - |2*score - 1|. Score 0.5 -> max entropy."""
-    from soup_cli.utils.active_sampler import score_uncertainty
+    from ai_forge_cli.utils.active_sampler import score_uncertainty
 
     # Single RM with score 0.5 should yield maximum uncertainty
     s = score_uncertainty(scores=[0.5])
@@ -64,7 +64,7 @@ def test_score_uncertainty_max_entropy():
 
 def test_score_uncertainty_two_rms_disagreement():
     """Two RMs: uncertainty = |s1 - s2|. Big gap -> max disagreement."""
-    from soup_cli.utils.active_sampler import score_uncertainty
+    from ai_forge_cli.utils.active_sampler import score_uncertainty
 
     s = score_uncertainty(scores=[0.1, 0.9])
     assert math.isclose(s, 0.8, abs_tol=1e-6)
@@ -74,13 +74,13 @@ def test_score_uncertainty_two_rms_disagreement():
 
 
 def test_score_uncertainty_empty():
-    from soup_cli.utils.active_sampler import score_uncertainty
+    from ai_forge_cli.utils.active_sampler import score_uncertainty
 
     assert score_uncertainty(scores=[]) == 0.0
 
 
 def test_score_uncertainty_rejects_non_finite():
-    from soup_cli.utils.active_sampler import score_uncertainty
+    from ai_forge_cli.utils.active_sampler import score_uncertainty
 
     with pytest.raises(ValueError):
         score_uncertainty(scores=[float("nan")])
@@ -89,14 +89,14 @@ def test_score_uncertainty_rejects_non_finite():
 
 
 def test_score_uncertainty_rejects_bool():
-    from soup_cli.utils.active_sampler import score_uncertainty
+    from ai_forge_cli.utils.active_sampler import score_uncertainty
 
     with pytest.raises(TypeError):
         score_uncertainty(scores=[True, False])
 
 
 def test_score_uncertainty_rejects_out_of_range():
-    from soup_cli.utils.active_sampler import score_uncertainty
+    from ai_forge_cli.utils.active_sampler import score_uncertainty
 
     with pytest.raises(ValueError):
         score_uncertainty(scores=[1.5])
@@ -105,7 +105,7 @@ def test_score_uncertainty_rejects_out_of_range():
 
 
 def test_score_uncertainty_rejects_above_cap():
-    from soup_cli.utils.active_sampler import score_uncertainty
+    from ai_forge_cli.utils.active_sampler import score_uncertainty
 
     # K=3..32 is the variance path (see #206 / test_v0631_206.py).
     # K>32 is the DoS cap.
@@ -119,7 +119,7 @@ def test_score_uncertainty_rejects_above_cap():
 
 
 def test_pick_top_uncertain_orders_descending():
-    from soup_cli.utils.active_sampler import pick_top_uncertain
+    from ai_forge_cli.utils.active_sampler import pick_top_uncertain
 
     rows = [
         {"id": "a", "uncertainty": 0.2},
@@ -131,7 +131,7 @@ def test_pick_top_uncertain_orders_descending():
 
 
 def test_pick_top_uncertain_budget_caps_output():
-    from soup_cli.utils.active_sampler import pick_top_uncertain
+    from ai_forge_cli.utils.active_sampler import pick_top_uncertain
 
     rows = [{"id": str(i), "uncertainty": i / 100} for i in range(50)]
     top = pick_top_uncertain(rows, budget=5)
@@ -139,7 +139,7 @@ def test_pick_top_uncertain_budget_caps_output():
 
 
 def test_pick_top_uncertain_handles_missing_uncertainty():
-    from soup_cli.utils.active_sampler import pick_top_uncertain
+    from ai_forge_cli.utils.active_sampler import pick_top_uncertain
 
     rows = [{"id": "a"}, {"id": "b", "uncertainty": 0.7}]
     top = pick_top_uncertain(rows, budget=2)
@@ -147,13 +147,13 @@ def test_pick_top_uncertain_handles_missing_uncertainty():
 
 
 def test_pick_top_uncertain_empty():
-    from soup_cli.utils.active_sampler import pick_top_uncertain
+    from ai_forge_cli.utils.active_sampler import pick_top_uncertain
 
     assert pick_top_uncertain([], budget=5) == []
 
 
 def test_pick_top_uncertain_invalid_budget():
-    from soup_cli.utils.active_sampler import pick_top_uncertain
+    from ai_forge_cli.utils.active_sampler import pick_top_uncertain
 
     rows = [{"id": "a", "uncertainty": 0.5}]
     with pytest.raises((TypeError, ValueError)):
@@ -163,7 +163,7 @@ def test_pick_top_uncertain_invalid_budget():
 
 
 def test_pick_top_uncertain_rejects_non_mapping():
-    from soup_cli.utils.active_sampler import pick_top_uncertain
+    from ai_forge_cli.utils.active_sampler import pick_top_uncertain
 
     with pytest.raises(TypeError):
         pick_top_uncertain([1, 2, 3], budget=2)
@@ -175,7 +175,7 @@ def test_pick_top_uncertain_rejects_non_mapping():
 
 
 def test_active_learning_plan_frozen():
-    from soup_cli.utils.active_sampler import ActiveLearningPlan
+    from ai_forge_cli.utils.active_sampler import ActiveLearningPlan
 
     plan = ActiveLearningPlan(
         rows_in=100,
@@ -193,7 +193,7 @@ def test_active_learning_plan_frozen():
 
 
 def test_sample_uncertain_rows_happy(tmp_path, monkeypatch):
-    from soup_cli.utils.active_sampler import sample_uncertain_rows
+    from ai_forge_cli.utils.active_sampler import sample_uncertain_rows
 
     monkeypatch.chdir(tmp_path)
     inp = tmp_path / "in.jsonl"
@@ -216,7 +216,7 @@ def test_sample_uncertain_rows_happy(tmp_path, monkeypatch):
 
 
 def test_sample_uncertain_rows_dual_rm(tmp_path, monkeypatch):
-    from soup_cli.utils.active_sampler import sample_uncertain_rows
+    from ai_forge_cli.utils.active_sampler import sample_uncertain_rows
 
     monkeypatch.chdir(tmp_path)
     inp = tmp_path / "in.jsonl"
@@ -236,7 +236,7 @@ def test_sample_uncertain_rows_dual_rm(tmp_path, monkeypatch):
 
 
 def test_sample_uncertain_rows_rejects_outside_cwd(tmp_path, monkeypatch):
-    from soup_cli.utils.active_sampler import sample_uncertain_rows
+    from ai_forge_cli.utils.active_sampler import sample_uncertain_rows
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "stray.jsonl"
@@ -251,7 +251,7 @@ def test_sample_uncertain_rows_rejects_outside_cwd(tmp_path, monkeypatch):
 
 
 def test_sample_uncertain_rows_missing_input(tmp_path, monkeypatch):
-    from soup_cli.utils.active_sampler import sample_uncertain_rows
+    from ai_forge_cli.utils.active_sampler import sample_uncertain_rows
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(FileNotFoundError):
@@ -264,7 +264,7 @@ def test_sample_uncertain_rows_missing_input(tmp_path, monkeypatch):
 
 def test_sample_uncertain_rows_budget_bigger_than_input(tmp_path, monkeypatch):
     """Selecting more than input has — output capped to input size."""
-    from soup_cli.utils.active_sampler import sample_uncertain_rows
+    from ai_forge_cli.utils.active_sampler import sample_uncertain_rows
 
     monkeypatch.chdir(tmp_path)
     inp = tmp_path / "in.jsonl"
@@ -281,7 +281,7 @@ def test_sample_uncertain_rows_budget_bigger_than_input(tmp_path, monkeypatch):
 
 
 def test_sample_uncertain_rows_rejects_null_byte():
-    from soup_cli.utils.active_sampler import sample_uncertain_rows
+    from ai_forge_cli.utils.active_sampler import sample_uncertain_rows
 
     with pytest.raises(ValueError):
         sample_uncertain_rows("bad\x00path.jsonl", output_path="o.jsonl", budget=1)
@@ -293,7 +293,7 @@ def test_sample_uncertain_rows_rejects_null_byte():
 
 
 def test_cli_active_sample_help():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["data", "active-sample", "--help"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -301,7 +301,7 @@ def test_cli_active_sample_help():
 
 
 def test_cli_active_sample_happy(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     inp = tmp_path / "in.jsonl"
@@ -321,7 +321,7 @@ def test_cli_active_sample_happy(tmp_path, monkeypatch):
 
 
 def test_cli_active_sample_invalid_budget(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     inp = tmp_path / "in.jsonl"

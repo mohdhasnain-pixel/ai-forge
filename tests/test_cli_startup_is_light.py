@@ -1,4 +1,4 @@
-"""The light-CLI invariant: ``import soup_cli.cli`` must not load PyTorch.
+"""The light-CLI invariant: ``import ai_forge_cli.cli`` must not load PyTorch.
 
 This replaces the family of per-module ``test_no_top_level_torch`` AST guards for
 the purpose of protecting CLI startup. Those guards prove a *syntactic* property
@@ -27,7 +27,7 @@ HEAVY = ("torch", "transformers", "accelerate", "peft", "trl", "datasets", "bits
 
 _PROBE = (
     "import sys\n"
-    "import soup_cli.cli\n"
+    "import ai_forge_cli.cli\n"
     "print(','.join(sorted(m for m in {heavy!r} if m in sys.modules)))\n"
 )
 
@@ -48,7 +48,7 @@ def test_cli_import_does_not_load_torch():
     """The headline invariant. A violation is a ~7x CLI startup regression."""
     leaked = _loaded_heavy_deps()
     assert not leaked, (
-        f"`import soup_cli.cli` pulled in {leaked}. The light core must stay "
+        f"`import ai_forge_cli.cli` pulled in {leaked}. The light core must stay "
         "torch-free -- run scripts/find_import_leak.py to get the call site. "
         "A lazy import that is CALLED at module scope is not lazy."
     )
@@ -65,7 +65,7 @@ def test_probe_would_catch_a_regression():
         [
             sys.executable,
             "-c",
-            "import sys, torch; import soup_cli.cli; "
+            "import sys, torch; import ai_forge_cli.cli; "
             "print('torch' in sys.modules)",
         ],
         capture_output=True,
@@ -82,18 +82,18 @@ def test_probe_would_catch_a_regression():
     [
         # Modules CLAUDE.md documents as "NO top-level torch". Each is reachable
         # from a light command or is a pure planner/verdict half.
-        "soup_cli.utils.reward_stress",
-        "soup_cli.utils.reward_synth",
-        "soup_cli.utils.ship_verdict",
-        "soup_cli.utils.layer_stream",
+        "ai_forge_cli.utils.reward_stress",
+        "ai_forge_cli.utils.reward_synth",
+        "ai_forge_cli.utils.ship_verdict",
+        "ai_forge_cli.utils.layer_stream",
         # Light cores that a command body imports lazily, so neither the startup
         # assertion nor a `--help` invocation reaches them. `soup mcp serve`
         # blocks (it is a stdio server), so its registry is covered here rather
         # than as an invocation.
-        "soup_cli.mcp_server.registry",
-        "soup_cli.utils.advise",
-        "soup_cli.eval.gate_suites",
-        "soup_cli.recipes.catalog",
+        "ai_forge_cli.mcp_server.registry",
+        "ai_forge_cli.utils.advise",
+        "ai_forge_cli.eval.gate_suites",
+        "ai_forge_cli.recipes.catalog",
     ],
 )
 def test_documented_light_module_stays_light(module: str):
@@ -120,7 +120,7 @@ def test_documented_light_module_stays_light(module: str):
 
 
 def test_every_command_module_is_imported_at_startup():
-    """Pins WHY the single ``import soup_cli.cli`` assertion is sufficient.
+    """Pins WHY the single ``import ai_forge_cli.cli`` assertion is sufficient.
 
     ``cli.py`` registers all 88 command modules eagerly, so a top-level leak in
     any of them is caught by ``test_cli_import_does_not_load_torch``. If command
@@ -130,10 +130,10 @@ def test_every_command_module_is_imported_at_startup():
     """
     probe = (
         "import pathlib, sys\n"
-        "import soup_cli.cli\n"
-        "loaded = {m for m in sys.modules if m.startswith('soup_cli.commands.')}\n"
-        "root = pathlib.Path(soup_cli.cli.__file__).parent / 'commands'\n"
-        "disk = {'soup_cli.commands.' + p.stem for p in root.glob('*.py')"
+        "import ai_forge_cli.cli\n"
+        "loaded = {m for m in sys.modules if m.startswith('ai_forge_cli.commands.')}\n"
+        "root = pathlib.Path(ai_forge_cli.cli.__file__).parent / 'commands'\n"
+        "disk = {'ai_forge_cli.commands.' + p.stem for p in root.glob('*.py')"
         " if p.stem != '__init__'}\n"
         "print(len(disk), len(disk - loaded))\n"
     )
@@ -178,7 +178,7 @@ def test_light_command_invocation_stays_light(argv: list[str]):
     probe = (
         "import sys\n"
         "from typer.testing import CliRunner\n"
-        "from soup_cli.cli import app\n"
+        "from ai_forge_cli.cli import app\n"
         f"r = CliRunner().invoke(app, {argv!r})\n"
         "print('SOUPPROBE|%s|%s' % (r.exit_code, ','.join(sorted(m for m in "
         f"{HEAVY!r} if m in sys.modules))))\n"
@@ -202,6 +202,6 @@ def test_stress_sentinel_matches_the_controller():
     transformers import. Pin the two values equal, so the duplication cannot
     silently drift into two different sentinels.
     """
-    from soup_cli.utils import reward_hack_control, reward_stress
+    from ai_forge_cli.utils import reward_hack_control, reward_stress
 
     assert reward_stress.DEFAULT_SENTINEL == reward_hack_control._DEFAULT_SENTINEL

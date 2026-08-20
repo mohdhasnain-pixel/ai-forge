@@ -2,7 +2,7 @@
 
 import pytest
 
-from soup_cli.data.formats import (
+from ai_forge_cli.data.formats import (
     detect_format,
     format_to_messages,
     messages_to_format,

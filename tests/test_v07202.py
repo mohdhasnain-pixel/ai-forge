@@ -148,7 +148,7 @@ class TestNF4Sharding:
     def test_packed_absmax_and_specs_are_written(self, tmp_path):
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             ABSMAX_SUFFIX,
             NESTED_ABSMAX_SUFFIX,
             NESTED_OFFSET_SUFFIX,
@@ -192,14 +192,14 @@ class TestNF4Sharding:
         from bitsandbytes.functional import dequantize_4bit, quantize_4bit
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             NF4_BLOCKSIZE,
             QUANT_NF4,
             extras_shard_path,
             layer_shard_path,
             shard_checkpoint,
         )
-        from soup_cli.utils.layer_stream_runtime import rebuild_quant_state
+        from ai_forge_cli.utils.layer_stream_runtime import rebuild_quant_state
 
         src = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -235,7 +235,7 @@ class TestNF4Sharding:
         exercise it directly rather than leaving a `raise` nobody has run."""
         import torch
 
-        from soup_cli.utils.layer_shard import _CodeTables
+        from ai_forge_cli.utils.layer_shard import _CodeTables
 
         tables = _CodeTables()
         tables.observe("a", torch.zeros(16), None)
@@ -245,7 +245,7 @@ class TestNF4Sharding:
     def test_nested_code_table_divergence_is_refused(self, tmp_path):
         import torch
 
-        from soup_cli.utils.layer_shard import _CodeTables
+        from ai_forge_cli.utils.layer_shard import _CodeTables
 
         tables = _CodeTables()
         tables.observe("a", torch.zeros(16), torch.zeros(256))
@@ -259,13 +259,13 @@ class TestNF4Sharding:
         from bitsandbytes.functional import dequantize_4bit
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             QUANT_NF4,
             extras_shard_path,
             layer_shard_path,
             shard_checkpoint,
         )
-        from soup_cli.utils.layer_stream_runtime import rebuild_quant_state
+        from ai_forge_cli.utils.layer_stream_runtime import rebuild_quant_state
 
         src = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -294,7 +294,7 @@ class TestNF4Sharding:
         import torch
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             QUANT_NF4,
             layer_shard_path,
             shard_checkpoint,
@@ -317,7 +317,7 @@ class TestNF4Sharding:
         """One resident copy of the 16-entry NF4 code table, not one per weight."""
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             NF4_CODE_KEY,
             NF4_NESTED_CODE_KEY,
             QUANT_NF4,
@@ -339,7 +339,7 @@ class TestNF4Sharding:
         would flatten it and the dequant would land somewhere else entirely."""
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             NESTED_OFFSET_SUFFIX,
             QUANT_NF4,
             layer_shard_path,
@@ -358,7 +358,7 @@ class TestNF4Sharding:
     def test_no_double_quant_omits_the_nested_tensors(self, tmp_path):
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             ABSMAX_SUFFIX,
             NESTED_ABSMAX_SUFFIX,
             QUANT_NF4,
@@ -387,7 +387,7 @@ class TestQuantCacheInvalidation:
     """A cache keyed without the quantisation streams the WRONG BYTES."""
 
     def test_bf16_cache_is_not_reused_for_an_nf4_request(self, tmp_path):
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             QUANT_NF4,
             QUANT_NONE,
             shard_checkpoint,
@@ -405,7 +405,7 @@ class TestQuantCacheInvalidation:
         assert nf4.quant_specs
 
     def test_nf4_cache_is_not_reused_for_a_bf16_request(self, tmp_path):
-        from soup_cli.utils.layer_shard import QUANT_NF4, QUANT_NONE, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import QUANT_NF4, QUANT_NONE, shard_checkpoint
 
         src = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -417,7 +417,7 @@ class TestQuantCacheInvalidation:
         assert not plain.quant_specs
 
     def test_double_quant_change_invalidates(self, tmp_path):
-        from soup_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
 
         src = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -439,7 +439,7 @@ class TestQuantCacheInvalidation:
         nested statistic, so a CPU-quantised cache reused for a CUDA run would
         break bit-exactness against a resident load. dtype happens to co-vary
         with device today, which would mask this — hence an explicit key."""
-        from soup_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
 
         src = _fake_weights_dir(tmp_path)
         out = str(tmp_path / "shards")
@@ -467,7 +467,7 @@ class TestQuantCacheInvalidation:
     def test_device_ordinal_does_not_invalidate(self, tmp_path):
         """cuda:0 and cuda:1 quantise identically — only the KIND is keyed, or
         every multi-GPU box would reshard on a different ordinal."""
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             QUANT_NF4,
             layer_shard_path,
             shard_checkpoint,
@@ -490,7 +490,7 @@ class TestQuantCacheInvalidation:
     def test_identical_request_hits_the_cache(self, tmp_path):
         """The control: without this, the three tests above prove nothing —
         a sharder that never caches passes all of them."""
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             QUANT_NF4,
             layer_shard_path,
             shard_checkpoint,
@@ -510,7 +510,7 @@ class TestQuantCacheInvalidation:
 
 class TestShardQuantGuards:
     def test_unknown_quant_is_refused_naming_the_allowlist(self, tmp_path):
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src = _fake_weights_dir(tmp_path)
         with pytest.raises(ValueError, match="nf4"):
@@ -519,14 +519,14 @@ class TestShardQuantGuards:
     def test_nf4_without_suffixes_is_refused(self, tmp_path):
         """Silently writing unquantised bytes under an ``nf4`` label would
         stream full-precision weights into ``Linear4bit`` modules."""
-        from soup_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
 
         src = _fake_weights_dir(tmp_path)
         with pytest.raises(ValueError, match="quant_suffixes"):
             shard_checkpoint(src, str(tmp_path / "o"), dtype="float32", quant=QUANT_NF4)
 
     def test_suffixes_without_nf4_is_refused(self, tmp_path):
-        from soup_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
 
         src = _fake_weights_dir(tmp_path)
         with pytest.raises(ValueError, match="quant_suffixes"):
@@ -540,7 +540,7 @@ class TestShardQuantGuards:
         the wrong statistics. The pre-NF4 guard compared names only."""
         import torch
 
-        from soup_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
 
         torch.manual_seed(0)
         blob = {}
@@ -567,7 +567,7 @@ class TestShardQuantGuards:
 
     def test_a_suffix_absent_from_the_checkpoint_is_refused(self, tmp_path):
         """A typo'd or stale suffix set means those weights ship unquantised."""
-        from soup_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
 
         src = _fake_weights_dir(tmp_path)
         with pytest.raises(ValueError, match="self_attn.nonexistent.weight"):
@@ -587,7 +587,7 @@ class TestHostileIndexIsRefused:
     clean Python exception, never as an out-of-bounds read in C."""
 
     def _spec(self, **over):
-        from soup_cli.utils.layer_shard import NF4WeightSpec
+        from ai_forge_cli.utils.layer_shard import NF4WeightSpec
 
         payload = {
             "shape": [64, 128],
@@ -630,8 +630,8 @@ class TestHostileIndexIsRefused:
         the tensor. The kernel would read past the buffer."""
         import json
 
-        from soup_cli.utils.layer_shard import QUANT_NF4, read_shard_index, shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import build_streamed_model
+        from ai_forge_cli.utils.layer_shard import QUANT_NF4, read_shard_index, shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import build_streamed_model
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=2)
         shards = str(tmp_path / "shards")
@@ -672,8 +672,8 @@ class TestHostileIndexIsRefused:
         (bitsandbytes pads a non-block-aligned tensor up to the next block), so
         an accidentally-strict `>=` must not reject real shards. The 3-element
         layernorm-sized weight below is deliberately NOT block-aligned."""
-        from soup_cli.utils.layer_shard import ABSMAX_SUFFIX, NF4WeightSpec
-        from soup_cli.utils.layer_stream_runtime import validate_quant_shape
+        from ai_forge_cli.utils.layer_shard import ABSMAX_SUFFIX, NF4WeightSpec
+        from ai_forge_cli.utils.layer_stream_runtime import validate_quant_shape
 
         # 100 elements at blocksize 64 -> bnb pads to 128 -> 64 packed bytes,
         # 2 absmax blocks. The index honestly claims 100.
@@ -696,8 +696,8 @@ class TestHostileIndexIsRefused:
         """``quant='none'`` matches the cache key, so a tampered index carrying
         specs anyway would be accepted and then reconstruct NF4 against a
         non-4bit skeleton."""
-        from soup_cli.utils.layer_shard import QUANT_NONE, NF4WeightSpec, ShardIndex
-        from soup_cli.utils.layer_stream_runtime import install_streaming
+        from ai_forge_cli.utils.layer_shard import QUANT_NONE, NF4WeightSpec, ShardIndex
+        from ai_forge_cli.utils.layer_stream_runtime import install_streaming
 
         bogus = ShardIndex(
             n_layers=1,
@@ -720,7 +720,7 @@ class TestUnquantisedPathUnchanged:
     def test_plain_shard_has_no_quant_metadata(self, tmp_path):
         from safetensors.torch import load_file
 
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             NF4_CODE_KEY,
             QUANT_NONE,
             extras_shard_path,
@@ -836,7 +836,7 @@ class TestPeftDispatchesTheBnbLoraPath:
     def test_streamed_skeleton_gets_the_bnb_aware_lora_layer(self, tmp_path):
         from peft import get_peft_model
 
-        from soup_cli.utils.layer_stream_runtime import build_meta_skeleton
+        from ai_forge_cli.utils.layer_stream_runtime import build_meta_skeleton
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         model = build_meta_skeleton(weights, dtype="bfloat16", quant="nf4")
@@ -851,7 +851,7 @@ class TestPeftDispatchesTheBnbLoraPath:
         for any implementation that happens to produce a Linear4bit base."""
         from peft import get_peft_model
 
-        from soup_cli.utils.layer_stream_runtime import build_meta_skeleton
+        from ai_forge_cli.utils.layer_stream_runtime import build_meta_skeleton
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         model = build_meta_skeleton(weights, dtype="bfloat16", quant="nf4")
@@ -865,7 +865,7 @@ class TestPeftDispatchesTheBnbLoraPath:
     def test_markers_match_what_from_pretrained_stamps(self, tmp_path):
         from transformers.utils.quantization_config import QuantizationMethod
 
-        from soup_cli.utils.layer_stream_runtime import build_meta_skeleton
+        from ai_forge_cli.utils.layer_stream_runtime import build_meta_skeleton
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         model = build_meta_skeleton(weights, dtype="bfloat16", quant="nf4")
@@ -879,7 +879,7 @@ class TestPeftDispatchesTheBnbLoraPath:
         error from ``model.hf_quantizer.quantization_config.quant_method``. With
         ``is_quantized`` stamped but no quantizer, EVERY streaming run dies at
         trainer construction with an AttributeError."""
-        from soup_cli.utils.layer_stream_runtime import build_meta_skeleton
+        from ai_forge_cli.utils.layer_stream_runtime import build_meta_skeleton
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         model = build_meta_skeleton(weights, dtype="bfloat16", quant="nf4")
@@ -893,9 +893,9 @@ class TestPeftDispatchesTheBnbLoraPath:
         same settings. `quant_menu.build_quantization_config_for_loader` is what
         every resident 4-bit load in this repo uses; if the two ever drift, the
         parity tests would keep passing against a reference nobody ships."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.utils.layer_stream_runtime import build_nf4_config
-        from soup_cli.utils.quant_menu import build_quantization_config_for_loader
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.utils.layer_stream_runtime import build_nf4_config
+        from ai_forge_cli.utils.quant_menu import build_quantization_config_for_loader
 
         cfg = load_config_from_string(
             "base: m\ntask: sft\ndata:\n  train: d.jsonl\n"
@@ -931,26 +931,26 @@ class TestPeftDispatchesTheBnbLoraPath:
         """
         from unittest.mock import MagicMock
 
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=2)
         _write_tiny_tokenizer(weights)
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("SOUP_LAYER_STREAM_CACHE_DIR", str(tmp_path / "cache"))
         monkeypatch.setattr(
-            "soup_cli.utils.spectrum_scan.resolve_model_weights", lambda *_a, **_k: weights
+            "ai_forge_cli.utils.spectrum_scan.resolve_model_weights", lambda *_a, **_k: weights
         )
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream.free_ram_bytes", lambda: 10_000_000_000
+            "ai_forge_cli.utils.layer_stream.free_ram_bytes", lambda: 10_000_000_000
         )
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream.detect_disk_kind", lambda *_a, **_k: "nvme"
+            "ai_forge_cli.utils.layer_stream.detect_disk_kind", lambda *_a, **_k: "nvme"
         )
 
         captured = {}
-        import soup_cli.utils.layer_shard as shard_mod
-        import soup_cli.utils.layer_stream_runtime as rt_mod
+        import ai_forge_cli.utils.layer_shard as shard_mod
+        import ai_forge_cli.utils.layer_stream_runtime as rt_mod
 
         real_shard = shard_mod.shard_checkpoint
 
@@ -990,7 +990,7 @@ class TestPeftDispatchesTheBnbLoraPath:
         byte-identical to what it was."""
         import bitsandbytes as bnb
 
-        from soup_cli.utils.layer_stream_runtime import build_meta_skeleton
+        from ai_forge_cli.utils.layer_stream_runtime import build_meta_skeleton
 
         weights, _, _ = _tiny_llama_dir(tmp_path)
         model = build_meta_skeleton(weights, dtype="float32")
@@ -1002,7 +1002,7 @@ class TestPeftDispatchesTheBnbLoraPath:
 
 class TestQuantisedLayerSuffixes:
     def test_finds_exactly_the_decoder_linears(self, tmp_path):
-        from soup_cli.utils.layer_stream_runtime import (
+        from ai_forge_cli.utils.layer_stream_runtime import (
             build_meta_skeleton,
             quantised_layer_suffixes,
         )
@@ -1022,7 +1022,7 @@ class TestQuantisedLayerSuffixes:
         )
 
     def test_layernorms_stay_out(self, tmp_path):
-        from soup_cli.utils.layer_stream_runtime import (
+        from ai_forge_cli.utils.layer_stream_runtime import (
             build_meta_skeleton,
             quantised_layer_suffixes,
         )
@@ -1038,14 +1038,14 @@ class TestQuantisedLayerSuffixes:
         hurts most."""
         import bitsandbytes as bnb
 
-        from soup_cli.utils.layer_stream_runtime import build_meta_skeleton
+        from ai_forge_cli.utils.layer_stream_runtime import build_meta_skeleton
 
         weights, _, _ = _tiny_llama_dir(tmp_path, tie=False)
         model = build_meta_skeleton(weights, dtype="bfloat16", quant="nf4")
         assert not isinstance(model.lm_head.weight, bnb.nn.Params4bit)
 
     def test_unquantised_skeleton_reports_no_suffixes(self, tmp_path):
-        from soup_cli.utils.layer_stream_runtime import (
+        from ai_forge_cli.utils.layer_stream_runtime import (
             build_meta_skeleton,
             quantised_layer_suffixes,
         )
@@ -1067,8 +1067,8 @@ def _nf4_stream(tmp_path, n_layers=2, tie=True, buffers=2, device="cpu", dtype="
     compared against a CPU-resident reference would fail for a reason that has
     nothing to do with streaming.
     """
-    from soup_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
-    from soup_cli.utils.layer_stream_runtime import (
+    from ai_forge_cli.utils.layer_shard import QUANT_NF4, shard_checkpoint
+    from ai_forge_cli.utils.layer_stream_runtime import (
         build_meta_skeleton,
         build_streamed_model,
         quantised_layer_suffixes,
@@ -1108,7 +1108,7 @@ def _resident_nf4(weights, dtype="float32", device="cpu"):
     from peft import get_peft_model
     from transformers import AutoModelForCausalLM
 
-    from soup_cli.utils.layer_stream_runtime import build_nf4_config
+    from ai_forge_cli.utils.layer_stream_runtime import build_nf4_config
 
     model = AutoModelForCausalLM.from_pretrained(
         weights,
@@ -1172,12 +1172,12 @@ class TestNF4SpecFromShard:
         absmax is uint8 under double quant, the nested absmax and offset are
         float32, and layernorms stay at the base dtype. Forcing one dtype
         across the pool would reinterpret the packed bytes as floats."""
-        from soup_cli.utils.layer_shard import (
+        from ai_forge_cli.utils.layer_shard import (
             ABSMAX_SUFFIX,
             NESTED_ABSMAX_SUFFIX,
             NESTED_OFFSET_SUFFIX,
         )
-        from soup_cli.utils.layer_stream_runtime import RamSource
+        from ai_forge_cli.utils.layer_stream_runtime import RamSource
 
         _, _, _, _, shards = _nf4_stream(tmp_path)
         spec = RamSource.spec_from_shard(shards)
@@ -1189,8 +1189,8 @@ class TestNF4SpecFromShard:
         assert spec["input_layernorm.weight"][1] == "float32"
 
     def test_zero_dim_offset_keeps_its_shape(self, tmp_path):
-        from soup_cli.utils.layer_shard import NESTED_OFFSET_SUFFIX
-        from soup_cli.utils.layer_stream_runtime import RamSource
+        from ai_forge_cli.utils.layer_shard import NESTED_OFFSET_SUFFIX
+        from ai_forge_cli.utils.layer_stream_runtime import RamSource
 
         _, _, _, _, shards = _nf4_stream(tmp_path)
         spec = RamSource.spec_from_shard(shards)
@@ -1217,7 +1217,7 @@ class TestNF4StreamedModel:
         assert not any(p.is_meta for _, p in trainable)
 
     def test_pool_streams_the_quant_sidecars(self, tmp_path):
-        from soup_cli.utils.layer_shard import ABSMAX_SUFFIX
+        from ai_forge_cli.utils.layer_shard import ABSMAX_SUFFIX
 
         _, runtime, _, _, _ = _nf4_stream(tmp_path)
         pooled = set(runtime.pool.buffers[0])
@@ -1229,7 +1229,7 @@ class TestNF4StreamedModel:
         the constructor ever copies — a ``.clone()``, a ``.to()``, a dtype
         promotion — streaming quietly allocates a whole layer per call and the
         bounded-VRAM claim is gone, with nothing failing to show it."""
-        from soup_cli.utils.layer_stream_runtime import decoder_owner, rebuild_params4bit
+        from ai_forge_cli.utils.layer_stream_runtime import decoder_owner, rebuild_params4bit
 
         model, runtime, _, index, _ = _nf4_stream(tmp_path)
         layer = decoder_owner(model).layers[0]
@@ -1240,8 +1240,8 @@ class TestNF4StreamedModel:
 
     def test_store_is_far_smaller_than_bf16(self, tmp_path):
         """The point of the whole slot: ~0.52 bytes/param instead of 2."""
-        from soup_cli.utils.layer_shard import shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import RamSource
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import RamSource
 
         _, runtime, weights, _, _ = _nf4_stream(tmp_path)
         plain_dir = str(tmp_path / "plain")
@@ -1378,8 +1378,8 @@ class TestNF4StaleCacheIsRefused:
         against ``None`` would raise somewhere deep inside bitsandbytes."""
         import pytest as _pytest
 
-        from soup_cli.utils.layer_shard import NF4WeightSpec
-        from soup_cli.utils.layer_stream_runtime import rebuild_quant_state
+        from ai_forge_cli.utils.layer_shard import NF4WeightSpec
+        from ai_forge_cli.utils.layer_stream_runtime import rebuild_quant_state
 
         spec = NF4WeightSpec(
             shape=(4, 4),
@@ -1410,7 +1410,7 @@ class TestAdapterRoundTripUnderNF4:
         from peft import PeftModel
         from transformers import AutoModelForCausalLM
 
-        from soup_cli.utils.layer_stream_runtime import build_nf4_config
+        from ai_forge_cli.utils.layer_stream_runtime import build_nf4_config
 
         model, _, weights, _, _ = _nf4_stream(tmp_path)
         _randomise_lora_b(model)
@@ -1465,7 +1465,7 @@ training:
 
 class TestSchemaAcceptsNF4:
     def test_four_bit_streaming_now_parses(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_stream_yaml(quantization="4bit"))
         assert cfg.training.stream_layers is True
@@ -1473,14 +1473,14 @@ class TestSchemaAcceptsNF4:
 
     def test_none_still_parses(self):
         """Control — the v0.72.0 bf16 path must not have been traded away."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_stream_yaml(quantization="none"))
         assert cfg.training.quantization == "none"
 
     @pytest.mark.parametrize("quant", ["8bit", "gptq", "bitnet_1.58"])
     def test_other_quantisations_are_refused_naming_the_supported_set(self, quant):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="4bit"):
             load_config_from_string(_stream_yaml(quantization=quant))
@@ -1488,7 +1488,7 @@ class TestSchemaAcceptsNF4:
     def test_refusal_names_stream_layers_not_something_else(self):
         """A pre-existing validator could reject 8bit for an unrelated reason
         and this suite would never notice."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception, match="stream_layers"):
             load_config_from_string(_stream_yaml(quantization="8bit"))
@@ -1499,19 +1499,19 @@ class TestSchemaAcceptsNF4:
 # ==========================================================================
 class TestNF4StoreEstimate:
     def test_plain_dtype_is_unscaled(self):
-        from soup_cli.utils.layer_stream import estimate_stream_store_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_stream_store_bytes
 
         assert estimate_stream_store_bytes(1_000, dtype="bfloat16", quant="none") == 1_000
 
     def test_nf4_is_about_a_quarter_of_bf16(self):
-        from soup_cli.utils.layer_stream import estimate_stream_store_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_stream_store_bytes
 
         got = estimate_stream_store_bytes(2_000_000, dtype="bfloat16", quant="nf4")
         # 0.516 bytes/param vs 2 -> 0.258
         assert 0.25 < got / 2_000_000 < 0.27
 
     def test_single_quant_is_larger_than_double_quant(self):
-        from soup_cli.utils.layer_stream import estimate_stream_store_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_stream_store_bytes
 
         double = estimate_stream_store_bytes(
             2_000_000, dtype="bfloat16", quant="nf4", double_quant=True
@@ -1526,7 +1526,7 @@ class TestNF4StoreEstimate:
         base against free RAM *before* sharding. Measuring an 8B checkpoint at
         its 16.1 GB bf16 on-disk size would refuse the run outright — i.e.
         refuse precisely the headline this slot exists to deliver."""
-        from soup_cli.utils.layer_stream import (
+        from ai_forge_cli.utils.layer_stream import (
             RAM_TIER_HEADROOM,
             estimate_stream_store_bytes,
         )
@@ -1538,7 +1538,7 @@ class TestNF4StoreEstimate:
         assert nf4 < free_ram * RAM_TIER_HEADROOM  # the NF4-aware one does not
 
     def test_unknown_quant_is_refused(self):
-        from soup_cli.utils.layer_stream import estimate_stream_store_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_stream_store_bytes
 
         with pytest.raises(ValueError, match="nf4"):
             estimate_stream_store_bytes(1_000, dtype="bfloat16", quant="int8")
@@ -1553,27 +1553,27 @@ class TestPreflightUsesTheStreamedSize:
         self, tmp_path, monkeypatch, *, quantization, free_ram, on_disk,
         stream_source="auto", disk_kind="nvme",
     ):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=2)
         _write_tiny_tokenizer(weights)
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("SOUP_LAYER_STREAM_CACHE_DIR", str(tmp_path / "cache"))
         monkeypatch.setattr(
-            "soup_cli.utils.spectrum_scan.resolve_model_weights", lambda *_a, **_k: weights
+            "ai_forge_cli.utils.spectrum_scan.resolve_model_weights", lambda *_a, **_k: weights
         )
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream.free_ram_bytes", lambda: free_ram
+            "ai_forge_cli.utils.layer_stream.free_ram_bytes", lambda: free_ram
         )
         monkeypatch.setattr(
-            "soup_cli.utils.layer_shard.source_weight_bytes", lambda *_a, **_k: on_disk
+            "ai_forge_cli.utils.layer_shard.source_weight_bytes", lambda *_a, **_k: on_disk
         )
         # Pinned, not probed: the real media type differs between the dev box
         # (NVMe) and a CI runner (often "unknown"), and an environment-dependent
         # tier decision would make these assertions flaky rather than wrong.
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream.detect_disk_kind", lambda *_a, **_k: disk_kind
+            "ai_forge_cli.utils.layer_stream.detect_disk_kind", lambda *_a, **_k: disk_kind
         )
         cfg = load_config_from_string(
             f"""
@@ -1675,15 +1675,15 @@ class TestReportedParameterCount:
 
     def test_reported_total_is_the_real_parameter_count(self, tmp_path, monkeypatch):
         """End-to-end through the trainer, against the model's own config."""
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         weights, resident, config = _tiny_llama_dir(tmp_path, n_layers=2)
         _write_tiny_tokenizer(weights)
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("SOUP_LAYER_STREAM_CACHE_DIR", str(tmp_path / "cache"))
         monkeypatch.setattr(
-            "soup_cli.utils.spectrum_scan.resolve_model_weights", lambda *_a, **_k: weights
+            "ai_forge_cli.utils.spectrum_scan.resolve_model_weights", lambda *_a, **_k: weights
         )
         cfg = load_config_from_string(
             f"""
@@ -1728,12 +1728,12 @@ class TestDeviceMapValue:
         "device,expected", [("cuda:1", 1), ("cuda:0", 0), ("cpu", "cpu"), ("meta", "meta")]
     )
     def test_indexed_devices_become_ints(self, device, expected):
-        from soup_cli.utils.layer_stream_runtime import _device_map_value
+        from ai_forge_cli.utils.layer_stream_runtime import _device_map_value
 
         assert _device_map_value(device) == expected
 
     def test_bare_cuda_gets_an_index(self):
-        from soup_cli.utils.layer_stream_runtime import _device_map_value
+        from ai_forge_cli.utils.layer_stream_runtime import _device_map_value
 
         value = _device_map_value("cuda")
         assert isinstance(value, int)
@@ -1748,15 +1748,15 @@ class TestTrainerWiring:
         the model the way ``soup train`` actually builds it."""
         import torch
 
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=2)
         _write_tiny_tokenizer(weights)
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("SOUP_LAYER_STREAM_CACHE_DIR", str(tmp_path / "cache"))
         monkeypatch.setattr(
-            "soup_cli.utils.spectrum_scan.resolve_model_weights", lambda *_a, **_k: weights
+            "ai_forge_cli.utils.spectrum_scan.resolve_model_weights", lambda *_a, **_k: weights
         )
 
         cfg = load_config_from_string(
@@ -1798,8 +1798,8 @@ class TestNF4EndToEndSetup:
     def _wrapper(self, tmp_path, monkeypatch):
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         weights, _, _ = _tiny_llama_dir(tmp_path, n_layers=2)
         _write_tiny_tokenizer(weights)
@@ -1994,9 +1994,9 @@ class TestNoTopLevelTorch:
         import ast
         import pathlib
 
-        import soup_cli
+        import ai_forge_cli
 
-        path = pathlib.Path(soup_cli.__file__).parent / "utils" / f"{module}.py"
+        path = pathlib.Path(ai_forge_cli.__file__).parent / "utils" / f"{module}.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
         banned = {"torch", "bitsandbytes", "transformers", "peft", "safetensors", "accelerate"}
         for node in tree.body:

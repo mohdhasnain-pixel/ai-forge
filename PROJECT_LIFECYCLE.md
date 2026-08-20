@@ -27,7 +27,7 @@ python -m venv venv
 source venv/bin/activate
 
 # Install AI Forge with training support
-pip install "soup-cli[train]"
+pip install "ai-forge[train]"
 
 # Verify installation
 ai-forge --version

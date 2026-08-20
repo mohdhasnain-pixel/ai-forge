@@ -2,7 +2,7 @@
 
 Extends v0.69.0 Part E ``score_triviality`` + ``score_popularity_signal`` with
 per-language token + phrase bundles (en/es/fr/de/ru). Option A from the issue:
-per-language registry under ``soup_cli/utils/brain_rot_lang.py`` plus an
+per-language registry under ``ai_forge_cli/utils/brain_rot_lang.py`` plus an
 optional ``lang`` parameter on the public scorers (default ``"en"`` so the
 v0.69.0 surface stays backward-compat).
 """
@@ -18,8 +18,8 @@ from types import MappingProxyType
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.utils import brain_rot, brain_rot_lang
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils import brain_rot, brain_rot_lang
 
 # Strip Rich's ANSI escape sequences before substring assertions — on narrow
 # Windows columns Rich can split a flag across colour-cycle escapes
@@ -342,7 +342,7 @@ class TestScoreRowLang:
         # tdd-review HIGH: prove the auto path actually routes to the
         # detected bundle (not a tautology). Force the detector to return
         # "es" and assert lang="auto" matches lang="es" byte-for-byte.
-        import soup_cli.utils.data_score as ds
+        import ai_forge_cli.utils.data_score as ds
 
         monkeypatch.setattr(ds, "_langdetect_fast", lambda text: "es")
         row = {"text": "jaja!!! jeje jaja jiji!!! jaja!!! jeje!!!"}
@@ -358,7 +358,7 @@ class TestScoreRowLang:
         # on the missing-package path; we patch it to None to simulate
         # the [data-pro]-not-installed environment without touching
         # sys.modules.
-        import soup_cli.utils.data_score as ds
+        import ai_forge_cli.utils.data_score as ds
 
         monkeypatch.setattr(ds, "_langdetect_fast", lambda text: None)
         row = {"text": "lol!!! omg!!! lol!!!"}
@@ -372,7 +372,7 @@ class TestScoreRowLang:
         # tdd-review HIGH: a detector that raises (e.g. corrupted
         # langdetect data) must not crash the scoring loop — falls back
         # to en silently per the issue spec.
-        import soup_cli.utils.data_score as ds
+        import ai_forge_cli.utils.data_score as ds
 
         def _boom(text: str) -> None:
             raise OSError("simulated detector failure")
@@ -388,7 +388,7 @@ class TestScoreRowLang:
     ) -> None:
         # tdd-review HIGH: detector returns an ISO code we don't have a
         # bundle for (e.g. "zh") → fall back to en, do not crash.
-        import soup_cli.utils.data_score as ds
+        import ai_forge_cli.utils.data_score as ds
 
         monkeypatch.setattr(ds, "_langdetect_fast", lambda text: "zh")
         row = {"text": "lol!!! omg!!! lol!!!"}
@@ -528,7 +528,7 @@ class TestBrainRotCliLang:
         # tdd-review MEDIUM #2 second prong: monkeypatch the detector to
         # return "es" and verify the CLI run completes successfully
         # (exercises the routing into the es bundle through the CLI).
-        import soup_cli.utils.data_score as ds
+        import ai_forge_cli.utils.data_score as ds
 
         monkeypatch.setattr(ds, "_langdetect_fast", lambda text: "es")
         monkeypatch.chdir(tmp_path)
@@ -582,7 +582,7 @@ class TestSourceWiring:
         # `from langdetect import detect` is also caught.
         root = Path(__file__).resolve().parent.parent
         src = (
-            root / "src" / "soup_cli" / "utils" / "brain_rot_lang.py"
+            root / "src" / "ai_forge_cli" / "utils" / "brain_rot_lang.py"
         ).read_text(encoding="utf-8")
         for line in src.splitlines():
             stripped = line.strip()
@@ -603,7 +603,7 @@ class TestSourceWiring:
         # the brain-rot module loads on a bare install.
         root = Path(__file__).resolve().parent.parent
         src = (
-            root / "src" / "soup_cli" / "utils" / "brain_rot.py"
+            root / "src" / "ai_forge_cli" / "utils" / "brain_rot.py"
         ).read_text(encoding="utf-8")
         # No top-level langdetect import.
         for line in src.splitlines():
@@ -614,7 +614,7 @@ class TestSourceWiring:
                 pytest.fail("brain_rot.py must not eager-import langdetect")
 
     def test_version_floor(self) -> None:
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
 
         major_minor = tuple(int(x) for x in __version__.split(".")[:2])
         # v0.69.x bullet — must ship in 0.69.0+.

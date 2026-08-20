@@ -21,7 +21,7 @@ def _clean(text: str) -> str:
 
 class TestResolvePooling:
     def test_allowlisted_model_short_circuits(self, monkeypatch):
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         def _no_network(mid):
             raise AssertionError("should not reach network")
@@ -32,7 +32,7 @@ class TestResolvePooling:
         assert embed.resolve_pooling("sentence-transformers/all-mpnet-base-v2") == "mean"
 
     def test_allowlist_is_case_insensitive(self, monkeypatch):
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         def _no_network(mid):
             raise AssertionError("should not reach network")
@@ -42,7 +42,7 @@ class TestResolvePooling:
         assert embed.resolve_pooling("Sentence-Transformers/All-MiniLM-L6-v2") == "mean"
 
     def test_cls_pooling_config_is_refused(self, monkeypatch):
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         monkeypatch.setattr(
             embed,
@@ -64,7 +64,7 @@ class TestResolvePooling:
         Pins the check ordering so a future refactor that collapses this
         into one flat check can't ship silently.
         """
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         monkeypatch.setattr(
             embed,
@@ -78,7 +78,7 @@ class TestResolvePooling:
             embed.resolve_pooling("org/contradictory-encoder")
 
     def test_mean_pooling_config_is_accepted(self, monkeypatch):
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         monkeypatch.setattr(
             embed,
@@ -91,14 +91,14 @@ class TestResolvePooling:
         assert embed.resolve_pooling("some/mean-model") == "mean"
 
     def test_unfetchable_config_is_refused_not_assumed(self, monkeypatch):
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         monkeypatch.setattr(embed, "_fetch_pooling_config", lambda mid: None)
         with pytest.raises(ValueError, match="cannot verify pooling"):
             embed.resolve_pooling("some/unknown-model")
 
     def test_refusal_names_what_it_found(self, monkeypatch):
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         monkeypatch.setattr(
             embed,
@@ -114,7 +114,7 @@ class TestResolvePooling:
 
     @pytest.mark.parametrize("bad", [None, 123, True, 1.5, b"bytes"])
     def test_non_string_model_id_rejected(self, bad):
-        from soup_cli.utils.embed import resolve_pooling
+        from ai_forge_cli.utils.embed import resolve_pooling
 
         with pytest.raises(TypeError, match="must be str"):
             resolve_pooling(bad)
@@ -126,7 +126,7 @@ class TestResolvePooling:
     # form could not tell the two apart — proven by mutation.
     @pytest.mark.parametrize("bad", ["", "   ", "\t\n"])
     def test_empty_model_id_names_the_empty_guard(self, bad, monkeypatch):
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         monkeypatch.setattr(
             embed, "_fetch_pooling_config",
@@ -136,7 +136,7 @@ class TestResolvePooling:
             embed.resolve_pooling(bad)
 
     def test_null_byte_model_id_names_the_null_guard(self, monkeypatch):
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         monkeypatch.setattr(
             embed, "_fetch_pooling_config",
@@ -146,7 +146,7 @@ class TestResolvePooling:
             embed.resolve_pooling("org/model\x00evil")
 
     def test_overlong_model_id_names_the_length_guard(self, monkeypatch):
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         monkeypatch.setattr(
             embed, "_fetch_pooling_config",
@@ -156,7 +156,7 @@ class TestResolvePooling:
             embed.resolve_pooling("o/" + "x" * (embed._MAX_MODEL_ID_CHARS + 1))
 
     def test_model_id_is_stripped_not_just_validated(self):
-        from soup_cli.utils.embed import resolve_pooling
+        from ai_forge_cli.utils.embed import resolve_pooling
 
         # surrounding whitespace must not defeat the allowlist
         assert resolve_pooling(
@@ -166,39 +166,39 @@ class TestResolvePooling:
 
 class TestEmbedTexts:
     def test_rejects_over_cap(self):
-        from soup_cli.utils.embed import _MAX_ROWS, embed_texts
+        from ai_forge_cli.utils.embed import _MAX_ROWS, embed_texts
 
         with pytest.raises(ValueError, match="too many texts"):
             embed_texts(["x"] * (_MAX_ROWS + 1))
 
     def test_rejects_empty_list(self):
-        from soup_cli.utils.embed import embed_texts
+        from ai_forge_cli.utils.embed import embed_texts
 
         with pytest.raises(ValueError, match="at least one text"):
             embed_texts([])
 
     def test_rejects_non_string_row(self):
-        from soup_cli.utils.embed import embed_texts
+        from ai_forge_cli.utils.embed import embed_texts
 
         with pytest.raises(TypeError, match=r"texts\[1\] must be str"):
             embed_texts(["ok", 42])
 
     @pytest.mark.parametrize("bad", [0, -1, True])
     def test_rejects_bad_batch_size(self, bad):
-        from soup_cli.utils.embed import embed_texts
+        from ai_forge_cli.utils.embed import embed_texts
 
         with pytest.raises((ValueError, TypeError)):
             embed_texts(["x"], batch_size=bad)
 
     def test_validate_texts_truncates_long_rows(self):
-        from soup_cli.utils.embed import _MAX_CHARS_PER_ROW, _validate_texts
+        from ai_forge_cli.utils.embed import _MAX_CHARS_PER_ROW, _validate_texts
 
         out = _validate_texts(["a" * (_MAX_CHARS_PER_ROW + 500)])
         assert len(out[0]) == _MAX_CHARS_PER_ROW
 
     def test_validate_texts_rejects_bare_string(self):
         """A bare str is a sequence of chars — almost always a caller bug."""
-        from soup_cli.utils.embed import _validate_texts
+        from ai_forge_cli.utils.embed import _validate_texts
 
         with pytest.raises(TypeError, match="sequence of str"):
             _validate_texts("not a list")
@@ -207,7 +207,7 @@ class TestEmbedTexts:
         """Padded positions must NOT contribute to the mean."""
         import numpy as np
 
-        from soup_cli.utils.embed import _mean_pool
+        from ai_forge_cli.utils.embed import _mean_pool
 
         torch = pytest.importorskip("torch")
         # 3 tokens; the last is padding carrying a huge value that would
@@ -220,7 +220,7 @@ class TestEmbedTexts:
     def test_mean_pool_all_padding_does_not_divide_by_zero(self):
         import numpy as np
 
-        from soup_cli.utils.embed import _mean_pool
+        from ai_forge_cli.utils.embed import _mean_pool
 
         torch = pytest.importorskip("torch")
         hidden = torch.tensor([[[5.0, 5.0]]])
@@ -231,7 +231,7 @@ class TestEmbedTexts:
     def test_l2_normalize_rows(self):
         import numpy as np
 
-        from soup_cli.utils.embed import _l2_normalize
+        from ai_forge_cli.utils.embed import _l2_normalize
 
         vecs = np.array([[3.0, 4.0], [0.0, 0.0]], dtype=np.float32)
         out = _l2_normalize(vecs)
@@ -242,7 +242,7 @@ class TestEmbedTexts:
     def test_l2_normalize_makes_cosine_a_dot_product(self):
         import numpy as np
 
-        from soup_cli.utils.embed import _l2_normalize
+        from ai_forge_cli.utils.embed import _l2_normalize
 
         vecs = _l2_normalize(np.array([[2.0, 0.0], [0.0, 5.0]], dtype=np.float32))
         assert float(vecs[0] @ vecs[1]) == pytest.approx(0.0, abs=1e-6)
@@ -250,7 +250,7 @@ class TestEmbedTexts:
 
     def test_refuses_unverified_model_before_any_download(self, monkeypatch):
         """resolve_pooling must gate embed_texts BEFORE a model is fetched."""
-        from soup_cli.utils import embed
+        from ai_forge_cli.utils import embed
 
         monkeypatch.setattr(embed, "_fetch_pooling_config", lambda mid: None)
         with pytest.raises(ValueError, match="cannot verify pooling"):
@@ -266,7 +266,7 @@ class TestGreedySemdedup:
         return arr / np.where(norms < 1e-12, 1.0, norms)
 
     def test_identical_vectors_collapse_to_one(self):
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         vecs = self._vecs([[1.0, 0.0], [1.0, 0.0], [1.0, 0.0]])
         rep = greedy_semdedup(vecs, threshold=0.9)
@@ -274,7 +274,7 @@ class TestGreedySemdedup:
         assert rep.dropped == (1, 2)
 
     def test_orthogonal_vectors_all_kept(self):
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         vecs = self._vecs([[1.0, 0.0], [0.0, 1.0]])
         rep = greedy_semdedup(vecs, threshold=0.9)
@@ -304,19 +304,19 @@ class TestGreedySemdedup:
 
     def test_threshold_boundary_is_inclusive(self):
         """cosine == threshold must DROP (>=), not keep."""
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         rep = greedy_semdedup(self._exact_half_cosine(), threshold=0.5)
         assert rep.dropped == (1,), "cosine == threshold must drop"
 
     def test_just_below_threshold_is_kept(self):
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         rep = greedy_semdedup(self._exact_half_cosine(), threshold=0.51)
         assert rep.dropped == ()
 
     def test_pairs_record_which_kept_row_and_cosine(self):
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         vecs = self._vecs([[1.0, 0.0], [0.0, 1.0], [1.0, 0.0]])
         rep = greedy_semdedup(vecs, threshold=0.9)
@@ -333,7 +333,7 @@ class TestGreedySemdedup:
         """
         import numpy as np
 
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         theta = float(np.arccos(0.95))
         vecs = self._vecs([
@@ -349,7 +349,7 @@ class TestGreedySemdedup:
         """A~B, B~C but A!~C: greedy keeps A, drops B; C compared to A only."""
         import numpy as np
 
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         t1 = float(np.arccos(0.95))
         vecs = self._vecs([
@@ -362,7 +362,7 @@ class TestGreedySemdedup:
         assert rep.dropped == (1,)
 
     def test_single_row(self):
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         rep = greedy_semdedup(self._vecs([[1.0, 0.0]]), threshold=0.9)
         assert rep.kept == (0,)
@@ -370,7 +370,7 @@ class TestGreedySemdedup:
     def test_empty_input(self):
         import numpy as np
 
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         rep = greedy_semdedup(
             np.zeros((0, 2), dtype=np.float32), threshold=0.9
@@ -381,7 +381,7 @@ class TestGreedySemdedup:
     def test_rejects_non_2d(self):
         import numpy as np
 
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         with pytest.raises(ValueError, match="2-D"):
             greedy_semdedup(np.zeros((5,), dtype=np.float32), threshold=0.9)
@@ -389,7 +389,7 @@ class TestGreedySemdedup:
     def test_rejects_over_cap(self):
         import numpy as np
 
-        from soup_cli.utils.semdedup import _MAX_SEMDEDUP_ROWS, greedy_semdedup
+        from ai_forge_cli.utils.semdedup import _MAX_SEMDEDUP_ROWS, greedy_semdedup
 
         vecs = np.zeros((_MAX_SEMDEDUP_ROWS + 1, 2), dtype=np.float32)
         with pytest.raises(ValueError, match="too many rows"):
@@ -397,13 +397,13 @@ class TestGreedySemdedup:
 
     @pytest.mark.parametrize("bad", [-0.1, 1.1, float("nan"), True, "x"])
     def test_rejects_bad_threshold(self, bad):
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         with pytest.raises((ValueError, TypeError)):
             greedy_semdedup(self._vecs([[1.0, 0.0]]), threshold=bad)
 
     def test_kept_and_dropped_partition_the_input(self):
-        from soup_cli.utils.semdedup import greedy_semdedup
+        from ai_forge_cli.utils.semdedup import greedy_semdedup
 
         vecs = self._vecs(
             [[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0], [1.0, 1.0]]
@@ -415,7 +415,7 @@ class TestGreedySemdedup:
     def test_report_is_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.semdedup import DedupReport
+        from ai_forge_cli.utils.semdedup import DedupReport
 
         rep = DedupReport(kept=(0,), dropped=(), pairs=(), threshold=0.9)
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -425,8 +425,8 @@ class TestGreedySemdedup:
 class TestExtrasHintsAreEscaped:
     """Rich eats `[extra]` as a markup tag unless it is escaped.
 
-    Unescaped, `pip install 'soup-cli[eval]'` renders as
-    `pip install 'soup-cli'` -- which installs the base package WITHOUT the
+    Unescaped, `pip install 'ai-forge[eval]'` renders as
+    `pip install 'ai-forge'` -- which installs the base package WITHOUT the
     extra the user is missing, so following the hint appears to succeed and
     the feature still fails. Found during v0.71.36; same class as the
     v0.71.28 \\[mcp] fix, which only fixed its own site.
@@ -436,7 +436,7 @@ class TestExtrasHintsAreEscaped:
     """
 
     # Rich style tags. A hint string carrying one of these is console.print
-    # output; a bare `raise ImportError("... soup-cli[mlx]")` is NOT and must
+    # output; a bare `raise ImportError("... ai-forge[mlx]")` is NOT and must
     # be left alone (escaping it would print a literal backslash).
     _RICH_TAGS = ("[/]", "[bold]", "[red]", "[yellow]", "[green]", "[dim]")
 
@@ -451,11 +451,11 @@ class TestExtrasHintsAreEscaped:
             Console(file=buf, force_terminal=False, width=100).print(markup)
             return buf.getvalue().strip()
 
-        assert render("[bold]pip install 'soup-cli[train]'[/]") == (
-            "pip install 'soup-cli'"
+        assert render("[bold]pip install 'ai-forge[train]'[/]") == (
+            "pip install 'ai-forge'"
         ), "unescaped bracket must be eaten (this is the bug)"
-        assert render("[bold]pip install 'soup-cli\\[train]'[/]") == (
-            "pip install 'soup-cli[train]'"
+        assert render("[bold]pip install 'ai-forge\\[train]'[/]") == (
+            "pip install 'ai-forge[train]'"
         ), "escaped bracket must survive (this is the fix)"
 
     def test_no_unescaped_extras_hint_in_rich_markup(self):
@@ -463,10 +463,10 @@ class TestExtrasHintsAreEscaped:
         import pathlib
         import re
 
-        import soup_cli
+        import ai_forge_cli
 
-        root = pathlib.Path(soup_cli.__file__).parent
-        bad_re = re.compile(r"(?<!\\)soup-cli\[[a-z][a-z0-9-]*\]")
+        root = pathlib.Path(ai_forge_cli.__file__).parent
+        bad_re = re.compile(r"(?<!\\)ai-forge\[[a-z][a-z0-9-]*\]")
         offenders = []
         for path in sorted(root.rglob("*.py")):
             rel = path.relative_to(root).as_posix()
@@ -480,7 +480,7 @@ class TestExtrasHintsAreEscaped:
                 if bad_re.search(line):
                     offenders.append(f"{rel}:{lineno}: {line.strip()}")
         assert not offenders, (
-            "unescaped soup-cli[extra] inside Rich markup — the bracket is "
+            "unescaped ai-forge[extra] inside Rich markup — the bracket is "
             "eaten and the printed command installs WITHOUT the extra:\n"
             + "\n".join(offenders)
         )
@@ -488,18 +488,18 @@ class TestExtrasHintsAreEscaped:
     @pytest.mark.parametrize(
         "argv,extra",
         [
-            (["data", "dedup", "--help"], "soup-cli[train]"),
-            (["train", "--help"], "soup-cli[carbon]"),
+            (["data", "dedup", "--help"], "ai-forge[train]"),
+            (["train", "--help"], "ai-forge[carbon]"),
         ],
     )
     def test_typer_help_keeps_the_extra_bracket(self, argv, extra):
         """Typer help is Rich-rendered too — the bracket must survive.
 
-        `--semantic` help shipped as "Requires soup-cli." before this fix.
+        `--semantic` help shipped as "Requires ai-forge." before this fix.
         """
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         res = CliRunner(env={"COLUMNS": "200"}).invoke(app, argv)
         assert res.exit_code == 0, (res.output, repr(res.exception))
@@ -510,7 +510,7 @@ class TestExtrasHintsAreEscaped:
     def test_plain_exception_hints_are_not_escaped(self):
         """The counter-rule: non-Rich text must NOT gain a backslash.
 
-        `raise ImportError('... pip install "soup-cli[mlx]"')` never reaches
+        `raise ImportError('... pip install "ai-forge[mlx]"')` never reaches
         Rich, so escaping it would surface a literal backslash to the user.
 
         The quoting itself is v0.71.37's business (cmd.exe cannot strip `'`);
@@ -518,14 +518,14 @@ class TestExtrasHintsAreEscaped:
         """
         import pathlib
 
-        import soup_cli
+        import ai_forge_cli
 
-        root = pathlib.Path(soup_cli.__file__).parent
+        root = pathlib.Path(ai_forge_cli.__file__).parent
         text = (root / "trainer" / "mlx_sft.py").read_text(encoding="utf-8")
         # Quote-agnostic on purpose: the shell quoting around the name is
         # v0.71.37's concern, this rule is only about the bracket staying bare.
-        assert "soup-cli[mlx]" in text
-        assert "soup-cli\\[mlx]" not in text
+        assert "ai-forge[mlx]" in text
+        assert "ai-forge\\[mlx]" not in text
 
 
 class TestDedupSemanticCli:
@@ -539,7 +539,7 @@ class TestDedupSemanticCli:
     def test_help_mentions_semantic(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         res = CliRunner().invoke(app, ["data", "dedup", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
@@ -550,8 +550,8 @@ class TestDedupSemanticCli:
         import numpy as np
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data as data_cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data as data_cmd
 
         rows = [
             {"text": "the cat sat on the mat"},
@@ -591,8 +591,8 @@ class TestDedupSemanticCli:
         import numpy as np
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data as data_cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data as data_cmd
 
         real_import = builtins.__import__
 
@@ -619,8 +619,8 @@ class TestDedupSemanticCli:
     def test_semantic_import_error_is_friendly(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data as data_cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data as data_cmd
 
         path = self._write(tmp_path, [{"text": "a"}])
 
@@ -633,13 +633,13 @@ class TestDedupSemanticCli:
             app, ["data", "dedup", str(path), "--semantic"]
         )
         assert res.exit_code == 1
-        assert "soup-cli[train]" in _clean(res.output)
+        assert "ai-forge[train]" in _clean(res.output)
 
     def test_semantic_pooling_refusal_surfaces(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data as data_cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data as data_cmd
 
         path = self._write(tmp_path, [{"text": "a"}])
 
@@ -659,8 +659,8 @@ class TestDedupSemanticCli:
         pytest.importorskip("datasketch")
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data as data_cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data as data_cmd
 
         called = []
         monkeypatch.setattr(
@@ -680,8 +680,8 @@ class TestDedupSemanticCli:
         import numpy as np
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data as data_cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data as data_cmd
 
         seen = {}
 
@@ -708,7 +708,7 @@ class TestDedupSemanticCli:
     def test_output_outside_cwd_rejected(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         path = self._write(tmp_path, [{"text": "a"}])
         work = tmp_path / "work"
@@ -729,39 +729,39 @@ class TestResolveK:
         [(1, 1), (3, 1), (4, 2), (8, 2), (200, 10), (1000, 22), (100_000, 25)],
     )
     def test_auto_heuristic(self, n_rows, expected):
-        from soup_cli.utils.topics import resolve_k
+        from ai_forge_cli.utils.topics import resolve_k
 
         assert resolve_k(n_rows, "auto") == expected
 
     def test_auto_is_capped_so_the_table_stays_one_screen(self):
-        from soup_cli.utils.topics import _MAX_K, resolve_k
+        from ai_forge_cli.utils.topics import _MAX_K, resolve_k
 
         assert resolve_k(10_000_000, "auto") == _MAX_K
 
     def test_explicit_k_used_as_is(self):
-        from soup_cli.utils.topics import resolve_k
+        from ai_forge_cli.utils.topics import resolve_k
 
         assert resolve_k(1000, 7) == 7
 
     def test_explicit_k_is_not_capped_by_max_k(self):
         """--clusters is the operator's call; only 'auto' is capped."""
-        from soup_cli.utils.topics import _MAX_K, resolve_k
+        from ai_forge_cli.utils.topics import _MAX_K, resolve_k
 
         assert resolve_k(1000, _MAX_K + 5) == _MAX_K + 5
 
     def test_explicit_k_clamped_to_n_rows(self):
-        from soup_cli.utils.topics import resolve_k
+        from ai_forge_cli.utils.topics import resolve_k
 
         assert resolve_k(3, 10) == 3
 
     def test_auto_is_case_and_space_insensitive(self):
-        from soup_cli.utils.topics import resolve_k
+        from ai_forge_cli.utils.topics import resolve_k
 
         assert resolve_k(200, " AUTO ") == 10
 
     @pytest.mark.parametrize("bad", [0, -1, True, "seven", 1.5])
     def test_rejects_bad_k(self, bad):
-        from soup_cli.utils.topics import resolve_k
+        from ai_forge_cli.utils.topics import resolve_k
 
         with pytest.raises((ValueError, TypeError)):
             resolve_k(100, bad)
@@ -777,7 +777,7 @@ class TestKmeans:
         return np.vstack([left, right]).astype(np.float32)
 
     def test_separates_two_obvious_blobs(self):
-        from soup_cli.utils.topics import kmeans
+        from ai_forge_cli.utils.topics import kmeans
 
         labels = kmeans(self._blobs(), k=2, seed=0)
         assert len(set(labels[:20].tolist())) == 1
@@ -800,7 +800,7 @@ class TestKmeans:
     def test_deterministic_by_seed(self):
         import numpy as np
 
-        from soup_cli.utils.topics import kmeans
+        from ai_forge_cli.utils.topics import kmeans
 
         vecs = self._unstructured()
         first = kmeans(vecs, k=5, seed=42)
@@ -813,7 +813,7 @@ class TestKmeans:
     def test_seed_actually_influences_the_result(self):
         """Guard the guard: if seeds stopped mattering, the test above
         would pass even with the seed ignored."""
-        from soup_cli.utils.topics import kmeans
+        from ai_forge_cli.utils.topics import kmeans
 
         vecs = self._unstructured()
         partitions = {
@@ -825,7 +825,7 @@ class TestKmeans:
         )
 
     def test_k_equals_one(self):
-        from soup_cli.utils.topics import kmeans
+        from ai_forge_cli.utils.topics import kmeans
 
         labels = kmeans(self._blobs(), k=1, seed=0)
         assert set(labels.tolist()) == {0}
@@ -833,7 +833,7 @@ class TestKmeans:
     def test_k_greater_than_n_is_clamped(self):
         import numpy as np
 
-        from soup_cli.utils.topics import kmeans
+        from ai_forge_cli.utils.topics import kmeans
 
         vecs = np.array([[0.0, 0.0], [1.0, 1.0]], dtype=np.float32)
         labels = kmeans(vecs, k=5, seed=0)
@@ -841,7 +841,7 @@ class TestKmeans:
         assert set(labels.tolist()) <= {0, 1}
 
     def test_labels_are_in_range(self):
-        from soup_cli.utils.topics import kmeans
+        from ai_forge_cli.utils.topics import kmeans
 
         labels = kmeans(self._blobs(), k=3, seed=1)
         assert all(0 <= int(x) < 3 for x in labels)
@@ -849,7 +849,7 @@ class TestKmeans:
     def test_empty_input(self):
         import numpy as np
 
-        from soup_cli.utils.topics import kmeans
+        from ai_forge_cli.utils.topics import kmeans
 
         labels = kmeans(np.zeros((0, 2), dtype=np.float32), k=2, seed=0)
         assert len(labels) == 0
@@ -857,7 +857,7 @@ class TestKmeans:
     def test_rejects_non_2d(self):
         import numpy as np
 
-        from soup_cli.utils.topics import kmeans
+        from ai_forge_cli.utils.topics import kmeans
 
         with pytest.raises(ValueError, match="2-D"):
             kmeans(np.zeros((5,), dtype=np.float32), k=2, seed=0)
@@ -865,7 +865,7 @@ class TestKmeans:
     def test_rejects_over_cap(self):
         import numpy as np
 
-        from soup_cli.utils.topics import _MAX_TOPIC_ROWS, kmeans
+        from ai_forge_cli.utils.topics import _MAX_TOPIC_ROWS, kmeans
 
         vecs = np.zeros((_MAX_TOPIC_ROWS + 1, 2), dtype=np.float32)
         with pytest.raises(ValueError, match="too many rows"):
@@ -875,7 +875,7 @@ class TestKmeans:
         """All-duplicate input makes every k-means++ distance zero."""
         import numpy as np
 
-        from soup_cli.utils.topics import kmeans
+        from ai_forge_cli.utils.topics import kmeans
 
         vecs = np.ones((10, 3), dtype=np.float32)
         labels = kmeans(vecs, k=3, seed=0)
@@ -901,7 +901,7 @@ class TestCtfidfLabels:
 
     def test_cluster_specific_term_beats_global_term(self):
         """The property that makes c-TF-IDF != plain TF-IDF."""
-        from soup_cli.utils.topics import ctfidf_labels
+        from ai_forge_cli.utils.topics import ctfidf_labels
 
         docs, labels = self._global_vs_specific()
         out = ctfidf_labels(docs, labels, k=5, top_n=1)
@@ -923,7 +923,7 @@ class TestCtfidfLabels:
         assert counts["the"] > counts["term0"]
 
     def test_top_n_respected(self):
-        from soup_cli.utils.topics import ctfidf_labels
+        from ai_forge_cli.utils.topics import ctfidf_labels
 
         out = ctfidf_labels(
             [["alpha", "beta", "gamma"], ["delta"]], [0, 1], k=2, top_n=2
@@ -931,27 +931,27 @@ class TestCtfidfLabels:
         assert len(out[0]) <= 2
 
     def test_empty_cluster_yields_empty_terms(self):
-        from soup_cli.utils.topics import ctfidf_labels
+        from ai_forge_cli.utils.topics import ctfidf_labels
 
         out = ctfidf_labels([["a"]], [0], k=3, top_n=2)
         assert out[1] == ()
         assert out[2] == ()
 
     def test_length_mismatch_rejected(self):
-        from soup_cli.utils.topics import ctfidf_labels
+        from ai_forge_cli.utils.topics import ctfidf_labels
 
         with pytest.raises(ValueError, match="same length"):
             ctfidf_labels([["a"], ["b"]], [0], k=1, top_n=1)
 
     def test_out_of_range_label_ignored(self):
-        from soup_cli.utils.topics import ctfidf_labels
+        from ai_forge_cli.utils.topics import ctfidf_labels
 
         out = ctfidf_labels([["a"], ["b"]], [0, 99], k=1, top_n=1)
         assert out[0] == ("a",)
 
     @pytest.mark.parametrize("bad", [0, -1, True])
     def test_rejects_bad_top_n(self, bad):
-        from soup_cli.utils.topics import ctfidf_labels
+        from ai_forge_cli.utils.topics import ctfidf_labels
 
         with pytest.raises((ValueError, TypeError)):
             ctfidf_labels([["a"]], [0], k=1, top_n=bad)
@@ -965,7 +965,7 @@ class TestBuildTopicReport:
         ]
 
     def test_fractions_sum_to_one(self):
-        from soup_cli.utils.topics import build_topic_report
+        from ai_forge_cli.utils.topics import build_topic_report
 
         rows = self._rows("python code", 6) + self._rows("protein fold", 4)
         rep = build_topic_report(rows, [0] * 6 + [1] * 4, k=2)
@@ -974,14 +974,14 @@ class TestBuildTopicReport:
         assert {t.size for t in rep.topics} == {6, 4}
 
     def test_topics_sorted_by_coverage_desc(self):
-        from soup_cli.utils.topics import build_topic_report
+        from ai_forge_cli.utils.topics import build_topic_report
 
         rows = self._rows("small", 2) + self._rows("big", 8)
         rep = build_topic_report(rows, [0] * 2 + [1] * 8, k=2)
         assert [t.size for t in rep.topics] == [8, 2]
 
     def test_small_cluster_raises_gap_warning(self):
-        from soup_cli.utils.topics import build_topic_report
+        from ai_forge_cli.utils.topics import build_topic_report
 
         rows = self._rows("code", 99) + self._rows("safety", 1)
         rep = build_topic_report(
@@ -990,14 +990,14 @@ class TestBuildTopicReport:
         assert any("thin" in w.lower() for w in rep.warnings)
 
     def test_no_warning_when_all_clusters_healthy(self):
-        from soup_cli.utils.topics import build_topic_report
+        from ai_forge_cli.utils.topics import build_topic_report
 
         rows = self._rows("code", 5) + self._rows("math", 5)
         rep = build_topic_report(rows, [0] * 5 + [1] * 5, k=2, min_fraction=0.02)
         assert rep.warnings == ()
 
     def test_member_indices_partition_the_input(self):
-        from soup_cli.utils.topics import build_topic_report
+        from ai_forge_cli.utils.topics import build_topic_report
 
         rows = self._rows("a", 3) + self._rows("b", 2)
         rep = build_topic_report(rows, [1, 0, 1, 0, 1], k=2)
@@ -1005,14 +1005,14 @@ class TestBuildTopicReport:
         assert allidx == [0, 1, 2, 3, 4]
 
     def test_zero_rows(self):
-        from soup_cli.utils.topics import build_topic_report
+        from ai_forge_cli.utils.topics import build_topic_report
 
         rep = build_topic_report([], [], k=1)
         assert rep.n_rows == 0
         assert rep.topics == ()
 
     def test_length_mismatch_rejected(self):
-        from soup_cli.utils.topics import build_topic_report
+        from ai_forge_cli.utils.topics import build_topic_report
 
         with pytest.raises(ValueError, match="same length"):
             build_topic_report(self._rows("a", 2), [0], k=1)
@@ -1020,7 +1020,7 @@ class TestBuildTopicReport:
     def test_report_is_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.topics import build_topic_report
+        from ai_forge_cli.utils.topics import build_topic_report
 
         rep = build_topic_report(self._rows("a", 2), [0, 0], k=1)
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -1062,7 +1062,7 @@ class TestDataTopicsCli:
     def test_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         res = CliRunner().invoke(app, ["data", "topics", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
@@ -1071,8 +1071,8 @@ class TestDataTopicsCli:
     def test_happy_path_writes_report(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_topics as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_topics as cmd
 
         path = self._write(tmp_path, self._rows())
         monkeypatch.setattr(cmd, "embed_texts", lambda *a, **k: self._fake_vecs())
@@ -1093,8 +1093,8 @@ class TestDataTopicsCli:
     def test_auto_clusters_runs(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_topics as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_topics as cmd
 
         path = self._write(tmp_path, self._rows())
         monkeypatch.setattr(cmd, "embed_texts", lambda *a, **k: self._fake_vecs())
@@ -1105,7 +1105,7 @@ class TestDataTopicsCli:
     def test_bad_clusters_value_rejected(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         path = self._write(tmp_path, self._rows())
         monkeypatch.chdir(tmp_path)
@@ -1118,7 +1118,7 @@ class TestDataTopicsCli:
     def test_output_outside_cwd_rejected(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         path = self._write(tmp_path, self._rows())
         work = tmp_path / "work"
@@ -1133,7 +1133,7 @@ class TestDataTopicsCli:
     def test_missing_file(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         res = CliRunner().invoke(app, ["data", "topics", "nope.jsonl"])
@@ -1143,7 +1143,7 @@ class TestDataTopicsCli:
     def test_empty_dataset(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         path = tmp_path / "empty.jsonl"
         path.write_text("", encoding="utf-8")
@@ -1155,8 +1155,8 @@ class TestDataTopicsCli:
     def test_import_error_friendly(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_topics as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_topics as cmd
 
         def _boom(*a, **k):
             raise ImportError("No module named 'torch'")
@@ -1166,13 +1166,13 @@ class TestDataTopicsCli:
         monkeypatch.chdir(tmp_path)
         res = CliRunner().invoke(app, ["data", "topics", str(path)])
         assert res.exit_code == 1
-        assert "soup-cli[train]" in _clean(res.output)
+        assert "ai-forge[train]" in _clean(res.output)
 
     def test_pooling_refusal_surfaces(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_topics as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_topics as cmd
 
         def _refuse(*a, **k):
             raise ValueError("cannot verify pooling for 'x/y'")
@@ -1189,8 +1189,8 @@ class TestDataTopicsCli:
         import numpy as np
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_topics as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_topics as cmd
 
         rows = [
             {"messages": [{"role": "assistant", "content": "[red]boom[/] alpha"}]}
@@ -1210,8 +1210,8 @@ class TestDataTopicsCli:
         import numpy as np
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_topics as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_topics as cmd
 
         rows = [
             {"messages": [{"role": "assistant", "content": f"code {i}"}]}
@@ -1238,7 +1238,7 @@ class TestComputePairLosses:
     """
 
     def _fake_torch_env(self, monkeypatch, loss_value=1.5):
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         torch = pytest.importorskip("torch")
 
@@ -1280,7 +1280,7 @@ class TestComputePairLosses:
         ) == []
 
     def test_compute_eval_loss_is_mean_of_non_nan(self, monkeypatch):
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval, "compute_pair_losses",
@@ -1293,7 +1293,7 @@ class TestComputePairLosses:
     def test_compute_eval_loss_all_nan_returns_nan(self, monkeypatch):
         import math
 
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(
             live_eval, "compute_pair_losses", lambda *a, **k: [float("nan")]
@@ -1307,7 +1307,7 @@ class TestComputePairLosses:
     def test_compute_eval_loss_empty_returns_nan(self, monkeypatch):
         import math
 
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         monkeypatch.setattr(live_eval, "compute_pair_losses", lambda *a, **k: [])
         assert math.isnan(
@@ -1336,27 +1336,27 @@ class TestComputePairLosses:
 
 class TestCanaryGeneration:
     def test_deterministic_by_seed(self):
-        from soup_cli.utils.canary import generate_canaries
+        from ai_forge_cli.utils.canary import generate_canaries
 
         assert generate_canaries(count=5, seed=7) == generate_canaries(
             count=5, seed=7
         )
 
     def test_different_seeds_differ(self):
-        from soup_cli.utils.canary import generate_canaries
+        from ai_forge_cli.utils.canary import generate_canaries
 
         assert generate_canaries(count=5, seed=1) != generate_canaries(
             count=5, seed=2
         )
 
     def test_secrets_unique(self):
-        from soup_cli.utils.canary import generate_canaries
+        from ai_forge_cli.utils.canary import generate_canaries
 
         canaries = generate_canaries(count=50, seed=0)
         assert len({c.secret for c in canaries}) == 50
 
     def test_controls_exclude_inserted(self):
-        from soup_cli.utils.canary import generate_canaries, generate_controls
+        from ai_forge_cli.utils.canary import generate_canaries, generate_controls
 
         inserted = generate_canaries(count=10, seed=0)
         controls = generate_controls(
@@ -1367,7 +1367,7 @@ class TestCanaryGeneration:
     def test_controls_share_carrier_with_canaries(self):
         """Controls must vary ONLY the secret — else the comparison is
         measuring the carrier, not memorization."""
-        from soup_cli.utils.canary import generate_canaries, generate_controls
+        from ai_forge_cli.utils.canary import generate_canaries, generate_controls
 
         canary = generate_canaries(count=1, seed=0)[0]
         control = generate_controls(count=1, seed=99, exclude=set())[0]
@@ -1377,7 +1377,7 @@ class TestCanaryGeneration:
         """Controls are only a valid null if they share the secret space."""
         import re
 
-        from soup_cli.utils.canary import generate_canaries, generate_controls
+        from ai_forge_cli.utils.canary import generate_canaries, generate_controls
 
         shape = re.compile(r"^ [0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}$")
         for canary in generate_canaries(count=8, seed=3):
@@ -1387,13 +1387,13 @@ class TestCanaryGeneration:
 
     @pytest.mark.parametrize("bad", [0, -1, True, "5", 10_001])
     def test_rejects_bad_count(self, bad):
-        from soup_cli.utils.canary import generate_canaries
+        from ai_forge_cli.utils.canary import generate_canaries
 
         with pytest.raises((ValueError, TypeError)):
             generate_canaries(count=bad, seed=0)
 
     def test_canary_rows_are_messages_format(self):
-        from soup_cli.utils.canary import canary_rows, generate_canaries
+        from ai_forge_cli.utils.canary import canary_rows, generate_canaries
 
         rows = canary_rows(generate_canaries(count=2, seed=0))
         assert len(rows) == 2
@@ -1404,7 +1404,7 @@ class TestCanaryGeneration:
     def test_canary_is_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.canary import Canary
+        from ai_forge_cli.utils.canary import Canary
 
         canary = Canary(carrier="c", secret="s")
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -1413,7 +1413,7 @@ class TestCanaryGeneration:
 
 class TestCanaryManifest:
     def test_roundtrip(self, tmp_path, monkeypatch):
-        from soup_cli.utils.canary import (
+        from ai_forge_cli.utils.canary import (
             generate_canaries,
             load_manifest,
             write_manifest,
@@ -1425,7 +1425,7 @@ class TestCanaryManifest:
         assert load_manifest("m.json") == canaries
 
     def test_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.canary import generate_canaries, write_manifest
+        from ai_forge_cli.utils.canary import generate_canaries, write_manifest
 
         work = tmp_path / "work"
         work.mkdir()
@@ -1441,7 +1441,7 @@ class TestCanaryManifest:
         Live smoke surfaced "[WinError 2] Не удается найти указанный файл"
         leaking straight through from os.path.getsize.
         """
-        from soup_cli.utils.canary import load_manifest
+        from ai_forge_cli.utils.canary import load_manifest
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="manifest not found"):
@@ -1450,7 +1450,7 @@ class TestCanaryManifest:
     def test_malformed_manifest_rejected(self, tmp_path, monkeypatch):
         from pathlib import Path
 
-        from soup_cli.utils.canary import load_manifest
+        from ai_forge_cli.utils.canary import load_manifest
 
         monkeypatch.chdir(tmp_path)
         Path("bad.json").write_text("{not json", encoding="utf-8")
@@ -1460,7 +1460,7 @@ class TestCanaryManifest:
     def test_non_list_canaries_rejected(self, tmp_path, monkeypatch):
         from pathlib import Path
 
-        from soup_cli.utils.canary import load_manifest
+        from ai_forge_cli.utils.canary import load_manifest
 
         monkeypatch.chdir(tmp_path)
         Path("bad.json").write_text('{"canaries": "nope"}', encoding="utf-8")
@@ -1470,7 +1470,7 @@ class TestCanaryManifest:
     def test_entry_missing_fields_rejected(self, tmp_path, monkeypatch):
         from pathlib import Path
 
-        from soup_cli.utils.canary import load_manifest
+        from ai_forge_cli.utils.canary import load_manifest
 
         monkeypatch.chdir(tmp_path)
         Path("bad.json").write_text(
@@ -1482,7 +1482,7 @@ class TestCanaryManifest:
     def test_oversize_manifest_rejected(self, tmp_path, monkeypatch):
         from pathlib import Path
 
-        from soup_cli.utils.canary import _MAX_MANIFEST_BYTES, load_manifest
+        from ai_forge_cli.utils.canary import _MAX_MANIFEST_BYTES, load_manifest
 
         monkeypatch.chdir(tmp_path)
         Path("big.json").write_text(
@@ -1500,7 +1500,7 @@ class TestCanaryManifest:
         import os
         import stat
 
-        from soup_cli.utils.canary import generate_canaries, write_manifest
+        from ai_forge_cli.utils.canary import generate_canaries, write_manifest
 
         monkeypatch.chdir(tmp_path)
         write_manifest(generate_canaries(count=2, seed=0), "m.json")
@@ -1512,7 +1512,7 @@ class TestCanaryManifest:
         """A manifest packed with entries would run unbounded forward passes."""
         from pathlib import Path
 
-        from soup_cli.utils.canary import _MAX_CANARIES, load_manifest
+        from ai_forge_cli.utils.canary import _MAX_CANARIES, load_manifest
 
         monkeypatch.chdir(tmp_path)
         entries = [
@@ -1531,7 +1531,7 @@ class TestCanaryManifest:
     def test_symlinked_manifest_rejected(self, tmp_path, monkeypatch):
         import os
 
-        from soup_cli.utils.canary import load_manifest
+        from ai_forge_cli.utils.canary import load_manifest
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "real.json"
@@ -1555,14 +1555,14 @@ class TestComputeExposure:
         return [float(i) for i in range(100)]
 
     def test_below_all_controls_is_memorized(self):
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         out = compute_exposure([0.1], [1.0, 2.0, 3.0, 4.0], ["s1"])
         assert out[0].percentile == 0.0
         assert out[0].memorized is True
 
     def test_middle_of_controls_not_memorized(self):
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         out = compute_exposure([2.5], [1.0, 2.0, 3.0, 4.0], ["s1"])
         assert out[0].percentile == pytest.approx(0.5)
@@ -1570,21 +1570,21 @@ class TestComputeExposure:
 
     def test_percentile_boundary_exactly_0_01_is_memorized(self):
         """1/100 is exact in binary — `<=` must include it."""
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         out = compute_exposure([0.5], self._controls_0_to_99(), ["s1"])
         assert out[0].percentile == 0.01, "fixture must land EXACTLY on 0.01"
         assert out[0].memorized is True, "<= 0.01 must count as memorized"
 
     def test_just_above_0_01_not_memorized(self):
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         out = compute_exposure([1.5], self._controls_0_to_99(), ["s1"])
         assert out[0].percentile == 0.02
         assert out[0].memorized is False
 
     def test_ties_count_as_not_strictly_less(self):
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         out = compute_exposure([1.0], [1.0, 1.0, 1.0, 1.0], ["s1"])
         assert out[0].percentile == 0.0
@@ -1593,7 +1593,7 @@ class TestComputeExposure:
         """A NaN must never read as a leak."""
         import math
 
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         out = compute_exposure([float("nan")], [1.0, 2.0], ["s1"])
         assert out[0].memorized is False
@@ -1601,26 +1601,26 @@ class TestComputeExposure:
         assert math.isnan(out[0].loss)
 
     def test_nan_controls_are_dropped_from_the_denominator(self):
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         out = compute_exposure([0.5], [1.0, float("nan"), 2.0], ["s1"])
         assert out[0].percentile == 0.0
 
     def test_zero_controls_refuses(self):
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         with pytest.raises(ValueError, match="at least one control"):
             compute_exposure([1.0], [], ["s1"])
 
     def test_all_nan_controls_refuses(self):
         """Refusing beats reporting OK against nothing."""
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         with pytest.raises(ValueError, match="at least one control"):
             compute_exposure([1.0], [float("nan")], ["s1"])
 
     def test_length_mismatch_rejected(self):
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         with pytest.raises(ValueError, match="same length"):
             compute_exposure([1.0, 2.0], [1.0], ["s1"])
@@ -1629,7 +1629,7 @@ class TestComputeExposure:
 class TestClassifyCanary:
     def _exposures(self, percentiles):
         """Build exposures landing on EXACT percentiles via 100 controls."""
-        from soup_cli.utils.canary import compute_exposure
+        from ai_forge_cli.utils.canary import compute_exposure
 
         controls = [float(i) for i in range(100)]
         losses = [pct * 100 - 0.5 for pct in percentiles]
@@ -1639,13 +1639,13 @@ class TestClassifyCanary:
 
     def test_every_canary_memorized_is_major(self):
         """The real signal: a memorized set lands at percentile 0.0."""
-        from soup_cli.utils.canary import classify_canary
+        from ai_forge_cli.utils.canary import classify_canary
 
         assert classify_canary(self._exposures([0.0] * 10)) == "MAJOR"
 
     def test_two_of_ten_memorized_is_major(self):
         """A partial leak must still fire: P(X>=2 | K=10, p=.01) = 0.4%."""
-        from soup_cli.utils.canary import classify_canary
+        from ai_forge_cli.utils.canary import classify_canary
 
         assert classify_canary(
             self._exposures([0.0, 0.01, 0.5, 0.6, 0.4, 0.7, 0.3, 0.8, 0.5, 0.9])
@@ -1655,7 +1655,7 @@ class TestClassifyCanary:
         """THE LIVE-SMOKE FIX. P(X>=1 | K=16, p=.01) = 15% — one canary
         dipping low is what a CLEAN model does one run in seven, and MAJOR
         exits 2. Firing here would make the CI gate cry wolf."""
-        from soup_cli.utils.canary import classify_canary
+        from ai_forge_cli.utils.canary import classify_canary
 
         pcts = [0.0] + [0.3 + 0.04 * i for i in range(15)]
         assert classify_canary(self._exposures(pcts)) != "MAJOR"
@@ -1666,7 +1666,7 @@ class TestClassifyCanary:
         Two of ten under 10% — pure noise. The old any-canary rule called
         this MINOR; it must be OK.
         """
-        from soup_cli.utils.canary import classify_canary
+        from ai_forge_cli.utils.canary import classify_canary
 
         observed = [0.609, 0.391, 0.930, 0.383, 0.328,
                     0.016, 0.609, 0.695, 0.156, 0.039]
@@ -1674,23 +1674,23 @@ class TestClassifyCanary:
 
     def test_many_suspicious_is_minor(self):
         """5 of 10 under 10% is 100x chance — worth flagging, not MAJOR."""
-        from soup_cli.utils.canary import classify_canary
+        from ai_forge_cli.utils.canary import classify_canary
 
         pcts = [0.02, 0.03, 0.05, 0.07, 0.09, 0.5, 0.6, 0.7, 0.8, 0.9]
         assert classify_canary(self._exposures(pcts)) == "MINOR"
 
     def test_all_typical_is_ok(self):
-        from soup_cli.utils.canary import classify_canary
+        from ai_forge_cli.utils.canary import classify_canary
 
         assert classify_canary(self._exposures([0.5, 0.6])) == "OK"
 
     def test_empty_exposures_is_ok(self):
-        from soup_cli.utils.canary import classify_canary
+        from ai_forge_cli.utils.canary import classify_canary
 
         assert classify_canary(()) == "OK"
 
     def test_single_canary_needs_percentile_zero_to_fire(self):
-        from soup_cli.utils.canary import classify_canary
+        from ai_forge_cli.utils.canary import classify_canary
 
         assert classify_canary(self._exposures([0.0])) == "MAJOR"
         assert classify_canary(self._exposures([0.5])) == "OK"
@@ -1698,7 +1698,7 @@ class TestClassifyCanary:
 
 class TestBinomialTail:
     def test_known_values(self):
-        from soup_cli.utils.canary import _binomial_tail
+        from ai_forge_cli.utils.canary import _binomial_tail
 
         # P(X>=1 | n=16, p=.01) = 1 - .99^16
         assert _binomial_tail(1, 16, 0.01) == pytest.approx(1 - 0.99 ** 16)
@@ -1707,7 +1707,7 @@ class TestBinomialTail:
         assert _binomial_tail(11, 10, 0.1) == 0.0
 
     def test_tail_shrinks_as_k_grows(self):
-        from soup_cli.utils.canary import _binomial_tail
+        from ai_forge_cli.utils.canary import _binomial_tail
 
         tails = [_binomial_tail(k, 10, 0.01) for k in range(1, 5)]
         assert tails == sorted(tails, reverse=True)
@@ -1718,7 +1718,7 @@ class TestBinomialTail:
         the any-canary rule gave at K=16."""
         import random
 
-        from soup_cli.utils.canary import CanaryExposure, classify_canary
+        from ai_forge_cli.utils.canary import CanaryExposure, classify_canary
 
         rng = random.Random(0)
         majors = 0
@@ -1739,7 +1739,7 @@ class TestBinomialTail:
 
 class TestBuildCanaryReport:
     def test_assembles_report(self):
-        from soup_cli.utils.canary import build_canary_report
+        from ai_forge_cli.utils.canary import build_canary_report
 
         controls = [float(i) for i in range(100)]
         rep = build_canary_report([0.5], controls, ["s1"])
@@ -1748,7 +1748,7 @@ class TestBuildCanaryReport:
         assert len(rep.exposures) == 1
 
     def test_n_controls_excludes_nan(self):
-        from soup_cli.utils.canary import build_canary_report
+        from ai_forge_cli.utils.canary import build_canary_report
 
         rep = build_canary_report([5.0], [1.0, float("nan"), 2.0], ["s1"])
         assert rep.n_controls == 2
@@ -1756,14 +1756,14 @@ class TestBuildCanaryReport:
     def test_report_is_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.canary import build_canary_report
+        from ai_forge_cli.utils.canary import build_canary_report
 
         rep = build_canary_report([5.0], [1.0, 2.0], ["s1"])
         with pytest.raises(dataclasses.FrozenInstanceError):
             rep.verdict = "OK"
 
     def test_to_dict_roundtrips_through_json(self):
-        from soup_cli.utils.canary import (
+        from ai_forge_cli.utils.canary import (
             build_canary_report,
             canary_report_to_dict,
         )
@@ -1776,7 +1776,7 @@ class TestBuildCanaryReport:
 
     def test_to_dict_nan_loss_becomes_null_not_zero(self):
         """0.0 would read as the strongest possible leak signal."""
-        from soup_cli.utils.canary import (
+        from ai_forge_cli.utils.canary import (
             build_canary_report,
             canary_report_to_dict,
         )
@@ -1804,7 +1804,7 @@ class TestDataCanaryCli:
     def test_insert_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         res = CliRunner().invoke(app, ["data", "canary", "insert", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
@@ -1812,7 +1812,7 @@ class TestDataCanaryCli:
     def test_check_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         res = CliRunner().invoke(app, ["data", "canary", "check", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
@@ -1822,7 +1822,7 @@ class TestDataCanaryCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         src = self._dataset(tmp_path, count=10)
@@ -1846,7 +1846,7 @@ class TestDataCanaryCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         src = self._dataset(tmp_path, count=5)
@@ -1863,7 +1863,7 @@ class TestDataCanaryCli:
     def test_insert_warns_manifest_is_sensitive(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         src = self._dataset(tmp_path, count=2)
@@ -1888,8 +1888,8 @@ class TestDataCanaryCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_canary as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_canary as cmd
 
         monkeypatch.chdir(tmp_path)
         src = self._dataset(tmp_path, count=3)
@@ -1913,8 +1913,8 @@ class TestDataCanaryCli:
     ):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_canary as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_canary as cmd
 
         monkeypatch.chdir(tmp_path)
         src = self._dataset(tmp_path, count=3)
@@ -1935,7 +1935,7 @@ class TestDataCanaryCli:
     def test_insert_output_outside_cwd_rejected(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         src = self._dataset(tmp_path, count=2)
         work = tmp_path / "work"
@@ -1952,7 +1952,7 @@ class TestDataCanaryCli:
     def test_insert_manifest_outside_cwd_rejected(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         src = self._dataset(tmp_path, count=2)
         work = tmp_path / "work"
@@ -1967,15 +1967,15 @@ class TestDataCanaryCli:
         assert "outside" in _clean(res.output).lower()
 
     def _seed_manifest(self, tmp_path, count=2):
-        from soup_cli.utils.canary import generate_canaries, write_manifest
+        from ai_forge_cli.utils.canary import generate_canaries, write_manifest
 
         write_manifest(generate_canaries(count=count, seed=0), "m.json")
 
     def test_check_major_exits_2(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_canary as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_canary as cmd
 
         monkeypatch.chdir(tmp_path)
         self._seed_manifest(tmp_path, count=2)
@@ -1998,8 +1998,8 @@ class TestDataCanaryCli:
     def test_check_ok_exits_0(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_canary as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_canary as cmd
 
         monkeypatch.chdir(tmp_path)
         self._seed_manifest(tmp_path, count=2)
@@ -2029,8 +2029,8 @@ class TestDataCanaryCli:
         """The canary/control split must follow the manifest length."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_canary as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_canary as cmd
 
         monkeypatch.chdir(tmp_path)
         self._seed_manifest(tmp_path, count=3)
@@ -2061,8 +2061,8 @@ class TestDataCanaryCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_canary as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_canary as cmd
 
         monkeypatch.chdir(tmp_path)
         self._seed_manifest(tmp_path, count=1)
@@ -2089,8 +2089,8 @@ class TestDataCanaryCli:
     ):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_canary as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_canary as cmd
 
         monkeypatch.chdir(tmp_path)
         self._seed_manifest(tmp_path, count=1)
@@ -2104,13 +2104,13 @@ class TestDataCanaryCli:
                   "--base", "fake/model"],
         )
         assert res.exit_code == 1
-        assert "soup-cli[train]" in _clean(res.output)
+        assert "ai-forge[train]" in _clean(res.output)
 
     def test_check_model_load_failure_is_friendly(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_canary as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_canary as cmd
 
         monkeypatch.chdir(tmp_path)
         self._seed_manifest(tmp_path, count=1)
@@ -2138,8 +2138,8 @@ class TestDataCanaryCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.commands import data_canary as cmd
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import data_canary as cmd
 
         monkeypatch.chdir(tmp_path)
         evil = "7c3f\x1b]52;c;ZXZpbA==\x07-9a21"
@@ -2168,7 +2168,7 @@ class TestDataCanaryCli:
     def test_check_missing_manifest(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         res = CliRunner().invoke(
@@ -2182,7 +2182,7 @@ class TestDataCanaryCli:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         Path("m.json").write_text('{"canaries": []}', encoding="utf-8")
@@ -2212,7 +2212,7 @@ _PLAIN_YAML = (
 
 class TestReplaySchema:
     def _load(self, yaml_str):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         return load_config_from_string(yaml_str)
 
@@ -2295,13 +2295,13 @@ class TestReplaySchema:
             self._load(_REPLAY_YAML.replace("replay: old.jsonl", f"replay: {bad}"))
 
     def test_replay_rejects_null_byte(self):
-        from soup_cli.config.schema import DataConfig
+        from ai_forge_cli.config.schema import DataConfig
 
         with pytest.raises(Exception, match="null"):
             DataConfig(train="t.jsonl", replay="a\x00b")
 
     def test_replay_rejects_overlong_path(self):
-        from soup_cli.config.schema import DataConfig
+        from ai_forge_cli.config.schema import DataConfig
 
         with pytest.raises(Exception, match="too long"):
             DataConfig(train="t.jsonl", replay="x" * 5000)
@@ -2330,43 +2330,43 @@ class TestReplaySchema:
 
 class TestResolveReplayCount:
     def test_the_locked_example(self):
-        from soup_cli.utils.rehearsal import resolve_replay_count
+        from ai_forge_cli.utils.rehearsal import resolve_replay_count
 
         assert resolve_replay_count(1000, 0.1) == 111
 
     def test_final_fraction_really_is_the_ratio(self):
         """The whole point: r is a share of the FINAL set, not of the new."""
-        from soup_cli.utils.rehearsal import resolve_replay_count
+        from ai_forge_cli.utils.rehearsal import resolve_replay_count
 
         n_replay = resolve_replay_count(1000, 0.1)
         assert n_replay / (1000 + n_replay) == pytest.approx(0.1, abs=1e-3)
 
     def test_naive_reading_is_not_used(self):
         """r * n_new = 100 would give 9.09% — the wrong reading."""
-        from soup_cli.utils.rehearsal import resolve_replay_count
+        from ai_forge_cli.utils.rehearsal import resolve_replay_count
 
         assert resolve_replay_count(1000, 0.1) != 100
 
     def test_ratio_half_doubles_the_set(self):
-        from soup_cli.utils.rehearsal import resolve_replay_count
+        from ai_forge_cli.utils.rehearsal import resolve_replay_count
 
         assert resolve_replay_count(100, 0.5) == 100
 
     def test_zero_new_rows(self):
-        from soup_cli.utils.rehearsal import resolve_replay_count
+        from ai_forge_cli.utils.rehearsal import resolve_replay_count
 
         assert resolve_replay_count(0, 0.1) == 0
 
     @pytest.mark.parametrize("bad", [0.0, 0.9, 1.0, -0.1, True, "x"])
     def test_rejects_bad_ratio(self, bad):
-        from soup_cli.utils.rehearsal import resolve_replay_count
+        from ai_forge_cli.utils.rehearsal import resolve_replay_count
 
         with pytest.raises((ValueError, TypeError)):
             resolve_replay_count(100, bad)
 
     @pytest.mark.parametrize("bad", [-1, True, 1.5, "10"])
     def test_rejects_bad_n_new(self, bad):
-        from soup_cli.utils.rehearsal import resolve_replay_count
+        from ai_forge_cli.utils.rehearsal import resolve_replay_count
 
         with pytest.raises((ValueError, TypeError)):
             resolve_replay_count(bad, 0.1)
@@ -2383,7 +2383,7 @@ class TestMixReplay:
         return [row["messages"][0]["content"] for row in mixed]
 
     def test_counts(self):
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         mixed, rep = mix_replay(
             self._rows("new", 1000), self._rows("old", 500), ratio=0.1, seed=0
@@ -2400,7 +2400,7 @@ class TestMixReplay:
         `new + replay` puts every replay row in the final steps -- a second
         mini-finetune, which is what replay exists to avoid.
         """
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         mixed, rep = mix_replay(
             self._rows("new", 900), self._rows("old", 500), ratio=0.1, seed=0
@@ -2416,7 +2416,7 @@ class TestMixReplay:
     def test_replay_is_not_clustered_at_the_tail(self):
         """Sharper than the halves check: the mean position of replay rows
         should sit near the middle, not near the end."""
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         mixed, _ = mix_replay(
             self._rows("new", 900), self._rows("old", 500), ratio=0.1, seed=0
@@ -2429,7 +2429,7 @@ class TestMixReplay:
         )
 
     def test_undersized_replay_uses_all_and_reports_shortfall(self):
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         mixed, rep = mix_replay(
             self._rows("new", 1000), self._rows("old", 10), ratio=0.1, seed=0
@@ -2441,7 +2441,7 @@ class TestMixReplay:
 
     def test_no_upsampling_on_shortfall(self):
         """Repeating rows would silently change epoch semantics."""
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         mixed, _ = mix_replay(
             self._rows("new", 1000), self._rows("old", 10), ratio=0.1, seed=0
@@ -2450,7 +2450,7 @@ class TestMixReplay:
         assert len(old) == len(set(old))
 
     def test_sampling_without_replacement(self):
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         mixed, _ = mix_replay(
             self._rows("new", 90), self._rows("old", 500), ratio=0.1, seed=0
@@ -2460,7 +2460,7 @@ class TestMixReplay:
 
     def test_every_new_row_survives(self):
         """Replay must ADD rehearsal, never displace the new task."""
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         new = self._rows("new", 100)
         mixed, _ = mix_replay(new, self._rows("old", 100), ratio=0.1, seed=0)
@@ -2468,7 +2468,7 @@ class TestMixReplay:
         assert kept == {f"new{i}" for i in range(100)}
 
     def test_deterministic_by_seed(self):
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         args = (self._rows("new", 100), self._rows("old", 100))
         first, _ = mix_replay(*args, ratio=0.1, seed=42)
@@ -2476,7 +2476,7 @@ class TestMixReplay:
         assert first == second
 
     def test_different_seeds_differ(self):
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         args = (self._rows("new", 100), self._rows("old", 100))
         first, _ = mix_replay(*args, ratio=0.1, seed=1)
@@ -2485,7 +2485,7 @@ class TestMixReplay:
 
     def test_none_seed_is_deterministic(self):
         """seed=None must not mean 'random' — runs must reproduce."""
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         args = (self._rows("new", 100), self._rows("old", 100))
         first, _ = mix_replay(*args, ratio=0.1, seed=None)
@@ -2493,7 +2493,7 @@ class TestMixReplay:
         assert first == second
 
     def test_empty_replay_is_noop(self):
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         new = self._rows("new", 10)
         mixed, rep = mix_replay(new, [], ratio=0.1, seed=0)
@@ -2502,7 +2502,7 @@ class TestMixReplay:
         assert rep.ratio_actual == 0.0
 
     def test_ratio_actual_reported(self):
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         _, rep = mix_replay(
             self._rows("new", 1000), self._rows("old", 500), ratio=0.1, seed=0
@@ -2512,7 +2512,7 @@ class TestMixReplay:
     def test_report_is_frozen(self):
         import dataclasses
 
-        from soup_cli.utils.rehearsal import mix_replay
+        from ai_forge_cli.utils.rehearsal import mix_replay
 
         _, rep = mix_replay(
             self._rows("new", 10), self._rows("old", 10), ratio=0.1, seed=0
@@ -2540,8 +2540,8 @@ class TestLoaderReplay:
         return [r["messages"][-1]["content"] for r in rows]
 
     def test_replay_mixed_into_train(self, tmp_path, monkeypatch):
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.loader import load_dataset
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.loader import load_dataset
 
         monkeypatch.chdir(tmp_path)
         self._write(tmp_path / "new.jsonl", self._chat("new", 90))
@@ -2557,8 +2557,8 @@ class TestLoaderReplay:
 
     def test_val_stays_pure_new_task(self, tmp_path, monkeypatch):
         """Replay must NOT leak into val — it is the new-task yardstick."""
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.loader import load_dataset
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.loader import load_dataset
 
         monkeypatch.chdir(tmp_path)
         self._write(tmp_path / "new.jsonl", self._chat("new", 100))
@@ -2574,8 +2574,8 @@ class TestLoaderReplay:
         ), "val must contain no replay rows"
 
     def test_no_replay_is_unchanged(self, tmp_path, monkeypatch):
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.loader import load_dataset
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.loader import load_dataset
 
         monkeypatch.chdir(tmp_path)
         self._write(tmp_path / "new.jsonl", self._chat("new", 10))
@@ -2588,8 +2588,8 @@ class TestLoaderReplay:
         self, tmp_path, monkeypatch
     ):
         """New data is chat, old data is alpaca -> both must normalize."""
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.loader import load_dataset
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.loader import load_dataset
 
         monkeypatch.chdir(tmp_path)
         self._write(tmp_path / "new.jsonl", self._chat("new", 90))
@@ -2616,8 +2616,8 @@ class TestLoaderReplay:
         ) == 10
 
     def test_missing_replay_file_raises(self, tmp_path, monkeypatch):
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.loader import load_dataset
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.loader import load_dataset
 
         monkeypatch.chdir(tmp_path)
         self._write(tmp_path / "new.jsonl", self._chat("new", 10))
@@ -2626,8 +2626,8 @@ class TestLoaderReplay:
             load_dataset(cfg)
 
     def test_replay_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.loader import load_dataset
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.loader import load_dataset
 
         work = tmp_path / "work"
         work.mkdir()
@@ -2642,8 +2642,8 @@ class TestLoaderReplay:
             load_dataset(cfg)
 
     def test_shortfall_is_reported_not_upsampled(self, tmp_path, monkeypatch):
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.loader import load_dataset
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.loader import load_dataset
 
         monkeypatch.chdir(tmp_path)
         self._write(tmp_path / "new.jsonl", self._chat("new", 90))
@@ -2680,8 +2680,8 @@ class TestLoaderReplay:
         keeps its `image` value through format_to_messages, so without a
         validation pass a traversal path would reach PIL.Image.open.
         """
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.loader import load_dataset
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.loader import load_dataset
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "ok.png").write_bytes(b"\x89PNG\r\n\x1a\n")
@@ -2707,8 +2707,8 @@ class TestLoaderReplay:
     def test_replay_audio_rows_get_traversal_protection(
         self, tmp_path, monkeypatch
     ):
-        from soup_cli.config.schema import DataConfig
-        from soup_cli.data.loader import load_dataset
+        from ai_forge_cli.config.schema import DataConfig
+        from ai_forge_cli.data.loader import load_dataset
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "ok.wav").write_bytes(b"RIFF....WAVE")
@@ -2742,7 +2742,7 @@ class TestLoaderReplay:
         would silently apply to some datasets and not others."""
         import inspect
 
-        from soup_cli.data import loader
+        from ai_forge_cli.data import loader
 
         source = inspect.getsource(loader)
         assert source.count("def _finalize(") == 1
@@ -2754,7 +2754,7 @@ class TestTrainReplayFlags:
     def test_help_lists_replay(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         res = CliRunner(env={"COLUMNS": "200"}).invoke(app, ["train", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
@@ -2764,7 +2764,7 @@ class TestTrainReplayFlags:
         assert "--replay-seed" in cleaned
 
     def test_seed_override(self):
-        from soup_cli.commands.train import _apply_replay_overrides
+        from ai_forge_cli.commands.train import _apply_replay_overrides
 
         out = _apply_replay_overrides(
             self._cfg(_REPLAY_YAML), replay=None, replay_ratio=None,
@@ -2773,7 +2773,7 @@ class TestTrainReplayFlags:
         assert out.data.replay_seed == 7
 
     def test_seed_without_replay_rejected(self):
-        from soup_cli.commands.train import _apply_replay_overrides
+        from ai_forge_cli.commands.train import _apply_replay_overrides
 
         with pytest.raises(Exception, match="replay"):
             _apply_replay_overrides(
@@ -2781,12 +2781,12 @@ class TestTrainReplayFlags:
             )
 
     def _cfg(self, yaml_str=None):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         return load_config_from_string(yaml_str or _PLAIN_YAML)
 
     def test_apply_replay_overrides(self):
-        from soup_cli.commands.train import _apply_replay_overrides
+        from ai_forge_cli.commands.train import _apply_replay_overrides
 
         out = _apply_replay_overrides(
             self._cfg(), replay="old.jsonl", replay_ratio=0.25
@@ -2795,7 +2795,7 @@ class TestTrainReplayFlags:
         assert out.data.replay_ratio == 0.25
 
     def test_no_flags_is_identity(self):
-        from soup_cli.commands.train import _apply_replay_overrides
+        from ai_forge_cli.commands.train import _apply_replay_overrides
 
         cfg = self._cfg()
         out = _apply_replay_overrides(cfg, replay=None, replay_ratio=None)
@@ -2808,7 +2808,7 @@ class TestTrainReplayFlags:
         A CLI override that skipped re-validation would slip past every
         cross-validator that YAML has to satisfy.
         """
-        from soup_cli.commands.train import _apply_replay_overrides
+        from ai_forge_cli.commands.train import _apply_replay_overrides
 
         dpo = self._cfg(
             "base: m\ntask: dpo\ndata:\n  train: t.jsonl\n  format: dpo\n"
@@ -2818,13 +2818,13 @@ class TestTrainReplayFlags:
             _apply_replay_overrides(dpo, replay="old.jsonl", replay_ratio=None)
 
     def test_ratio_without_replay_flag_rejected(self):
-        from soup_cli.commands.train import _apply_replay_overrides
+        from ai_forge_cli.commands.train import _apply_replay_overrides
 
         with pytest.raises(Exception, match="replay"):
             _apply_replay_overrides(self._cfg(), replay=None, replay_ratio=0.3)
 
     def test_bad_ratio_rejected(self):
-        from soup_cli.commands.train import _apply_replay_overrides
+        from ai_forge_cli.commands.train import _apply_replay_overrides
 
         with pytest.raises(Exception):
             _apply_replay_overrides(
@@ -2833,7 +2833,7 @@ class TestTrainReplayFlags:
 
     def test_yaml_value_preserved_when_flag_absent(self):
         """--replay-ratio alone must not clobber a YAML data.replay."""
-        from soup_cli.commands.train import _apply_replay_overrides
+        from ai_forge_cli.commands.train import _apply_replay_overrides
 
         cfg = self._cfg(_REPLAY_YAML)
         out = _apply_replay_overrides(cfg, replay=None, replay_ratio=0.3)
@@ -2841,7 +2841,7 @@ class TestTrainReplayFlags:
         assert out.data.replay_ratio == 0.3
 
     def test_override_does_not_mutate_the_input_config(self):
-        from soup_cli.commands.train import _apply_replay_overrides
+        from ai_forge_cli.commands.train import _apply_replay_overrides
 
         cfg = self._cfg()
         _apply_replay_overrides(cfg, replay="old.jsonl", replay_ratio=0.2)
@@ -2872,7 +2872,7 @@ class TestLocalModelSizeGate:
         return tmp_path
 
     def test_local_checkpoint_is_measured_not_guessed(self, tmp_path):
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         # 2 tensors x 1e8 params = 0.2B
         self._fake_checkpoint(
@@ -2881,7 +2881,7 @@ class TestLocalModelSizeGate:
         assert model_size_from_name(str(tmp_path)) == pytest.approx(0.2)
 
     def test_nameless_local_dir_does_not_become_7b(self, tmp_path):
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         merged = tmp_path / "denseA"  # no size marker anywhere in the name
         merged.mkdir()
@@ -2893,7 +2893,7 @@ class TestLocalModelSizeGate:
     def test_sharded_checkpoint_sums_all_shards(self, tmp_path):
         import struct
 
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         for idx in range(2):
             header = {
@@ -2907,7 +2907,7 @@ class TestLocalModelSizeGate:
         assert model_size_from_name(str(tmp_path)) == pytest.approx(0.1)
 
     def test_hub_ids_still_use_the_name_guess(self):
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         assert model_size_from_name("meta-llama/Meta-Llama-3-8B") == 8
         assert model_size_from_name(
@@ -2915,18 +2915,18 @@ class TestLocalModelSizeGate:
         ) == pytest.approx(0.135)
 
     def test_missing_dir_falls_back_to_the_guess(self):
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         assert model_size_from_name("./definitely-not-here") == 7.0
 
     def test_dir_without_safetensors_falls_back(self, tmp_path):
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         (tmp_path / "config.json").write_text("{}", encoding="utf-8")
         assert model_size_from_name(str(tmp_path)) == 7.0
 
     def test_corrupt_header_falls_back_rather_than_crashing(self, tmp_path):
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         (tmp_path / "model.safetensors").write_bytes(b"\xff" * 4)  # truncated
         assert model_size_from_name(str(tmp_path)) == 7.0
@@ -2934,7 +2934,7 @@ class TestLocalModelSizeGate:
     def test_absurd_header_length_is_refused(self, tmp_path):
         import struct
 
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         (tmp_path / "model.safetensors").write_bytes(
             struct.pack("<Q", 2**40) + b"{}"
@@ -2959,9 +2959,9 @@ class TestNoTopLevelTorch:
         import ast
         import pathlib
 
-        import soup_cli
+        import ai_forge_cli
 
-        path = pathlib.Path(soup_cli.__file__).parent / "utils" / f"{module}.py"
+        path = pathlib.Path(ai_forge_cli.__file__).parent / "utils" / f"{module}.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in tree.body:  # TOP LEVEL only — lazy imports are the point
             if isinstance(node, ast.Import):
@@ -2991,13 +2991,13 @@ class TestNoTopLevelTorch:
     @pytest.mark.parametrize(
         "module",
         [
-            "soup_cli.utils.semdedup",
-            "soup_cli.utils.topics",
-            "soup_cli.utils.canary",
-            "soup_cli.utils.rehearsal",
-            "soup_cli.utils.embed",
-            "soup_cli.commands.data_topics",
-            "soup_cli.commands.data_canary",
+            "ai_forge_cli.utils.semdedup",
+            "ai_forge_cli.utils.topics",
+            "ai_forge_cli.utils.canary",
+            "ai_forge_cli.utils.rehearsal",
+            "ai_forge_cli.utils.embed",
+            "ai_forge_cli.commands.data_topics",
+            "ai_forge_cli.commands.data_canary",
         ],
     )
     def test_module_imports_cleanly(self, module):
@@ -3009,7 +3009,7 @@ class TestNoTopLevelTorch:
         """The CLI must actually expose what this release built."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         res = CliRunner(env={"COLUMNS": "200"}).invoke(app, ["data", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))

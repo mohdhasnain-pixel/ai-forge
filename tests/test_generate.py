@@ -8,7 +8,7 @@ class TestParseJsonArray:
 
     def test_parse_clean_json_array(self):
         """Should parse a clean JSON array."""
-        from soup_cli.commands.generate import _parse_json_array
+        from ai_forge_cli.commands.generate import _parse_json_array
 
         content = json.dumps([
             {"instruction": "What is AI?", "input": "", "output": "AI is..."},
@@ -20,7 +20,7 @@ class TestParseJsonArray:
 
     def test_parse_json_with_markdown_fences(self):
         """Should strip markdown code fences."""
-        from soup_cli.commands.generate import _parse_json_array
+        from ai_forge_cli.commands.generate import _parse_json_array
 
         content = '```json\n[{"instruction": "test", "input": "", "output": "ok"}]\n```'
         result = _parse_json_array(content)
@@ -29,7 +29,7 @@ class TestParseJsonArray:
 
     def test_parse_json_with_extra_text(self):
         """Should extract JSON array from surrounding text."""
-        from soup_cli.commands.generate import _parse_json_array
+        from ai_forge_cli.commands.generate import _parse_json_array
 
         content = (
             'Here are the examples:\n'
@@ -40,14 +40,14 @@ class TestParseJsonArray:
 
     def test_parse_empty_content(self):
         """Should return empty list for empty content."""
-        from soup_cli.commands.generate import _parse_json_array
+        from ai_forge_cli.commands.generate import _parse_json_array
 
         result = _parse_json_array("")
         assert result == []
 
     def test_parse_jsonl_fallback(self):
         """Should fall back to line-by-line JSON parsing."""
-        from soup_cli.commands.generate import _parse_json_array
+        from ai_forge_cli.commands.generate import _parse_json_array
 
         content = (
             '{"instruction": "a", "input": "", "output": "b"}\n'
@@ -58,14 +58,14 @@ class TestParseJsonArray:
 
     def test_parse_invalid_json(self):
         """Should return empty list for completely invalid JSON."""
-        from soup_cli.commands.generate import _parse_json_array
+        from ai_forge_cli.commands.generate import _parse_json_array
 
         result = _parse_json_array("this is not json at all")
         assert result == []
 
     def test_parse_filters_non_dicts(self):
         """Should filter out non-dict items."""
-        from soup_cli.commands.generate import _parse_json_array
+        from ai_forge_cli.commands.generate import _parse_json_array
 
         content = '[{"instruction": "a", "input": "", "output": "b"}, "string", 42]'
         result = _parse_json_array(content)
@@ -77,21 +77,21 @@ class TestValidateExample:
 
     def test_validate_alpaca_valid(self):
         """Valid alpaca format should pass."""
-        from soup_cli.commands.generate import _validate_example
+        from ai_forge_cli.commands.generate import _validate_example
 
         example = {"instruction": "test", "input": "", "output": "ok"}
         assert _validate_example(example, "alpaca") is True
 
     def test_validate_alpaca_missing_fields(self):
         """Alpaca missing required fields should fail."""
-        from soup_cli.commands.generate import _validate_example
+        from ai_forge_cli.commands.generate import _validate_example
 
         assert _validate_example({"instruction": "test"}, "alpaca") is False
         assert _validate_example({"output": "test"}, "alpaca") is False
 
     def test_validate_sharegpt_valid(self):
         """Valid sharegpt format should pass."""
-        from soup_cli.commands.generate import _validate_example
+        from ai_forge_cli.commands.generate import _validate_example
 
         example = {
             "conversations": [
@@ -103,14 +103,14 @@ class TestValidateExample:
 
     def test_validate_sharegpt_too_few(self):
         """Sharegpt with fewer than 2 messages should fail."""
-        from soup_cli.commands.generate import _validate_example
+        from ai_forge_cli.commands.generate import _validate_example
 
         example = {"conversations": [{"from": "human", "value": "Hi"}]}
         assert _validate_example(example, "sharegpt") is False
 
     def test_validate_chatml_valid(self):
         """Valid chatml format should pass."""
-        from soup_cli.commands.generate import _validate_example
+        from ai_forge_cli.commands.generate import _validate_example
 
         example = {
             "messages": [
@@ -122,13 +122,13 @@ class TestValidateExample:
 
     def test_validate_chatml_empty(self):
         """Chatml with empty messages should fail."""
-        from soup_cli.commands.generate import _validate_example
+        from ai_forge_cli.commands.generate import _validate_example
 
         assert _validate_example({"messages": []}, "chatml") is False
 
     def test_validate_unknown_format(self):
         """Unknown format should fail."""
-        from soup_cli.commands.generate import _validate_example
+        from ai_forge_cli.commands.generate import _validate_example
 
         assert _validate_example({"data": "test"}, "unknown") is False
 
@@ -138,7 +138,7 @@ class TestBuildGenerationPrompt:
 
     def test_prompt_includes_format_spec(self):
         """Prompt should include format specification."""
-        from soup_cli.commands.generate import _build_generation_prompt
+        from ai_forge_cli.commands.generate import _build_generation_prompt
 
         result = _build_generation_prompt("Create math questions", 5, "alpaca", [])
         assert "instruction" in result
@@ -147,7 +147,7 @@ class TestBuildGenerationPrompt:
 
     def test_prompt_includes_seed_examples(self):
         """Prompt should include seed examples when provided."""
-        from soup_cli.commands.generate import _build_generation_prompt
+        from ai_forge_cli.commands.generate import _build_generation_prompt
 
         seeds = [{"instruction": "example", "input": "", "output": "test"}]
         result = _build_generation_prompt("Create data", 3, "alpaca", seeds)
@@ -156,14 +156,14 @@ class TestBuildGenerationPrompt:
 
     def test_prompt_sharegpt_format(self):
         """Prompt should describe sharegpt format correctly."""
-        from soup_cli.commands.generate import _build_generation_prompt
+        from ai_forge_cli.commands.generate import _build_generation_prompt
 
         result = _build_generation_prompt("Create chats", 3, "sharegpt", [])
         assert "conversations" in result
 
     def test_prompt_chatml_format(self):
         """Prompt should describe chatml format correctly."""
-        from soup_cli.commands.generate import _build_generation_prompt
+        from ai_forge_cli.commands.generate import _build_generation_prompt
 
         result = _build_generation_prompt("Create chats", 3, "chatml", [])
         assert "messages" in result
@@ -174,7 +174,7 @@ class TestRowToText:
 
     def test_row_to_text_basic(self):
         """Should concatenate all values."""
-        from soup_cli.commands.generate import _row_to_text
+        from ai_forge_cli.commands.generate import _row_to_text
 
         row = {"instruction": "What is AI?", "output": "AI is..."}
         text = _row_to_text(row)
@@ -183,7 +183,7 @@ class TestRowToText:
 
     def test_row_to_text_empty_values(self):
         """Should skip empty values."""
-        from soup_cli.commands.generate import _row_to_text
+        from ai_forge_cli.commands.generate import _row_to_text
 
         row = {"instruction": "test", "input": "", "output": "ok"}
         text = _row_to_text(row)
@@ -197,7 +197,7 @@ class TestGenerateCLI:
         """Should reject invalid format."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, [
@@ -212,7 +212,7 @@ class TestGenerateCLI:
         """Should reject invalid provider."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, [

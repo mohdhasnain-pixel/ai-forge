@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import LoraConfig
-from soup_cli.utils.peft_builder import build_peft_config
+from ai_forge_cli.config.schema import LoraConfig
+from ai_forge_cli.utils.peft_builder import build_peft_config
 
 
 class TestInitStrategyField:
@@ -116,7 +116,7 @@ class TestPeftBuilderInitStrategy:
 
 class TestInstantiatePeftConfig:
     def test_instantiate_lora_config(self):
-        from soup_cli.utils.peft_builder import instantiate_peft_config
+        from ai_forge_cli.utils.peft_builder import instantiate_peft_config
         cfg = LoraConfig(init_strategy="pissa")
         spec = build_peft_config(cfg, target_modules=["q_proj", "v_proj"], task_type="CAUSAL_LM")
         result = instantiate_peft_config(spec)
@@ -127,7 +127,7 @@ class TestInstantiatePeftConfig:
         assert result.init_lora_weights == "pissa"
 
     def test_instantiate_with_rank_pattern(self):
-        from soup_cli.utils.peft_builder import instantiate_peft_config
+        from ai_forge_cli.utils.peft_builder import instantiate_peft_config
         cfg = LoraConfig(rank_pattern={"q_proj": 8})
         spec = build_peft_config(cfg, target_modules=["q_proj"], task_type="CAUSAL_LM")
         result = instantiate_peft_config(spec)
@@ -139,7 +139,7 @@ class TestInitStrategyYamlRoundtripV0401Regression:
     bypassed validation; assert it always errors at full-config load."""
 
     def test_bogus_init_strategy_via_full_yaml_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """
 base: HuggingFaceTB/SmolLM2-135M-Instruct

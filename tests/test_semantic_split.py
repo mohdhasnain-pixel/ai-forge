@@ -6,7 +6,7 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -148,7 +148,7 @@ class TestSemanticSplit:
         # Write dummy file so the file exists validation passes
         ds_path.write_text("{}", encoding="utf-8")
         # Mock load_raw_data to return a list of 50001 items without writing a huge file
-        import soup_cli.commands.data as data_mod
+        import ai_forge_cli.commands.data as data_mod
         monkeypatch.setattr(data_mod, "load_raw_data", lambda path: [{"text": "a"}] * 50001)
 
         result = runner.invoke(

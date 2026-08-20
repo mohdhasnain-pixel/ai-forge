@@ -200,7 +200,7 @@ class TestTheScannerCanActuallyFail:
 
     def test_the_real_license_advisor_module_passes(self):
         """The end-to-end version of the control above, on the actual file."""
-        target = REPO_ROOT / "src" / "soup_cli" / "utils" / "license_advisor.py"
+        target = REPO_ROOT / "src" / "ai_forge_cli" / "utils" / "license_advisor.py"
         if not target.exists():  # pragma: no cover - module renamed
             pytest.skip("license_advisor.py not present")
         text = io.open(target, encoding="utf-8", errors="replace").read()

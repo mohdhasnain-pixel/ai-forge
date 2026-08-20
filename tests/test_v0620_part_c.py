@@ -15,7 +15,7 @@ import pytest
 
 class TestModuleSurface:
     def test_imports(self):
-        from soup_cli.utils.steering import (
+        from ai_forge_cli.utils.steering import (
             SUPPORTED_STEERING_METHODS,
             SteeringMethodSpec,
             build_steering_vector,
@@ -31,14 +31,14 @@ class TestModuleSurface:
         assert isinstance(SUPPORTED_STEERING_METHODS, frozenset)
 
     def test_methods_exact(self):
-        from soup_cli.utils.steering import SUPPORTED_STEERING_METHODS
+        from ai_forge_cli.utils.steering import SUPPORTED_STEERING_METHODS
 
         assert SUPPORTED_STEERING_METHODS == frozenset({"caa", "iti", "repe"})
 
     def test_metadata_mapping_proxy(self):
         from types import MappingProxyType
 
-        from soup_cli.utils.steering import _STEERING_METHOD_METADATA  # type: ignore
+        from ai_forge_cli.utils.steering import _STEERING_METHOD_METADATA  # type: ignore
 
         assert isinstance(_STEERING_METHOD_METADATA, MappingProxyType)
 
@@ -48,49 +48,49 @@ class TestModuleSurface:
 
 class TestValidateMethod:
     def test_happy(self):
-        from soup_cli.utils.steering import validate_steering_method
+        from ai_forge_cli.utils.steering import validate_steering_method
 
         for name in ("caa", "iti", "repe"):
             assert validate_steering_method(name) == name
 
     def test_case_insensitive(self):
-        from soup_cli.utils.steering import validate_steering_method
+        from ai_forge_cli.utils.steering import validate_steering_method
 
         assert validate_steering_method("CAA") == "caa"
         assert validate_steering_method("ItI") == "iti"
 
     def test_bool_rejected(self):
-        from soup_cli.utils.steering import validate_steering_method
+        from ai_forge_cli.utils.steering import validate_steering_method
 
         with pytest.raises(TypeError):
             validate_steering_method(True)
 
     def test_non_string_rejected(self):
-        from soup_cli.utils.steering import validate_steering_method
+        from ai_forge_cli.utils.steering import validate_steering_method
 
         with pytest.raises(TypeError):
             validate_steering_method(42)
 
     def test_empty_rejected(self):
-        from soup_cli.utils.steering import validate_steering_method
+        from ai_forge_cli.utils.steering import validate_steering_method
 
         with pytest.raises(ValueError):
             validate_steering_method("")
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.steering import validate_steering_method
+        from ai_forge_cli.utils.steering import validate_steering_method
 
         with pytest.raises(ValueError):
             validate_steering_method("caa\x00")
 
     def test_oversize_rejected(self):
-        from soup_cli.utils.steering import validate_steering_method
+        from ai_forge_cli.utils.steering import validate_steering_method
 
         with pytest.raises(ValueError):
             validate_steering_method("c" * 100)
 
     def test_unknown_rejected(self):
-        from soup_cli.utils.steering import validate_steering_method
+        from ai_forge_cli.utils.steering import validate_steering_method
 
         with pytest.raises(ValueError, match="steering"):
             validate_steering_method("nonsense")
@@ -101,43 +101,43 @@ class TestValidateMethod:
 
 class TestValidateName:
     def test_happy(self):
-        from soup_cli.utils.steering import validate_steering_name
+        from ai_forge_cli.utils.steering import validate_steering_name
 
         for name in ("safety-v1", "helpfulness_2024", "tone-formal"):
             assert validate_steering_name(name) == name
 
     def test_bool_rejected(self):
-        from soup_cli.utils.steering import validate_steering_name
+        from ai_forge_cli.utils.steering import validate_steering_name
 
         with pytest.raises(TypeError):
             validate_steering_name(True)
 
     def test_non_string_rejected(self):
-        from soup_cli.utils.steering import validate_steering_name
+        from ai_forge_cli.utils.steering import validate_steering_name
 
         with pytest.raises(TypeError):
             validate_steering_name(1)
 
     def test_empty_rejected(self):
-        from soup_cli.utils.steering import validate_steering_name
+        from ai_forge_cli.utils.steering import validate_steering_name
 
         with pytest.raises(ValueError):
             validate_steering_name("")
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.steering import validate_steering_name
+        from ai_forge_cli.utils.steering import validate_steering_name
 
         with pytest.raises(ValueError):
             validate_steering_name("safety\x00")
 
     def test_oversize_rejected(self):
-        from soup_cli.utils.steering import validate_steering_name
+        from ai_forge_cli.utils.steering import validate_steering_name
 
         with pytest.raises(ValueError):
             validate_steering_name("x" * 200)
 
     def test_invalid_chars_rejected(self):
-        from soup_cli.utils.steering import validate_steering_name
+        from ai_forge_cli.utils.steering import validate_steering_name
 
         # Path separators / spaces / shell metacharacters rejected so
         # the name can be safely embedded in CLI args and filenames.
@@ -151,19 +151,19 @@ class TestValidateName:
 
 class TestValidateStrength:
     def test_happy(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         assert validate_steering_strength(0.5) == 0.5
         assert validate_steering_strength(-1.0) == -1.0
         assert validate_steering_strength(0.0) == 0.0
 
     def test_int_coerced(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         assert validate_steering_strength(1) == 1.0
 
     def test_bool_rejected(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         with pytest.raises(TypeError):
             validate_steering_strength(True)
@@ -171,7 +171,7 @@ class TestValidateStrength:
     def test_non_finite_rejected(self):
         import math
 
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         with pytest.raises(ValueError):
             validate_steering_strength(math.nan)
@@ -179,7 +179,7 @@ class TestValidateStrength:
             validate_steering_strength(math.inf)
 
     def test_out_of_bounds_rejected(self):
-        from soup_cli.utils.steering import validate_steering_strength
+        from ai_forge_cli.utils.steering import validate_steering_strength
 
         with pytest.raises(ValueError):
             validate_steering_strength(100.0)
@@ -192,7 +192,7 @@ class TestValidateStrength:
 
 class TestSpec:
     def test_caa_spec(self):
-        from soup_cli.utils.steering import get_steering_method_spec
+        from ai_forge_cli.utils.steering import get_steering_method_spec
 
         spec = get_steering_method_spec("caa")
         assert spec.name == "caa"
@@ -200,26 +200,26 @@ class TestSpec:
         assert spec.needs_contrastive_pairs is True
 
     def test_iti_spec(self):
-        from soup_cli.utils.steering import get_steering_method_spec
+        from ai_forge_cli.utils.steering import get_steering_method_spec
 
         spec = get_steering_method_spec("iti")
         assert spec.name == "iti"
         assert spec.needs_attention_heads is True
 
     def test_repe_spec(self):
-        from soup_cli.utils.steering import get_steering_method_spec
+        from ai_forge_cli.utils.steering import get_steering_method_spec
 
         spec = get_steering_method_spec("repe")
         assert spec.name == "repe"
 
     def test_unknown_raises(self):
-        from soup_cli.utils.steering import get_steering_method_spec
+        from ai_forge_cli.utils.steering import get_steering_method_spec
 
         with pytest.raises(ValueError):
             get_steering_method_spec("nonsense")
 
     def test_frozen(self):
-        from soup_cli.utils.steering import get_steering_method_spec
+        from ai_forge_cli.utils.steering import get_steering_method_spec
 
         spec = get_steering_method_spec("caa")
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -233,26 +233,26 @@ class TestDeferredStubs:
     def test_apply_steering_removed(self):
         # v0.71.10 #201 — the apply_steering stub is replaced by the live
         # install_steering_hook runtime.
-        import soup_cli.utils.steering as steering
+        import ai_forge_cli.utils.steering as steering
 
         assert not hasattr(steering, "apply_steering")
 
     def test_build_steering_vector_requires_base(self):
         # v0.71.10 #201 — no longer NotImplementedError; missing base/pairs is
         # a loud ValueError (validation happens after method+name checks).
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         with pytest.raises(ValueError, match="base"):
             build_steering_vector(method="caa", name="safety-v1")
 
     def test_build_steering_vector_validates_method_first(self):
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         with pytest.raises(ValueError):
             build_steering_vector(method="nonsense", name="safety-v1")
 
     def test_build_steering_vector_validates_name_first(self):
-        from soup_cli.utils.steering import build_steering_vector
+        from ai_forge_cli.utils.steering import build_steering_vector
 
         with pytest.raises(ValueError):
             build_steering_vector(method="caa", name="bad/path")
@@ -263,7 +263,7 @@ class TestDeferredStubs:
 
 class TestRegistryArtifactKind:
     def test_steering_vector_in_valid_kinds(self):
-        from soup_cli.registry.store import _VALID_KINDS
+        from ai_forge_cli.registry.store import _VALID_KINDS
 
         assert "steering_vector" in _VALID_KINDS
 
@@ -275,7 +275,7 @@ class TestCLI:
     def test_cli_help_lists_steer(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["--help"])
@@ -285,7 +285,7 @@ class TestCLI:
     def test_steer_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["--help"])
@@ -294,7 +294,7 @@ class TestCLI:
     def test_steer_train_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["train", "--help"])
@@ -303,7 +303,7 @@ class TestCLI:
     def test_steer_apply_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["apply", "--help"])
@@ -312,7 +312,7 @@ class TestCLI:
     def test_steer_list_help(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["list", "--help"])
@@ -321,7 +321,7 @@ class TestCLI:
     def test_steer_train_unknown_method_rejected(self):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         runner = CliRunner()
         result = runner.invoke(app, [
@@ -338,7 +338,7 @@ class TestCLI:
     def test_steer_train_plan_only(self, tmp_path, monkeypatch):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         monkeypatch.chdir(tmp_path)
         # Create a tiny pairs JSONL to pass the path-containment check.
@@ -367,7 +367,7 @@ class TestServeSteerFlag:
     def test_serve_help_mentions_steer(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])

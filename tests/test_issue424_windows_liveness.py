@@ -16,9 +16,9 @@ from unittest.mock import patch
 
 import pytest
 
-from soup_cli.experiment import tracker as tracker_module
-from soup_cli.mcp_server import execution as execution_module
-from soup_cli.utils.process_liveness import process_is_alive
+from ai_forge_cli.experiment import tracker as tracker_module
+from ai_forge_cli.mcp_server import execution as execution_module
+from ai_forge_cli.utils.process_liveness import process_is_alive
 
 _STILL_ACTIVE_EXIT_CODE = 259
 
@@ -71,7 +71,7 @@ def test_win32_never_falls_back_to_os_kill():
     proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
     try:
         time.sleep(0.2)
-        with patch("soup_cli.utils.process_liveness.os.kill") as mock_kill:
+        with patch("ai_forge_cli.utils.process_liveness.os.kill") as mock_kill:
             process_is_alive(proc.pid)
         mock_kill.assert_not_called()
     finally:

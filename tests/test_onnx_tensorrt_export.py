@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 from unittest.mock import patch as mock_patch
 
-from soup_cli.commands.export import SUPPORTED_FORMATS
+from ai_forge_cli.commands.export import SUPPORTED_FORMATS
 
 # ─── Format Support Tests ────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ class TestOnnxExportCLI:
         """soup export --format onnx should fail if model path doesn't exist."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(
@@ -51,7 +51,7 @@ class TestOnnxExportCLI:
         """Export help should mention onnx format."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["export", "--help"])
@@ -61,7 +61,7 @@ class TestOnnxExportCLI:
         """Export help should mention tensorrt format."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["export", "--help"])
@@ -81,12 +81,12 @@ class TestOnnxExportFunction:
 
         mock_main_export = MagicMock()
         with mock_patch(
-            "soup_cli.commands.export.main_export",
+            "ai_forge_cli.commands.export.main_export",
             mock_main_export,
             create=True,
         ):
             # Need to patch the import inside the function
-            import soup_cli.commands.export as export_mod
+            import ai_forge_cli.commands.export as export_mod
             original = getattr(export_mod, "main_export", None)
             try:
                 # Inject mock at module level for the lazy import
@@ -119,7 +119,7 @@ class TestOnnxExportFunction:
             "optimum.exporters": MagicMock(),
             "optimum.exporters.onnx": MagicMock(main_export=mock_main_export),
         }):
-            import soup_cli.commands.export as export_mod
+            import ai_forge_cli.commands.export as export_mod
 
             export_mod._export_onnx(model_dir, None, None)
             call_kwargs = mock_main_export.call_args[1]
@@ -146,7 +146,7 @@ class TestTensorrtExportFunction:
             "optimum.exporters.onnx": MagicMock(),
             "tensorrt_llm": MagicMock(),
         }), mock_patch("subprocess.run", return_value=mock_result) as mock_run:
-            import soup_cli.commands.export as export_mod
+            import ai_forge_cli.commands.export as export_mod
 
             export_mod._export_tensorrt(
                 model_dir, str(tmp_path / "trt_out"), None
@@ -165,7 +165,7 @@ class TestExportUnsupportedFormat:
         """Export with unsupported format should exit with error."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         model_dir = tmp_path / "model"
         model_dir.mkdir()

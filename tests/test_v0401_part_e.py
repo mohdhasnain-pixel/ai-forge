@@ -15,8 +15,8 @@ from pathlib import Path
 
 
 def test_suggest_recipes_returns_close_matches():
-    from soup_cli.commands.recipes import _suggest_recipes
-    from soup_cli.recipes.catalog import RECIPES
+    from ai_forge_cli.commands.recipes import _suggest_recipes
+    from ai_forge_cli.recipes.catalog import RECIPES
 
     if not RECIPES:
         return
@@ -33,7 +33,7 @@ def test_suggest_recipes_returns_close_matches():
 
 
 def test_suggest_recipes_empty_for_garbage():
-    from soup_cli.commands.recipes import _suggest_recipes
+    from ai_forge_cli.commands.recipes import _suggest_recipes
 
     # Wholly unrelated query should return [] (cutoff=0.6).
     suggestions = _suggest_recipes("zzqqxxyyy_no_match_at_all")
@@ -44,7 +44,7 @@ def test_suggest_recipes_empty_for_garbage():
 
 
 def test_jsonl_loader_strips_utf8_bom(tmp_path: Path):
-    from soup_cli.data.loader import _load_jsonl
+    from ai_forge_cli.data.loader import _load_jsonl
 
     f = tmp_path / "with_bom.jsonl"
     # Write BOM + valid JSONL via binary mode so we control the bytes.
@@ -61,7 +61,7 @@ def test_jsonl_loader_strips_utf8_bom(tmp_path: Path):
 
 
 def test_jsonl_loader_no_bom_still_works(tmp_path: Path):
-    from soup_cli.data.loader import _load_jsonl
+    from ai_forge_cli.data.loader import _load_jsonl
 
     f = tmp_path / "no_bom.jsonl"
     f.write_text('{"prompt": "alpha"}\n{"prompt": "beta"}\n', encoding="utf-8")
@@ -76,7 +76,7 @@ def test_data_sample_default_filename_includes_strategy():
     """Source-level invariant: default ``out_path`` template names the strategy."""
     import inspect
 
-    from soup_cli.commands.data import sample_data
+    from ai_forge_cli.commands.data import sample_data
 
     src = inspect.getsource(sample_data)
     assert '_sampled_{strategy}.jsonl' in src, (

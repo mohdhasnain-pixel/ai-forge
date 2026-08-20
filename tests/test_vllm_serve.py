@@ -15,7 +15,7 @@ class TestVllmDetection:
 
     def test_is_vllm_available_when_installed(self):
         """Should return True when vllm is importable."""
-        from soup_cli.utils.vllm import is_vllm_available
+        from ai_forge_cli.utils.vllm import is_vllm_available
 
         mock_vllm = MagicMock()
         with patch.dict("sys.modules", {"vllm": mock_vllm}):
@@ -23,14 +23,14 @@ class TestVllmDetection:
 
     def test_is_vllm_available_when_not_installed(self):
         """Should return False when vllm is not importable."""
-        from soup_cli.utils.vllm import is_vllm_available
+        from ai_forge_cli.utils.vllm import is_vllm_available
 
         with patch.dict("sys.modules", {"vllm": None}):
             assert is_vllm_available() is False
 
     def test_get_vllm_version_installed(self):
         """Should return version string when installed."""
-        from soup_cli.utils.vllm import get_vllm_version
+        from ai_forge_cli.utils.vllm import get_vllm_version
 
         mock_vllm = MagicMock()
         mock_vllm.__version__ = "0.5.0"
@@ -39,14 +39,14 @@ class TestVllmDetection:
 
     def test_get_vllm_version_not_installed(self):
         """Should return 'not installed' when vllm is missing."""
-        from soup_cli.utils.vllm import get_vllm_version
+        from ai_forge_cli.utils.vllm import get_vllm_version
 
         with patch.dict("sys.modules", {"vllm": None}):
             assert get_vllm_version() == "not installed"
 
     def test_get_vllm_version_no_attr(self):
         """Should return 'unknown' if __version__ not set."""
-        from soup_cli.utils.vllm import get_vllm_version
+        from ai_forge_cli.utils.vllm import get_vllm_version
 
         mock_vllm = MagicMock(spec=[])  # no __version__ attr
         with patch.dict("sys.modules", {"vllm": mock_vllm}):
@@ -65,7 +65,7 @@ class TestServeBackendFlag:
         """serve --backend invalid should fail."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         # Create a fake model dir
@@ -82,13 +82,13 @@ class TestServeBackendFlag:
         """serve --backend vllm should fail if vllm not installed."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         model_dir = tmp_path / "model"
         model_dir.mkdir()
 
-        with patch("soup_cli.utils.vllm.is_vllm_available", return_value=False):
+        with patch("ai_forge_cli.utils.vllm.is_vllm_available", return_value=False):
             result = runner.invoke(
                 app, ["serve", "--model", str(model_dir), "--backend", "vllm"]
             )
@@ -100,7 +100,7 @@ class TestServeBackendFlag:
 
         from rich.console import Console
 
-        from soup_cli.commands import serve as serve_mod
+        from ai_forge_cli.commands import serve as serve_mod
 
         # Save original console
         original_console = serve_mod.console
@@ -111,7 +111,7 @@ class TestServeBackendFlag:
         model_dir.mkdir()
 
         try:
-            with patch("soup_cli.utils.vllm.is_vllm_available", return_value=True):
+            with patch("ai_forge_cli.utils.vllm.is_vllm_available", return_value=True):
                 # Will fail at model loading but we can check for hint output
                 try:
                     serve_mod.serve.__wrapped__(
@@ -138,7 +138,7 @@ class TestServeBackendFlag:
         """Default backend should be transformers."""
         import inspect
 
-        from soup_cli.commands.serve import serve
+        from ai_forge_cli.commands.serve import serve
 
         sig = inspect.signature(serve)
         backend_param = sig.parameters.get("backend")
@@ -149,7 +149,7 @@ class TestServeBackendFlag:
         """Backend param should accept 'vllm' as a value."""
         import inspect
 
-        from soup_cli.commands.serve import serve
+        from ai_forge_cli.commands.serve import serve
 
         sig = inspect.signature(serve)
         backend_param = sig.parameters.get("backend")
@@ -165,7 +165,7 @@ class TestServeTensorParallel:
         """serve should have --tensor-parallel param."""
         import inspect
 
-        from soup_cli.commands.serve import serve
+        from ai_forge_cli.commands.serve import serve
 
         sig = inspect.signature(serve)
         assert "tensor_parallel" in sig.parameters
@@ -174,7 +174,7 @@ class TestServeTensorParallel:
         """Default tensor parallel size should be 1."""
         import inspect
 
-        from soup_cli.commands.serve import serve
+        from ai_forge_cli.commands.serve import serve
 
         sig = inspect.signature(serve)
         tp_param = sig.parameters["tensor_parallel"]
@@ -184,7 +184,7 @@ class TestServeTensorParallel:
         """serve should have --gpu-memory param."""
         import inspect
 
-        from soup_cli.commands.serve import serve
+        from ai_forge_cli.commands.serve import serve
 
         sig = inspect.signature(serve)
         assert "gpu_memory_utilization" in sig.parameters
@@ -193,7 +193,7 @@ class TestServeTensorParallel:
         """Default GPU memory utilization should be 0.9."""
         import inspect
 
-        from soup_cli.commands.serve import serve
+        from ai_forge_cli.commands.serve import serve
 
         sig = inspect.signature(serve)
         param = sig.parameters["gpu_memory_utilization"]
@@ -223,7 +223,7 @@ class TestCreateVllmEngine:
         }):
             from importlib import reload
 
-            import soup_cli.utils.vllm as vllm_mod
+            import ai_forge_cli.utils.vllm as vllm_mod
 
             reload(vllm_mod)
 
@@ -257,7 +257,7 @@ class TestCreateVllmEngine:
         }):
             from importlib import reload
 
-            import soup_cli.utils.vllm as vllm_mod
+            import ai_forge_cli.utils.vllm as vllm_mod
 
             reload(vllm_mod)
 
@@ -288,7 +288,7 @@ class TestCreateVllmEngine:
         }):
             from importlib import reload
 
-            import soup_cli.utils.vllm as vllm_mod
+            import ai_forge_cli.utils.vllm as vllm_mod
 
             reload(vllm_mod)
 
@@ -332,7 +332,7 @@ class TestCreateVllmApp:
         }):
             from importlib import reload
 
-            import soup_cli.utils.vllm as vllm_mod
+            import ai_forge_cli.utils.vllm as vllm_mod
 
             reload(vllm_mod)
 
@@ -363,7 +363,7 @@ class TestCreateVllmApp:
         }):
             from importlib import reload
 
-            import soup_cli.utils.vllm as vllm_mod
+            import ai_forge_cli.utils.vllm as vllm_mod
 
             reload(vllm_mod)
 
@@ -397,7 +397,7 @@ class TestCreateVllmApp:
         }):
             from importlib import reload
 
-            import soup_cli.utils.vllm as vllm_mod
+            import ai_forge_cli.utils.vllm as vllm_mod
 
             reload(vllm_mod)
 
@@ -434,7 +434,7 @@ class TestCreateVllmApp:
         }):
             from importlib import reload
 
-            import soup_cli.utils.vllm as vllm_mod
+            import ai_forge_cli.utils.vllm as vllm_mod
 
             reload(vllm_mod)
 
@@ -474,13 +474,13 @@ class TestServeVllmIntegration:
         mock_app = MagicMock()
 
         with patch(
-            "soup_cli.utils.vllm.create_vllm_engine",
+            "ai_forge_cli.utils.vllm.create_vllm_engine",
             return_value=(mock_engine, "base-model"),
         ) as mock_create_engine, patch(
-            "soup_cli.utils.vllm.create_vllm_app",
+            "ai_forge_cli.utils.vllm.create_vllm_app",
             return_value=mock_app,
         ) as mock_create_app:
-            from soup_cli.commands.serve import _serve_vllm
+            from ai_forge_cli.commands.serve import _serve_vllm
 
             model_path = tmp_path / "model"
             model_path.mkdir()
@@ -521,13 +521,13 @@ class TestServeVllmIntegration:
         mock_app = MagicMock()
 
         with patch(
-            "soup_cli.utils.vllm.create_vllm_engine",
+            "ai_forge_cli.utils.vllm.create_vllm_engine",
             return_value=(mock_engine, "base-model"),
         ), patch(
-            "soup_cli.utils.vllm.create_vllm_app",
+            "ai_forge_cli.utils.vllm.create_vllm_app",
             return_value=mock_app,
         ) as mock_create_app:
-            from soup_cli.commands.serve import _serve_vllm
+            from ai_forge_cli.commands.serve import _serve_vllm
 
             model_path = tmp_path / "adapter"
             model_path.mkdir()
@@ -561,7 +561,7 @@ class TestTransformersBackendUnchanged:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
@@ -588,7 +588,7 @@ class TestTransformersBackendUnchanged:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -624,7 +624,7 @@ class TestServeCliRegistration:
         """soup serve --help should mention --backend flag."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -636,7 +636,7 @@ class TestServeCliRegistration:
         """soup serve --help should mention --tensor-parallel flag."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -648,7 +648,7 @@ class TestServeCliRegistration:
         """soup serve --help should mention --gpu-memory flag."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -685,7 +685,7 @@ class TestVersionDetectsVllm:
         """version --full extras should include serve-fast check."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         # Run version --full — vllm won't be installed but it shouldn't crash

@@ -19,7 +19,7 @@ class TestTensorBoardFlagConflict:
         """Should fail if both --wandb and --tensorboard are set."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         config_file = tmp_path / "soup.yaml"
         config_file.write_text(
@@ -41,7 +41,7 @@ class TestTensorBoardFlagConflict:
         """--tensorboard alone should not trigger conflict error."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         config_file = tmp_path / "soup.yaml"
         config_file.write_text(
@@ -69,7 +69,7 @@ class TestTensorBoardImportCheck:
         """Should fail with install hint when tensorboard is not available."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         config_file = tmp_path / "soup.yaml"
         config_file.write_text(
@@ -81,7 +81,7 @@ class TestTensorBoardImportCheck:
 
         # Patch the specific import inside train.py to raise ImportError
         with mock_patch(
-            "soup_cli.commands.train.typer",
+            "ai_forge_cli.commands.train.typer",
             wraps=__import__("typer"),
         ):
             original_import = __builtins__["__import__"] if isinstance(
@@ -112,7 +112,7 @@ class TestTensorBoardCLI:
         """Train command should show --tensorboard in help."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["train", "--help"])
@@ -124,7 +124,7 @@ class TestTensorBoardCLI:
         """--tensorboard help should mention TensorBoard."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["train", "--help"])
@@ -140,8 +140,8 @@ class TestTensorBoardTrainerIntegration:
 
     def test_sft_trainer_accepts_tensorboard_report_to(self):
         """SFT trainer should accept report_to='tensorboard'."""
-        from soup_cli.config.schema import SoupConfig
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.schema import SoupConfig
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -153,8 +153,8 @@ class TestTensorBoardTrainerIntegration:
 
     def test_dpo_trainer_accepts_tensorboard_report_to(self):
         """DPO trainer should accept report_to='tensorboard'."""
-        from soup_cli.config.schema import SoupConfig
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.config.schema import SoupConfig
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -166,8 +166,8 @@ class TestTensorBoardTrainerIntegration:
 
     def test_grpo_trainer_accepts_tensorboard_report_to(self):
         """GRPO trainer should accept report_to='tensorboard'."""
-        from soup_cli.config.schema import SoupConfig
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.config.schema import SoupConfig
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -179,8 +179,8 @@ class TestTensorBoardTrainerIntegration:
 
     def test_kto_trainer_accepts_tensorboard_report_to(self):
         """KTO trainer should accept report_to='tensorboard'."""
-        from soup_cli.config.schema import SoupConfig
-        from soup_cli.trainer.kto import KTOTrainerWrapper
+        from ai_forge_cli.config.schema import SoupConfig
+        from ai_forge_cli.trainer.kto import KTOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -199,7 +199,7 @@ class TestTensorBoardSweepRouting:
 
     def test_sweep_run_single_with_tensorboard_report_to(self):
         """Sweep _run_single should pass report_to through to trainer."""
-        from soup_cli.config.schema import SoupConfig
+        from ai_forge_cli.config.schema import SoupConfig
 
         cfg = SoupConfig(
             base="some-model",
@@ -218,20 +218,20 @@ class TestTensorBoardSweepRouting:
         }
         fake_gpu_info = {"memory_total": "0 MB", "memory_total_bytes": 0}
 
-        with mock_patch("soup_cli.data.loader.load_dataset", return_value=fake_dataset), \
-             mock_patch("soup_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
-             mock_patch("soup_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
-             mock_patch("soup_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
-             mock_patch("soup_cli.monitoring.display.TrainingDisplay"), \
-             mock_patch("soup_cli.trainer.sft.SFTTrainerWrapper.setup"), \
+        with mock_patch("ai_forge_cli.data.loader.load_dataset", return_value=fake_dataset), \
+             mock_patch("ai_forge_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
+             mock_patch("ai_forge_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
+             mock_patch("ai_forge_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
+             mock_patch("ai_forge_cli.monitoring.display.TrainingDisplay"), \
+             mock_patch("ai_forge_cli.trainer.sft.SFTTrainerWrapper.setup"), \
              mock_patch(
-                 "soup_cli.trainer.sft.SFTTrainerWrapper.train", return_value=fake_result
+                 "ai_forge_cli.trainer.sft.SFTTrainerWrapper.train", return_value=fake_result
              ):
             mock_tracker = MagicMock()
             mock_tracker.start_run.return_value = "run-tb-1"
             mock_tracker_cls.return_value = mock_tracker
 
-            from soup_cli.commands.sweep import _run_single
+            from ai_forge_cli.commands.sweep import _run_single
 
             result = _run_single(cfg, {}, "tb_run_1", None)
 
@@ -248,7 +248,7 @@ class TestTensorBoardHappyPath:
         """--tensorboard should print 'enabled' when tensorboard is available."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         config_file = tmp_path / "soup.yaml"
         config_file.write_text(

@@ -97,7 +97,7 @@ def _tiny_model_and_tok(d: int = 8, n_layers: int = 3, vocab: int = 64):
 
 class TestProbeKernel:
     def test_module_imports(self) -> None:
-        from soup_cli.utils import probe_kernel
+        from ai_forge_cli.utils import probe_kernel
 
         for name in (
             "compute_contrast_probe",
@@ -109,7 +109,7 @@ class TestProbeKernel:
             assert hasattr(probe_kernel, name), name
 
     def test_contrast_probe_separates_classes(self) -> None:
-        from soup_cli.utils.probe_kernel import (
+        from ai_forge_cli.utils.probe_kernel import (
             apply_linear_probe,
             compute_contrast_probe,
         )
@@ -128,7 +128,7 @@ class TestProbeKernel:
         assert apply_linear_probe(new_neg, w, threshold)[0] < threshold
 
     def test_contrast_probe_unit_norm(self) -> None:
-        from soup_cli.utils.probe_kernel import compute_contrast_probe
+        from ai_forge_cli.utils.probe_kernel import compute_contrast_probe
 
         w, _ = compute_contrast_probe(
             np.ones((4, 8)) * 2.0, np.ones((4, 8)) * -1.0
@@ -136,32 +136,32 @@ class TestProbeKernel:
         assert np.linalg.norm(w) == pytest.approx(1.0, abs=1e-5)
 
     def test_contrast_probe_degenerate_rejected(self) -> None:
-        from soup_cli.utils.probe_kernel import compute_contrast_probe
+        from ai_forge_cli.utils.probe_kernel import compute_contrast_probe
 
         same = np.ones((4, 8))
         with pytest.raises(ValueError, match="degenerate"):
             compute_contrast_probe(same, same)
 
     def test_contrast_probe_dim_mismatch(self) -> None:
-        from soup_cli.utils.probe_kernel import compute_contrast_probe
+        from ai_forge_cli.utils.probe_kernel import compute_contrast_probe
 
         with pytest.raises(ValueError, match="hidden-dim mismatch"):
             compute_contrast_probe(np.ones((4, 8)), np.ones((4, 6)))
 
     def test_contrast_probe_non_2d_rejected(self) -> None:
-        from soup_cli.utils.probe_kernel import compute_contrast_probe
+        from ai_forge_cli.utils.probe_kernel import compute_contrast_probe
 
         with pytest.raises(ValueError, match="2D"):
             compute_contrast_probe(np.ones(8), np.ones((4, 8)))
 
     def test_contrast_probe_empty_rejected(self) -> None:
-        from soup_cli.utils.probe_kernel import compute_contrast_probe
+        from ai_forge_cli.utils.probe_kernel import compute_contrast_probe
 
         with pytest.raises(ValueError, match="non-empty"):
             compute_contrast_probe(np.empty((0, 8)), np.ones((4, 8)))
 
     def test_contrast_probe_non_finite_rejected(self) -> None:
-        from soup_cli.utils.probe_kernel import compute_contrast_probe
+        from ai_forge_cli.utils.probe_kernel import compute_contrast_probe
 
         bad = np.ones((4, 8))
         bad[0, 0] = np.inf
@@ -169,25 +169,25 @@ class TestProbeKernel:
             compute_contrast_probe(bad, np.ones((4, 8)))
 
     def test_apply_linear_probe_shape_mismatch(self) -> None:
-        from soup_cli.utils.probe_kernel import apply_linear_probe
+        from ai_forge_cli.utils.probe_kernel import apply_linear_probe
 
         with pytest.raises(ValueError, match="shape mismatch"):
             apply_linear_probe(np.ones((3, 8)), np.ones(6), 0.0)
 
     def test_apply_linear_probe_bool_threshold(self) -> None:
-        from soup_cli.utils.probe_kernel import apply_linear_probe
+        from ai_forge_cli.utils.probe_kernel import apply_linear_probe
 
         with pytest.raises(TypeError, match="threshold"):
             apply_linear_probe(np.ones((3, 8)), np.ones(8), True)
 
     def test_apply_linear_probe_nan_threshold(self) -> None:
-        from soup_cli.utils.probe_kernel import apply_linear_probe
+        from ai_forge_cli.utils.probe_kernel import apply_linear_probe
 
         with pytest.raises(ValueError, match="finite"):
             apply_linear_probe(np.ones((3, 8)), np.ones(8), float("nan"))
 
     def test_flagged_rate(self) -> None:
-        from soup_cli.utils.probe_kernel import flagged_rate
+        from ai_forge_cli.utils.probe_kernel import flagged_rate
 
         assert flagged_rate(np.array([1.0, 2.0, 3.0, 4.0]), 2.5) == 0.5
         assert flagged_rate(np.array([]), 0.0) == 0.0
@@ -195,7 +195,7 @@ class TestProbeKernel:
             flagged_rate(np.ones((2, 2)), 0.0)
 
     def test_classify_probe_rate_bands(self) -> None:
-        from soup_cli.utils.probe_kernel import classify_probe_rate
+        from ai_forge_cli.utils.probe_kernel import classify_probe_rate
 
         assert classify_probe_rate(0.0, minor=0.05, major=0.20) == "OK"
         # boundary lands in the MORE SEVERE bucket
@@ -204,7 +204,7 @@ class TestProbeKernel:
         assert classify_probe_rate(0.10, minor=0.05, major=0.20) == "MINOR"
 
     def test_classify_probe_rate_invalid(self) -> None:
-        from soup_cli.utils.probe_kernel import classify_probe_rate
+        from ai_forge_cli.utils.probe_kernel import classify_probe_rate
 
         with pytest.raises(TypeError):
             classify_probe_rate(True, minor=0.05, major=0.20)
@@ -221,35 +221,35 @@ class TestProbeKernel:
 
 class TestExtractLayerActivations:
     def test_resolve_layer_module(self) -> None:
-        from soup_cli.utils.live_eval import resolve_layer_module
+        from ai_forge_cli.utils.live_eval import resolve_layer_module
 
         model, _ = _tiny_model_and_tok()
         mod = resolve_layer_module(model, "model.layers.1")
         assert mod is model.model.layers[1]
 
     def test_resolve_layer_module_bad_path(self) -> None:
-        from soup_cli.utils.live_eval import resolve_layer_module
+        from ai_forge_cli.utils.live_eval import resolve_layer_module
 
         model, _ = _tiny_model_and_tok()
         with pytest.raises(ValueError, match="could not resolve"):
             resolve_layer_module(model, "model.nope.5")
 
     def test_resolve_layer_module_rejects_dunder(self) -> None:
-        from soup_cli.utils.live_eval import resolve_layer_module
+        from ai_forge_cli.utils.live_eval import resolve_layer_module
 
         model, _ = _tiny_model_and_tok()
         with pytest.raises(ValueError, match="invalid layer path"):
             resolve_layer_module(model, "model.__class__")
 
     def test_resolve_layer_module_empty(self) -> None:
-        from soup_cli.utils.live_eval import resolve_layer_module
+        from ai_forge_cli.utils.live_eval import resolve_layer_module
 
         model, _ = _tiny_model_and_tok()
         with pytest.raises(ValueError, match="non-empty"):
             resolve_layer_module(model, "  ")
 
     def test_extract_mean_pooled(self) -> None:
-        from soup_cli.utils.live_eval import extract_layer_activations
+        from ai_forge_cli.utils.live_eval import extract_layer_activations
 
         model, tok = _tiny_model_and_tok(d=8)
         acts = extract_layer_activations(
@@ -260,7 +260,7 @@ class TestExtractLayerActivations:
         assert acts.dtype == np.float32
 
     def test_extract_per_token(self) -> None:
-        from soup_cli.utils.live_eval import extract_layer_activations
+        from ai_forge_cli.utils.live_eval import extract_layer_activations
 
         model, tok = _tiny_model_and_tok(d=8)
         acts = extract_layer_activations(
@@ -271,7 +271,7 @@ class TestExtractLayerActivations:
         assert acts.shape == (5, 8)
 
     def test_extract_per_token_token_cap(self) -> None:
-        from soup_cli.utils.live_eval import extract_layer_activations
+        from ai_forge_cli.utils.live_eval import extract_layer_activations
 
         model, tok = _tiny_model_and_tok(d=8)
         acts = extract_layer_activations(
@@ -281,7 +281,7 @@ class TestExtractLayerActivations:
         assert acts.shape[0] == 4
 
     def test_extract_bad_pool(self) -> None:
-        from soup_cli.utils.live_eval import extract_layer_activations
+        from ai_forge_cli.utils.live_eval import extract_layer_activations
 
         model, tok = _tiny_model_and_tok()
         with pytest.raises(ValueError, match="pool"):
@@ -291,7 +291,7 @@ class TestExtractLayerActivations:
             )
 
     def test_extract_empty_prompts(self) -> None:
-        from soup_cli.utils.live_eval import extract_layer_activations
+        from ai_forge_cli.utils.live_eval import extract_layer_activations
 
         model, tok = _tiny_model_and_tok()
         with pytest.raises(ValueError, match="non-empty"):
@@ -300,7 +300,7 @@ class TestExtractLayerActivations:
             )
 
     def test_hook_removed_after_extract(self) -> None:
-        from soup_cli.utils.live_eval import extract_layer_activations
+        from ai_forge_cli.utils.live_eval import extract_layer_activations
 
         model, tok = _tiny_model_and_tok()
         target = model.model.layers[1]
@@ -318,14 +318,14 @@ class TestExtractLayerActivations:
 
 class TestSleeperRealWeights:
     def test_reexports(self) -> None:
-        from soup_cli.utils import sleeper_probe
+        from ai_forge_cli.utils import sleeper_probe
 
         assert hasattr(sleeper_probe, "compute_contrast_probe")
         assert hasattr(sleeper_probe, "load_probe_weights")
 
     def test_load_npz(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.sleeper_probe import load_probe_weights
+        from ai_forge_cli.utils.sleeper_probe import load_probe_weights
 
         p = tmp_path / "probe.npz"
         np.savez(p, w=np.ones(8, dtype=np.float32), threshold=np.array(2.5))
@@ -335,7 +335,7 @@ class TestSleeperRealWeights:
 
     def test_load_npy_threshold_default(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.sleeper_probe import load_probe_weights
+        from ai_forge_cli.utils.sleeper_probe import load_probe_weights
 
         np.save(tmp_path / "probe.npy", np.ones(8, dtype=np.float32))
         w, thr = load_probe_weights("probe.npy")
@@ -346,7 +346,7 @@ class TestSleeperRealWeights:
         monkeypatch.chdir(tmp_path)
         from safetensors.numpy import save_file
 
-        from soup_cli.utils.sleeper_probe import load_probe_weights
+        from ai_forge_cli.utils.sleeper_probe import load_probe_weights
 
         save_file(
             {
@@ -361,7 +361,7 @@ class TestSleeperRealWeights:
 
     def test_load_bad_extension(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.sleeper_probe import load_probe_weights
+        from ai_forge_cli.utils.sleeper_probe import load_probe_weights
 
         (tmp_path / "probe.bin").write_bytes(b"x")
         with pytest.raises(ValueError, match="npz / .npy / .safetensors"):
@@ -369,14 +369,14 @@ class TestSleeperRealWeights:
 
     def test_load_outside_cwd(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.sleeper_probe import load_probe_weights
+        from ai_forge_cli.utils.sleeper_probe import load_probe_weights
 
         with pytest.raises(ValueError):
             load_probe_weights(str(tmp_path.parent / "x.npz"))
 
     def test_load_npz_missing_w(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.sleeper_probe import load_probe_weights
+        from ai_forge_cli.utils.sleeper_probe import load_probe_weights
 
         np.savez(tmp_path / "probe.npz", notw=np.ones(8))
         with pytest.raises(KeyError, match="'w'"):
@@ -384,7 +384,7 @@ class TestSleeperRealWeights:
 
     def test_load_non_1d(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.sleeper_probe import load_probe_weights
+        from ai_forge_cli.utils.sleeper_probe import load_probe_weights
 
         np.save(tmp_path / "probe.npy", np.ones((2, 4), dtype=np.float32))
         with pytest.raises(ValueError, match="1D"):
@@ -392,7 +392,7 @@ class TestSleeperRealWeights:
 
     def test_load_non_finite(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.sleeper_probe import load_probe_weights
+        from ai_forge_cli.utils.sleeper_probe import load_probe_weights
 
         bad = np.ones(8, dtype=np.float32)
         bad[0] = np.inf
@@ -405,7 +405,7 @@ class TestSleeperRealWeights:
         import os
 
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.sleeper_probe import load_probe_weights
+        from ai_forge_cli.utils.sleeper_probe import load_probe_weights
 
         real = tmp_path / "real.npz"
         np.savez(real, w=np.ones(8))
@@ -415,7 +415,7 @@ class TestSleeperRealWeights:
             load_probe_weights("link.npz")
 
     def test_run_with_weights_arbitrary_base(self) -> None:
-        from soup_cli.utils.sleeper_probe import run_sleeper_probe
+        from ai_forge_cli.utils.sleeper_probe import run_sleeper_probe
 
         acts = np.zeros((10, 8), dtype=np.float32)
         acts[:2] = 10.0  # 2 of 10 tokens score high → 20% → MAJOR (1%/5% bands)
@@ -426,7 +426,7 @@ class TestSleeperRealWeights:
         assert result.verdict == "MAJOR"
 
     def test_run_with_weights_dim_mismatch(self) -> None:
-        from soup_cli.utils.sleeper_probe import run_sleeper_probe
+        from ai_forge_cli.utils.sleeper_probe import run_sleeper_probe
 
         with pytest.raises(ValueError, match="hidden_dim mismatch"):
             run_sleeper_probe(
@@ -434,13 +434,13 @@ class TestSleeperRealWeights:
             )
 
     def test_run_with_bad_weights_tuple(self) -> None:
-        from soup_cli.utils.sleeper_probe import run_sleeper_probe
+        from ai_forge_cli.utils.sleeper_probe import run_sleeper_probe
 
         with pytest.raises(TypeError, match="W, threshold"):
             run_sleeper_probe(np.ones((3, 8), dtype=np.float32), "x", weights=[1, 2, 3])
 
     def test_run_with_bad_threshold(self) -> None:
-        from soup_cli.utils.sleeper_probe import run_sleeper_probe
+        from ai_forge_cli.utils.sleeper_probe import run_sleeper_probe
 
         with pytest.raises(TypeError, match="threshold"):
             run_sleeper_probe(
@@ -449,7 +449,7 @@ class TestSleeperRealWeights:
 
     def test_synthetic_fallback_still_works(self) -> None:
         # The SHA-256 fallback path must remain (back-compat, #215 criterion).
-        from soup_cli.utils.sleeper_probe import run_sleeper_probe
+        from ai_forge_cli.utils.sleeper_probe import run_sleeper_probe
 
         acts = np.zeros((50, 4096), dtype=np.float32)
         result = run_sleeper_probe(acts, "meta-llama/Llama-3-8B")
@@ -457,7 +457,7 @@ class TestSleeperRealWeights:
         assert result.verdict in {"OK", "MINOR", "MAJOR"}
 
     def test_contrast_to_run_end_to_end(self) -> None:
-        from soup_cli.utils.sleeper_probe import (
+        from ai_forge_cli.utils.sleeper_probe import (
             compute_contrast_probe,
             run_sleeper_probe,
         )
@@ -483,7 +483,7 @@ class TestSleeperCli215:
 
     def test_sleeper_with_weights(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         acts = self._write_acts(tmp_path, 10, 8, 1)
         np.savez(tmp_path / "w.npz", w=np.array([1.0] + [0.0] * 7), threshold=np.array(1.0))
@@ -495,7 +495,7 @@ class TestSleeperCli215:
 
     def test_sleeper_weights_requires_evidence(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         np.savez(tmp_path / "w.npz", w=np.ones(8))
         res = runner.invoke(app, ["sleeper", "custom/model", "--weights", "w.npz"])
@@ -504,7 +504,7 @@ class TestSleeperCli215:
 
     def test_sleeper_bad_weights_file(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         acts = self._write_acts(tmp_path, 4, 8, 0)
         res = runner.invoke(
@@ -513,7 +513,7 @@ class TestSleeperCli215:
         assert res.exit_code == 2
 
     def test_sleeper_help_lists_weights(self) -> None:
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         res = runner.invoke(app, ["sleeper", "--help"])
         assert res.exit_code == 0
@@ -543,19 +543,19 @@ def _fake_sae_dir(tmp_path, d_model: int = 4, n_feats: int = 8) -> str:
 
 class TestHubsSnapshotDownload:
     def test_validate_cache_dir_under_tmp(self, tmp_path) -> None:
-        from soup_cli.utils.hubs import _validate_cache_dir
+        from ai_forge_cli.utils.hubs import _validate_cache_dir
 
         sub = tmp_path / "cache"
         assert _validate_cache_dir(str(sub)).endswith("cache")
 
     def test_validate_cache_dir_outside(self) -> None:
-        from soup_cli.utils.hubs import _validate_cache_dir
+        from ai_forge_cli.utils.hubs import _validate_cache_dir
 
         with pytest.raises(ValueError, match="HOME"):
             _validate_cache_dir("/etc/passwd-dir")
 
     def test_snapshot_download_bad_repo(self, tmp_path) -> None:
-        from soup_cli.utils.hubs import snapshot_download
+        from ai_forge_cli.utils.hubs import snapshot_download
 
         with pytest.raises(ValueError, match="null bytes"):
             snapshot_download("a\x00b", cache_dir=str(tmp_path / "c"))
@@ -563,7 +563,7 @@ class TestHubsSnapshotDownload:
     def test_snapshot_download_happy(self, tmp_path, monkeypatch) -> None:
         import huggingface_hub
 
-        from soup_cli.utils import hubs
+        from ai_forge_cli.utils import hubs
 
         captured = {}
 
@@ -585,7 +585,7 @@ class TestHubsSnapshotDownload:
         assert out.endswith("cache")
 
     def test_snapshot_download_bad_allow_patterns(self, tmp_path) -> None:
-        from soup_cli.utils.hubs import snapshot_download
+        from ai_forge_cli.utils.hubs import snapshot_download
 
         with pytest.raises(TypeError, match="allow_patterns"):
             snapshot_download(
@@ -598,8 +598,8 @@ class TestHubsSnapshotDownload:
 
 class TestDownloadSae:
     def test_rejects_non_allowlisted(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils import hubs
-        from soup_cli.utils.sae_diff import download_sae
+        from ai_forge_cli.utils import hubs
+        from ai_forge_cli.utils.sae_diff import download_sae
 
         # Must reject BEFORE any network call.
         called = {"n": 0}
@@ -612,8 +612,8 @@ class TestDownloadSae:
         assert called["n"] == 0
 
     def test_happy_path(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils import hubs
-        from soup_cli.utils.sae_diff import download_sae
+        from ai_forge_cli.utils import hubs
+        from ai_forge_cli.utils.sae_diff import download_sae
 
         snap = _fake_sae_dir(tmp_path)
         captured = {}
@@ -634,8 +634,8 @@ class TestDownloadSae:
         assert os.path.join(".soup", "sae-cache") in captured["cache_dir"]
 
     def test_custom_cache_dir(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils import hubs
-        from soup_cli.utils.sae_diff import download_sae
+        from ai_forge_cli.utils import hubs
+        from ai_forge_cli.utils.sae_diff import download_sae
 
         snap = _fake_sae_dir(tmp_path)
         captured = {}
@@ -649,8 +649,8 @@ class TestDownloadSae:
         assert captured["cache_dir"] == str(tmp_path / "mycache")
 
     def test_no_safetensors(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils import hubs
-        from soup_cli.utils.sae_diff import download_sae
+        from ai_forge_cli.utils import hubs
+        from ai_forge_cli.utils.sae_diff import download_sae
 
         empty = tmp_path / "empty"
         empty.mkdir()
@@ -662,8 +662,8 @@ class TestDownloadSae:
             download_sae("openai/sae-gpt2-small")
 
     def test_tofu_rejection_propagates(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils import hubs
-        from soup_cli.utils.sae_diff import download_sae
+        from ai_forge_cli.utils import hubs
+        from ai_forge_cli.utils.sae_diff import download_sae
 
         def _boom(repo_id, **k):
             raise ValueError("namespace-pin refused: author changed")
@@ -675,7 +675,7 @@ class TestDownloadSae:
     def test_default_cache_dir_under_home(self) -> None:
         import os
 
-        from soup_cli.utils.sae_diff import default_sae_cache_dir
+        from ai_forge_cli.utils.sae_diff import default_sae_cache_dir
 
         d = default_sae_cache_dir()
         assert d.startswith(os.path.expanduser("~"))
@@ -684,7 +684,7 @@ class TestDownloadSae:
 
 class TestSaeDiffCli216:
     def test_auto_download_in_help(self) -> None:
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         res = runner.invoke(app, ["sae-diff", "--help"])
         assert res.exit_code == 0
@@ -692,7 +692,7 @@ class TestSaeDiffCli216:
 
     def test_auto_download_unknown_repo(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         (tmp_path / "pre.json").write_text(
             json.dumps({"activations": [[1.0, 2.0, 3.0, 4.0]]}), encoding="utf-8"
@@ -709,8 +709,8 @@ class TestSaeDiffCli216:
 
     def test_auto_download_happy(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands import probe as probe_cmd
-        from soup_cli.utils import sae_diff
+        from ai_forge_cli.commands import probe as probe_cmd
+        from ai_forge_cli.utils import sae_diff
 
         # Mock download_sae to return a small in-memory SAE.
         fake_sae = {
@@ -745,7 +745,7 @@ class TestTruthHarmProbes:
     def _mod(self, mod_name):
         import importlib
 
-        return importlib.import_module(f"soup_cli.utils.{mod_name}")
+        return importlib.import_module(f"ai_forge_cli.utils.{mod_name}")
 
     def test_module_imports(self, mod_name) -> None:
         mod = self._mod(mod_name)
@@ -846,7 +846,7 @@ class TestTruthHarmProbes:
 
 class TestProbePackTruthHarm:
     def test_packs_contain_three_kinds(self) -> None:
-        from soup_cli.utils.probe_pack import BUNDLED_PACKS
+        from ai_forge_cli.utils.probe_pack import BUNDLED_PACKS
 
         for base, pack in BUNDLED_PACKS.items():
             kinds = {p.kind for p in pack.probes}
@@ -854,7 +854,7 @@ class TestProbePackTruthHarm:
             assert len(pack.probes) == 3
 
     def test_pack_json_lists_truth_harm(self) -> None:
-        from soup_cli.utils.probe_pack import get_probe_pack, render_pack_json
+        from ai_forge_cli.utils.probe_pack import get_probe_pack, render_pack_json
 
         pack = get_probe_pack("meta-llama/Llama-3-8B")
         payload = json.loads(render_pack_json(pack))
@@ -873,14 +873,14 @@ class TestTruthHarmCli:
         return "acts.json"
 
     def test_help(self, kind) -> None:
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         res = runner.invoke(app, [kind, "--help"])
         assert res.exit_code == 0
 
     def test_no_evidence_metadata_panel(self, kind, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         res = runner.invoke(app, [kind, "meta-llama/Llama-3-8B"])
         assert res.exit_code == 0, res.output
@@ -888,7 +888,7 @@ class TestTruthHarmCli:
 
     def test_unknown_base(self, kind, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         res = runner.invoke(app, [kind, "evil/nope"])
         assert res.exit_code == 2
@@ -896,7 +896,7 @@ class TestTruthHarmCli:
 
     def test_with_evidence_runs(self, kind, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         acts = self._acts(tmp_path, 10, 4096, 0)
         res = runner.invoke(app, [kind, "meta-llama/Llama-3-8B", "--evidence", acts])
@@ -905,7 +905,7 @@ class TestTruthHarmCli:
 
     def test_with_weights_major_exit2(self, kind, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         acts = self._acts(tmp_path, 10, 8, 5)
         np.savez(tmp_path / "w.npz", w=np.array([1.0] + [0.0] * 7), threshold=np.array(0.5))
@@ -923,32 +923,32 @@ class TestTruthHarmCli:
 
 class TestMeasureInterferenceValidation:
     def test_bad_base(self) -> None:
-        from soup_cli.utils.interference_live import measure_interference_losses
+        from ai_forge_cli.utils.interference_live import measure_interference_losses
 
         with pytest.raises(ValueError, match="base"):
             measure_interference_losses("", {"a": "p", "b": "q"}, [])
 
     def test_too_few_adapters(self) -> None:
-        from soup_cli.utils.interference_live import measure_interference_losses
+        from ai_forge_cli.utils.interference_live import measure_interference_losses
 
         with pytest.raises(ValueError, match="at least 2"):
             measure_interference_losses("base", {"a": "p"}, [])
 
     def test_too_many_adapters(self) -> None:
-        from soup_cli.utils.interference_live import measure_interference_losses
+        from ai_forge_cli.utils.interference_live import measure_interference_losses
 
         adapters = {f"a{i}": f"p{i}" for i in range(17)}
         with pytest.raises(ValueError, match="too many"):
             measure_interference_losses("base", adapters, [])
 
     def test_bad_adapter_path_type(self) -> None:
-        from soup_cli.utils.interference_live import measure_interference_losses
+        from ai_forge_cli.utils.interference_live import measure_interference_losses
 
         with pytest.raises(ValueError, match="path"):
             measure_interference_losses("base", {"a": "p", "b": 123}, [])
 
     def test_adapters_not_mapping(self) -> None:
-        from soup_cli.utils.interference_live import measure_interference_losses
+        from ai_forge_cli.utils.interference_live import measure_interference_losses
 
         with pytest.raises(TypeError, match="mapping"):
             measure_interference_losses("base", ["a", "b"], [])
@@ -959,7 +959,7 @@ class TestParseAdapterSpecs:
         monkeypatch.chdir(tmp_path)
         (tmp_path / "a").mkdir()
         (tmp_path / "b").mkdir()
-        from soup_cli.commands.probe import _parse_adapter_specs
+        from ai_forge_cli.commands.probe import _parse_adapter_specs
 
         out = _parse_adapter_specs(["a=a", "b=b"])
         assert out == {"a": "a", "b": "b"}
@@ -967,7 +967,7 @@ class TestParseAdapterSpecs:
     def test_no_equals(self) -> None:
         import typer
 
-        from soup_cli.commands.probe import _parse_adapter_specs
+        from ai_forge_cli.commands.probe import _parse_adapter_specs
 
         with pytest.raises(typer.BadParameter, match="name=path"):
             _parse_adapter_specs(["aaa"])
@@ -977,7 +977,7 @@ class TestParseAdapterSpecs:
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "x").mkdir()
-        from soup_cli.commands.probe import _parse_adapter_specs
+        from ai_forge_cli.commands.probe import _parse_adapter_specs
 
         with pytest.raises(typer.BadParameter, match="duplicate"):
             _parse_adapter_specs(["a=x", "a=x"])
@@ -986,7 +986,7 @@ class TestParseAdapterSpecs:
         import typer
 
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import _parse_adapter_specs
+        from ai_forge_cli.commands.probe import _parse_adapter_specs
 
         with pytest.raises(typer.BadParameter, match="under the cwd"):
             _parse_adapter_specs([f"a={tmp_path.parent}"])
@@ -994,7 +994,7 @@ class TestParseAdapterSpecs:
     def test_empty(self) -> None:
         import typer
 
-        from soup_cli.commands.probe import _parse_adapter_specs
+        from ai_forge_cli.commands.probe import _parse_adapter_specs
 
         with pytest.raises(typer.BadParameter, match="2 --adapter"):
             _parse_adapter_specs(None)
@@ -1013,7 +1013,7 @@ class TestInterferenceMeasureCli:
         return "eval.jsonl"
 
     def test_measure_in_help(self) -> None:
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         res = runner.invoke(app, ["interference", "--help"])
         assert res.exit_code == 0
@@ -1022,7 +1022,7 @@ class TestInterferenceMeasureCli:
 
     def test_measure_requires_base_model(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         suite = self._eval_suite(tmp_path)
         (tmp_path / "a").mkdir()
@@ -1036,7 +1036,7 @@ class TestInterferenceMeasureCli:
 
     def test_measure_bad_adapter_spec(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         suite = self._eval_suite(tmp_path)
         res = runner.invoke(
@@ -1049,7 +1049,7 @@ class TestInterferenceMeasureCli:
 
     def test_measure_missing_suite(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         (tmp_path / "a").mkdir()
         (tmp_path / "b").mkdir()
@@ -1062,8 +1062,8 @@ class TestInterferenceMeasureCli:
 
     def test_measure_happy(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
-        from soup_cli.utils import interference_live
+        from ai_forge_cli.commands.probe import app
+        from ai_forge_cli.utils import interference_live
 
         suite = self._eval_suite(tmp_path)
         (tmp_path / "a").mkdir()
@@ -1086,8 +1086,8 @@ class TestInterferenceMeasureCli:
 
     def test_measure_major_exit2(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
-        from soup_cli.utils import interference_live
+        from ai_forge_cli.commands.probe import app
+        from ai_forge_cli.utils import interference_live
 
         suite = self._eval_suite(tmp_path)
         (tmp_path / "a").mkdir()
@@ -1108,7 +1108,7 @@ class TestInterferenceMeasureCli:
 
     def test_legacy_losses_path_still_works(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         (tmp_path / "losses.json").write_text(
             json.dumps({
@@ -1122,7 +1122,7 @@ class TestInterferenceMeasureCli:
 
     def test_no_args_errors(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.probe import app
+        from ai_forge_cli.commands.probe import app
 
         res = runner.invoke(app, ["interference"])
         assert res.exit_code == 2
@@ -1137,7 +1137,7 @@ class TestInterferenceMeasureCli:
 class TestLoadCapturePrompts:
     def test_jsonl_objects(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.train import _load_capture_prompts
+        from ai_forge_cli.commands.train import _load_capture_prompts
 
         p = tmp_path / "p.jsonl"
         p.write_text(
@@ -1147,21 +1147,21 @@ class TestLoadCapturePrompts:
         assert _load_capture_prompts(str(p)) == ["hello", "world"]
 
     def test_json_strings(self, tmp_path) -> None:
-        from soup_cli.commands.train import _load_capture_prompts
+        from ai_forge_cli.commands.train import _load_capture_prompts
 
         p = tmp_path / "p.jsonl"
         p.write_text('"one"\n"two"\n', encoding="utf-8")
         assert _load_capture_prompts(str(p)) == ["one", "two"]
 
     def test_raw_text_lines(self, tmp_path) -> None:
-        from soup_cli.commands.train import _load_capture_prompts
+        from ai_forge_cli.commands.train import _load_capture_prompts
 
         p = tmp_path / "p.txt"
         p.write_text("plain one\nplain two\n\n", encoding="utf-8")
         assert _load_capture_prompts(str(p)) == ["plain one", "plain two"]
 
     def test_cap(self, tmp_path) -> None:
-        from soup_cli.commands.train import _load_capture_prompts
+        from ai_forge_cli.commands.train import _load_capture_prompts
 
         p = tmp_path / "p.jsonl"
         p.write_text("\n".join(f'"line{i}"' for i in range(400)), encoding="utf-8")
@@ -1170,7 +1170,7 @@ class TestLoadCapturePrompts:
 
 class TestCaptureActivations:
     def _fake_live(self, monkeypatch, capture_call=None):
-        from soup_cli.utils import live_eval
+        from ai_forge_cli.utils import live_eval
 
         def _fake_load(model_id, *, adapter=None, device=None, trust_remote_code=False):
             if capture_call is not None:
@@ -1190,7 +1190,7 @@ class TestCaptureActivations:
 
     def test_writes_activations_json(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.train import _capture_activations
+        from ai_forge_cli.commands.train import _capture_activations
 
         self._fake_live(monkeypatch)
         out_dir = tmp_path / "out"
@@ -1215,7 +1215,7 @@ class TestCaptureActivations:
 
     def test_requires_prompts(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.train import _capture_activations
+        from ai_forge_cli.commands.train import _capture_activations
 
         (tmp_path / "out").mkdir()
         with pytest.raises(ValueError, match="requires --capture-prompts"):
@@ -1223,7 +1223,7 @@ class TestCaptureActivations:
 
     def test_empty_prompts(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.train import _capture_activations
+        from ai_forge_cli.commands.train import _capture_activations
 
         (tmp_path / "out").mkdir()
         (tmp_path / "empty.jsonl").write_text("\n\n", encoding="utf-8")
@@ -1234,7 +1234,7 @@ class TestCaptureActivations:
 
     def test_bad_layer(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.train import _capture_activations
+        from ai_forge_cli.commands.train import _capture_activations
 
         (tmp_path / "out").mkdir()
         (tmp_path / "p.jsonl").write_text('"x"', encoding="utf-8")
@@ -1243,7 +1243,7 @@ class TestCaptureActivations:
 
     def test_prompts_outside_cwd(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.train import _capture_activations
+        from ai_forge_cli.commands.train import _capture_activations
 
         (tmp_path / "out").mkdir()
         with pytest.raises(ValueError):
@@ -1254,7 +1254,7 @@ class TestCaptureActivations:
 
     def test_detects_lora_adapter(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.train import _capture_activations
+        from ai_forge_cli.commands.train import _capture_activations
 
         call: dict = {}
         self._fake_live(monkeypatch, capture_call=call)
@@ -1270,7 +1270,7 @@ class TestCaptureActivations:
 
     def test_full_model_no_adapter(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.train import _capture_activations
+        from ai_forge_cli.commands.train import _capture_activations
 
         call: dict = {}
         self._fake_live(monkeypatch, capture_call=call)
@@ -1287,7 +1287,7 @@ class TestCaptureActivations:
 
 class TestTrainCaptureCli:
     def test_flags_in_help(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         res = runner.invoke(app, ["train", "--help"])
         assert res.exit_code == 0
@@ -1304,45 +1304,45 @@ class TestTrainCaptureCli:
 class TestReviewFollowups:
     # --- validate_bundled_base (only indirectly tested before) ---
     def test_validate_bundled_base_canonicalises(self) -> None:
-        from soup_cli.utils import probe_kernel as pk
+        from ai_forge_cli.utils import probe_kernel as pk
 
         spec = pk.ProbeSpec(base="Meta/Foo", hidden_dim=8, threshold=0.0, description="")
         bundled = {"Meta/Foo": spec}
         assert pk.validate_bundled_base("meta/foo", bundled) == "Meta/Foo"
 
     def test_validate_bundled_base_rejects_bool(self) -> None:
-        from soup_cli.utils import probe_kernel as pk
+        from ai_forge_cli.utils import probe_kernel as pk
 
         with pytest.raises(TypeError, match="bool"):
             pk.validate_bundled_base(True, {})
 
     def test_validate_bundled_base_rejects_int(self) -> None:
-        from soup_cli.utils import probe_kernel as pk
+        from ai_forge_cli.utils import probe_kernel as pk
 
         with pytest.raises(TypeError, match="str"):
             pk.validate_bundled_base(5, {})
 
     def test_validate_bundled_base_null_byte(self) -> None:
-        from soup_cli.utils import probe_kernel as pk
+        from ai_forge_cli.utils import probe_kernel as pk
 
         with pytest.raises(ValueError, match="null byte"):
             pk.validate_bundled_base("a\x00b", {"a\x00b": object()})
 
     def test_validate_bundled_base_oversize(self) -> None:
-        from soup_cli.utils import probe_kernel as pk
+        from ai_forge_cli.utils import probe_kernel as pk
 
         with pytest.raises(ValueError, match="chars"):
             pk.validate_bundled_base("x" * 5000, {})
 
     def test_validate_bundled_base_unknown(self) -> None:
-        from soup_cli.utils import probe_kernel as pk
+        from ai_forge_cli.utils import probe_kernel as pk
 
         with pytest.raises(ValueError, match="no bundled probe"):
             pk.validate_bundled_base("nope", {"a": object()})
 
     # --- synthetic_probe_weights determinism + salt separation ---
     def test_synthetic_weights_deterministic(self) -> None:
-        from soup_cli.utils.probe_kernel import synthetic_probe_weights
+        from ai_forge_cli.utils.probe_kernel import synthetic_probe_weights
 
         a = synthetic_probe_weights("base/x", 16, salt="truth")
         b = synthetic_probe_weights("base/x", 16, salt="truth")
@@ -1351,27 +1351,27 @@ class TestReviewFollowups:
         assert float(np.linalg.norm(a)) == pytest.approx(1.0, abs=1e-5)
 
     def test_synthetic_weights_salt_distinguishes(self) -> None:
-        from soup_cli.utils.probe_kernel import synthetic_probe_weights
+        from ai_forge_cli.utils.probe_kernel import synthetic_probe_weights
 
         truth = synthetic_probe_weights("base/x", 16, salt="truth")
         harm = synthetic_probe_weights("base/x", 16, salt="harm")
         assert not np.array_equal(truth, harm)
 
     def test_synthetic_weights_empty_salt(self) -> None:
-        from soup_cli.utils.probe_kernel import synthetic_probe_weights
+        from ai_forge_cli.utils.probe_kernel import synthetic_probe_weights
 
         with pytest.raises(ValueError, match="salt"):
             synthetic_probe_weights("base/x", 16, salt="")
 
     def test_synthetic_weights_bool_hidden_dim(self) -> None:
-        from soup_cli.utils.probe_kernel import synthetic_probe_weights
+        from ai_forge_cli.utils.probe_kernel import synthetic_probe_weights
 
         with pytest.raises(TypeError, match="hidden_dim"):
             synthetic_probe_weights("base/x", True, salt="truth")
 
     # --- run_linear_probe (generic orchestrator) ---
     def test_run_linear_probe_major(self) -> None:
-        from soup_cli.utils.probe_kernel import run_linear_probe
+        from ai_forge_cli.utils.probe_kernel import run_linear_probe
 
         # w aligned with every row, threshold below all scores → 100% flagged.
         acts = np.ones((10, 4), dtype=np.float32)
@@ -1385,7 +1385,7 @@ class TestReviewFollowups:
         assert res.num_tokens == 10
 
     def test_run_linear_probe_non_2d(self) -> None:
-        from soup_cli.utils.probe_kernel import run_linear_probe
+        from ai_forge_cli.utils.probe_kernel import run_linear_probe
 
         with pytest.raises(ValueError, match="2D"):
             run_linear_probe(
@@ -1395,7 +1395,7 @@ class TestReviewFollowups:
 
     # --- run_bundled_probe: weights path skips the allowlist ---
     def test_run_bundled_weights_skips_allowlist(self) -> None:
-        from soup_cli.utils.probe_kernel import run_bundled_probe
+        from ai_forge_cli.utils.probe_kernel import run_bundled_probe
 
         acts = np.ones((5, 4), dtype=np.float32)
         res = run_bundled_probe(
@@ -1406,7 +1406,7 @@ class TestReviewFollowups:
         assert res.verdict == "MAJOR"  # arbitrary base accepted with weights
 
     def test_run_bundled_weights_dim_mismatch(self) -> None:
-        from soup_cli.utils.probe_kernel import run_bundled_probe
+        from ai_forge_cli.utils.probe_kernel import run_bundled_probe
 
         acts = np.ones((5, 4), dtype=np.float32)
         with pytest.raises(ValueError, match="hidden_dim mismatch"):
@@ -1417,7 +1417,7 @@ class TestReviewFollowups:
             )
 
     def test_run_bundled_synthetic_requires_bundled_base(self) -> None:
-        from soup_cli.utils.probe_kernel import run_bundled_probe
+        from ai_forge_cli.utils.probe_kernel import run_bundled_probe
 
         acts = np.ones((5, 4), dtype=np.float32)
         with pytest.raises(ValueError, match="no bundled probe"):
@@ -1428,7 +1428,7 @@ class TestReviewFollowups:
 
     # --- ProbeSpec / ProbeResult __post_init__ + frozen ---
     def test_probespec_rejects_bad_hidden_dim(self) -> None:
-        from soup_cli.utils.probe_kernel import ProbeSpec
+        from ai_forge_cli.utils.probe_kernel import ProbeSpec
 
         with pytest.raises(ValueError, match="hidden_dim"):
             ProbeSpec(base="b", hidden_dim=0, threshold=0.0, description="")
@@ -1436,14 +1436,14 @@ class TestReviewFollowups:
     def test_probespec_frozen(self) -> None:
         import dataclasses
 
-        from soup_cli.utils.probe_kernel import ProbeSpec
+        from ai_forge_cli.utils.probe_kernel import ProbeSpec
 
         spec = ProbeSpec(base="b", hidden_dim=8, threshold=0.0, description="")
         with pytest.raises(dataclasses.FrozenInstanceError):
             spec.base = "other"  # type: ignore[misc]
 
     def test_proberesult_rejects_bad_verdict(self) -> None:
-        from soup_cli.utils.probe_kernel import ProbeResult
+        from ai_forge_cli.utils.probe_kernel import ProbeResult
 
         with pytest.raises(ValueError, match="verdict"):
             ProbeResult(
@@ -1452,7 +1452,7 @@ class TestReviewFollowups:
             )
 
     def test_proberesult_rejects_negative_tokens(self) -> None:
-        from soup_cli.utils.probe_kernel import ProbeResult
+        from ai_forge_cli.utils.probe_kernel import ProbeResult
 
         with pytest.raises(ValueError, match="num_tokens"):
             ProbeResult(
@@ -1463,7 +1463,7 @@ class TestReviewFollowups:
     def test_proberesult_frozen(self) -> None:
         import dataclasses
 
-        from soup_cli.utils.probe_kernel import ProbeResult
+        from ai_forge_cli.utils.probe_kernel import ProbeResult
 
         res = ProbeResult(
             kind="truth", base="b", num_tokens=1, flag_rate=0.0,
@@ -1474,7 +1474,7 @@ class TestReviewFollowups:
 
     # --- resolve_layer_module PEFT-wrapper fallback (live smoke caught this) ---
     def test_resolve_layer_module_peft_fallback(self) -> None:
-        from soup_cli.utils.live_eval import resolve_layer_module
+        from ai_forge_cli.utils.live_eval import resolve_layer_module
 
         inner, _ = _tiny_model_and_tok()
 
@@ -1488,7 +1488,7 @@ class TestReviewFollowups:
         assert resolved is inner.model.layers[1]
 
     def test_resolve_layer_module_dunder_blocked_even_with_peft(self) -> None:
-        from soup_cli.utils.live_eval import resolve_layer_module
+        from ai_forge_cli.utils.live_eval import resolve_layer_module
 
         inner, _ = _tiny_model_and_tok()
 
@@ -1503,7 +1503,7 @@ class TestReviewFollowups:
     # --- new checkpoint-layout guard in _capture_activations ---
     def test_capture_rejects_dir_without_config(self, tmp_path, monkeypatch) -> None:
         monkeypatch.chdir(tmp_path)
-        from soup_cli.commands.train import _capture_activations
+        from ai_forge_cli.commands.train import _capture_activations
 
         out_dir = tmp_path / "out"
         out_dir.mkdir()  # neither config.json nor adapter_config.json
@@ -1516,15 +1516,15 @@ class TestReviewFollowups:
 
 class TestPatchInvariants:
     def test_version_bumped(self) -> None:
-        import soup_cli
+        import ai_forge_cli
 
-        major_minor = tuple(int(x) for x in soup_cli.__version__.split(".")[:3])
+        major_minor = tuple(int(x) for x in ai_forge_cli.__version__.split(".")[:3])
         assert major_minor >= (0, 71, 8)
 
     def test_new_modules_no_top_level_heavy(self) -> None:
         import pathlib
 
-        src = pathlib.Path(__file__).resolve().parent.parent / "src" / "soup_cli"
+        src = pathlib.Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli"
         for rel in (
             "utils/probe_kernel.py",
             "utils/truth_probe.py",
@@ -1539,7 +1539,7 @@ class TestPatchInvariants:
     def test_probe_kernel_no_top_level_numpy(self) -> None:
         import pathlib
 
-        src = pathlib.Path(__file__).resolve().parent.parent / "src" / "soup_cli"
+        src = pathlib.Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli"
         text = (src / "utils" / "probe_kernel.py").read_text(encoding="utf-8")
         assert "\nimport numpy" not in text
         assert "\nimport torch" not in text

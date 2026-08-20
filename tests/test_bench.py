@@ -2,7 +2,7 @@
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -35,8 +35,8 @@ def test_bench_custom_prompts(tmp_path, monkeypatch):
 
     from unittest.mock import patch
 
-    with patch("soup_cli.commands.infer._load_model") as mock_load, \
-         patch("soup_cli.commands.infer._generate") as mock_generate:
+    with patch("ai_forge_cli.commands.infer._load_model") as mock_load, \
+         patch("ai_forge_cli.commands.infer._generate") as mock_generate:
 
         mock_load.return_value = ("mock_model", "mock_tokenizer")
         mock_generate.return_value = (None, 10)
@@ -84,12 +84,12 @@ def test_bench_happy_path(tmp_path, monkeypatch):
 
     from unittest.mock import patch
 
-    with patch("soup_cli.commands.infer._load_model") as mock_load, \
-         patch("soup_cli.commands.infer._generate") as mock_generate, \
+    with patch("ai_forge_cli.commands.infer._load_model") as mock_load, \
+         patch("ai_forge_cli.commands.infer._generate") as mock_generate, \
          patch("torch.cuda.is_available") as mock_is_available, \
          patch("torch.cuda.reset_peak_memory_stats"), \
          patch("torch.cuda.max_memory_allocated") as mock_max_memory, \
-         patch("soup_cli.utils.gpu.detect_device") as mock_detect_device:
+         patch("ai_forge_cli.utils.gpu.detect_device") as mock_detect_device:
 
         mock_load.return_value = ("mock_model", "mock_tokenizer")
         mock_generate.return_value = ("mock response", 128)
@@ -122,10 +122,10 @@ def test_bench_cpu_warning(tmp_path, monkeypatch):
 
     from unittest.mock import patch
 
-    with patch("soup_cli.commands.infer._load_model") as mock_load, \
-         patch("soup_cli.commands.infer._generate") as mock_generate, \
+    with patch("ai_forge_cli.commands.infer._load_model") as mock_load, \
+         patch("ai_forge_cli.commands.infer._generate") as mock_generate, \
          patch("torch.cuda.is_available") as mock_is_available, \
-         patch("soup_cli.utils.gpu.detect_device") as mock_detect_device:
+         patch("ai_forge_cli.utils.gpu.detect_device") as mock_detect_device:
 
         mock_load.return_value = ("mock_model", "mock_tokenizer")
         mock_generate.return_value = ("mock response", 10)

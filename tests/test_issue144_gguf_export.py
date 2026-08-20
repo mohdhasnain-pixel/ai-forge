@@ -26,7 +26,7 @@ def _run_export(model_dir, output):
     """
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = CliRunner().invoke(
         app,
@@ -54,7 +54,7 @@ class TestTheF16IntermediateCannotEatAUsersFile:
     def test_a_quantised_export_does_not_delete_an_existing_f16_gguf(
         self, tmp_path, monkeypatch
     ):
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         model = self._model_dir(tmp_path)
         llama = self._fake_llama_cpp(tmp_path)
@@ -84,7 +84,7 @@ class TestTheF16IntermediateCannotEatAUsersFile:
     def test_the_intermediate_is_still_cleaned_up(self, tmp_path, monkeypatch):
         """CONTROL. Fixing the collision must not leave multi-gigabyte f16 files
         behind — that would trade data loss for a full disk."""
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         model = self._model_dir(tmp_path)
         llama = self._fake_llama_cpp(tmp_path)
@@ -120,7 +120,7 @@ class TestConvertDepsAreInstalledOnEveryPath:
         silently shells out to pip is a surprise, and an existing test that mocks
         `subprocess.run` to catch clone attempts saw the pip call instead.
         """
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         model = tmp_path / "mymodel"
         model.mkdir()
@@ -155,7 +155,7 @@ class TestConvertDepsAreInstalledOnEveryPath:
         turned an existing clone-detection test into a false failure — and that
         machine was CI, not this one.
         """
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         llama = tmp_path / "llama.cpp"
         llama.mkdir()
@@ -172,7 +172,7 @@ class TestConvertDepsAreInstalledOnEveryPath:
     ):
         """CONTROL. It must not shell out to pip on every export when the packages
         are already present — that is a network call in the hot path."""
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         calls = []
         monkeypatch.setattr(export_mod.subprocess, "run", lambda *a, **k: calls.append(a))
@@ -183,7 +183,7 @@ class TestConvertDepsAreInstalledOnEveryPath:
     def test_the_install_runs_when_they_are_not(self, tmp_path, monkeypatch):
         """The other half. Without this, pinning "does not call pip" would be
         satisfied by an installer that never installs anything."""
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         calls = []
         monkeypatch.setattr(export_mod.subprocess, "run", lambda *a, **k: calls.append(a))

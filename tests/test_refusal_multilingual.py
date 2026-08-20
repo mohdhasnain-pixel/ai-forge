@@ -1,6 +1,6 @@
 """Multilingual refusal-pattern coverage (closes issue #166 / v0.56.0 KL #3).
 
-Extends ``soup_cli/utils/diagnose/refusal.py::_REFUSAL_PATTERNS`` from
+Extends ``ai_forge_cli/utils/diagnose/refusal.py::_REFUSAL_PATTERNS`` from
 English-only to ``en/es/fr/de/ru`` via a per-language pattern table.
 Tests cover: per-language phrase detection, dispatch isolation (a Spanish
 phrase under ``lang='en'`` does NOT match), validator rejection matrix,
@@ -14,7 +14,7 @@ from types import MappingProxyType
 
 import pytest
 
-from soup_cli.utils.diagnose.refusal import (
+from ai_forge_cli.utils.diagnose.refusal import (
     _MAX_LANG_CODE_LEN,
     _MAX_REFUSAL_SCAN,
     _REFUSAL_PATTERNS_BY_LANG,
@@ -315,7 +315,7 @@ class TestPerLanguageInputCap:
         # Intentional internal access — mirrors v0.56.0 policy in
         # ``test_v0560.py::TestReviewFixCoverage::test_refusal_input_capped``
         # so the cap stays asserted at the underscore name.
-        from soup_cli.utils.diagnose.refusal import _MAX_REFUSAL_SCAN
+        from ai_forge_cli.utils.diagnose.refusal import _MAX_REFUSAL_SCAN
 
         assert _MAX_REFUSAL_SCAN == 8192
 
@@ -323,7 +323,7 @@ class TestPerLanguageInputCap:
         # The Spanish refusal phrase sits AFTER the 8192-byte cap, so
         # the bounded regex never sees it. (Behaviour parity with v0.56.0
         # English cap.) Intentional internal access — see note above.
-        from soup_cli.utils.diagnose.refusal import _MAX_REFUSAL_SCAN
+        from ai_forge_cli.utils.diagnose.refusal import _MAX_REFUSAL_SCAN
 
         prefix = "x" * (_MAX_REFUSAL_SCAN + 100)
         text = prefix + " No puedo ayudar"
@@ -492,12 +492,12 @@ class TestSourceWiring:
     accidentally break (LOW tdd-review fix)."""
 
     def test_apply_pattern_is_module_level_function(self) -> None:
-        import soup_cli.utils.diagnose.refusal as mod
+        import ai_forge_cli.utils.diagnose.refusal as mod
 
         assert callable(getattr(mod, "_apply_pattern", None))
 
     def test_supported_refusal_langs_is_public_export(self) -> None:
-        import soup_cli.utils.diagnose.refusal as mod
+        import ai_forge_cli.utils.diagnose.refusal as mod
 
         # No leading underscore — public surface contract.
         assert hasattr(mod, "SUPPORTED_REFUSAL_LANGS")
@@ -507,7 +507,7 @@ class TestSourceWiring:
         from pathlib import Path
 
         source = Path(
-            "src/soup_cli/utils/diagnose/refusal.py"
+            "src/ai_forge_cli/utils/diagnose/refusal.py"
         ).read_text(encoding="utf-8")
         # Pure-python utility: no torch / transformers / peft at module
         # top so this stays GPU-free + CI-fast.

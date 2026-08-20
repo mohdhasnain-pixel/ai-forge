@@ -28,7 +28,7 @@ def _lora_keys(stem="base_model.model.layers.0.self_attn.q_proj"):
 # ---------------------------------------------------------------------------
 class TestMergeConcat:
     def test_mixed_rank_add_reconstructs_exactly(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         rng = np.random.default_rng(0)
         ak, bk = _lora_keys()
@@ -47,7 +47,7 @@ class TestMergeConcat:
         assert skipped == ()
 
     def test_mixed_rank_negate_reconstructs_exactly(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         rng = np.random.default_rng(1)
         ak, bk = _lora_keys()
@@ -65,7 +65,7 @@ class TestMergeConcat:
     def test_zero_scaling_zeroes_that_adapters_contribution(self):
         # scalings=[0.0, 1.0] must zero the first adapter's contribution (proves
         # the CLI's explicit `is None` fallback threads a real 0.0, not `or 1.0`).
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         rng = np.random.default_rng(20)
         ak, bk = _lora_keys()
@@ -81,8 +81,8 @@ class TestMergeConcat:
 
     def test_concat_rank_cap_boundary(self, monkeypatch):
         # sum == cap is accepted; cap+1 is rejected (mutation-tight on `>`).
-        import soup_cli.utils.adapter_arithmetic as mod
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        import ai_forge_cli.utils.adapter_arithmetic as mod
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         monkeypatch.setattr(mod, "_MAX_CONCAT_RANK", 8)
         ak, bk = _lora_keys()
@@ -108,7 +108,7 @@ class TestMergeConcat:
     def test_non_lora_shape_mismatch_skipped(self):
         # A shared non-LoRA tensor with mismatched shapes falls into `skipped`,
         # not a crash / silent mismerge.
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         ak, bk = _lora_keys()
         bias = "base_model.model.layers.0.self_attn.q_proj.bias"
@@ -123,7 +123,7 @@ class TestMergeConcat:
     def test_scalings_baked_into_a(self):
         # Per-adapter scaling (alpha/r) baked into A block so a single-scaling
         # output adapter reproduces Σ cᵢ·sᵢ·(Bᵢ@Aᵢ).
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         rng = np.random.default_rng(2)
         ak, bk = _lora_keys()
@@ -136,7 +136,7 @@ class TestMergeConcat:
         assert np.allclose(delta_out, 2.0 * 3.0 * (b1 @ a1), atol=1e-4)
 
     def test_rank_truncation_svd(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         rng = np.random.default_rng(3)
         ak, bk = _lora_keys()
@@ -157,7 +157,7 @@ class TestMergeConcat:
         assert np.allclose(merged[bk] @ merged[ak], best, atol=1e-3)
 
     def test_rank_larger_than_concat_no_truncation(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         rng = np.random.default_rng(4)
         ak, bk = _lora_keys()
@@ -169,7 +169,7 @@ class TestMergeConcat:
         assert new_rank == 2  # capped at the actual concatenated rank
 
     def test_rank_must_be_positive(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         ak, bk = _lora_keys()
         a1 = np.ones((2, 3), dtype=np.float32)
@@ -178,7 +178,7 @@ class TestMergeConcat:
             merge_task_arithmetic_concat([{ak: a1, bk: b1}], [1.0], rank=0)
 
     def test_length_mismatch_rejected(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         ak, bk = _lora_keys()
         with pytest.raises(ValueError, match="length"):
@@ -189,8 +189,8 @@ class TestMergeConcat:
     def test_concat_rank_cap_rejects_ballooning_module(self, monkeypatch):
         # A single abnormally-high-rank module is refused before the concat
         # allocation (DoS cap), pointing the operator at --rank.
-        import soup_cli.utils.adapter_arithmetic as mod
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        import ai_forge_cli.utils.adapter_arithmetic as mod
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         monkeypatch.setattr(mod, "_MAX_CONCAT_RANK", 8)
         ak, bk = _lora_keys()
@@ -207,8 +207,8 @@ class TestMergeConcat:
     def test_output_element_cap_rejects_amplified_output(self, monkeypatch):
         # Many modules padded to a uniform rank must be refused when the total
         # emitted element count exceeds the aggregate cap.
-        import soup_cli.utils.adapter_arithmetic as mod
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        import ai_forge_cli.utils.adapter_arithmetic as mod
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         monkeypatch.setattr(mod, "_MAX_OUTPUT_ELEMENTS", 100)
         w1, w2 = {}, {}
@@ -223,7 +223,7 @@ class TestMergeConcat:
 
     def test_incompatible_inner_dims_rejected(self):
         # Same module but in-dim (A cols) differs → cannot concat.
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         ak, bk = _lora_keys()
         a1 = np.ones((2, 3), dtype=np.float32)
@@ -239,7 +239,7 @@ class TestMergeConcat:
         # Two modules with different concat ranks must emit a UNIFORM-rank,
         # loadable adapter (zero-padded), not tensors of mismatched rank vs the
         # single config `r`. Reconstruction stays exact for both modules.
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         rng = np.random.default_rng(7)
         # module q: rank 4+8=12 ; module k: rank 2+2=4
@@ -270,7 +270,7 @@ class TestMergeConcat:
     def test_shared_non_lora_tensor_combined_linearly(self):
         # bias / modules_to_save present in every adapter must be combined
         # linearly (Σ cᵢ·tᵢ), not silently dropped (mirrors element-wise path).
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         ak, bk = _lora_keys()
         a1 = np.ones((4, 8), dtype=np.float32)
@@ -287,7 +287,7 @@ class TestMergeConcat:
         assert skipped == ()
 
     def test_disjoint_pair_stems_skipped(self):
-        from soup_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
+        from ai_forge_cli.utils.adapter_arithmetic import merge_task_arithmetic_concat
 
         a_ak, a_bk = _lora_keys("mod.a")
         b_ak, b_bk = _lora_keys("mod.b")
@@ -300,7 +300,7 @@ class TestMergeConcat:
 
 class TestReadAdapterScaling:
     def test_reads_scaling(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_arithmetic import read_adapter_lora_scaling
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_lora_scaling
 
         monkeypatch.chdir(tmp_path)
         d = tmp_path / "ad"
@@ -311,7 +311,7 @@ class TestReadAdapterScaling:
         assert read_adapter_lora_scaling("ad") == pytest.approx(2.0)
 
     def test_missing_returns_none(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_arithmetic import read_adapter_lora_scaling
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_lora_scaling
 
         monkeypatch.chdir(tmp_path)
         d = tmp_path / "ad"
@@ -319,7 +319,7 @@ class TestReadAdapterScaling:
         assert read_adapter_lora_scaling("ad") is None
 
     def test_zero_rank_returns_none(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_arithmetic import read_adapter_lora_scaling
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_lora_scaling
 
         monkeypatch.chdir(tmp_path)
         d = tmp_path / "ad"
@@ -332,7 +332,7 @@ class TestReadAdapterScaling:
     def test_zero_alpha_returns_zero_not_none(self, tmp_path, monkeypatch):
         # lora_alpha=0 with r>0 is a valid (intentionally-zeroed) task vector —
         # scaling is 0.0, NOT None. The CLI must not `or 1.0` it back to full.
-        from soup_cli.utils.adapter_arithmetic import read_adapter_lora_scaling
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_lora_scaling
 
         monkeypatch.chdir(tmp_path)
         d = tmp_path / "ad"
@@ -344,7 +344,7 @@ class TestReadAdapterScaling:
 
     def test_read_adapter_base_still_works(self, tmp_path, monkeypatch):
         # Regression: the shared-config refactor must not break read_adapter_base.
-        from soup_cli.utils.adapter_arithmetic import read_adapter_base
+        from ai_forge_cli.utils.adapter_arithmetic import read_adapter_base
 
         monkeypatch.chdir(tmp_path)
         d = tmp_path / "ad"
@@ -385,7 +385,7 @@ class TestWriteMergedAdapterConfigOverrides:
     def test_config_overrides_patch_r_and_alpha(self, tmp_path, monkeypatch):
         from safetensors.numpy import load_file
 
-        from soup_cli.utils.adapter_merge import write_merged_adapter
+        from ai_forge_cli.utils.adapter_merge import write_merged_adapter
 
         monkeypatch.chdir(tmp_path)
         src = _make_adapter(
@@ -406,7 +406,7 @@ class TestWriteMergedAdapterConfigOverrides:
         assert any("lora_A" in k for k in out_keys)
 
     def test_config_overrides_none_leaves_config_verbatim(self, tmp_path, monkeypatch):
-        from soup_cli.utils.adapter_merge import write_merged_adapter
+        from ai_forge_cli.utils.adapter_merge import write_merged_adapter
 
         monkeypatch.chdir(tmp_path)
         src = _make_adapter(
@@ -429,7 +429,7 @@ class TestArithmeticMixedRankCli:
     def _run(self, args, cwd):
         from typer.testing import CliRunner
 
-        from soup_cli.commands.adapters import app
+        from ai_forge_cli.commands.adapters import app
 
         runner = CliRunner()
         old = os.getcwd()

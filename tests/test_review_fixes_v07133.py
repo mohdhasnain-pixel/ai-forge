@@ -43,14 +43,14 @@ class TestVllmTrustRemoteCode:
         return captured
 
     def test_default_is_false(self, monkeypatch):
-        from soup_cli.utils.vllm import create_vllm_engine
+        from ai_forge_cli.utils.vllm import create_vllm_engine
 
         captured = self._install_fake_vllm(monkeypatch)
         create_vllm_engine(model_path="some/model")
         assert captured["trust_remote_code"] is False
 
     def test_true_is_threaded_through(self, monkeypatch):
-        from soup_cli.utils.vllm import create_vllm_engine
+        from ai_forge_cli.utils.vllm import create_vllm_engine
 
         captured = self._install_fake_vllm(monkeypatch)
         create_vllm_engine(model_path="some/model", trust_remote_code=True)
@@ -58,7 +58,7 @@ class TestVllmTrustRemoteCode:
 
     def test_serve_vllm_passes_resolved_trust(self, monkeypatch):
         # _serve_vllm must forward its trust_remote_code down to the engine.
-        import soup_cli.commands.serve as serve
+        import ai_forge_cli.commands.serve as serve
 
         seen: dict = {}
 
@@ -67,10 +67,10 @@ class TestVllmTrustRemoteCode:
             return object(), "m"
 
         monkeypatch.setattr(
-            "soup_cli.utils.vllm.create_vllm_engine", _fake_engine
+            "ai_forge_cli.utils.vllm.create_vllm_engine", _fake_engine
         )
         monkeypatch.setattr(
-            "soup_cli.utils.vllm.create_vllm_app",
+            "ai_forge_cli.utils.vllm.create_vllm_app",
             lambda **kw: object(),
         )
         serve._serve_vllm(
@@ -90,7 +90,7 @@ class TestVllmTrustRemoteCode:
 # --------------------------------------------------------------------------
 class TestVisionImageContainment:
     def test_absolute_traversal_dropped(self, tmp_path):
-        from soup_cli.data.loader import _validate_vision_images
+        from ai_forge_cli.data.loader import _validate_vision_images
 
         img_dir = tmp_path / "imgs"
         img_dir.mkdir()
@@ -106,7 +106,7 @@ class TestVisionImageContainment:
         assert len(out) == 1
 
     def test_relative_traversal_dropped(self, tmp_path):
-        from soup_cli.data.loader import _validate_vision_images
+        from ai_forge_cli.data.loader import _validate_vision_images
 
         img_dir = tmp_path / "imgs"
         img_dir.mkdir()
@@ -151,7 +151,7 @@ class TestAdapterScope:
     def _run(self, requested, active, names):
         import threading
 
-        from soup_cli.commands.serve import _adapter_scope
+        from ai_forge_cli.commands.serve import _adapter_scope
 
         model = _FakeAdapterModel()
         lock = threading.Lock()
@@ -185,7 +185,7 @@ class TestAdapterScope:
 
 class TestLoadNamedAdapters:
     def test_wraps_plain_model_then_loads_rest(self, monkeypatch):
-        import soup_cli.commands.serve as serve
+        import ai_forge_cli.commands.serve as serve
 
         loaded: dict = {"from_pretrained": [], "load_adapter": []}
 
@@ -232,9 +232,9 @@ def _write_sft_config(tmp_path):
 
 
 def _force_two_gpus(monkeypatch):
-    from soup_cli.commands import train as train_cmd
-    from soup_cli.utils import launcher as launcher_mod
-    from soup_cli.utils import topology as topo_mod
+    from ai_forge_cli.commands import train as train_cmd
+    from ai_forge_cli.utils import launcher as launcher_mod
+    from ai_forge_cli.utils import topology as topo_mod
 
     for var in ("RANK", "WORLD_SIZE", "LOCAL_RANK"):
         monkeypatch.delenv(var, raising=False)
@@ -250,7 +250,7 @@ def _force_two_gpus(monkeypatch):
 
 class TestDryRunNoReexec:
     def test_dry_run_does_not_execvp(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         _write_sft_config(tmp_path)
@@ -274,7 +274,7 @@ class TestDryRunNoReexec:
 
 class TestReexecForwardsFlags:
     def test_capture_flags_forwarded(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         _write_sft_config(tmp_path)
@@ -308,8 +308,8 @@ class TestReexecForwardsFlags:
 # --------------------------------------------------------------------------
 class TestMlxOptimizer:
     def test_train_passes_non_none_optimizer(self, tmp_path, monkeypatch):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.mlx_sft import MLXSFTTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.mlx_sft import MLXSFTTrainerWrapper
 
         cfg = load_config_from_string(
             "base: mlx-community/tiny\n"
@@ -378,7 +378,7 @@ class TestMlxOptimizer:
 # --------------------------------------------------------------------------
 class TestDataInspectEscape:
     def test_bracket_slash_does_not_crash(self, tmp_path, monkeypatch):
-        from soup_cli.commands.data import app as data_app
+        from ai_forge_cli.commands.data import app as data_app
 
         monkeypatch.chdir(tmp_path)
         data_file = tmp_path / "d.jsonl"
@@ -407,8 +407,8 @@ def _write_asr_input(tmp_path, rows):
 
 class TestAsrInferMetricGuard:
     def test_oversized_reference_does_not_crash(self, tmp_path, monkeypatch):
-        import soup_cli.commands.infer as infer
-        from soup_cli.cli import app as cli_app
+        import ai_forge_cli.commands.infer as infer
+        from ai_forge_cli.cli import app as cli_app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "a.wav").write_bytes(b"x")
@@ -441,8 +441,8 @@ class TestAsrInferMetricGuard:
 
 class TestAsrSkipControlStrip:
     def test_hostile_filename_is_stripped(self, tmp_path, monkeypatch):
-        import soup_cli.commands.infer as infer
-        from soup_cli.cli import app as cli_app
+        import ai_forge_cli.commands.infer as infer
+        from ai_forge_cli.cli import app as cli_app
 
         monkeypatch.chdir(tmp_path)
         # A filename carrying a raw ESC byte; transcriber raises so the skip
@@ -466,7 +466,7 @@ class TestAsrSkipControlStrip:
 
 class TestAsrTaskValidation:
     def test_bad_asr_task_rejected_upfront(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app as cli_app
+        from ai_forge_cli.cli import app as cli_app
 
         monkeypatch.chdir(tmp_path)
         _write_asr_input(tmp_path, [{"audio": "a.wav"}])
@@ -481,8 +481,8 @@ class TestAsrTaskValidation:
 
 class TestAsrAllSkippedExit:
     def test_all_rows_skipped_exit_2(self, tmp_path, monkeypatch):
-        import soup_cli.commands.infer as infer
-        from soup_cli.cli import app as cli_app
+        import ai_forge_cli.commands.infer as infer
+        from ai_forge_cli.cli import app as cli_app
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "a.wav").write_bytes(b"x")
@@ -508,7 +508,7 @@ class TestDistillKdShift:
     def test_mask_aligns_to_predicted_token(self):
         import torch
 
-        from soup_cli.trainer.distill import _compute_distill_term
+        from ai_forge_cli.trainer.distill import _compute_distill_term
 
         # seq=4, vocab=3. Teacher/student differ ONLY at position 1 (which,
         # after the causal shift, predicts token at index 2).
@@ -538,13 +538,13 @@ class TestDistillKdShift:
 # --------------------------------------------------------------------------
 class TestLoaderNonMapping:
     def test_bare_list_raises_valueerror(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="mapping"):
             load_config_from_string("- a\n- b\n")
 
     def test_scalar_raises_valueerror(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="mapping"):
             load_config_from_string("42\n")
@@ -575,7 +575,7 @@ class TestRunsEscape:
                 pass
 
         monkeypatch.setattr(
-            "soup_cli.experiment.tracker.ExperimentTracker", _FakeTracker
+            "ai_forge_cli.experiment.tracker.ExperimentTracker", _FakeTracker
         )
 
     def _crafted_run(self):
@@ -596,14 +596,14 @@ class TestRunsEscape:
         }
 
     def test_list_does_not_crash(self, monkeypatch):
-        from soup_cli.commands.runs import app as runs_app
+        from ai_forge_cli.commands.runs import app as runs_app
 
         self._install_fake_tracker(monkeypatch, self._crafted_run())
         result = CliRunner().invoke(runs_app, [])
         assert result.exit_code == 0, (result.output, repr(result.exception))
 
     def test_show_does_not_crash(self, monkeypatch):
-        from soup_cli.commands.runs import app as runs_app
+        from ai_forge_cli.commands.runs import app as runs_app
 
         self._install_fake_tracker(monkeypatch, self._crafted_run())
         result = CliRunner().invoke(runs_app, ["show", "abcd1234", "--no-plot"])
@@ -618,7 +618,7 @@ class TestConstantTimeToken:
         pytest.importorskip("fastapi")
         from starlette.testclient import TestClient
 
-        from soup_cli.ui.app import create_app, set_auth_token
+        from ai_forge_cli.ui.app import create_app, set_auth_token
 
         set_auth_token("a" * 32)
         app = create_app()
@@ -645,7 +645,7 @@ class TestConstantTimeToken:
 # --------------------------------------------------------------------------
 class TestAtomicWrites:
     def test_vscode_writes_and_honours_force(self, tmp_path, monkeypatch):
-        from soup_cli.utils.vscode_setup import write_vscode_launch
+        from ai_forge_cli.utils.vscode_setup import write_vscode_launch
 
         monkeypatch.chdir(tmp_path)
         out = write_vscode_launch(config_path="soup.yaml", target_dir=".vscode")
@@ -662,7 +662,7 @@ class TestAtomicWrites:
         assert Path(out).exists()
 
     def test_lr_finder_writes_under_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.utils.lr_finder import save_lr_finder_report
+        from ai_forge_cli.utils.lr_finder import save_lr_finder_report
 
         monkeypatch.chdir(tmp_path)
         out = tmp_path / "lr.json"
@@ -671,7 +671,7 @@ class TestAtomicWrites:
         assert "recommended_lr" in payload
 
     def test_lr_finder_rejects_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.utils.lr_finder import save_lr_finder_report
+        from ai_forge_cli.utils.lr_finder import save_lr_finder_report
 
         monkeypatch.chdir(tmp_path)
         outside = tmp_path.parent / "escape.json"

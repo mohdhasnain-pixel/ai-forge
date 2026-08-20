@@ -16,8 +16,8 @@ from typing import List
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.commands import advise as advise_cmd
-from soup_cli.utils.advise import (
+from ai_forge_cli.commands import advise as advise_cmd
+from ai_forge_cli.utils.advise import (
     CHOICES,
     TASK_CATEGORIES,
     DatasetProfile,
@@ -32,7 +32,7 @@ from soup_cli.utils.advise import (
     synth_probe_baselines,
     synth_probe_lora_delta,
 )
-from soup_cli.utils.advise_history import (
+from ai_forge_cli.utils.advise_history import (
     HistoryEntry,
     history_path,
     load_history,
@@ -647,7 +647,7 @@ class TestHistoryPath:
         # OS env layer rejects raw NUL bytes (POSIX execve / Win32 SetEnv
         # both refuse `\x00`), so we exercise the helper's defence-in-depth
         # NUL guard via a stubbed env dict rather than `monkeypatch.setenv`.
-        from soup_cli.utils import advise_history
+        from ai_forge_cli.utils import advise_history
 
         original = advise_history.os.environ
         try:
@@ -809,56 +809,56 @@ class TestCLI:
 
 class TestSourceWiring:
     def test_cli_registers_advise(self):
-        cli_path = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "cli.py"
+        cli_path = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "cli.py"
         text = cli_path.read_text(encoding="utf-8")
         assert "_advise_cmd" in text
         assert 'name="advise"' in text
 
     def test_version_bump(self):
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
         # Asserts a forward-compatible floor (v0.54.0 shipped advise);
         # later releases that bump the version must not regress this gate.
         assert __version__ >= "0.54.0"
 
     def test_advise_module_imports(self):
         # Importable without heavy deps (lazy imports inside helpers).
-        from soup_cli.commands import advise as _cmd  # noqa: F401
-        from soup_cli.utils import advise as _advise  # noqa: F401
-        from soup_cli.utils import advise_history as _hist  # noqa: F401
+        from ai_forge_cli.commands import advise as _cmd  # noqa: F401
+        from ai_forge_cli.utils import advise as _advise  # noqa: F401
+        from ai_forge_cli.utils import advise_history as _hist  # noqa: F401
 
 
 class TestArgvRewriter:
     def test_no_advise_in_argv(self):
-        from soup_cli.cli import _rewrite_advise_argv
+        from ai_forge_cli.cli import _rewrite_advise_argv
         argv = ["soup", "train", "--config", "x.yaml"]
         assert _rewrite_advise_argv(argv) == argv
 
     def test_advise_with_subcommand_unchanged(self):
-        from soup_cli.cli import _rewrite_advise_argv
+        from ai_forge_cli.cli import _rewrite_advise_argv
         for sub in ("run", "explain", "compare", "--help"):
             argv = ["soup", "advise", sub]
             assert _rewrite_advise_argv(argv) == argv
 
     def test_advise_with_data_injects_run(self):
-        from soup_cli.cli import _rewrite_advise_argv
+        from ai_forge_cli.cli import _rewrite_advise_argv
         argv = ["soup", "advise", "data.jsonl"]
         out = _rewrite_advise_argv(argv)
         assert out == ["soup", "advise", "run", "data.jsonl"]
 
     def test_advise_with_data_and_flags(self):
-        from soup_cli.cli import _rewrite_advise_argv
+        from ai_forge_cli.cli import _rewrite_advise_argv
         argv = ["soup", "advise", "data.jsonl", "--goal", "summarize"]
         out = _rewrite_advise_argv(argv)
         assert out[2] == "run"
         assert out[3] == "data.jsonl"
 
     def test_advise_with_flag_only_unchanged(self):
-        from soup_cli.cli import _rewrite_advise_argv
+        from ai_forge_cli.cli import _rewrite_advise_argv
         argv = ["soup", "advise", "--probe"]
         assert _rewrite_advise_argv(argv) == argv
 
     def test_advise_alone_unchanged(self):
-        from soup_cli.cli import _rewrite_advise_argv
+        from ai_forge_cli.cli import _rewrite_advise_argv
         argv = ["soup", "advise"]
         assert _rewrite_advise_argv(argv) == argv
 
@@ -1053,7 +1053,7 @@ class TestAdviseSchemaField:
     """Plan's cross-cutting bullet: schema-only `advise: AdviseConfig` on SoupConfig."""
 
     def test_advise_field_default_none(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """
 base: test-model
@@ -1065,7 +1065,7 @@ data:
         assert cfg.advise is None
 
     def test_advise_goal_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """
 base: test-model
@@ -1088,13 +1088,13 @@ advise:
         # bypass YAML (e.g. construct AdviseConfig directly).
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import AdviseConfig
+        from ai_forge_cli.config.schema import AdviseConfig
 
         with pytest.raises(ValidationError, match="null"):
             AdviseConfig(goal="bad\x00goal")
 
     def test_advise_oversize_goal_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         oversized = "a" * 5000
         yaml_text = f"""

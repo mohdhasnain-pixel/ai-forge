@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import soup_cli
+import ai_forge_cli
 
 
 def _src(rel: str) -> str:
-    return (Path(soup_cli.__file__).parent / rel).read_text(encoding="utf-8")
+    return (Path(ai_forge_cli.__file__).parent / rel).read_text(encoding="utf-8")
 
 
 def test_license_matrix_permissive_weak_symmetric():
-    from soup_cli.utils.license_matrix import (
+    from ai_forge_cli.utils.license_matrix import (
         _PERMISSIVE,
         _WEAK_COPYLEFT,
         LICENSE_MATRIX,
@@ -23,7 +23,7 @@ def test_license_matrix_permissive_weak_symmetric():
 
 
 def test_detect_format_prefers_tool_calling_over_audio():
-    from soup_cli.data.formats import detect_format
+    from ai_forge_cli.data.formats import detect_format
 
     row = {
         "messages": [{"role": "user", "content": "x"}],
@@ -35,7 +35,7 @@ def test_detect_format_prefers_tool_calling_over_audio():
 
 
 def test_converters_reject_null_content():
-    from soup_cli.data.formats import format_to_messages
+    from ai_forge_cli.data.formats import format_to_messages
 
     # A JSON null in a required content field routes the row to the drop path
     # (returns None) instead of producing literal None content.
@@ -60,7 +60,7 @@ def test_tool_call_args_subset_penalizes_hallucinated_args():
 
 
 def test_ema_and_median_use_window_size():
-    from soup_cli.utils.reward_hack_control import smooth_signal
+    from ai_forge_cli.utils.reward_hack_control import smooth_signal
 
     # Windowed EMA: a longer retained window folds in more history, so the
     # result differs from the 1-element (2-tap) case — proving
@@ -92,9 +92,9 @@ def test_generate_partial_save_present():
 
 
 def test_package_docstring_has_no_mojibake():
-    assert soup_cli.__doc__ is not None
-    assert "вЂ" not in soup_cli.__doc__
-    assert "—" in soup_cli.__doc__
+    assert ai_forge_cli.__doc__ is not None
+    assert "вЂ" not in ai_forge_cli.__doc__
+    assert "—" in ai_forge_cli.__doc__
 
 
 def test_pyproject_has_no_mojibake():
@@ -121,7 +121,7 @@ def test_docs_commands_lists_every_registered_command():
     import pathlib
     import re
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     registered = {c.name or c.callback.__name__.replace("_", "-") for c in app.registered_commands}
     registered |= {group.name for group in app.registered_groups}

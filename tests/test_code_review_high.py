@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-import soup_cli
+import ai_forge_cli
 
 # ═══════════════════════ HIGH — training correctness ═══════════════════════
 
@@ -19,7 +19,7 @@ import soup_cli
 def test_ppo_refuses_silent_random_reward_head():
     """PPO with only a reward_fn (no reward_model) must fail loudly, not build
     a randomly-initialised reward head and train the policy against noise."""
-    from soup_cli.trainer.ppo import PPOTrainerWrapper
+    from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
     wrapper = object.__new__(PPOTrainerWrapper)
     wrapper.reward_model_instance = None
@@ -36,7 +36,7 @@ def test_alphaedit_rejects_nonfinite_denominator(monkeypatch):
     """A NaN key-norm must be rejected (NaN <= 0.0 is False, so the old bare
     `denom <= 0.0` guard let it corrupt weights in place)."""
     torch = pytest.importorskip("torch")
-    import soup_cli.utils.edit_kernels as ek
+    import ai_forge_cli.utils.edit_kernels as ek
 
     class _Down:
         def __init__(self):
@@ -59,7 +59,7 @@ def test_orpo_length_normalization_restores_odds_ratio():
     """With summed sequence log-probs exp() underflows and the odds-ratio
     correction collapses; passing lengths length-normalises and restores it."""
     torch = pytest.importorskip("torch")
-    from soup_cli.utils.preference_combine import compute_orpo_term
+    from ai_forge_cli.utils.preference_combine import compute_orpo_term
 
     pol_chosen = torch.tensor([-40.0])
     pol_rejected = torch.tensor([-50.0])
@@ -80,7 +80,7 @@ def test_orpo_length_normalization_restores_odds_ratio():
 
 
 def test_ipo_beta_schedule_uses_ipo_tau_not_dpo_beta():
-    src = (Path(soup_cli.__file__).parent / "trainer" / "ipo.py").read_text(
+    src = (Path(ai_forge_cli.__file__).parent / "trainer" / "ipo.py").read_text(
         encoding="utf-8"
     )
     assert "beta_start=tcfg.ipo_tau" in src
@@ -90,7 +90,7 @@ def test_ipo_beta_schedule_uses_ipo_tau_not_dpo_beta():
 def test_beta_schedule_callback_sets_beta_from_start():
     """At step 0 the schedule must apply beta_start — so passing ipo_tau (not
     the DPO default) is what keeps the user's τ intact."""
-    from soup_cli.utils.dpo_variants import BetaScheduleCallback
+    from ai_forge_cli.utils.dpo_variants import BetaScheduleCallback
 
     trainer = types.SimpleNamespace(beta=0.5)  # e.g. the user's ipo_tau
     cb = BetaScheduleCallback(beta_start=0.5, beta_end=0.1, total_steps=10, schedule="linear")
@@ -108,7 +108,7 @@ def test_distill_term_masks_padding_and_prompt():
     applied to the unshifted labels, dropping each span's first predicted token
     and leaking the boundary token past it)."""
     torch = pytest.importorskip("torch")
-    from soup_cli.trainer.distill import _compute_distill_term
+    from ai_forge_cli.trainer.distill import _compute_distill_term
 
     student = torch.zeros(1, 3, 4)
     teacher = torch.zeros(1, 3, 4)
@@ -139,7 +139,7 @@ def test_distill_term_masks_padding_and_prompt():
 
 def test_kto_negative_one_label_is_undesirable():
     """`bool(-1)` is True; a -1 label in the ±1 convention must map to False."""
-    from soup_cli.data.formats import _convert_kto
+    from ai_forge_cli.data.formats import _convert_kto
 
     base = {"prompt": "p", "completion": "c"}
     assert _convert_kto({**base, "label": -1})["label"] is False
@@ -154,7 +154,7 @@ def test_apply_llama_pro_freeze_freezes_all_but_new_blocks():
     pytest.importorskip("torch")
     import torch.nn as nn
 
-    from soup_cli.utils.block_expansion import apply_llama_pro_freeze
+    from ai_forge_cli.utils.block_expansion import apply_llama_pro_freeze
 
     class _M(nn.Module):
         def __init__(self):
@@ -173,7 +173,7 @@ def test_apply_llama_pro_freeze_freezes_all_but_new_blocks():
 def test_block_expansion_freeze_uses_actual_added_not_requested(monkeypatch):
     """When expand_layers over-requests, the freeze must target the ACTUAL
     appended count (clamped), else original layers stay trainable."""
-    import soup_cli.utils.block_expansion as be
+    import ai_forge_cli.utils.block_expansion as be
 
     class _Inner:
         def __init__(self, n):
@@ -205,7 +205,7 @@ def test_block_expansion_freeze_uses_actual_added_not_requested(monkeypatch):
 
 
 def _src(rel: str) -> str:
-    return (Path(soup_cli.__file__).parent / rel).read_text(encoding="utf-8")
+    return (Path(ai_forge_cli.__file__).parent / rel).read_text(encoding="utf-8")
 
 
 # ═══════════════════════ HIGH — features that silently do nothing ═══════════
@@ -224,7 +224,7 @@ def test_gpus_reexec_passes_run_shaping_flags():
 
 
 def test_pre_push_hook_enforces_gate_suite():
-    from soup_cli.utils.eval_gate_hook import render_pre_push_hook
+    from ai_forge_cli.utils.eval_gate_hook import render_pre_push_hook
 
     hook = render_pre_push_hook(baseline_run_id="run-abc123", suite_path="evals/locked.json")
     assert '--suite "$GATE_SUITE"' in hook
@@ -233,7 +233,7 @@ def test_pre_push_hook_enforces_gate_suite():
 def test_eval_against_blocks_on_unloadable_locked_suite(tmp_path, monkeypatch):
     from typer.testing import CliRunner
 
-    from soup_cli.commands.eval import app
+    from ai_forge_cli.commands.eval import app
 
     monkeypatch.chdir(tmp_path)
     result = CliRunner().invoke(
@@ -244,7 +244,7 @@ def test_eval_against_blocks_on_unloadable_locked_suite(tmp_path, monkeypatch):
 
 
 def test_deploy_measure_cache_key_includes_candidates():
-    from soup_cli.utils.deploy_measure import compute_cache_key
+    from ai_forge_cli.utils.deploy_measure import compute_cache_key
 
     common = dict(base_sha="a" * 16, profile_name="p", tasks_sha="b" * 64)
     k_one = compute_cache_key(**common, candidates=["4bit"])
@@ -275,7 +275,7 @@ def test_ui_inspect_uses_commonpath_containment():
 
 
 def test_is_under_cwd_rejects_sibling_prefix(tmp_path, monkeypatch):
-    from soup_cli.utils.paths import is_under_cwd
+    from ai_forge_cli.utils.paths import is_under_cwd
 
     proj = tmp_path / "project"
     proj.mkdir()
@@ -288,7 +288,7 @@ def test_is_under_cwd_rejects_sibling_prefix(tmp_path, monkeypatch):
 
 def test_registry_lineage_cycle_detected_beyond_depth_10(tmp_path, monkeypatch):
     monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
-    from soup_cli.registry.store import RegistryStore
+    from ai_forge_cli.registry.store import RegistryStore
 
     with RegistryStore() as store:
         ids = [
@@ -318,7 +318,7 @@ def test_gguf_calib_reads_from_nofollow_fd_no_reopen():
 
 
 def test_namespace_created_at_differs_both_directions():
-    from soup_cli.utils.namespace_pin import _created_at_differs
+    from ai_forge_cli.utils.namespace_pin import _created_at_differs
 
     assert _created_at_differs("2026-01-02T00:00:00", "2026-01-01T00:00:00") is True
     assert _created_at_differs("2026-01-01T00:00:00", "2026-01-02T00:00:00") is True
@@ -326,7 +326,7 @@ def test_namespace_created_at_differs_both_directions():
 
 
 def test_namespace_pin_flags_forward_created_at_drift(tmp_path):
-    from soup_cli.utils.namespace_pin import NamespacePinStore, verify_namespace
+    from ai_forge_cli.utils.namespace_pin import NamespacePinStore, verify_namespace
 
     store = NamespacePinStore(str(tmp_path / "pins.db"))
     first = verify_namespace(
@@ -365,7 +365,7 @@ def test_eval_auto_catches_typer_exit():
 def test_data_split_rejects_negative_val(tmp_path, monkeypatch):
     from typer.testing import CliRunner
 
-    from soup_cli.commands.data import app
+    from ai_forge_cli.commands.data import app
 
     monkeypatch.chdir(tmp_path)
     (tmp_path / "d.jsonl").write_text(
@@ -379,7 +379,7 @@ def test_data_split_rejects_negative_val(tmp_path, monkeypatch):
 
 
 def test_trace_parser_reads_bom_first_record(tmp_path):
-    from soup_cli.data.traces.parsers import parse_soup_serve
+    from ai_forge_cli.data.traces.parsers import parse_soup_serve
 
     trace_dir = tmp_path / "traces"
     trace_dir.mkdir()
@@ -394,7 +394,7 @@ def test_trace_parser_reads_bom_first_record(tmp_path):
 
 
 def test_plan_estimate_handles_batch_size_auto():
-    from soup_cli.utils.terraform_plan import _estimate_runtime_minutes
+    from ai_forge_cli.utils.terraform_plan import _estimate_runtime_minutes
 
     minutes = _estimate_runtime_minutes(
         {"training": {"epochs": 2, "batch_size": "auto"}}
@@ -406,7 +406,7 @@ def test_rl_checkpoint_only_main_process_writes(tmp_path, monkeypatch):
     import os
 
     monkeypatch.chdir(tmp_path)
-    from soup_cli.utils.rl_checkpoint import (
+    from ai_forge_cli.utils.rl_checkpoint import (
         RLCheckpointConfig,
         build_rl_checkpoint_callback,
     )

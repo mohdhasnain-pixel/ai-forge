@@ -378,8 +378,8 @@ in v0.71.31.
 
 Exit codes (v0.71.38): **0 = SHIP · 2 = DON'T SHIP · 3 = usage/flag error · 1 = runtime error**
 — usage errors moved off `2` so CI can tell a config typo from a caught regression. The engine
-lives in `soup_cli.utils.ship_verdict` (`decide_ship` is a pure function — the whole truth table
-is CPU-testable); the bundled suites live in `soup_cli.eval.gate_suites`.
+lives in `ai_forge_cli.utils.ship_verdict` (`decide_ship` is a pure function — the whole truth table
+is CPU-testable); the bundled suites live in `ai_forge_cli.eval.gate_suites`.
 
 ### Noise Floor (v0.73.2)
 
@@ -510,7 +510,7 @@ the prompt cue and the option-letter extractor never touch them.
 Pure-Python BLEU + ROUGE-1 / ROUGE-2 / ROUGE-L for `soup eval custom`:
 
 ```python
-from soup_cli.utils.nlg_metrics import (
+from ai_forge_cli.utils.nlg_metrics import (
     bleu_score, rouge_l_score, compute_nlg_metric, NLG_METRICS,
     effective_tokens_per_second,
 )
@@ -538,7 +538,7 @@ set. OK / MINOR / MAJOR thresholds at 0.05 / 0.20 mean KL — same scale as
 `soup eval quant-check`.
 
 ```python
-from soup_cli.eval.calibrate import run_calibration
+from ai_forge_cli.eval.calibrate import run_calibration
 
 # baseline_logits / quantized_logits: list[list[float]] aligned per-prompt
 report = run_calibration(baseline_logits, quantized_logits)
@@ -556,7 +556,7 @@ Local leaderboard with Elo ratings (K=32, base 1500). Bring your own pairwise
 winners — Soup just keeps the books:
 
 ```python
-from soup_cli.eval.arena import Tournament
+from ai_forge_cli.eval.arena import Tournament
 
 t = Tournament()
 t.record("llama-3.1-8b-finetune", "qwen2.5-7b-finetune", winner="a")
@@ -575,7 +575,7 @@ Full-featured evaluation platform with standard benchmarks, custom evals, LLM-as
 
 ```bash
 # Install eval dependencies
-pip install "soup-cli[eval]"
+pip install "ai-forge[eval]"
 
 # Standard benchmarks (wraps lm-evaluation-harness)
 soup eval benchmark --model ./output --benchmarks mmlu,gsm8k,hellaswag
@@ -676,7 +676,7 @@ v0.65 ships five new evaluation surfaces that close the "judges are biased, suit
 **Judge calibration** — refuse to use an uncalibrated judge in production:
 
 ```python
-from soup_cli.eval.calibrate import (
+from ai_forge_cli.eval.calibrate import (
     PairwiseJudgement, run_pairwise_calibration, ensure_judge_calibrated,
 )
 

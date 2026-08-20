@@ -8,8 +8,8 @@ import click
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.utils.ollama import (
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils.ollama import (
     ALLOWED_OLLAMA_PARAMS,
     FORMAT_TO_TEMPLATE,
     OLLAMA_TEMPLATES,
@@ -26,8 +26,8 @@ from soup_cli.utils.ollama import (
 
 runner = CliRunner()
 
-# Patch targets — lazy imports in deploy.py resolve to soup_cli.utils.ollama
-_OLLAMA = "soup_cli.utils.ollama"
+# Patch targets — lazy imports in deploy.py resolve to ai_forge_cli.utils.ollama
+_OLLAMA = "ai_forge_cli.utils.ollama"
 
 
 # ─── validate_model_name ───
@@ -704,7 +704,7 @@ def test_auto_detect_from_soup_yaml(tmp_path, monkeypatch):
         "base: test\ndata:\n  train: data.jsonl\n  format: chatml\n",
         encoding="utf-8",
     )
-    from soup_cli.commands.deploy import _auto_detect_template
+    from ai_forge_cli.commands.deploy import _auto_detect_template
 
     result = _auto_detect_template()
     assert result == "chatml"
@@ -712,7 +712,7 @@ def test_auto_detect_from_soup_yaml(tmp_path, monkeypatch):
 
 def test_auto_detect_no_soup_yaml(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    from soup_cli.commands.deploy import _auto_detect_template
+    from ai_forge_cli.commands.deploy import _auto_detect_template
 
     result = _auto_detect_template()
     assert result is None
@@ -721,7 +721,7 @@ def test_auto_detect_no_soup_yaml(tmp_path, monkeypatch):
 def test_auto_detect_invalid_yaml(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "soup.yaml").write_text(":::invalid", encoding="utf-8")
-    from soup_cli.commands.deploy import _auto_detect_template
+    from ai_forge_cli.commands.deploy import _auto_detect_template
 
     result = _auto_detect_template()
     assert result is None
@@ -733,7 +733,7 @@ def test_auto_detect_no_format(tmp_path, monkeypatch):
         "base: test\ndata:\n  train: data.jsonl\n",
         encoding="utf-8",
     )
-    from soup_cli.commands.deploy import _auto_detect_template
+    from ai_forge_cli.commands.deploy import _auto_detect_template
 
     result = _auto_detect_template()
     assert result is None
@@ -744,7 +744,7 @@ def test_auto_detect_no_format(tmp_path, monkeypatch):
 
 def test_export_deploy_unsupported_target():
     """_auto_deploy_ollama rejects non-ollama targets."""
-    from soup_cli.commands.export import _auto_deploy_ollama
+    from ai_forge_cli.commands.export import _auto_deploy_ollama
 
     with pytest.raises((SystemExit, click.exceptions.Exit)):
         _auto_deploy_ollama(Path("m.gguf"), "model", "kubernetes", None)
@@ -753,7 +753,7 @@ def test_export_deploy_unsupported_target():
 @patch(f"{_OLLAMA}.detect_ollama", return_value=None)
 def test_export_deploy_ollama_not_found(mock_detect):
     """_auto_deploy_ollama exits if Ollama not installed."""
-    from soup_cli.commands.export import _auto_deploy_ollama
+    from ai_forge_cli.commands.export import _auto_deploy_ollama
 
     with pytest.raises((SystemExit, click.exceptions.Exit)):
         _auto_deploy_ollama(Path("m.gguf"), "model", "ollama", None)
@@ -763,7 +763,7 @@ def test_export_deploy_ollama_not_found(mock_detect):
 @patch(f"{_OLLAMA}.detect_ollama", return_value="0.6.2")
 def test_export_deploy_ollama_success(mock_detect_fn, mock_deploy_fn):
     """_auto_deploy_ollama succeeds with valid inputs."""
-    from soup_cli.commands.export import _auto_deploy_ollama
+    from ai_forge_cli.commands.export import _auto_deploy_ollama
 
     _auto_deploy_ollama(Path("model.gguf"), "mymodel", "ollama", "soup-mymodel")
     mock_deploy_fn.assert_called_once()
@@ -773,7 +773,7 @@ def test_export_deploy_ollama_success(mock_detect_fn, mock_deploy_fn):
 @patch(f"{_OLLAMA}.detect_ollama", return_value="0.6.2")
 def test_export_deploy_ollama_create_fails(mock_detect_fn, mock_deploy_fn):
     """_auto_deploy_ollama exits on deploy failure."""
-    from soup_cli.commands.export import _auto_deploy_ollama
+    from ai_forge_cli.commands.export import _auto_deploy_ollama
 
     with pytest.raises((SystemExit, click.exceptions.Exit)):
         _auto_deploy_ollama(Path("m.gguf"), "model", "ollama", "soup-model")
@@ -781,7 +781,7 @@ def test_export_deploy_ollama_create_fails(mock_detect_fn, mock_deploy_fn):
 
 def test_export_deploy_invalid_name():
     """_auto_deploy_ollama rejects invalid model name."""
-    from soup_cli.commands.export import _auto_deploy_ollama
+    from ai_forge_cli.commands.export import _auto_deploy_ollama
 
     with pytest.raises((SystemExit, click.exceptions.Exit)):
         _auto_deploy_ollama(Path("m.gguf"), "model", "ollama", "bad/name")

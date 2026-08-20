@@ -8,8 +8,8 @@ import re
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app as soup_app
-from soup_cli.utils.blame import (
+from ai_forge_cli.cli import app as soup_app
+from ai_forge_cli.utils.blame import (
     BlamePlan,
     BlameShardWork,
     parse_budget,
@@ -238,7 +238,7 @@ def test_plan_blame_missing_dataset(tmp_path, monkeypatch):
 
 def test_run_blame_no_longer_raises_v0_66_lifted():
     """v0.66.0 Part B lifted the stub — runner now returns BlameResult."""
-    from soup_cli.utils.blame import BlameResult
+    from ai_forge_cli.utils.blame import BlameResult
 
     plan = BlamePlan(
         adapter_dir="a", dataset_path="d", layer="x",

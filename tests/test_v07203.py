@@ -54,7 +54,7 @@ MEASURED_VRAM_GRID = [
 
 
 def _predict(row):
-    from soup_cli.utils.layer_stream import estimate_stream_peak_vram
+    from ai_forge_cli.utils.layer_stream import estimate_stream_peak_vram
 
     return estimate_stream_peak_vram(
         layer_bytes=row["pool"] // 2,
@@ -78,27 +78,27 @@ class TestLogitsBytesIsMeasuredNotDerived:
     152k-vocab model at batch 8, which is the whole reason a fit gate exists."""
 
     def test_charges_the_measured_fourteen_bytes_per_element(self):
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         got = estimate_logits_bytes(vocab_size=151936, seq_len=512, batch_size=1)
         assert got == 512 * 151936 * 14
 
     def test_is_not_the_old_first_principles_six(self):
         """Control: without this the test above passes for any constant."""
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         got = estimate_logits_bytes(vocab_size=1000, seq_len=8, batch_size=1)
         assert got != 8 * 1000 * 6
 
     def test_scales_with_batch(self):
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         one = estimate_logits_bytes(vocab_size=1000, seq_len=8, batch_size=1)
         four = estimate_logits_bytes(vocab_size=1000, seq_len=8, batch_size=4)
         assert four == 4 * one
 
     def test_without_the_loss_only_the_bf16_logits_are_live(self):
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         got = estimate_logits_bytes(
             vocab_size=1000, seq_len=10, batch_size=1, upcast_fp32=False
@@ -106,7 +106,7 @@ class TestLogitsBytesIsMeasuredNotDerived:
         assert got == 10 * 1000 * 2
 
     def test_rejects_non_positive_dimensions(self):
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         with pytest.raises(ValueError, match="positive"):
             estimate_logits_bytes(vocab_size=0, seq_len=8, batch_size=1)
@@ -119,7 +119,7 @@ class TestActivationBytes:
         """The checkpoint boundary save is one copy PER LAYER; the recompute
         transient is one layer's worth regardless of depth. That separation is
         the entire memory argument for streaming, so it is pinned."""
-        from soup_cli.utils.layer_stream import estimate_activation_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_activation_bytes
 
         kw = dict(hidden_size=576, intermediate_size=1536, seq_len=512, batch_size=1)
         ten = estimate_activation_bytes(n_layers=10, **kw)
@@ -128,7 +128,7 @@ class TestActivationBytes:
         assert twenty - ten == 10 * 2 * 576 * 512
 
     def test_scales_linearly_in_batch_and_seq(self):
-        from soup_cli.utils.layer_stream import estimate_activation_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_activation_bytes
 
         kw = dict(hidden_size=64, intermediate_size=128, n_layers=4)
         base = estimate_activation_bytes(seq_len=100, batch_size=1, **kw)
@@ -171,7 +171,7 @@ class TestPeakVramReproducesTheMeasuredGrid:
         """The finding that makes batch budgeting the estimator rather than a
         refinement of it: at Qwen2.5-0.5B B8 S512 the logits tensor is 146x the
         entire buffer pool. A weights-and-buffers pre-flight green-lights this."""
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         row = MEASURED_VRAM_GRID[-1]
         logits = estimate_logits_bytes(
@@ -184,7 +184,7 @@ class TestEstimateAdapterParams:
     def test_counts_two_matrices_per_target_per_layer(self):
         """LoRA adds an A and a B per targeted module. Deliberately biased HIGH
         (it assumes hidden x hidden), which is the safe direction for a budget."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         class _T:
             class lora:  # noqa: N801 — mirrors the config attribute name
@@ -201,7 +201,7 @@ class TestEstimateAdapterParams:
     def test_auto_target_modules_assume_four(self):
         """`target_modules: auto` is a string, not a list — it must not be
         len()'d into 4 by accident of the word's length."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         class _T:
             class lora:  # noqa: N801
@@ -222,7 +222,7 @@ class TestUntiedEmbeddingsAreBudgeted:
     brief: budget them or the card OOMs on a model the planner said would fit."""
 
     def test_extras_are_charged_to_vram(self):
-        from soup_cli.utils.layer_stream import estimate_stream_peak_vram
+        from ai_forge_cli.utils.layer_stream import estimate_stream_peak_vram
 
         kw = dict(
             layer_bytes=1000, buffers=2, adapter_params=0, vocab_size=100,
@@ -235,7 +235,7 @@ class TestUntiedEmbeddingsAreBudgeted:
     def test_published_8b_nf4_row_is_bracketed_on_the_safe_side(self):
         """Independent check — nothing in the formula was fitted to this row.
         Llama-3.1-8B NF4, untied embeddings, measured 3.32 GB in v0.72.2."""
-        from soup_cli.utils.layer_stream import estimate_stream_peak_vram
+        from ai_forge_cli.utils.layer_stream import estimate_stream_peak_vram
 
         predicted = estimate_stream_peak_vram(
             layer_bytes=int(3.60e9 / 32),
@@ -255,14 +255,14 @@ class TestUntiedEmbeddingsAreBudgeted:
 
 class TestStreamFitDecision:
     def test_refuses_when_demand_exceeds_available(self):
-        from soup_cli.utils.layer_stream import decide_stream_fit
+        from ai_forge_cli.utils.layer_stream import decide_stream_fit
 
         fit = decide_stream_fit(predicted_bytes=5_000_000_000, available_bytes=3_445_000_000)
         assert not fit.fits
         assert "GB" in fit.reason
 
     def test_accepts_when_it_fits(self):
-        from soup_cli.utils.layer_stream import decide_stream_fit
+        from ai_forge_cli.utils.layer_stream import decide_stream_fit
 
         fit = decide_stream_fit(predicted_bytes=1_000_000_000, available_bytes=3_445_000_000)
         assert fit.fits
@@ -272,7 +272,7 @@ class TestStreamFitDecision:
         under this box's measured 3.445 GB of allocator-visible VRAM. An
         over-conservative reserve -- e.g. charging the plan's 1 GB workspace on
         top -- would refuse precisely the run this feature exists to enable."""
-        from soup_cli.utils.layer_stream import decide_stream_fit
+        from ai_forge_cli.utils.layer_stream import decide_stream_fit
 
         assert decide_stream_fit(
             predicted_bytes=int(3.32e9), available_bytes=int(3.445e9)
@@ -283,14 +283,14 @@ class TestStreamFitDecision:
         NOT raise -- WDDM spilled to host memory and the run merely became very
         slow -- so the estimator is the only thing standing between the user and
         a silent 10x slowdown."""
-        from soup_cli.utils.layer_stream import decide_stream_fit
+        from ai_forge_cli.utils.layer_stream import decide_stream_fit
 
         assert not decide_stream_fit(
             predicted_bytes=int(4.82e9), available_bytes=int(3.445e9)
         ).fits
 
     def test_reason_names_the_knobs_the_user_can_actually_turn(self):
-        from soup_cli.utils.layer_stream import decide_stream_fit
+        from ai_forge_cli.utils.layer_stream import decide_stream_fit
 
         reason = decide_stream_fit(
             predicted_bytes=5_000_000_000, available_bytes=1_000_000_000
@@ -304,7 +304,7 @@ class TestResolveAvailableVramBytes:
     fully REPLACE the measured figure, not adjust it."""
 
     def test_no_override_uses_the_measured_figure(self):
-        from soup_cli.utils.layer_stream import resolve_available_vram_bytes
+        from ai_forge_cli.utils.layer_stream import resolve_available_vram_bytes
 
         got = resolve_available_vram_bytes(measured_bytes=3_445_000_000, override_bytes=None)
         assert got == 3_445_000_000
@@ -312,7 +312,7 @@ class TestResolveAvailableVramBytes:
     def test_override_replaces_a_larger_measured_figure(self):
         """Raising the budget: let a documented over-prediction through even
         though the driver reports plenty of headroom."""
-        from soup_cli.utils.layer_stream import resolve_available_vram_bytes
+        from ai_forge_cli.utils.layer_stream import resolve_available_vram_bytes
 
         got = resolve_available_vram_bytes(
             measured_bytes=16_000_000_000, override_bytes=3_541_000_000
@@ -323,7 +323,7 @@ class TestResolveAvailableVramBytes:
         """Lowering the budget below what the driver reports: the Colab/Kaggle
         case from #347's follow-up comment, where set_per_process_memory_fraction
         caps the process but mem_get_info() still reports the whole card."""
-        from soup_cli.utils.layer_stream import resolve_available_vram_bytes
+        from ai_forge_cli.utils.layer_stream import resolve_available_vram_bytes
 
         got = resolve_available_vram_bytes(
             measured_bytes=16_000_000_000, override_bytes=4_000_000_000
@@ -339,7 +339,7 @@ class TestResolveAvailableVramBytes:
         mutation (falsy-0 falls back to the driver figure) still passed the
         full suite (review on #386, blocking item). This pins the resolver
         itself, not just that 0 survives config load."""
-        from soup_cli.utils.layer_stream import resolve_available_vram_bytes
+        from ai_forge_cli.utils.layer_stream import resolve_available_vram_bytes
 
         got = resolve_available_vram_bytes(measured_bytes=15_360_000_000, override_bytes=0)
         assert got == 0
@@ -348,7 +348,7 @@ class TestResolveAvailableVramBytes:
         """The acceptance test #347's follow-up comment asks for verbatim: an
         override set below the real free VRAM must turn an otherwise-fitting
         config into a refusal, because that is the assertion nothing can fake."""
-        from soup_cli.utils.layer_stream import decide_stream_fit, resolve_available_vram_bytes
+        from ai_forge_cli.utils.layer_stream import decide_stream_fit, resolve_available_vram_bytes
 
         predicted = 5_000_000_000
         measured_free = 16_000_000_000  # plenty, would normally fit
@@ -362,7 +362,7 @@ class TestResolveAvailableVramBytes:
 
 class TestThroughputForecast:
     def test_ceiling_uses_c_equals_six(self):
-        from soup_cli.utils.layer_stream import forecast_stream_throughput
+        from ai_forge_cli.utils.layer_stream import forecast_stream_throughput
 
         got = forecast_stream_throughput(
             params=1_000_000_000, effective_tflops=6.0, tokens_per_epoch=0
@@ -370,7 +370,7 @@ class TestThroughputForecast:
         assert got.tokens_per_sec_ceiling == pytest.approx(1000.0)
 
     def test_epoch_seconds_is_a_floor_from_the_ceiling(self):
-        from soup_cli.utils.layer_stream import forecast_stream_throughput
+        from ai_forge_cli.utils.layer_stream import forecast_stream_throughput
 
         got = forecast_stream_throughput(
             params=1_000_000_000, effective_tflops=6.0, tokens_per_epoch=10_000
@@ -381,7 +381,7 @@ class TestThroughputForecast:
         """Honesty: real streamed training landed at 68%-100% of the measured
         GEMM ceiling on the dev box, so a bare tok/s number would over-promise
         by up to 1.5x. The forecast must carry the bracket."""
-        from soup_cli.utils.layer_stream import (
+        from ai_forge_cli.utils.layer_stream import (
             MEASURED_CEILING_FRACTION,
             forecast_stream_throughput,
         )
@@ -394,7 +394,7 @@ class TestThroughputForecast:
         assert got.tokens_per_sec_low == pytest.approx(1000.0 * low)
 
     def test_rejects_a_non_finite_tflops(self):
-        from soup_cli.utils.layer_stream import forecast_stream_throughput
+        from ai_forge_cli.utils.layer_stream import forecast_stream_throughput
 
         with pytest.raises(ValueError, match="finite"):
             forecast_stream_throughput(
@@ -428,7 +428,7 @@ class TestMeasuredGemmCeiling:
         this box's boost clock moved 442..952 MHz inside a single gate run."""
         import math
 
-        from soup_cli.utils.layer_stream_runtime import measure_gemm_tflops
+        from ai_forge_cli.utils.layer_stream_runtime import measure_gemm_tflops
 
         got = measure_gemm_tflops(device="cuda")
         assert got is not None
@@ -452,7 +452,7 @@ class TestMeasuredGemmCeiling:
         sessions at the same reported clock)."""
         import torch
 
-        from soup_cli.utils.layer_stream_runtime import _GEMM_SIZE, measure_gemm_tflops
+        from ai_forge_cli.utils.layer_stream_runtime import _GEMM_SIZE, measure_gemm_tflops
 
         got = measure_gemm_tflops(device="cuda")
         assert got is not None
@@ -484,7 +484,7 @@ class TestMeasuredGemmCeiling:
         )
 
     def test_returns_none_on_cpu_rather_than_inventing_a_number(self):
-        from soup_cli.utils.layer_stream_runtime import measure_gemm_tflops
+        from ai_forge_cli.utils.layer_stream_runtime import measure_gemm_tflops
 
         assert measure_gemm_tflops(device="cpu") is None
 
@@ -492,7 +492,7 @@ class TestMeasuredGemmCeiling:
         """A ceiling's noise is ONE-SIDED — contention, a cold clock and thermal
         throttling only ever make an achievable rate look slower. Taking the best
         repeat must return max(samples) and include all repeat measurements."""
-        from soup_cli.utils.layer_stream_runtime import measure_gemm_tflops
+        from ai_forge_cli.utils.layer_stream_runtime import measure_gemm_tflops
 
         got = measure_gemm_tflops(device="cuda", reps=4)
         assert got is not None
@@ -506,7 +506,7 @@ class TestIssue444BestRepeatSelection:
     """Regression tests for #444: deterministic repeat selection in measure_gemm_tflops."""
 
     def test_gemm_ceiling_defaults_samples_to_empty_tuple(self) -> None:
-        from soup_cli.utils.layer_stream_runtime import GemmCeiling
+        from ai_forge_cli.utils.layer_stream_runtime import GemmCeiling
 
         ceiling = GemmCeiling(tflops=10.5, sm_clock_mhz=1200, size=4096)
         assert ceiling.tflops == 10.5
@@ -520,7 +520,7 @@ class TestIssue444BestRepeatSelection:
         """Synthetic benchmark proving best-of-N selects max(samples) deterministically."""
         import sys
 
-        from soup_cli.utils import layer_stream_runtime
+        from ai_forge_cli.utils import layer_stream_runtime
 
         elapsed_sequence = [100.0, 20.0, 50.0, 40.0]
         call_idx = 0
@@ -587,7 +587,7 @@ class TestIssue444BestRepeatSelection:
         """Degenerate timing (seconds <= 0) must return None without raising."""
         import sys
 
-        from soup_cli.utils import layer_stream_runtime
+        from ai_forge_cli.utils import layer_stream_runtime
 
         class _MockEvent:
             def __init__(self, *args, **kwargs) -> None:
@@ -637,7 +637,7 @@ class TestIssue444BestRepeatSelection:
         """Degenerate iters=0 must yield non-positive rates and return None."""
         import sys
 
-        from soup_cli.utils import layer_stream_runtime
+        from ai_forge_cli.utils import layer_stream_runtime
 
         class _MockEvent:
             def __init__(self, *args, **kwargs) -> None:
@@ -688,7 +688,7 @@ class TestBatchSizeIsSupported:
     where streaming pays off: one weight read amortised over more tokens."""
 
     def test_batch_size_above_one_is_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_stream_yaml(batch_size=4))
         assert cfg.training.batch_size == 4
@@ -697,7 +697,7 @@ class TestBatchSizeIsSupported:
     def test_auto_batch_size_is_still_refused(self):
         """"auto" resolves by OOM-probing a resident model, which streaming does
         not have -- it would probe a model that never loads."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="batch_size"):
             load_config_from_string(_stream_yaml(batch_size='"auto"'))
@@ -716,7 +716,7 @@ class TestArchAllowlist:
          "phi", "phi3"],
     )
     def test_gated_families_are_accepted(self, family):
-        from soup_cli.utils.layer_stream import stream_arch_of
+        from ai_forge_cli.utils.layer_stream import stream_arch_of
 
         class _Cfg:
             model_type = family
@@ -728,7 +728,7 @@ class TestArchAllowlist:
         """`gemma3` is the one that matters: a real google/gemma-3-* reports it
         for the VISION wrapper, and streaming a multimodal model as a causal LM
         is the silent mis-train the allowlist exists to prevent."""
-        from soup_cli.utils.layer_stream import stream_arch_of
+        from ai_forge_cli.utils.layer_stream import stream_arch_of
 
         class _Cfg:
             model_type = family
@@ -746,7 +746,7 @@ class TestDiskKindDetection:
     constant, which can never fire."""
 
     def test_reports_one_of_the_known_kinds(self):
-        from soup_cli.utils.layer_stream import DISK_KINDS, detect_disk_kind
+        from ai_forge_cli.utils.layer_stream import DISK_KINDS, detect_disk_kind
 
         assert detect_disk_kind(".") in DISK_KINDS
 
@@ -756,7 +756,7 @@ class TestDiskKindDetection:
         Asserted by counting probe calls rather than by timing: a wall-clock
         threshold would itself pay the 9 s on a cold cache and would flake on a
         loaded CI runner."""
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         calls = []
         monkeypatch.setattr(ls, "_DISK_KIND_CACHE", {})
@@ -769,7 +769,7 @@ class TestDiskKindDetection:
         assert len(calls) == 1, f"probed {len(calls)} times, expected 1"
 
     def test_unknown_is_refused_rather_than_assumed_fast(self):
-        from soup_cli.utils.layer_stream import choose_tier
+        from ai_forge_cli.utils.layer_stream import choose_tier
 
         with pytest.raises(ValueError, match="NVMe"):
             choose_tier(100, 10, "unknown")
@@ -778,7 +778,7 @@ class TestDiskKindDetection:
     def test_only_nvme_earns_the_disk_tier(self, kind):
         """A SATA SSD is refused too — that is v0.72.0's documented policy and
         this release does not quietly widen it."""
-        from soup_cli.utils.layer_stream import choose_tier
+        from ai_forge_cli.utils.layer_stream import choose_tier
 
         with pytest.raises(ValueError, match="NVMe"):
             choose_tier(100, 10, kind)
@@ -786,7 +786,7 @@ class TestDiskKindDetection:
     def test_windows_bus_type_beats_media_type(self):
         """An NVMe drive reports MediaType 'SSD' and BusType 'NVMe' (measured on
         this box), so keying on MediaType alone would refuse every NVMe disk."""
-        from soup_cli.utils.layer_stream import _windows_kind
+        from ai_forge_cli.utils.layer_stream import _windows_kind
 
         assert _windows_kind({"MediaType": "SSD", "BusType": "NVMe"}) == "nvme"
         assert _windows_kind({"MediaType": "SSD", "BusType": "SATA"}) == "ssd"
@@ -799,7 +799,7 @@ class TestDiskKindDetection:
         3 HDD, 4 SSD, 5 SCM} — verified against this box, whose NVMe reports raw
         value 4. The first cut had 3 and 4 SWAPPED, which would have reported a
         spinning disk as an SSD."""
-        from soup_cli.utils.layer_stream import _windows_kind
+        from ai_forge_cli.utils.layer_stream import _windows_kind
 
         assert _windows_kind({"MediaType": "3", "BusType": "SATA"}) == "hdd"
         assert _windows_kind({"MediaType": "4", "BusType": "SATA"}) == "ssd"
@@ -814,7 +814,7 @@ class TestDiskKindMeasuredFallback:
     HDD refusal (160 seeks/step, plan P11) must survive as a control."""
 
     def test_throughput_at_or_above_the_floor_is_nvme_class(self):
-        from soup_cli.utils.layer_stream import (
+        from ai_forge_cli.utils.layer_stream import (
             NVME_TIER_MIN_BYTES_PER_S,
             _classify_measured_read,
         )
@@ -823,7 +823,7 @@ class TestDiskKindMeasuredFallback:
         assert _classify_measured_read(1.5e9) == "nvme"  # the reported virtio disk
 
     def test_slow_or_unmeasurable_stays_hdd(self):
-        from soup_cli.utils.layer_stream import (
+        from ai_forge_cli.utils.layer_stream import (
             NVME_TIER_MIN_BYTES_PER_S,
             _classify_measured_read,
         )
@@ -850,7 +850,7 @@ class TestDiskKindMeasuredFallback:
         if sys.platform != "linux":
             pytest.skip("simulates a Linux /sys/block layout; disk-tier detection is Linux-only")
 
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         real_listdir = os.listdir
         real_open = builtins.open
@@ -879,7 +879,7 @@ class TestDiskKindMeasuredFallback:
 
     def test_virtio_fast_disk_now_earns_the_disk_tier(self, monkeypatch):
         """Criterion 1: no NVMe device, ``rotational=1``, fast measured read."""
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         self._fake_linux(monkeypatch, devices=["vda"], rotational=1, measured_bps=1.5e9)
         assert ls.detect_disk_kind("/data") == "nvme"
@@ -888,7 +888,7 @@ class TestDiskKindMeasuredFallback:
 
     def test_a_genuinely_slow_device_is_still_refused(self, monkeypatch):
         """Criterion 2 (the control): the fix cannot be satisfied by 'always allow'."""
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         self._fake_linux(monkeypatch, devices=["vda"], rotational=1, measured_bps=150e6)
         assert ls.detect_disk_kind("/data") == "hdd"
@@ -897,7 +897,7 @@ class TestDiskKindMeasuredFallback:
 
     def test_rotational_zero_is_authoritative_and_never_measures(self, monkeypatch):
         """A device that declares itself solid state is trusted — no probe cost."""
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         self._fake_linux(monkeypatch, devices=["sda"], rotational=0, measured_bps=None)
         calls = []
@@ -912,7 +912,7 @@ class TestDiskKindMeasuredFallback:
         never an unbounded or crashing probe."""
         import os
 
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         monkeypatch.delattr(os, "O_DIRECT", raising=False)
         assert ls._measure_seq_read_bytes_per_s(".") is None
@@ -922,7 +922,7 @@ class TestDiskKindMeasuredFallback:
         it, not just the opaque ``'hdd'`` verdict. CPU-only — the rate travels
         with the verdict in a ``DiskClassification``, so no /sys simulation is
         needed to exercise the note (it runs on all CI cells, not just Linux)."""
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         # A verdict DERIVED from a measurement carries the rate that produced it.
         slow = ls.DiskClassification("hdd", measured_bps=150e6)
@@ -938,7 +938,7 @@ class TestDiskKindMeasuredFallback:
         e.g. stream_disk_kind=hdd on a fast virtio disk. The rate now travels
         with the verdict, and an override verdict carries none, so the refusal
         structurally cannot cite a reading it did not produce. CPU-only."""
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         # kind='hdd' from an override; measured_bps=None because the verdict is
         # the user's, not the probe's (see resolve_disk_kind).
@@ -951,7 +951,7 @@ class TestDiskKindMeasuredFallback:
         """resolve_disk_kind with an override must strip any probe rate, even
         when detection measured a fast disk underneath (the #411 re-review repro:
         detect 2.0 GB/s, override to hdd — the 2.0 must not survive)."""
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         monkeypatch.setattr(
             ls, "classify_disk_kind", lambda *_a, **_k: ls.DiskClassification("nvme", 2.0e9)
@@ -970,7 +970,7 @@ class TestDiskKindMeasuredFallback:
         import tempfile
         import time
 
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         if getattr(os, "O_DIRECT", None) is None:
             pytest.skip("O_DIRECT is Linux-only; the probe returns None elsewhere")
@@ -1007,7 +1007,7 @@ class TestDiskKindMeasuredFallback:
         import os
         import tempfile
 
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         if not hasattr(os, "O_DIRECT"):
             pytest.skip("O_DIRECT is Linux-only")
@@ -1027,7 +1027,7 @@ class TestDiskKindMeasuredFallback:
 
     def test_override_wins_and_reports_what_it_overrode(self, monkeypatch):
         """Criterion 3: the override is used AND the notice names both values."""
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         monkeypatch.setattr(ls, "detect_disk_kind", lambda *_a, **_k: "hdd")
         notes = []
@@ -1035,7 +1035,7 @@ class TestDiskKindMeasuredFallback:
         assert notes and "nvme" in notes[0] and "hdd" in notes[0]
 
     def test_no_override_returns_the_detected_kind_silently(self, monkeypatch):
-        import soup_cli.utils.layer_stream as ls
+        import ai_forge_cli.utils.layer_stream as ls
 
         monkeypatch.setattr(
             ls, "classify_disk_kind", lambda *_a, **_k: ls.DiskClassification("ssd")
@@ -1047,7 +1047,7 @@ class TestDiskKindMeasuredFallback:
     def test_stream_disk_kind_is_a_footgun_without_stream_layers(self):
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="stream_disk_kind"):
             load_config_from_string(
@@ -1057,7 +1057,7 @@ class TestDiskKindMeasuredFallback:
     def test_stream_disk_kind_is_accepted_while_streaming(self):
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             yaml.safe_dump(_stream_disk_kind_config(stream_layers=True))
@@ -1100,10 +1100,10 @@ class TestDoctorReportsTheDiskKind:
     def test_each_media_type_gets_its_own_verdict(self, monkeypatch, kind, expected):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream.detect_disk_kind", lambda *_a, **_k: kind
+            "ai_forge_cli.utils.layer_stream.detect_disk_kind", lambda *_a, **_k: kind
         )
         result = CliRunner().invoke(app, ["doctor", "--disk"])
         plain = _strip_ansi(result.output)
@@ -1118,11 +1118,11 @@ class TestDoctorReportsTheDiskKind:
         so defaulting this off loses nothing."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         calls = []
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream.detect_disk_kind",
+            "ai_forge_cli.utils.layer_stream.detect_disk_kind",
             lambda *_a, **_k: calls.append(1) or "nvme",
         )
         plain = _strip_ansi(CliRunner().invoke(app, ["doctor"]).output)
@@ -1134,12 +1134,12 @@ class TestDoctorReportsTheDiskKind:
     ):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         def _boom(*_a, **_k):
             raise OSError("no storage subsystem")
 
-        monkeypatch.setattr("soup_cli.utils.layer_stream.detect_disk_kind", _boom)
+        monkeypatch.setattr("ai_forge_cli.utils.layer_stream.detect_disk_kind", _boom)
         result = CliRunner().invoke(app, ["doctor", "--disk"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
         assert "Unknown" in _strip_ansi(result.output)
@@ -1156,7 +1156,7 @@ class TestTierProbeIsLazy:
     def test_ram_tier_never_pays_for_the_probe(self):
         """The measured reason this matters: the probe is ~9 s on Windows and
         the answer is irrelevant whenever the base fits in RAM."""
-        from soup_cli.utils.layer_stream import TIER_RAM, choose_tier
+        from ai_forge_cli.utils.layer_stream import TIER_RAM, choose_tier
 
         calls = []
 
@@ -1168,7 +1168,7 @@ class TestTierProbeIsLazy:
         assert calls == [], "the disk probe ran on a RAM-tier decision"
 
     def test_disk_tier_does_pay_for_it(self):
-        from soup_cli.utils.layer_stream import TIER_DISK, choose_tier
+        from ai_forge_cli.utils.layer_stream import TIER_DISK, choose_tier
 
         calls = []
 
@@ -1287,8 +1287,8 @@ class TestDiskTier:
         so a failure partway through does not strand the earlier ones."""
         import os
 
-        from soup_cli.utils.layer_shard import layer_shard_path
-        from soup_cli.utils.layer_stream_runtime import DiskSource, RamSource
+        from ai_forge_cli.utils.layer_shard import layer_shard_path
+        from ai_forge_cli.utils.layer_stream_runtime import DiskSource, RamSource
 
         _tiny_stream(tmp_path, name="d1", tier="ram")
         shards = str(tmp_path / "d1")
@@ -1302,7 +1302,7 @@ class TestDiskTier:
         """The disk tier holds ONE open handle per decoder layer — 80+ on a large
         model. Without an explicit release they live until the process exits and
         leak across back-to-back runs in one process (`soup sweep`, the web UI)."""
-        from soup_cli.utils.layer_stream_runtime import DiskSource
+        from ai_forge_cli.utils.layer_stream_runtime import DiskSource
 
         _, runtime, _ = _tiny_stream(tmp_path, name="d1", tier="disk")
         assert isinstance(runtime.source, DiskSource)
@@ -1331,8 +1331,8 @@ class TestAutoTierFallback:
         self, tmp_path, monkeypatch, *, free_ram, stream_source,
         disk_kind="nvme", device="cpu", extra_training_yaml="",
     ):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         _tiny_stream(tmp_path)  # writes a real tiny checkpoint at tmp_path/model
         weights = str(tmp_path / "model")
@@ -1340,17 +1340,17 @@ class TestAutoTierFallback:
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("SOUP_LAYER_STREAM_CACHE_DIR", str(tmp_path / "cache"))
         monkeypatch.setattr(
-            "soup_cli.utils.spectrum_scan.resolve_model_weights", lambda *_a, **_k: weights
+            "ai_forge_cli.utils.spectrum_scan.resolve_model_weights", lambda *_a, **_k: weights
         )
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream.free_ram_bytes", lambda: free_ram
+            "ai_forge_cli.utils.layer_stream.free_ram_bytes", lambda: free_ram
         )
         # Pinned rather than probed: the real media type differs between this
         # box (NVMe) and a CI runner (often "unknown"), and an
         # environment-dependent tier would make these flaky rather than wrong.
         # Patch classify_disk_kind (what resolve_disk_kind and detect_disk_kind
         # both route through) so the pin reaches the streaming setup's lambda.
-        import soup_cli.utils.layer_stream as _ls
+        import ai_forge_cli.utils.layer_stream as _ls
 
         monkeypatch.setattr(
             _ls, "classify_disk_kind", lambda *_a, **_k: _ls.DiskClassification(disk_kind)
@@ -1395,7 +1395,7 @@ class TestAutoTierFallback:
             probed.append(1)
             return "hdd"
 
-        monkeypatch.setattr("soup_cli.utils.layer_stream.detect_disk_kind", _probe)
+        monkeypatch.setattr("ai_forge_cli.utils.layer_stream.detect_disk_kind", _probe)
         with pytest.raises(ValueError, match="stream_source='ram'"):
             self._run(
                 tmp_path, monkeypatch, free_ram=1000, stream_source="ram",
@@ -1485,7 +1485,7 @@ class TestAutoTierFallback:
         seen = {}
 
         def _fake_probe(model, *, rows, seq_len, vocab_size, device):
-            from soup_cli.utils.layer_stream_runtime import StepPeak
+            from ai_forge_cli.utils.layer_stream_runtime import StepPeak
 
             seen.update(rows=rows, seq_len=seq_len, vocab_size=vocab_size)
             return StepPeak(
@@ -1494,7 +1494,7 @@ class TestAutoTierFallback:
             )
 
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream_runtime.measure_step_peak_bytes", _fake_probe
+            "ai_forge_cli.utils.layer_stream_runtime.measure_step_peak_bytes", _fake_probe
         )
         monkeypatch.setattr(
             torch.cuda, "mem_get_info", lambda *_a, **_k: (4_000_000_000, 4_000_000_000)
@@ -1515,10 +1515,10 @@ class TestAutoTierFallback:
         wiring that ignored the answer would also satisfy."""
         import torch
 
-        from soup_cli.utils.layer_stream_runtime import StepPeak
+        from ai_forge_cli.utils.layer_stream_runtime import StepPeak
 
         monkeypatch.setattr(
-            "soup_cli.utils.layer_stream_runtime.measure_step_peak_bytes",
+            "ai_forge_cli.utils.layer_stream_runtime.measure_step_peak_bytes",
             lambda *_a, **kw: StepPeak(
                 peak_bytes=9_000_000_000, reserved_bytes=9_000_000_000,
                 seconds=0.01, rows=kw["rows"], seq_len=kw["seq_len"],
@@ -1537,7 +1537,7 @@ class TestAutoTierFallback:
     def test_the_fallback_says_the_cost_is_unmeasured(self, tmp_path, monkeypatch):
         """A silent fallback to a slower path is the failure mode this project
         keeps calling out; the note must not overstate what was measured."""
-        from soup_cli.utils.layer_stream import build_stream_plan
+        from ai_forge_cli.utils.layer_stream import build_stream_plan
 
         plan = build_stream_plan(
             arch="llama", n_layers=2, layer_bytes=1000, embed_bytes=0,
@@ -1577,13 +1577,13 @@ def _write_tiny_tokenizer(weights_dir):
 
 class TestDiskTierConfig:
     def test_stream_source_disk_is_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_stream_yaml(stream_source="disk"))
         assert cfg.training.stream_source == "disk"
 
     def test_stream_source_auto_is_still_the_default(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         assert load_config_from_string(_stream_yaml()).training.stream_source == "auto"
 
@@ -1593,13 +1593,13 @@ class TestDiskTierConfig:
 # ==========================================================================
 class TestGradientAccumulationIsSupported:
     def test_accumulation_above_one_is_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_stream_yaml(gradient_accumulation_steps=4))
         assert cfg.training.gradient_accumulation_steps == 4
 
     def test_batch_and_accumulation_compose(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             _stream_yaml(batch_size=2, gradient_accumulation_steps=2)
@@ -1662,14 +1662,14 @@ class TestAccumulationAdvice:
     batch_size was 2.52x faster because one weight read covers 4x the tokens."""
 
     def test_advises_raising_batch_when_accumulating_at_batch_one(self):
-        from soup_cli.utils.layer_stream import accumulation_advice
+        from ai_forge_cli.utils.layer_stream import accumulation_advice
 
         note = accumulation_advice(batch_size=1, accum=4)
         assert note is not None
         assert "batch_size" in note
 
     def test_quotes_the_measured_ratio_not_a_guess(self):
-        from soup_cli.utils.layer_stream import (
+        from ai_forge_cli.utils.layer_stream import (
             ACCUM_VS_BATCH_SPEEDUP,
             accumulation_advice,
         )
@@ -1689,14 +1689,14 @@ class TestAccumulationAdvice:
         assert _advice(batch_size=4, accum=1) is None
 
     def test_rejects_nonsense_counts(self):
-        from soup_cli.utils.layer_stream import accumulation_advice
+        from ai_forge_cli.utils.layer_stream import accumulation_advice
 
         with pytest.raises(ValueError, match="positive"):
             accumulation_advice(batch_size=0, accum=1)
 
 
 def _advice(**kw):
-    from soup_cli.utils.layer_stream import accumulation_advice
+    from ai_forge_cli.utils.layer_stream import accumulation_advice
 
     return accumulation_advice(**kw)
 
@@ -1714,8 +1714,8 @@ def _tiny_stream(
     from safetensors.torch import save_file
     from transformers import AutoModelForCausalLM, LlamaConfig
 
-    from soup_cli.utils.layer_shard import shard_checkpoint
-    from soup_cli.utils.layer_stream_runtime import build_streamed_model
+    from ai_forge_cli.utils.layer_shard import shard_checkpoint
+    from ai_forge_cli.utils.layer_stream_runtime import build_streamed_model
 
     weights = tmp_path / "model"
     if not weights.exists():
@@ -1746,7 +1746,7 @@ def _tiny_stream(
     shards = str(tmp_path / name)
     suffixes = ()
     if quant == "nf4":
-        from soup_cli.utils.layer_stream_runtime import (
+        from ai_forge_cli.utils.layer_stream_runtime import (
             build_meta_skeleton,
             quantised_layer_suffixes,
         )
@@ -1947,7 +1947,7 @@ class TestResumeLoadsIntoAStreamedModel:
         attacker-planted binary sitting in that checkout."""
         import os
 
-        from soup_cli.utils.layer_stream import _resolve_tool
+        from ai_forge_cli.utils.layer_stream import _resolve_tool
 
         assert _resolve_tool("__soup_no_such_tool__") is None
         found = _resolve_tool("__soup_no_such_tool__", __file__)
@@ -2010,7 +2010,7 @@ class TestResumeRevalidatesTheShardCache:
     def test_a_changed_source_checkpoint_changes_the_fingerprint(self, tmp_path):
         """The silent failure the brief names: resuming against a stale shard
         cache streams the WRONG weights with no error."""
-        from soup_cli.utils.layer_shard import read_shard_index, shard_checkpoint
+        from ai_forge_cli.utils.layer_shard import read_shard_index, shard_checkpoint
 
         _, _, weights = _tiny_stream(tmp_path)
         before = read_shard_index(str(tmp_path / "shards")).source_fingerprint
@@ -2043,7 +2043,7 @@ class TestResumeFlagsAreAccepted:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         _tiny_stream(tmp_path)  # writes a real tiny checkpoint at tmp_path/model
         data = tmp_path / "data.jsonl"

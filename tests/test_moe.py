@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from soup_cli.utils.moe import (
+from ai_forge_cli.utils.moe import (
     MOE_CONFIG_KEYS,
     MOE_EXPERT_PATTERNS,
     STANDARD_TARGET_MODULES,

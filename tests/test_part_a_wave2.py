@@ -78,7 +78,7 @@ def _build_can(
 
 class TestCanFormatVersionBump:
     def test_v1_still_loads(self):
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         m = Manifest(
             can_format_version=1,
@@ -88,7 +88,7 @@ class TestCanFormatVersionBump:
         assert m.can_format_version == 1
 
     def test_v2_loads(self):
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         m = Manifest(
             can_format_version=2,
@@ -99,7 +99,7 @@ class TestCanFormatVersionBump:
 
     def test_v3_loads(self):
         # v0.71.3 #182 bumped CAN_FORMAT_VERSION 2 -> 3 (attestations field).
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         m = Manifest(
             can_format_version=3,
@@ -109,7 +109,7 @@ class TestCanFormatVersionBump:
         assert m.can_format_version == 3
 
     def test_v4_rejected(self):
-        from soup_cli.cans.schema import Manifest
+        from ai_forge_cli.cans.schema import Manifest
 
         with pytest.raises(Exception, match="unknown can_format_version"):
             Manifest(
@@ -119,50 +119,50 @@ class TestCanFormatVersionBump:
             )
 
     def test_pack_writes_v3(self, tmp_path, monkeypatch):
-        from soup_cli.cans.schema import CAN_FORMAT_VERSION
+        from ai_forge_cli.cans.schema import CAN_FORMAT_VERSION
 
         assert CAN_FORMAT_VERSION == 3
 
 
 class TestDeployTargetValidation:
     def test_known_kinds_accepted(self):
-        from soup_cli.cans.schema import DeployTarget
+        from ai_forge_cli.cans.schema import DeployTarget
 
         for kind in ("ollama", "gguf", "vllm"):
             DeployTarget(kind=kind, name="x")
 
     def test_unknown_kind_rejected(self):
-        from soup_cli.cans.schema import DeployTarget
+        from ai_forge_cli.cans.schema import DeployTarget
 
         with pytest.raises(Exception):
             DeployTarget(kind="docker", name="x")
 
     def test_path_traversal_rejected(self):
-        from soup_cli.cans.schema import DeployTarget
+        from ai_forge_cli.cans.schema import DeployTarget
 
         with pytest.raises(ValueError, match="\\.\\."):
             DeployTarget(kind="gguf", path="../../etc/passwd")
 
     def test_absolute_path_rejected(self):
-        from soup_cli.cans.schema import DeployTarget
+        from ai_forge_cli.cans.schema import DeployTarget
 
         with pytest.raises(ValueError, match="must be relative"):
             DeployTarget(kind="gguf", path="/etc/passwd")
 
     def test_null_byte_in_name_rejected(self):
-        from soup_cli.cans.schema import DeployTarget
+        from ai_forge_cli.cans.schema import DeployTarget
 
         with pytest.raises(ValueError, match="null bytes"):
             DeployTarget(kind="ollama", name="bad\x00name")
 
     def test_null_byte_in_path_rejected(self):
-        from soup_cli.cans.schema import DeployTarget
+        from ai_forge_cli.cans.schema import DeployTarget
 
         with pytest.raises(ValueError, match="null byte"):
             DeployTarget(kind="gguf", path="x\x00.gguf")
 
     def test_manifest_with_deploy_targets(self):
-        from soup_cli.cans.schema import DeployTarget, Manifest
+        from ai_forge_cli.cans.schema import DeployTarget, Manifest
 
         m = Manifest(
             can_format_version=2,
@@ -184,7 +184,7 @@ class TestDeployTargetValidation:
 
 class TestCaptureEnv:
     def test_capture_env_writes_python_version(self, tmp_path):
-        from soup_cli.cans.run import capture_env
+        from ai_forge_cli.cans.run import capture_env
 
         out = capture_env(tmp_path / "env.txt")
         text = out.read_text(encoding="utf-8")
@@ -193,7 +193,7 @@ class TestCaptureEnv:
 
     def test_capture_env_handles_pip_failure(self, tmp_path, monkeypatch):
         """If pip freeze times out, env.txt is still written."""
-        from soup_cli.cans import run as run_mod
+        from ai_forge_cli.cans import run as run_mod
 
         def _boom(*args, **kwargs):
             raise OSError("pip not on PATH")
@@ -211,7 +211,7 @@ class TestCaptureEnv:
 
 class TestRunCan:
     def test_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.cans.run import run_can
+        from ai_forge_cli.cans.run import run_can
 
         monkeypatch.chdir(tmp_path)
         outside = tmp_path.parent / "outside.can"
@@ -219,14 +219,14 @@ class TestRunCan:
             run_can(str(outside), yes=True)
 
     def test_missing_can(self, tmp_path, monkeypatch):
-        from soup_cli.cans.run import run_can
+        from ai_forge_cli.cans.run import run_can
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
             run_can(str(tmp_path / "missing.can"), yes=True)
 
     def test_requires_yes_or_callback(self, tmp_path, monkeypatch):
-        from soup_cli.cans.run import run_can
+        from ai_forge_cli.cans.run import run_can
 
         monkeypatch.chdir(tmp_path)
         can = _build_can(tmp_path / "r.can")
@@ -234,7 +234,7 @@ class TestRunCan:
             run_can(str(can))
 
     def test_callback_can_decline(self, tmp_path, monkeypatch):
-        from soup_cli.cans.run import run_can
+        from ai_forge_cli.cans.run import run_can
 
         monkeypatch.chdir(tmp_path)
         can = _build_can(tmp_path / "r.can")
@@ -242,7 +242,7 @@ class TestRunCan:
             run_can(str(can), confirm_callback=lambda _m: False)
 
     def test_train_invoked_via_subprocess(self, tmp_path, monkeypatch):
-        from soup_cli.cans import run as run_mod
+        from ai_forge_cli.cans import run as run_mod
 
         monkeypatch.chdir(tmp_path)
         can = _build_can(tmp_path / "r.can")
@@ -261,7 +261,7 @@ class TestRunCan:
         assert "--yes" in captured["argv"]
 
     def test_extract_dir_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.cans.run import run_can
+        from ai_forge_cli.cans.run import run_can
 
         monkeypatch.chdir(tmp_path)
         can = _build_can(tmp_path / "r.can")
@@ -270,7 +270,7 @@ class TestRunCan:
             run_can(str(can), yes=True, extract_dir=outside)
 
     def test_env_capture_path_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.cans.run import run_can
+        from ai_forge_cli.cans.run import run_can
 
         monkeypatch.chdir(tmp_path)
         can = _build_can(tmp_path / "r.can")
@@ -278,7 +278,7 @@ class TestRunCan:
         # We never reach the env capture step because the validation runs
         # before subprocess; but to test the validation we need to mock
         # subprocess.
-        from soup_cli.cans import run as run_mod
+        from ai_forge_cli.cans import run as run_mod
         monkeypatch.setattr(run_mod.subprocess, "run",
                             lambda *a, **k: MagicMock(returncode=0))
         with pytest.raises(ValueError, match="outside cwd"):
@@ -292,7 +292,7 @@ class TestRunCan:
 
 class TestPublishCan:
     def test_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.cans.publish import publish_can
+        from ai_forge_cli.cans.publish import publish_can
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(ValueError, match="outside cwd"):
@@ -302,7 +302,7 @@ class TestPublishCan:
             )
 
     def test_missing_file_raises(self, tmp_path, monkeypatch):
-        from soup_cli.cans.publish import publish_can
+        from ai_forge_cli.cans.publish import publish_can
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
@@ -312,7 +312,7 @@ class TestPublishCan:
             )
 
     def test_invalid_repo_id_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.cans.publish import publish_can
+        from ai_forge_cli.cans.publish import publish_can
 
         monkeypatch.chdir(tmp_path)
         can = _build_can(tmp_path / "r.can")
@@ -320,21 +320,21 @@ class TestPublishCan:
             publish_can(str(can), repo_id="not a valid repo!", token="t")
 
     def test_no_token_raises(self, tmp_path, monkeypatch):
-        from soup_cli.cans.publish import publish_can
+        from ai_forge_cli.cans.publish import publish_can
 
         monkeypatch.chdir(tmp_path)
         # Force resolve_token to return empty
         monkeypatch.delenv("HF_TOKEN", raising=False)
         monkeypatch.delenv("HUGGINGFACE_HUB_TOKEN", raising=False)
         monkeypatch.setattr(
-            "soup_cli.cans.publish.resolve_token", lambda: "",
+            "ai_forge_cli.cans.publish.resolve_token", lambda: "",
         )
         can = _build_can(tmp_path / "r.can")
         with pytest.raises(ValueError, match="no HF token"):
             publish_can(str(can), repo_id="me/repo")
 
     def test_commit_message_sanitized(self, tmp_path, monkeypatch):
-        from soup_cli.cans.publish import _sanitize_commit_message
+        from ai_forge_cli.cans.publish import _sanitize_commit_message
 
         # First-line only
         result = _sanitize_commit_message("first\nsecond\nthird")
@@ -349,7 +349,7 @@ class TestPublishCan:
         assert "can-format-v1" in _sanitize_commit_message(None)
 
     def test_happy_path_uploads_with_mocked_hf(self, tmp_path, monkeypatch):
-        from soup_cli.cans import publish as publish_mod
+        from ai_forge_cli.cans import publish as publish_mod
 
         monkeypatch.chdir(tmp_path)
         can = _build_can(tmp_path / "r.can")
@@ -377,7 +377,7 @@ class TestPublishCan:
 
 class TestCanCLIPublishAndRun:
     def test_can_run_without_yes_shows_panel_and_exits(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         can = _build_can(tmp_path / "r.can")
@@ -386,7 +386,7 @@ class TestCanCLIPublishAndRun:
         assert "confirm" in result.output.lower() or "--yes" in result.output
 
     def test_can_publish_missing_file(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         result = runner.invoke(

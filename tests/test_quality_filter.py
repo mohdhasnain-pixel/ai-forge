@@ -10,28 +10,28 @@ class TestCoherenceScoring:
 
     def test_empty_text_returns_zero(self):
         """Empty text should have 0 coherence."""
-        from soup_cli.utils.quality import compute_coherence_score
+        from ai_forge_cli.utils.quality import compute_coherence_score
 
         scores = compute_coherence_score([""])
         assert scores[0] == 0.0
 
     def test_whitespace_only_returns_zero(self):
         """Whitespace-only text should have 0 coherence."""
-        from soup_cli.utils.quality import compute_coherence_score
+        from ai_forge_cli.utils.quality import compute_coherence_score
 
         scores = compute_coherence_score(["   \n\t  "])
         assert scores[0] == 0.0
 
     def test_short_text_returns_low_score(self):
         """Very short text (< 3 words) should have low coherence."""
-        from soup_cli.utils.quality import compute_coherence_score
+        from ai_forge_cli.utils.quality import compute_coherence_score
 
         scores = compute_coherence_score(["Hi there"])
         assert scores[0] <= 0.3
 
     def test_coherent_text_returns_high_score(self):
         """Well-formed English text should have high coherence."""
-        from soup_cli.utils.quality import compute_coherence_score
+        from ai_forge_cli.utils.quality import compute_coherence_score
 
         text = (
             "Python is a versatile programming language. "
@@ -43,7 +43,7 @@ class TestCoherenceScoring:
 
     def test_repetitive_text_returns_lower_score(self):
         """Highly repetitive text should score lower."""
-        from soup_cli.utils.quality import compute_coherence_score
+        from ai_forge_cli.utils.quality import compute_coherence_score
 
         normal = "Python is a programming language used for web development."
         repetitive = "the the the the the the the the the the the"
@@ -53,7 +53,7 @@ class TestCoherenceScoring:
 
     def test_scores_in_valid_range(self):
         """All coherence scores should be in [0, 1]."""
-        from soup_cli.utils.quality import compute_coherence_score
+        from ai_forge_cli.utils.quality import compute_coherence_score
 
         texts = [
             "Hello world!",
@@ -67,14 +67,14 @@ class TestCoherenceScoring:
 
     def test_multiple_texts_scored_independently(self):
         """Each text should get its own score."""
-        from soup_cli.utils.quality import compute_coherence_score
+        from ai_forge_cli.utils.quality import compute_coherence_score
 
         scores = compute_coherence_score(["good text here", "another good text"])
         assert len(scores) == 2
 
     def test_empty_list_returns_empty(self):
         """Empty input should return empty output."""
-        from soup_cli.utils.quality import compute_coherence_score
+        from ai_forge_cli.utils.quality import compute_coherence_score
 
         scores = compute_coherence_score([])
         assert scores == []
@@ -88,13 +88,13 @@ class TestScoreCoherenceInternal:
 
     def test_none_text_returns_zero(self):
         """None-like input should return 0."""
-        from soup_cli.utils.quality import _score_coherence
+        from ai_forge_cli.utils.quality import _score_coherence
 
         assert _score_coherence("") == 0.0
 
     def test_text_with_punctuation_scores_higher(self):
         """Text with sentence-ending punctuation should score higher."""
-        from soup_cli.utils.quality import _score_coherence
+        from ai_forge_cli.utils.quality import _score_coherence
 
         no_punct = "This is some text without any punctuation marks"
         with_punct = "This is some text. It has proper punctuation!"
@@ -103,7 +103,7 @@ class TestScoreCoherenceInternal:
 
     def test_diverse_vocabulary_scores_higher(self):
         """Text with diverse vocabulary should score higher."""
-        from soup_cli.utils.quality import _score_coherence
+        from ai_forge_cli.utils.quality import _score_coherence
 
         diverse = "The quick brown fox jumps over the lazy sleeping dog."
         monotone = "go go go go go go go go go go go go go go go."
@@ -119,7 +119,7 @@ class TestFilterByQuality:
 
     def test_empty_data_returns_empty(self):
         """Empty data should return empty kept and removed."""
-        from soup_cli.utils.quality import filter_by_quality
+        from ai_forge_cli.utils.quality import filter_by_quality
 
         kept, removed = filter_by_quality([], coherence_threshold=0.5)
         assert kept == []
@@ -127,7 +127,7 @@ class TestFilterByQuality:
 
     def test_coherence_filter_removes_low_quality(self):
         """Rows below coherence threshold should be removed."""
-        from soup_cli.utils.quality import filter_by_quality
+        from ai_forge_cli.utils.quality import filter_by_quality
 
         data = [
             {"text": "This is a well-written sentence. It has proper structure."},
@@ -142,7 +142,7 @@ class TestFilterByQuality:
         """Without thresholds, all data should be kept (but need at least one)."""
         # filter_by_quality requires at least one threshold, but passing
         # both as None effectively keeps all
-        from soup_cli.utils.quality import filter_by_quality
+        from ai_forge_cli.utils.quality import filter_by_quality
 
         data = [{"text": "hello"}, {"text": "world"}]
         kept, removed = filter_by_quality(data)
@@ -151,7 +151,7 @@ class TestFilterByQuality:
 
     def test_text_field_option(self):
         """text_field parameter should select which field to score."""
-        from soup_cli.utils.quality import filter_by_quality
+        from ai_forge_cli.utils.quality import filter_by_quality
 
         data = [
             {"instruction": "x", "output": "This is a good detailed response."},
@@ -164,13 +164,13 @@ class TestFilterByQuality:
 
     def test_perplexity_filter_requires_model(self):
         """Perplexity filtering should try to load a model."""
-        from soup_cli.utils.quality import filter_by_quality
+        from ai_forge_cli.utils.quality import filter_by_quality
 
         data = [{"text": "Hello world."}]
 
         # Mock torch/transformers to avoid actual model loading
         with mock_patch(
-            "soup_cli.utils.quality.compute_perplexity_scores",
+            "ai_forge_cli.utils.quality.compute_perplexity_scores",
             return_value=[50.0],
         ):
             kept, removed = filter_by_quality(
@@ -181,7 +181,7 @@ class TestFilterByQuality:
 
     def test_perplexity_filter_removes_high_perplexity(self):
         """Rows with perplexity above threshold should be removed."""
-        from soup_cli.utils.quality import filter_by_quality
+        from ai_forge_cli.utils.quality import filter_by_quality
 
         data = [
             {"text": "Normal text."},
@@ -189,7 +189,7 @@ class TestFilterByQuality:
         ]
 
         with mock_patch(
-            "soup_cli.utils.quality.compute_perplexity_scores",
+            "ai_forge_cli.utils.quality.compute_perplexity_scores",
             return_value=[50.0, 5000.0],
         ):
             kept, removed = filter_by_quality(
@@ -209,7 +209,7 @@ class TestFilterCommand:
         """soup data filter should be a registered command."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "filter", "--help"])
@@ -221,7 +221,7 @@ class TestFilterCommand:
         """soup data filter should require at least one filter option."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "filter", "nonexistent.jsonl"])
@@ -231,7 +231,7 @@ class TestFilterCommand:
         """soup data filter should fail gracefully for missing file."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(
@@ -245,7 +245,7 @@ class TestFilterCommand:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         # Create test data
         data_file = tmp_path / "test.jsonl"
@@ -280,7 +280,7 @@ class TestFilterCommand:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         data_file = tmp_path / "test.jsonl"
         rows = [

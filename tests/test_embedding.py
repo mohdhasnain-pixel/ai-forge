@@ -6,7 +6,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Config Tests ───────────────────────────────────────────────────────────
 
@@ -204,21 +204,21 @@ class TestEmbeddingDataFormat:
 
     def test_format_signature_exists(self):
         """embedding format signature should be registered."""
-        from soup_cli.data.formats import FORMAT_SIGNATURES
+        from ai_forge_cli.data.formats import FORMAT_SIGNATURES
 
         assert "embedding" in FORMAT_SIGNATURES
         assert FORMAT_SIGNATURES["embedding"] == {"anchor", "positive"}
 
     def test_detect_embedding_format_pair(self):
         """Should auto-detect embedding format from anchor+positive keys."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"anchor": "What is Python?", "positive": "A programming language."}]
         assert detect_format(data) == "embedding"
 
     def test_detect_embedding_format_triplet(self):
         """Should auto-detect embedding format with triplet data."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [
             {
@@ -231,7 +231,7 @@ class TestEmbeddingDataFormat:
 
     def test_convert_embedding_pair(self):
         """Should convert embedding pair row correctly."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"anchor": "query", "positive": "relevant doc"}
         result = format_to_messages(row, "embedding")
@@ -241,7 +241,7 @@ class TestEmbeddingDataFormat:
 
     def test_convert_embedding_triplet(self):
         """Should convert embedding triplet row correctly."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"anchor": "query", "positive": "relevant", "negative": "irrelevant"}
         result = format_to_messages(row, "embedding")
@@ -251,7 +251,7 @@ class TestEmbeddingDataFormat:
 
     def test_convert_embedding_empty_anchor_returns_none(self):
         """Empty anchor should cause conversion to return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"anchor": "", "positive": "text"}
         result = format_to_messages(row, "embedding")
@@ -259,7 +259,7 @@ class TestEmbeddingDataFormat:
 
     def test_convert_embedding_empty_positive_returns_none(self):
         """Empty positive should cause conversion to return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"anchor": "query", "positive": ""}
         result = format_to_messages(row, "embedding")
@@ -267,7 +267,7 @@ class TestEmbeddingDataFormat:
 
     def test_convert_embedding_missing_anchor_returns_none(self):
         """Row missing 'anchor' key should return None."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"text": "some text", "positive": "relevant"}
         result = format_to_messages(row, "embedding")
@@ -275,14 +275,14 @@ class TestEmbeddingDataFormat:
 
     def test_embedding_not_confused_with_dpo(self):
         """Embedding data should not be detected as DPO."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"anchor": "query", "positive": "relevant"}]
         assert detect_format(data) == "embedding"
 
     def test_convert_embedding_empty_negative_skipped(self):
         """Empty negative field should be excluded from result."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"anchor": "query", "positive": "relevant", "negative": ""}
         result = format_to_messages(row, "embedding")
@@ -325,13 +325,13 @@ class TestEmbeddingTrainRouting:
 
     def test_embedding_import_exists(self):
         """EmbeddingTrainerWrapper should be importable."""
-        from soup_cli.trainer.embedding import EmbeddingTrainerWrapper
+        from ai_forge_cli.trainer.embedding import EmbeddingTrainerWrapper
 
         assert EmbeddingTrainerWrapper is not None
 
     def test_embedding_wrapper_init(self):
         """EmbeddingTrainerWrapper should initialize without error."""
-        from soup_cli.trainer.embedding import EmbeddingTrainerWrapper
+        from ai_forge_cli.trainer.embedding import EmbeddingTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -346,7 +346,7 @@ class TestEmbeddingTrainRouting:
 
     def test_embedding_wrapper_init_with_options(self):
         """EmbeddingTrainerWrapper should accept all constructor options."""
-        from soup_cli.trainer.embedding import EmbeddingTrainerWrapper
+        from ai_forge_cli.trainer.embedding import EmbeddingTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -367,28 +367,28 @@ class TestEmbeddingSweepParams:
     """Test embedding parameter shortcuts in sweep."""
 
     def test_embedding_loss_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"embedding_loss": "contrastive"}}
         _set_nested_param(config, "embedding_loss", "triplet")
         assert config["training"]["embedding_loss"] == "triplet"
 
     def test_embedding_margin_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"embedding_margin": 0.5}}
         _set_nested_param(config, "embedding_margin", 1.0)
         assert config["training"]["embedding_margin"] == pytest.approx(1.0)
 
     def test_embedding_pooling_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"embedding_pooling": "mean"}}
         _set_nested_param(config, "embedding_pooling", "cls")
         assert config["training"]["embedding_pooling"] == "cls"
 
     def test_embedding_loss_shortcut_creates_nested_key(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "embedding_loss", "triplet")
@@ -396,7 +396,7 @@ class TestEmbeddingSweepParams:
 
     def test_sweep_run_single_routes_to_embedding_trainer(self):
         """_run_single should instantiate EmbeddingTrainerWrapper for embedding task."""
-        from soup_cli.commands.sweep import _run_single
+        from ai_forge_cli.commands.sweep import _run_single
 
         cfg = SoupConfig(
             base="some-model",
@@ -417,14 +417,14 @@ class TestEmbeddingSweepParams:
         }
 
         fake_gpu_info = {"memory_total": "0 MB", "memory_total_bytes": 0}
-        with mock_patch("soup_cli.data.loader.load_dataset", return_value=fake_dataset), \
-             mock_patch("soup_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
-             mock_patch("soup_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
-             mock_patch("soup_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
-             mock_patch("soup_cli.monitoring.display.TrainingDisplay"), \
-             mock_patch("soup_cli.trainer.embedding.EmbeddingTrainerWrapper.setup"), \
+        with mock_patch("ai_forge_cli.data.loader.load_dataset", return_value=fake_dataset), \
+             mock_patch("ai_forge_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
+             mock_patch("ai_forge_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
+             mock_patch("ai_forge_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
+             mock_patch("ai_forge_cli.monitoring.display.TrainingDisplay"), \
+             mock_patch("ai_forge_cli.trainer.embedding.EmbeddingTrainerWrapper.setup"), \
              mock_patch(
-                 "soup_cli.trainer.embedding.EmbeddingTrainerWrapper.train",
+                 "ai_forge_cli.trainer.embedding.EmbeddingTrainerWrapper.train",
                  return_value=fake_result,
              ) as mock_train:
             mock_tracker = MagicMock()
@@ -445,7 +445,7 @@ class TestEmbeddingTrainGuard:
 
     def test_train_before_setup_raises_runtime_error(self):
         """Calling train() before setup() should raise RuntimeError."""
-        from soup_cli.trainer.embedding import EmbeddingTrainerWrapper
+        from ai_forge_cli.trainer.embedding import EmbeddingTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -458,7 +458,7 @@ class TestEmbeddingTrainGuard:
 
     def test_train_error_message_mentions_setup(self):
         """RuntimeError message should mention setup()."""
-        from soup_cli.trainer.embedding import EmbeddingTrainerWrapper
+        from ai_forge_cli.trainer.embedding import EmbeddingTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -479,7 +479,7 @@ class TestEmbeddingTrainResults:
 
     def _make_wrapper_with_mock_trainer(self, log_history=None, global_step=20):
         """Helper: return an EmbeddingTrainerWrapper with trainer pre-injected."""
-        from soup_cli.trainer.embedding import EmbeddingTrainerWrapper
+        from ai_forge_cli.trainer.embedding import EmbeddingTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -579,7 +579,7 @@ class TestEmbeddingTrainResults:
             call_count[0] += 1
             return 0 if call_count[0] == 1 else 90
 
-        with mock_patch("soup_cli.trainer.embedding.time.time", side_effect=fake_time):
+        with mock_patch("ai_forge_cli.trainer.embedding.time.time", side_effect=fake_time):
             result = wrapper.train()
 
         assert result["duration"] == "1m"
@@ -596,7 +596,7 @@ class TestEmbeddingTrainResults:
             call_count[0] += 1
             return 0 if call_count[0] == 1 else 3720  # 1h 2m
 
-        with mock_patch("soup_cli.trainer.embedding.time.time", side_effect=fake_time):
+        with mock_patch("ai_forge_cli.trainer.embedding.time.time", side_effect=fake_time):
             result = wrapper.train()
 
         assert result["duration"] == "1h 2m"
@@ -626,7 +626,7 @@ class TestEmbeddingSetupTransformers:
              mock_patch("peft.get_peft_model", return_value=mock_model), \
              mock_patch("peft.LoraConfig") as mock_lora_config, \
              mock_patch("peft.prepare_model_for_kbit_training"):
-            from soup_cli.trainer.embedding import EmbeddingTrainerWrapper
+            from ai_forge_cli.trainer.embedding import EmbeddingTrainerWrapper
 
             wrapper = EmbeddingTrainerWrapper(cfg, device="cpu")
             wrapper._setup_transformers(cfg, cfg.training)
@@ -654,7 +654,7 @@ class TestEmbeddingSetupTransformers:
              mock_patch("peft.get_peft_model", return_value=mock_model), \
              mock_patch("peft.LoraConfig") as mock_lora_config, \
              mock_patch("peft.prepare_model_for_kbit_training"):
-            from soup_cli.trainer.embedding import EmbeddingTrainerWrapper
+            from ai_forge_cli.trainer.embedding import EmbeddingTrainerWrapper
 
             wrapper = EmbeddingTrainerWrapper(cfg, device="cpu")
             wrapper._setup_transformers(cfg, cfg.training)
@@ -683,7 +683,7 @@ class TestEmbeddingSetupTransformers:
              mock_patch("peft.get_peft_model", return_value=mock_model), \
              mock_patch("peft.LoraConfig") as mock_lora_config, \
              mock_patch("peft.prepare_model_for_kbit_training"):
-            from soup_cli.trainer.embedding import EmbeddingTrainerWrapper
+            from ai_forge_cli.trainer.embedding import EmbeddingTrainerWrapper
 
             wrapper = EmbeddingTrainerWrapper(cfg, device="cpu")
             wrapper._setup_transformers(cfg, cfg.training)
@@ -702,7 +702,7 @@ class TestEmbeddingInitTemplate:
         """soup init --template embedding should write a file with embedding task."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -722,8 +722,8 @@ class TestEmbeddingInitTemplate:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.config.loader import load_config
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.config.loader import load_config
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -743,9 +743,9 @@ class TestEmbeddingWizardPath:
 
     def test_wizard_embedding_task_sets_embedding_format(self):
         """When the wizard receives task=embedding, data format should be 'embedding'."""
-        from soup_cli.commands.init import _interactive_wizard
+        from ai_forge_cli.commands.init import _interactive_wizard
 
-        with mock_patch("soup_cli.commands.init.Prompt.ask", side_effect=[
+        with mock_patch("ai_forge_cli.commands.init.Prompt.ask", side_effect=[
             "some-model",
             "embedding",
             "./data/pairs.jsonl",
@@ -759,7 +759,7 @@ class TestEmbeddingWizardPath:
 
     def test_wizard_embedding_does_not_prompt_for_format(self):
         """The wizard should NOT ask for data format when task=embedding."""
-        from soup_cli.commands.init import _interactive_wizard
+        from ai_forge_cli.commands.init import _interactive_wizard
 
         prompt_calls = []
 
@@ -774,7 +774,7 @@ class TestEmbeddingWizardPath:
             }
             return answers.get(question, kwargs.get("default", ""))
 
-        with mock_patch("soup_cli.commands.init.Prompt.ask", side_effect=record_prompt):
+        with mock_patch("ai_forge_cli.commands.init.Prompt.ask", side_effect=record_prompt):
             config_text = _interactive_wizard()
 
         assert not any("format" in call.lower() for call in prompt_calls)
@@ -789,7 +789,7 @@ class TestEmbeddingConfigLoaderRoundTrip:
 
     def test_embedding_template_round_trip(self):
         """TEMPLATES['embedding'] should parse via load_config_from_string."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(TEMPLATES["embedding"])
         assert cfg.task == "embedding"
@@ -798,7 +798,7 @@ class TestEmbeddingConfigLoaderRoundTrip:
 
     def test_embedding_custom_yaml_round_trip(self):
         """Custom embedding YAML string should round-trip correctly."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: BAAI/bge-base-en-v1.5
@@ -838,7 +838,7 @@ class TestPoolingFunction:
         """Mean pooling should average non-padding tokens."""
         import torch
 
-        from soup_cli.trainer.embedding import _pool_embeddings
+        from ai_forge_cli.trainer.embedding import _pool_embeddings
 
         hidden = torch.tensor([
             [[1.0, 2.0], [3.0, 4.0], [0.0, 0.0]],
@@ -852,7 +852,7 @@ class TestPoolingFunction:
         """CLS pooling should return first token embedding."""
         import torch
 
-        from soup_cli.trainer.embedding import _pool_embeddings
+        from ai_forge_cli.trainer.embedding import _pool_embeddings
 
         hidden = torch.tensor([
             [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
@@ -866,7 +866,7 @@ class TestPoolingFunction:
         """Last-token pooling should return last non-padding token."""
         import torch
 
-        from soup_cli.trainer.embedding import _pool_embeddings
+        from ai_forge_cli.trainer.embedding import _pool_embeddings
 
         hidden = torch.tensor([
             [[1.0, 2.0], [3.0, 4.0], [0.0, 0.0]],

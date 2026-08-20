@@ -37,7 +37,7 @@ import os
 import pytest
 import yaml
 
-from soup_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.loader import load_config_from_string
 
 # ==========================================================================
 # Shared config builders (pure YAML — no torch)
@@ -365,7 +365,7 @@ def _dataset():
 
 def _wrapper(tmp_path, monkeypatch, base=None, **training_over):
     """A real SFTTrainerWrapper over a real tiny checkpoint."""
-    from soup_cli.trainer.sft import SFTTrainerWrapper
+    from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
     base = base or _tiny_llama_dir(tmp_path)
     monkeypatch.chdir(tmp_path)
@@ -485,7 +485,7 @@ class TestMultipackSamplerSeed:
 
     @staticmethod
     def _seed_passed_to_multipack(tmp_path, monkeypatch, **over):
-        import soup_cli.utils.multipack_trainer as mt
+        import ai_forge_cli.utils.multipack_trainer as mt
 
         seen = {}
         real = mt.attach_multipack_state
@@ -632,7 +632,7 @@ class TestFullFinetuneTrainer:
         _requires_train_extra()
         wrapper, dataset = _wrapper(tmp_path, monkeypatch, lora={"r": 0})
 
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         original = SFTTrainerWrapper._setup_transformers
 
@@ -668,7 +668,7 @@ class TestSchemaHalfStaysLight:
         import ast
         import pathlib
 
-        import soup_cli.config.schema as schema_mod
+        import ai_forge_cli.config.schema as schema_mod
 
         tree = ast.parse(pathlib.Path(schema_mod.__file__).read_text(encoding="utf-8"))
         offenders = []

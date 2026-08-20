@@ -54,16 +54,16 @@ rocm-smi
 
 ```bash
 # Basic installation (CLI only)
-pip install soup-cli
+pip install ai-forge
 
 # With training support
-pip install "soup-cli[train]"
+pip install "ai-forge[train]"
 
 # Full installation (all features)
-pip install "soup-cli[all]"
+pip install "ai-forge[all]"
 
 # With specific extras
-pip install "soup-cli[train,serve,data,eval]"
+pip install "ai-forge[train,serve,data,eval]"
 ```
 
 ### Option 2: From Source (For Development)
@@ -94,7 +94,7 @@ conda create -n ai-forge python=3.10
 conda activate ai-forge
 
 # Install from PyPI
-pip install "soup-cli[train]"
+pip install "ai-forge[train]"
 ```
 
 ## Verification
@@ -211,7 +211,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ```bash
 # Install MLX backend support
-pip install "soup-cli[all]"  # Includes MLX support
+pip install "ai-forge[all]"  # Includes MLX support
 
 # Initialize with MLX backend
 ai-forge init --task sft --backend mlx --model <mlx-model>
@@ -252,7 +252,7 @@ env\Scripts\activate
 
 # Install dependencies
 pip install --upgrade pip
-pip install "soup-cli[train]"
+pip install "ai-forge[train]"
 
 # Deactivate when done
 deactivate
@@ -384,7 +384,7 @@ pip cache purge
 # Reinstall in clean environment
 python -m venv env_clean
 source env_clean/bin/activate
-pip install "soup-cli[train]"
+pip install "ai-forge[train]"
 
 # If still failing, check Python version and compatibility
 python --version
@@ -396,15 +396,15 @@ pip list | grep torch
 ```bash
 # If you see permission denied:
 # Option 1: Use sudo (not recommended)
-sudo pip install soup-cli
+sudo pip install ai-forge
 
 # Option 2: Install to user directory (recommended)
-pip install --user soup-cli
+pip install --user ai-forge
 
 # Option 3: Use virtual environment (best)
 python -m venv env
 source env/bin/activate
-pip install soup-cli
+pip install ai-forge
 ```
 
 ## Next Steps

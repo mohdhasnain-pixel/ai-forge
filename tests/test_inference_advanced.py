@@ -25,7 +25,7 @@ class TestPrefixCachingCLI:
     def test_serve_prefix_cache_flag_exists(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -33,7 +33,7 @@ class TestPrefixCachingCLI:
         assert "--prefix-cache" in _strip_ansi(result.output)
 
     def test_serve_prefix_cache_default_false(self):
-        from soup_cli.commands.serve import serve
+        from ai_forge_cli.commands.serve import serve
 
         sig = inspect.signature(serve)
         param = sig.parameters.get("prefix_cache")
@@ -43,7 +43,7 @@ class TestPrefixCachingCLI:
 
 class TestPrefixCachingEngine:
     def test_create_engine_accepts_prefix_cache(self):
-        from soup_cli.utils.vllm import create_vllm_engine
+        from ai_forge_cli.utils.vllm import create_vllm_engine
 
         sig = inspect.signature(create_vllm_engine)
         assert "enable_prefix_caching" in sig.parameters
@@ -63,7 +63,7 @@ class TestPrefixCachingEngine:
         }):
             from importlib import reload
 
-            import soup_cli.utils.vllm as vllm_mod
+            import ai_forge_cli.utils.vllm as vllm_mod
 
             reload(vllm_mod)
 
@@ -88,7 +88,7 @@ class TestPrefixCachingEngine:
         }):
             from importlib import reload
 
-            import soup_cli.utils.vllm as vllm_mod
+            import ai_forge_cli.utils.vllm as vllm_mod
 
             reload(vllm_mod)
 
@@ -107,50 +107,50 @@ class TestPrefixCachingEngine:
 
 class TestSpeculativePairing:
     def test_pick_draft_model_for_llama_70b(self):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         result = pick_draft_model("meta-llama/Llama-3.1-70B-Instruct")
         assert result is not None
         assert "1b" in result.lower() or "3b" in result.lower()
 
     def test_pick_draft_model_for_llama_8b_returns_none(self):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         # 8B is too small for speculative decoding (draft+target overhead > gain)
         result = pick_draft_model("meta-llama/Llama-3.1-8B-Instruct")
         assert result is None
 
     def test_pick_draft_model_for_qwen_72b(self):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         result = pick_draft_model("Qwen/Qwen2.5-72B-Instruct")
         assert result is not None
         assert "qwen" in result.lower()
 
     def test_pick_draft_model_unknown_returns_none(self):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         assert pick_draft_model("some/unknown-model") is None
 
     def test_pick_draft_model_empty_string_returns_none(self):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         assert pick_draft_model("") is None
 
     def test_pick_draft_model_rejects_urls(self):
         """Guard against URL injection — only HF model IDs."""
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         assert pick_draft_model("https://evil.com/model") is None
         assert pick_draft_model("http://localhost/model") is None
 
     def test_pick_draft_model_rejects_null_byte(self):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         assert pick_draft_model("meta-llama/Llama\x00-3.1-70B-Instruct") is None
 
     def test_pick_draft_model_case_insensitive_match(self):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         a = pick_draft_model("Meta-Llama/Llama-3.1-70B-Instruct")
         b = pick_draft_model("meta-llama/llama-3.1-70b-instruct")
@@ -159,7 +159,7 @@ class TestSpeculativePairing:
     def test_serve_auto_spec_flag(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -177,7 +177,7 @@ class TestLoRAHotSwap:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         # Create valid adapter path under cwd
         adapter_dir = tmp_path / "adapter-a"
@@ -215,7 +215,7 @@ class TestLoRAHotSwap:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -234,7 +234,7 @@ class TestLoRAHotSwap:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -253,7 +253,7 @@ class TestLoRAHotSwap:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -280,7 +280,7 @@ class TestStructuredOutput:
     def test_structured_output_flag_exists(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -288,7 +288,7 @@ class TestStructuredOutput:
         assert "--structured-output" in _strip_ansi(result.output)
 
     def test_validate_structured_output_accepts_known_modes(self):
-        from soup_cli.utils.structured_output import validate_mode
+        from ai_forge_cli.utils.structured_output import validate_mode
 
         assert validate_mode("json") == "json"
         assert validate_mode("regex") == "regex"
@@ -296,49 +296,49 @@ class TestStructuredOutput:
         assert validate_mode(None) == "off"
 
     def test_validate_structured_output_rejects_unknown(self):
-        from soup_cli.utils.structured_output import validate_mode
+        from ai_forge_cli.utils.structured_output import validate_mode
 
         with pytest.raises(ValueError, match="Unknown structured-output mode"):
             validate_mode("xml")
 
     def test_validate_json_schema_accepts_dict(self):
-        from soup_cli.utils.structured_output import validate_json_schema
+        from ai_forge_cli.utils.structured_output import validate_json_schema
 
         schema = {"type": "object", "properties": {"name": {"type": "string"}}}
         # Should not raise
         validate_json_schema(schema)
 
     def test_validate_json_schema_rejects_non_dict(self):
-        from soup_cli.utils.structured_output import validate_json_schema
+        from ai_forge_cli.utils.structured_output import validate_json_schema
 
         with pytest.raises(ValueError):
             validate_json_schema("not a dict")
 
     def test_validate_regex_pattern_rejects_redos(self):
         """Guard against ReDoS: nested quantifier over catastrophic backtracking."""
-        from soup_cli.utils.structured_output import validate_regex_pattern
+        from ai_forge_cli.utils.structured_output import validate_regex_pattern
 
         with pytest.raises(ValueError, match="length"):
             validate_regex_pattern("x" * 10_000)
 
     def test_validate_regex_pattern_accepts_simple(self):
-        from soup_cli.utils.structured_output import validate_regex_pattern
+        from ai_forge_cli.utils.structured_output import validate_regex_pattern
 
         validate_regex_pattern(r"\d{3}-\d{4}")
 
     def test_validate_regex_pattern_rejects_invalid(self):
-        from soup_cli.utils.structured_output import validate_regex_pattern
+        from ai_forge_cli.utils.structured_output import validate_regex_pattern
 
         with pytest.raises(ValueError):
             validate_regex_pattern("[unclosed")
 
     def test_build_constraint_returns_none_when_off(self):
-        from soup_cli.utils.structured_output import build_constraint
+        from ai_forge_cli.utils.structured_output import build_constraint
 
         assert build_constraint("off", None, None) is None
 
     def test_build_constraint_json_requires_schema_or_skips(self):
-        from soup_cli.utils.structured_output import build_constraint
+        from ai_forge_cli.utils.structured_output import build_constraint
 
         result = build_constraint("json", None, None)
         # When no schema provided, fall back to free-form JSON (not None
@@ -347,7 +347,7 @@ class TestStructuredOutput:
         assert result is None or isinstance(result, dict)
 
     def test_build_constraint_regex_requires_pattern(self):
-        from soup_cli.utils.structured_output import build_constraint
+        from ai_forge_cli.utils.structured_output import build_constraint
 
         with pytest.raises(ValueError):
             build_constraint("regex", None, None)
@@ -362,7 +362,7 @@ class TestBatchingDashboard:
     def test_dashboard_flag_exists(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -373,7 +373,7 @@ class TestBatchingDashboard:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -391,7 +391,7 @@ class TestBatchingDashboard:
         assert "active_requests" in data
 
     def test_metrics_counters_start_at_zero(self):
-        from soup_cli.utils.metrics import ServerMetrics
+        from ai_forge_cli.utils.metrics import ServerMetrics
 
         m = ServerMetrics()
         snap = m.snapshot()
@@ -400,7 +400,7 @@ class TestBatchingDashboard:
         assert snap["active_requests"] == 0
 
     def test_metrics_tracks_request_lifecycle(self):
-        from soup_cli.utils.metrics import ServerMetrics
+        from ai_forge_cli.utils.metrics import ServerMetrics
 
         m = ServerMetrics()
         with m.track_request():
@@ -410,7 +410,7 @@ class TestBatchingDashboard:
         assert m.snapshot()["requests_total"] == 1
 
     def test_metrics_track_request_handles_exception(self):
-        from soup_cli.utils.metrics import ServerMetrics
+        from ai_forge_cli.utils.metrics import ServerMetrics
 
         m = ServerMetrics()
         with pytest.raises(RuntimeError):
@@ -420,7 +420,7 @@ class TestBatchingDashboard:
         assert m.snapshot()["requests_total"] == 1
 
     def test_metrics_record_tokens(self):
-        from soup_cli.utils.metrics import ServerMetrics
+        from ai_forge_cli.utils.metrics import ServerMetrics
 
         m = ServerMetrics()
         m.record_tokens(42)
@@ -428,14 +428,14 @@ class TestBatchingDashboard:
         assert m.snapshot()["tokens_generated_total"] == 50
 
     def test_metrics_record_tokens_rejects_negative(self):
-        from soup_cli.utils.metrics import ServerMetrics
+        from ai_forge_cli.utils.metrics import ServerMetrics
 
         m = ServerMetrics()
         with pytest.raises(ValueError):
             m.record_tokens(-1)
 
     def test_metrics_latency_percentiles(self):
-        from soup_cli.utils.metrics import ServerMetrics
+        from ai_forge_cli.utils.metrics import ServerMetrics
 
         m = ServerMetrics()
         for ms in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
@@ -455,7 +455,7 @@ class TestRequestTracing:
     def test_trace_flag_exists(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -463,33 +463,33 @@ class TestRequestTracing:
         assert "--trace" in _strip_ansi(result.output)
 
     def test_is_otel_available_when_missing(self):
-        from soup_cli.utils.tracing import is_otel_available
+        from ai_forge_cli.utils.tracing import is_otel_available
 
         with patch.dict("sys.modules", {"opentelemetry": None}):
             assert is_otel_available() is False
 
     def test_build_tracer_returns_none_when_disabled(self):
-        from soup_cli.utils.tracing import build_tracer
+        from ai_forge_cli.utils.tracing import build_tracer
 
         assert build_tracer(enabled=False) is None
 
     def test_build_tracer_returns_none_when_otel_missing(self):
-        from soup_cli.utils.tracing import build_tracer
+        from ai_forge_cli.utils.tracing import build_tracer
 
         with patch(
-            "soup_cli.utils.tracing.is_otel_available", return_value=False
+            "ai_forge_cli.utils.tracing.is_otel_available", return_value=False
         ):
             # Should not raise, just return None + log
             assert build_tracer(enabled=True) is None
 
     def test_validate_otlp_endpoint_accepts_localhost_http(self):
-        from soup_cli.utils.tracing import validate_otlp_endpoint
+        from ai_forge_cli.utils.tracing import validate_otlp_endpoint
 
         assert validate_otlp_endpoint("http://localhost:4317") == "http://localhost:4317"
         assert validate_otlp_endpoint("http://127.0.0.1:4317") == "http://127.0.0.1:4317"
 
     def test_validate_otlp_endpoint_accepts_https(self):
-        from soup_cli.utils.tracing import validate_otlp_endpoint
+        from ai_forge_cli.utils.tracing import validate_otlp_endpoint
 
         assert (
             validate_otlp_endpoint("https://otlp.example.com:4317")
@@ -497,19 +497,19 @@ class TestRequestTracing:
         )
 
     def test_validate_otlp_endpoint_rejects_plain_http_remote(self):
-        from soup_cli.utils.tracing import validate_otlp_endpoint
+        from ai_forge_cli.utils.tracing import validate_otlp_endpoint
 
         with pytest.raises(ValueError, match="HTTPS"):
             validate_otlp_endpoint("http://evil.com:4317")
 
     def test_validate_otlp_endpoint_rejects_bad_scheme(self):
-        from soup_cli.utils.tracing import validate_otlp_endpoint
+        from ai_forge_cli.utils.tracing import validate_otlp_endpoint
 
         with pytest.raises(ValueError):
             validate_otlp_endpoint("ftp://example.com")
 
     def test_validate_otlp_endpoint_rejects_null_byte(self):
-        from soup_cli.utils.tracing import validate_otlp_endpoint
+        from ai_forge_cli.utils.tracing import validate_otlp_endpoint
 
         with pytest.raises(ValueError):
             validate_otlp_endpoint("http://localhost\x00/evil")
@@ -524,7 +524,7 @@ class TestAutoQuant:
     def test_auto_quant_flag_exists(self):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -532,7 +532,7 @@ class TestAutoQuant:
         assert "--auto-quant" in _strip_ansi(result.output)
 
     def test_candidate_order_default(self):
-        from soup_cli.utils.auto_quant import default_candidate_order
+        from ai_forge_cli.utils.auto_quant import default_candidate_order
 
         order = default_candidate_order()
         # First candidate should be fastest-to-try; we canonicalize order.
@@ -544,7 +544,7 @@ class TestAutoQuant:
         assert "awq" in order
 
     def test_pick_best_candidate_prefers_fastest_ok(self):
-        from soup_cli.utils.auto_quant import Candidate, pick_best
+        from ai_forge_cli.utils.auto_quant import Candidate, pick_best
 
         candidates = [
             Candidate(name="gguf", score=0.92, latency_ms=200, ok=True),
@@ -556,7 +556,7 @@ class TestAutoQuant:
         assert best.name == "awq"
 
     def test_pick_best_drops_below_threshold(self):
-        from soup_cli.utils.auto_quant import Candidate, pick_best
+        from ai_forge_cli.utils.auto_quant import Candidate, pick_best
 
         candidates = [
             Candidate(name="gguf", score=0.50, latency_ms=100, ok=True),
@@ -567,7 +567,7 @@ class TestAutoQuant:
         assert best.name == "none"
 
     def test_pick_best_raises_when_no_candidates_pass(self):
-        from soup_cli.utils.auto_quant import Candidate, pick_best
+        from ai_forge_cli.utils.auto_quant import Candidate, pick_best
 
         candidates = [
             Candidate(name="gguf", score=0.50, latency_ms=100, ok=True),
@@ -576,7 +576,7 @@ class TestAutoQuant:
             pick_best(candidates, min_score=0.90)
 
     def test_pick_best_skips_failed(self):
-        from soup_cli.utils.auto_quant import Candidate, pick_best
+        from ai_forge_cli.utils.auto_quant import Candidate, pick_best
 
         candidates = [
             Candidate(name="gguf", score=0.99, latency_ms=1, ok=False),
@@ -586,13 +586,13 @@ class TestAutoQuant:
         assert best.name == "awq"
 
     def test_candidate_requires_positive_latency(self):
-        from soup_cli.utils.auto_quant import Candidate
+        from ai_forge_cli.utils.auto_quant import Candidate
 
         with pytest.raises(ValueError):
             Candidate(name="x", score=0.9, latency_ms=-1, ok=True)
 
     def test_candidate_score_bounded(self):
-        from soup_cli.utils.auto_quant import Candidate
+        from ai_forge_cli.utils.auto_quant import Candidate
 
         with pytest.raises(ValueError):
             Candidate(name="x", score=1.5, latency_ms=100, ok=True)
@@ -600,7 +600,7 @@ class TestAutoQuant:
             Candidate(name="x", score=-0.1, latency_ms=100, ok=True)
 
     def test_min_score_bounds(self):
-        from soup_cli.utils.auto_quant import Candidate, pick_best
+        from ai_forge_cli.utils.auto_quant import Candidate, pick_best
 
         candidates = [
             Candidate(name="awq", score=0.9, latency_ms=100, ok=True),
@@ -613,7 +613,7 @@ class TestAutoQuant:
     def test_name_validation_on_candidate(self):
         """Candidate names must be alphanumeric — prevents arbitrary strings
         leaking into log/display."""
-        from soup_cli.utils.auto_quant import Candidate
+        from ai_forge_cli.utils.auto_quant import Candidate
 
         with pytest.raises(ValueError):
             Candidate(name="../../etc", score=0.9, latency_ms=100, ok=True)
@@ -621,7 +621,7 @@ class TestAutoQuant:
     def test_pick_best_tie_break_by_first_encountered(self):
         """When latency and score are tied, prefer first-encountered
         (stable — consistent with v0.28.0 kernel_picker)."""
-        from soup_cli.utils.auto_quant import Candidate, pick_best
+        from ai_forge_cli.utils.auto_quant import Candidate, pick_best
 
         candidates = [
             Candidate(name="gguf", score=0.92, latency_ms=200, ok=True),
@@ -631,7 +631,7 @@ class TestAutoQuant:
         assert best.name == "gguf"
 
     def test_pick_best_all_failed(self):
-        from soup_cli.utils.auto_quant import Candidate, pick_best
+        from ai_forge_cli.utils.auto_quant import Candidate, pick_best
 
         candidates = [
             Candidate(name="gguf", score=0.99, latency_ms=100, ok=False),
@@ -641,7 +641,7 @@ class TestAutoQuant:
             pick_best(candidates, min_score=0.90)
 
     def test_pick_best_empty_list(self):
-        from soup_cli.utils.auto_quant import pick_best
+        from ai_forge_cli.utils.auto_quant import pick_best
 
         with pytest.raises(ValueError, match="no candidate"):
             pick_best([], min_score=0.90)
@@ -649,7 +649,7 @@ class TestAutoQuant:
     def test_pick_best_consumes_generator_once(self):
         """Regression test: error message counts correctly when input is
         a generator (not a list). v0.30.0 review fix."""
-        from soup_cli.utils.auto_quant import Candidate, pick_best
+        from ai_forge_cli.utils.auto_quant import Candidate, pick_best
 
         def gen():
             yield Candidate(name="gguf", score=0.5, latency_ms=100, ok=True)
@@ -659,13 +659,13 @@ class TestAutoQuant:
             pick_best(gen(), min_score=0.90)
 
     def test_candidate_nan_score_rejected(self):
-        from soup_cli.utils.auto_quant import Candidate
+        from ai_forge_cli.utils.auto_quant import Candidate
 
         with pytest.raises(ValueError, match="finite"):
             Candidate(name="x", score=float("nan"), latency_ms=100, ok=True)
 
     def test_candidate_nan_latency_rejected(self):
-        from soup_cli.utils.auto_quant import Candidate
+        from ai_forge_cli.utils.auto_quant import Candidate
 
         with pytest.raises(ValueError, match="finite"):
             Candidate(name="x", score=0.9, latency_ms=float("nan"), ok=True)
@@ -696,7 +696,7 @@ class TestSpeculativePairingFullMatrix:
         ],
     )
     def test_known_targets_return_draft(self, target):
-        from soup_cli.utils.spec_pairing import pick_draft_model
+        from ai_forge_cli.utils.spec_pairing import pick_draft_model
 
         result = pick_draft_model(target)
         assert result is not None, f"no draft mapped for {target}"
@@ -707,7 +707,7 @@ class TestLoRADeactivate:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -733,7 +733,7 @@ class TestLoRADeactivate:
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
 
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         app = _create_app(
             model_obj=MagicMock(),
@@ -754,7 +754,7 @@ class TestMetricsThreadSafety:
         (catches missing lock / non-atomic increment)."""
         import threading
 
-        from soup_cli.utils.metrics import ServerMetrics
+        from ai_forge_cli.utils.metrics import ServerMetrics
 
         metrics = ServerMetrics()
 
@@ -773,7 +773,7 @@ class TestMetricsThreadSafety:
         assert snap["active_requests"] == 0
 
     def test_record_tokens_zero_allowed(self):
-        from soup_cli.utils.metrics import ServerMetrics
+        from ai_forge_cli.utils.metrics import ServerMetrics
 
         metrics = ServerMetrics()
         metrics.record_tokens(0)  # must not raise
@@ -782,32 +782,32 @@ class TestMetricsThreadSafety:
 
 class TestTracingExtra:
     def test_validate_otlp_rejects_private_ip(self):
-        from soup_cli.utils.tracing import validate_otlp_endpoint
+        from ai_forge_cli.utils.tracing import validate_otlp_endpoint
 
         with pytest.raises(ValueError, match="private"):
             validate_otlp_endpoint("https://192.168.1.10:4317")
 
     def test_validate_otlp_rejects_link_local(self):
         """Cloud-metadata IP must be blocked (SSRF hardening)."""
-        from soup_cli.utils.tracing import validate_otlp_endpoint
+        from ai_forge_cli.utils.tracing import validate_otlp_endpoint
 
         with pytest.raises(ValueError, match="private|link"):
             validate_otlp_endpoint("https://169.254.169.254:4317")
 
     def test_validate_otlp_rejects_zero_host(self):
-        from soup_cli.utils.tracing import validate_otlp_endpoint
+        from ai_forge_cli.utils.tracing import validate_otlp_endpoint
 
         with pytest.raises(ValueError):
             validate_otlp_endpoint("https://0.0.0.0:4317")
 
     def test_validate_otlp_rejects_missing_host(self):
-        from soup_cli.utils.tracing import validate_otlp_endpoint
+        from ai_forge_cli.utils.tracing import validate_otlp_endpoint
 
         with pytest.raises(ValueError, match="host"):
             validate_otlp_endpoint("http:///path")
 
     def test_validate_otlp_rejects_non_string(self):
-        from soup_cli.utils.tracing import validate_otlp_endpoint
+        from ai_forge_cli.utils.tracing import validate_otlp_endpoint
 
         with pytest.raises(ValueError):
             validate_otlp_endpoint(123)  # type: ignore[arg-type]
@@ -819,7 +819,7 @@ class TestStructuredOutputExtra:
         pytest.importorskip("fastapi")  # CLI exits early w/o FastAPI
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         model_dir = tmp_path / "model"
@@ -848,7 +848,7 @@ class TestAutoQuantCLIWarning:
         pytest.importorskip("fastapi")  # CLI exits early w/o FastAPI
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         model_dir = tmp_path / "model"
@@ -877,7 +877,7 @@ class TestJsonSchemaContainment:
         pytest.importorskip("fastapi")  # CLI exits early w/o FastAPI
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         # Put the schema OUTSIDE cwd
         outside_dir = tmp_path / "outside"

@@ -25,12 +25,12 @@ runner = CliRunner()
 
 class TestMerge4bitWiring:
     def test_imports(self):
-        from soup_cli.utils.save_formats import merge_4bit
+        from ai_forge_cli.utils.save_formats import merge_4bit
 
         assert callable(merge_4bit)
 
     def test_no_longer_raises_not_implemented(self, tmp_path):
-        from soup_cli.utils.save_formats import merge_4bit
+        from ai_forge_cli.utils.save_formats import merge_4bit
 
         # The live wiring lands in v0.53.1; calling without args used to
         # raise NotImplementedError. Now it accepts named args and runs
@@ -44,7 +44,7 @@ class TestMerge4bitWiring:
             )
 
     def test_rejects_outside_cwd_source(self, tmp_path, monkeypatch):
-        from soup_cli.utils.save_formats import merge_4bit
+        from ai_forge_cli.utils.save_formats import merge_4bit
 
         monkeypatch.chdir(tmp_path)
         outside = tmp_path.parent / "outside"
@@ -57,7 +57,7 @@ class TestMerge4bitWiring:
             )
 
     def test_rejects_outside_cwd_output(self, tmp_path, monkeypatch):
-        from soup_cli.utils.save_formats import merge_4bit
+        from ai_forge_cli.utils.save_formats import merge_4bit
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "src"
@@ -73,7 +73,7 @@ class TestMerge4bitWiring:
     def test_rejects_symlink_output(self, tmp_path, monkeypatch):
         if sys.platform == "win32":
             pytest.skip("symlink rejection POSIX-only")
-        from soup_cli.utils.save_formats import merge_4bit
+        from ai_forge_cli.utils.save_formats import merge_4bit
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "src"
@@ -98,7 +98,7 @@ class TestMerge4bitWiring:
         any non-bool value (including ``"yes"`` or ``1``) is rejected,
         while ``True`` / ``False`` pass through.
         """
-        from soup_cli.utils.save_formats import merge_4bit
+        from ai_forge_cli.utils.save_formats import merge_4bit
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "src"
@@ -118,7 +118,7 @@ class TestMerge4bitWiring:
             )
 
     def test_happy_path_with_mocks(self, tmp_path, monkeypatch):
-        from soup_cli.utils import save_formats
+        from ai_forge_cli.utils import save_formats
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "merged"
@@ -160,12 +160,12 @@ class TestMerge4bitWiring:
 
 class TestExportTorchAOWiring:
     def test_imports(self):
-        from soup_cli.utils.save_formats import export_torchao
+        from ai_forge_cli.utils.save_formats import export_torchao
 
         assert callable(export_torchao)
 
     def test_invalid_scheme_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.save_formats import export_torchao
+        from ai_forge_cli.utils.save_formats import export_torchao
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "src"
@@ -179,7 +179,7 @@ class TestExportTorchAOWiring:
             )
 
     def test_rejects_outside_cwd_model(self, tmp_path, monkeypatch):
-        from soup_cli.utils.save_formats import export_torchao
+        from ai_forge_cli.utils.save_formats import export_torchao
 
         monkeypatch.chdir(tmp_path)
         outside = tmp_path.parent / "outside_torchao"
@@ -192,7 +192,7 @@ class TestExportTorchAOWiring:
             )
 
     def test_rejects_outside_cwd_output(self, tmp_path, monkeypatch):
-        from soup_cli.utils.save_formats import export_torchao
+        from ai_forge_cli.utils.save_formats import export_torchao
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "src"
@@ -206,7 +206,7 @@ class TestExportTorchAOWiring:
             )
 
     def test_happy_path_with_mocks(self, tmp_path, monkeypatch):
-        from soup_cli.utils import save_formats
+        from ai_forge_cli.utils import save_formats
 
         monkeypatch.chdir(tmp_path)
         src = tmp_path / "model"
@@ -260,7 +260,7 @@ class TestExportTorchAOWiring:
 
 class TestMergeSaveFormatCLI:
     def test_save_format_help_lists_flag(self):
-        from soup_cli.commands.merge import merge
+        from ai_forge_cli.commands.merge import merge
 
         app = typer.Typer()
         app.command()(merge)
@@ -275,7 +275,7 @@ class TestMergeSaveFormatCLI:
         assert "--save-format" in registered, registered
 
     def test_invalid_save_format(self, tmp_path, monkeypatch):
-        from soup_cli.commands.merge import merge
+        from ai_forge_cli.commands.merge import merge
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "adapter"
@@ -305,7 +305,7 @@ class TestMergeSaveFormatCLI:
         hardcoding ``double_quant=True`` at the call site fails the assertion."""
         from unittest.mock import MagicMock, patch
 
-        from soup_cli.commands.merge import merge
+        from ai_forge_cli.commands.merge import merge
 
         monkeypatch.chdir(tmp_path)
         adapter = tmp_path / "adapter"
@@ -314,11 +314,11 @@ class TestMergeSaveFormatCLI:
             '{"base_model_name_or_path": "some/base"}', encoding="utf-8"
         )
         monkeypatch.setattr(
-            "soup_cli.utils.trust_remote.model_requires_trust_remote_code",
+            "ai_forge_cli.utils.trust_remote.model_requires_trust_remote_code",
             lambda *_a, **_k: False,
         )
         monkeypatch.setattr(
-            "soup_cli.utils.trust_remote.resolve_trust_remote_code",
+            "ai_forge_cli.utils.trust_remote.resolve_trust_remote_code",
             lambda *_a, **_k: False,
         )
         fake_model = MagicMock()
@@ -334,7 +334,7 @@ class TestMergeSaveFormatCLI:
         ), patch(
             "transformers.AutoTokenizer.from_pretrained", return_value=MagicMock()
         ), patch(
-            "soup_cli.utils.save_formats.merge_4bit",
+            "ai_forge_cli.utils.save_formats.merge_4bit",
             side_effect=lambda **k: captured.update(k),
         ):
             result = runner.invoke(
@@ -356,12 +356,12 @@ class TestMergeSaveFormatCLI:
 
 class TestExportTorchaoCLI:
     def test_torchao_in_supported_formats(self):
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         assert "torchao" in export_mod.SUPPORTED_FORMATS
 
     def test_torchao_help_lists_quant_config(self):
-        from soup_cli.commands.export import export
+        from ai_forge_cli.commands.export import export
 
         app = typer.Typer()
         app.command()(export)
@@ -375,7 +375,7 @@ class TestExportTorchaoCLI:
         assert "--gguf-flavour" in registered, registered
 
     def test_torchao_requires_quant_config(self, tmp_path, monkeypatch):
-        from soup_cli.commands.export import export
+        from ai_forge_cli.commands.export import export
 
         monkeypatch.chdir(tmp_path)
         model = tmp_path / "model"
@@ -396,7 +396,7 @@ class TestExportTorchaoCLI:
         assert "--quant-config" in result.output or "quant_config" in result.output
 
     def test_torchao_quant_config_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.export import export
+        from ai_forge_cli.commands.export import export
 
         monkeypatch.chdir(tmp_path)
         model = tmp_path / "model"
@@ -426,18 +426,18 @@ class TestExportTorchaoCLI:
 
 class TestValidateQuantConfigPath:
     def test_existing_shape_validators_still_work(self):
-        from soup_cli.utils.save_formats import validate_quant_config_path
+        from ai_forge_cli.utils.save_formats import validate_quant_config_path
 
         assert validate_quant_config_path("config.yaml") == "config.yaml"
 
     def test_null_byte_rejected(self):
-        from soup_cli.utils.save_formats import validate_quant_config_path
+        from ai_forge_cli.utils.save_formats import validate_quant_config_path
 
         with pytest.raises(ValueError):
             validate_quant_config_path("ev\x00il.yaml")
 
     def test_load_quant_config_yaml_happy(self, tmp_path, monkeypatch):
-        from soup_cli.utils.save_formats import load_quant_config
+        from ai_forge_cli.utils.save_formats import load_quant_config
 
         monkeypatch.chdir(tmp_path)
         yaml_path = tmp_path / "q.yaml"
@@ -446,7 +446,7 @@ class TestValidateQuantConfigPath:
         assert data == {"scheme": "Int4WeightOnly"}
 
     def test_load_quant_config_yaml_outside_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.utils.save_formats import load_quant_config
+        from ai_forge_cli.utils.save_formats import load_quant_config
 
         monkeypatch.chdir(tmp_path)
         outside = tmp_path.parent / "outside.yaml"
@@ -457,7 +457,7 @@ class TestValidateQuantConfigPath:
     def test_load_quant_config_yaml_symlink(self, tmp_path, monkeypatch):
         if sys.platform == "win32":
             pytest.skip("symlink rejection POSIX-only")
-        from soup_cli.utils.save_formats import load_quant_config
+        from ai_forge_cli.utils.save_formats import load_quant_config
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "real.yaml"
@@ -468,7 +468,7 @@ class TestValidateQuantConfigPath:
             load_quant_config(str(link))
 
     def test_load_quant_config_yaml_size_cap(self, tmp_path, monkeypatch):
-        from soup_cli.utils.save_formats import load_quant_config
+        from ai_forge_cli.utils.save_formats import load_quant_config
 
         monkeypatch.chdir(tmp_path)
         big = tmp_path / "big.yaml"
@@ -478,7 +478,7 @@ class TestValidateQuantConfigPath:
             load_quant_config(str(big))
 
     def test_load_quant_config_yaml_invalid_extension(self, tmp_path, monkeypatch):
-        from soup_cli.utils.save_formats import load_quant_config
+        from ai_forge_cli.utils.save_formats import load_quant_config
 
         monkeypatch.chdir(tmp_path)
         bad = tmp_path / "config.txt"
@@ -487,7 +487,7 @@ class TestValidateQuantConfigPath:
             load_quant_config(str(bad))
 
     def test_load_quant_config_yaml_missing(self, tmp_path, monkeypatch):
-        from soup_cli.utils.save_formats import load_quant_config
+        from ai_forge_cli.utils.save_formats import load_quant_config
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
@@ -505,7 +505,7 @@ class TestTorchAOKwargAllowlist:
         return src
 
     def _run(self, src, tmp_path, scheme, quant_config_data):
-        from soup_cli.utils import save_formats
+        from ai_forge_cli.utils import save_formats
 
         fake_model = MagicMock()
         fake_tokenizer = MagicMock()
@@ -576,7 +576,7 @@ class TestDetectPrequantizedSymlinkRejection:
     )
     def test_config_json_symlink_returns_none(self, tmp_path, monkeypatch):
         """Security regression — `config.json` as a symlink is refused."""
-        from soup_cli.autopilot.decisions import detect_prequantized_format_from_path
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format_from_path
 
         monkeypatch.chdir(tmp_path)
         model_dir = tmp_path / "model"

@@ -25,25 +25,25 @@ class TestNewProvidersValidation:
 
     def test_ollama_provider_accepted(self):
         """'ollama' should be a valid provider."""
-        from soup_cli.commands.generate import VALID_PROVIDERS
+        from ai_forge_cli.commands.generate import VALID_PROVIDERS
 
         assert "ollama" in VALID_PROVIDERS
 
     def test_anthropic_provider_accepted(self):
         """'anthropic' should be a valid provider."""
-        from soup_cli.commands.generate import VALID_PROVIDERS
+        from ai_forge_cli.commands.generate import VALID_PROVIDERS
 
         assert "anthropic" in VALID_PROVIDERS
 
     def test_vllm_provider_accepted(self):
         """'vllm' should be a valid provider."""
-        from soup_cli.commands.generate import VALID_PROVIDERS
+        from ai_forge_cli.commands.generate import VALID_PROVIDERS
 
         assert "vllm" in VALID_PROVIDERS
 
     def test_old_providers_still_work(self):
         """Original providers should still be valid."""
-        from soup_cli.commands.generate import VALID_PROVIDERS
+        from ai_forge_cli.commands.generate import VALID_PROVIDERS
 
         assert "openai" in VALID_PROVIDERS
         assert "local" in VALID_PROVIDERS
@@ -53,7 +53,7 @@ class TestNewProvidersValidation:
         """Invalid provider should be rejected by CLI."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, [
@@ -72,7 +72,7 @@ class TestNewProvidersCLIHelp:
         """Help text should mention 'ollama' provider."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "generate", "--help"])
@@ -82,7 +82,7 @@ class TestNewProvidersCLIHelp:
         """Help text should mention 'anthropic' provider."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "generate", "--help"])
@@ -92,7 +92,7 @@ class TestNewProvidersCLIHelp:
         """Help text should mention 'vllm' provider."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "generate", "--help"])
@@ -102,7 +102,7 @@ class TestNewProvidersCLIHelp:
         """Help text should mention --template option."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "generate", "--help"])
@@ -112,7 +112,7 @@ class TestNewProvidersCLIHelp:
         """Help text should mention --quality-pipeline option."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "generate", "--help"])
@@ -128,7 +128,7 @@ class TestOllamaProvider:
 
     def test_detect_ollama_success(self):
         """detect_ollama should return version when Ollama is running."""
-        from soup_cli.data.providers.ollama import detect_ollama
+        from ai_forge_cli.data.providers.ollama import detect_ollama
 
         mock_tags = MagicMock()
         mock_tags.status_code = 200
@@ -144,7 +144,7 @@ class TestOllamaProvider:
 
     def test_detect_ollama_not_running(self):
         """detect_ollama should return None when Ollama is not running."""
-        from soup_cli.data.providers.ollama import detect_ollama
+        from ai_forge_cli.data.providers.ollama import detect_ollama
 
         with mock_patch("httpx.get", side_effect=OSError("connection refused")):
             version = detect_ollama()
@@ -152,7 +152,7 @@ class TestOllamaProvider:
 
     def test_detect_ollama_version_endpoint_fails(self):
         """detect_ollama should return 'unknown' if version endpoint fails."""
-        from soup_cli.data.providers.ollama import detect_ollama
+        from ai_forge_cli.data.providers.ollama import detect_ollama
 
         mock_tags = MagicMock()
         mock_tags.status_code = 200
@@ -164,7 +164,7 @@ class TestOllamaProvider:
 
     def test_generate_ollama_calls_api(self):
         """generate_ollama should call Ollama API correctly."""
-        from soup_cli.data.providers.ollama import generate_ollama
+        from ai_forge_cli.data.providers.ollama import generate_ollama
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -191,7 +191,7 @@ class TestOllamaProvider:
 
     def test_generate_ollama_error_response(self):
         """generate_ollama should raise ValueError on error."""
-        from soup_cli.data.providers.ollama import generate_ollama
+        from ai_forge_cli.data.providers.ollama import generate_ollama
 
         mock_response = MagicMock()
         mock_response.status_code = 404
@@ -213,33 +213,33 @@ class TestOllamaSSRF:
 
     def test_blocks_remote_url(self):
         """Remote Ollama URL should be rejected."""
-        from soup_cli.data.providers.ollama import validate_ollama_url
+        from ai_forge_cli.data.providers.ollama import validate_ollama_url
 
         with pytest.raises(ValueError, match="localhost"):
             validate_ollama_url("http://evil.com:11434")
 
     def test_blocks_non_http_scheme(self):
         """Non-HTTP scheme should be rejected."""
-        from soup_cli.data.providers.ollama import validate_ollama_url
+        from ai_forge_cli.data.providers.ollama import validate_ollama_url
 
         with pytest.raises(ValueError, match="HTTP or HTTPS"):
             validate_ollama_url("file:///etc/passwd")
 
     def test_allows_localhost(self):
         """localhost should be allowed."""
-        from soup_cli.data.providers.ollama import validate_ollama_url
+        from ai_forge_cli.data.providers.ollama import validate_ollama_url
 
         validate_ollama_url("http://localhost:11434")  # Should not raise
 
     def test_allows_127_0_0_1(self):
         """127.0.0.1 should be allowed."""
-        from soup_cli.data.providers.ollama import validate_ollama_url
+        from ai_forge_cli.data.providers.ollama import validate_ollama_url
 
         validate_ollama_url("http://127.0.0.1:11434")  # Should not raise
 
     def test_generate_ollama_rejects_remote(self):
         """generate_ollama should reject remote URLs."""
-        from soup_cli.data.providers.ollama import generate_ollama
+        from ai_forge_cli.data.providers.ollama import generate_ollama
 
         with pytest.raises(ValueError, match="localhost"):
             generate_ollama(
@@ -259,7 +259,7 @@ class TestAnthropicProvider:
 
     def test_generate_anthropic_calls_api(self):
         """generate_anthropic should call Anthropic Messages API."""
-        from soup_cli.data.providers.anthropic import generate_anthropic
+        from ai_forge_cli.data.providers.anthropic import generate_anthropic
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -287,7 +287,7 @@ class TestAnthropicProvider:
 
     def test_generate_anthropic_no_api_key(self):
         """generate_anthropic should raise ValueError without API key."""
-        from soup_cli.data.providers.anthropic import generate_anthropic
+        from ai_forge_cli.data.providers.anthropic import generate_anthropic
 
         with mock_patch.dict(os.environ, {}, clear=True):
             # Remove ANTHROPIC_API_KEY if present
@@ -304,7 +304,7 @@ class TestAnthropicProvider:
 
     def test_generate_anthropic_error_response(self):
         """generate_anthropic should raise ValueError on API error."""
-        from soup_cli.data.providers.anthropic import generate_anthropic
+        from ai_forge_cli.data.providers.anthropic import generate_anthropic
 
         mock_response = MagicMock()
         mock_response.status_code = 401
@@ -324,7 +324,7 @@ class TestAnthropicProvider:
         """Anthropic API key should only come from environment, never CLI."""
         import inspect
 
-        from soup_cli.data.providers.anthropic import generate_anthropic
+        from ai_forge_cli.data.providers.anthropic import generate_anthropic
 
         sig = inspect.signature(generate_anthropic)
         param_names = list(sig.parameters.keys())
@@ -332,7 +332,7 @@ class TestAnthropicProvider:
 
     def test_anthropic_parses_content_blocks(self):
         """Anthropic response with multiple content blocks should be parsed."""
-        from soup_cli.data.providers.anthropic import generate_anthropic
+        from ai_forge_cli.data.providers.anthropic import generate_anthropic
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -363,7 +363,7 @@ class TestVLLMProvider:
 
     def test_generate_vllm_calls_api(self):
         """generate_vllm should call vLLM OpenAI-compatible API."""
-        from soup_cli.data.providers.vllm import generate_vllm
+        from ai_forge_cli.data.providers.vllm import generate_vllm
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -390,7 +390,7 @@ class TestVLLMProvider:
 
     def test_generate_vllm_appends_v1(self):
         """generate_vllm should append /v1 if missing."""
-        from soup_cli.data.providers.vllm import generate_vllm
+        from ai_forge_cli.data.providers.vllm import generate_vllm
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -410,7 +410,7 @@ class TestVLLMProvider:
 
     def test_generate_vllm_error_response(self):
         """generate_vllm should raise ValueError on error."""
-        from soup_cli.data.providers.vllm import generate_vllm
+        from ai_forge_cli.data.providers.vllm import generate_vllm
 
         mock_response = MagicMock()
         mock_response.status_code = 500
@@ -430,33 +430,33 @@ class TestVLLMSSRF:
 
     def test_blocks_non_http_scheme(self):
         """Non-HTTP scheme should be rejected."""
-        from soup_cli.data.providers.vllm import validate_vllm_url
+        from ai_forge_cli.data.providers.vllm import validate_vllm_url
 
         with pytest.raises(ValueError, match="HTTP or HTTPS"):
             validate_vllm_url("file:///etc/passwd")
 
     def test_blocks_remote_http(self):
         """Remote HTTP should be rejected."""
-        from soup_cli.data.providers.vllm import validate_vllm_url
+        from ai_forge_cli.data.providers.vllm import validate_vllm_url
 
         with pytest.raises(ValueError, match="HTTPS for remote"):
             validate_vllm_url("http://169.254.169.254/latest")
 
     def test_allows_localhost_http(self):
         """localhost HTTP should be allowed."""
-        from soup_cli.data.providers.vllm import validate_vllm_url
+        from ai_forge_cli.data.providers.vllm import validate_vllm_url
 
         validate_vllm_url("http://localhost:8000")  # Should not raise
 
     def test_allows_remote_https(self):
         """Remote HTTPS should be allowed."""
-        from soup_cli.data.providers.vllm import validate_vllm_url
+        from ai_forge_cli.data.providers.vllm import validate_vllm_url
 
         validate_vllm_url("https://vllm.example.com:8000")  # Should not raise
 
     def test_generate_vllm_rejects_remote_http(self):
         """generate_vllm should reject remote HTTP URLs."""
-        from soup_cli.data.providers.vllm import generate_vllm
+        from ai_forge_cli.data.providers.vllm import generate_vllm
 
         with pytest.raises(ValueError, match="HTTPS for remote"):
             generate_vllm(
@@ -476,7 +476,7 @@ class TestAnthropicHardcodedURL:
 
     def test_api_url_is_anthropic(self):
         """The API URL must always be anthropic.com."""
-        from soup_cli.data.providers.anthropic import ANTHROPIC_API_URL
+        from ai_forge_cli.data.providers.anthropic import ANTHROPIC_API_URL
 
         assert "anthropic.com" in ANTHROPIC_API_URL
         assert ANTHROPIC_API_URL.startswith("https://")
@@ -485,7 +485,7 @@ class TestAnthropicHardcodedURL:
         """generate_anthropic should not accept an api_base parameter."""
         import inspect
 
-        from soup_cli.data.providers.anthropic import generate_anthropic
+        from ai_forge_cli.data.providers.anthropic import generate_anthropic
 
         sig = inspect.signature(generate_anthropic)
         assert "api_base" not in sig.parameters
@@ -497,7 +497,7 @@ class TestProviderMalformedResponse:
 
     def test_anthropic_malformed_content(self):
         """Anthropic with unexpected response structure should raise."""
-        from soup_cli.data.providers.anthropic import generate_anthropic
+        from ai_forge_cli.data.providers.anthropic import generate_anthropic
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -515,7 +515,7 @@ class TestProviderMalformedResponse:
 
     def test_vllm_malformed_content(self):
         """vLLM with unexpected response structure should raise."""
-        from soup_cli.data.providers.vllm import generate_vllm
+        from ai_forge_cli.data.providers.vllm import generate_vllm
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -533,7 +533,7 @@ class TestProviderMalformedResponse:
 
     def test_ollama_malformed_content(self):
         """Ollama with unexpected response structure should raise."""
-        from soup_cli.data.providers.ollama import generate_ollama
+        from ai_forge_cli.data.providers.ollama import generate_ollama
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -555,20 +555,20 @@ class TestParseJsonArrayShared:
 
     def test_parse_valid_array(self):
         """Should parse a clean JSON array."""
-        from soup_cli.data.providers._utils import parse_json_array
+        from ai_forge_cli.data.providers._utils import parse_json_array
 
         result = parse_json_array('[{"a": 1}, {"b": 2}]')
         assert len(result) == 2
 
     def test_parse_empty(self):
         """Should return empty for empty input."""
-        from soup_cli.data.providers._utils import parse_json_array
+        from ai_forge_cli.data.providers._utils import parse_json_array
 
         assert parse_json_array("") == []
 
     def test_parse_markdown_fences(self):
         """Should strip markdown code fences."""
-        from soup_cli.data.providers._utils import parse_json_array
+        from ai_forge_cli.data.providers._utils import parse_json_array
 
         content = '```json\n[{"a": 1}]\n```'
         result = parse_json_array(content)
@@ -576,7 +576,7 @@ class TestParseJsonArrayShared:
 
     def test_parse_ndjson_fallback(self):
         """Should fall back to line-by-line JSON."""
-        from soup_cli.data.providers._utils import parse_json_array
+        from ai_forge_cli.data.providers._utils import parse_json_array
 
         content = '{"a": 1}\n{"b": 2}'
         result = parse_json_array(content)
@@ -591,10 +591,10 @@ class TestBatchRoutingNewProviders:
 
     def test_routes_to_ollama(self):
         """provider='ollama' should route to Ollama provider."""
-        from soup_cli.commands.generate import _generate_batch
+        from ai_forge_cli.commands.generate import _generate_batch
 
         with mock_patch(
-            "soup_cli.data.providers.ollama.generate_ollama",
+            "ai_forge_cli.data.providers.ollama.generate_ollama",
             return_value=[{"instruction": "x", "output": "y"}],
         ) as mock_ollama:
             result = _generate_batch(
@@ -609,10 +609,10 @@ class TestBatchRoutingNewProviders:
 
     def test_routes_to_anthropic(self):
         """provider='anthropic' should route to Anthropic provider."""
-        from soup_cli.commands.generate import _generate_batch
+        from ai_forge_cli.commands.generate import _generate_batch
 
         with mock_patch(
-            "soup_cli.data.providers.anthropic.generate_anthropic",
+            "ai_forge_cli.data.providers.anthropic.generate_anthropic",
             return_value=[{"instruction": "x", "output": "y"}],
         ) as mock_anthropic:
             result = _generate_batch(
@@ -627,10 +627,10 @@ class TestBatchRoutingNewProviders:
 
     def test_routes_to_vllm(self):
         """provider='vllm' should route to vLLM provider."""
-        from soup_cli.commands.generate import _generate_batch
+        from ai_forge_cli.commands.generate import _generate_batch
 
         with mock_patch(
-            "soup_cli.data.providers.vllm.generate_vllm",
+            "ai_forge_cli.data.providers.vllm.generate_vllm",
             return_value=[{"instruction": "x", "output": "y"}],
         ) as mock_vllm:
             result = _generate_batch(
@@ -645,12 +645,12 @@ class TestBatchRoutingNewProviders:
 
     def test_old_providers_still_route(self):
         """Original providers should still route correctly."""
-        from soup_cli.commands.generate import _generate_batch
+        from ai_forge_cli.commands.generate import _generate_batch
 
         for prov, mock_target in [
-            ("openai", "soup_cli.commands.generate._generate_openai"),
-            ("local", "soup_cli.commands.generate._generate_local"),
-            ("server", "soup_cli.commands.generate._generate_server"),
+            ("openai", "ai_forge_cli.commands.generate._generate_openai"),
+            ("local", "ai_forge_cli.commands.generate._generate_local"),
+            ("server", "ai_forge_cli.commands.generate._generate_server"),
         ]:
             with mock_patch(mock_target, return_value=[]) as mock_fn:
                 _generate_batch(
@@ -671,7 +671,7 @@ class TestTemplateValidation:
 
     def test_valid_templates(self):
         """All valid templates should be accepted."""
-        from soup_cli.commands.generate import VALID_TEMPLATES
+        from ai_forge_cli.commands.generate import VALID_TEMPLATES
 
         assert "code" in VALID_TEMPLATES
         assert "conversation" in VALID_TEMPLATES
@@ -683,7 +683,7 @@ class TestTemplateValidation:
         """Invalid template should be rejected."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, [
@@ -700,7 +700,7 @@ class TestCodeTemplate:
 
     def test_build_prompt_default(self):
         """Code template should build a valid prompt."""
-        from soup_cli.data.templates.code import build_prompt
+        from ai_forge_cli.data.templates.code import build_prompt
 
         result = build_prompt(5, "alpaca", "format spec", language="Python")
         assert "Python" in result
@@ -708,7 +708,7 @@ class TestCodeTemplate:
 
     def test_build_prompt_languages(self):
         """Code template should support different languages."""
-        from soup_cli.data.templates.code import build_prompt
+        from ai_forge_cli.data.templates.code import build_prompt
 
         for lang in ["Python", "JavaScript", "Go", "Rust", "Java"]:
             result = build_prompt(3, "alpaca", "spec", language=lang)
@@ -716,7 +716,7 @@ class TestCodeTemplate:
 
     def test_build_prompt_task_types(self):
         """Code template should support different task types."""
-        from soup_cli.data.templates.code import build_prompt
+        from ai_forge_cli.data.templates.code import build_prompt
 
         for task_type in ["function", "debug", "explain", "refactor", "test"]:
             result = build_prompt(3, "alpaca", "spec", task_type=task_type)
@@ -725,7 +725,7 @@ class TestCodeTemplate:
 
     def test_template_spec_has_languages(self):
         """Template spec should list supported languages."""
-        from soup_cli.data.templates.code import TEMPLATE_SPEC
+        from ai_forge_cli.data.templates.code import TEMPLATE_SPEC
 
         assert "languages" in TEMPLATE_SPEC
         assert len(TEMPLATE_SPEC["languages"]) >= 5
@@ -736,7 +736,7 @@ class TestConversationTemplate:
 
     def test_build_prompt_default(self):
         """Conversation template should build a valid prompt."""
-        from soup_cli.data.templates.conversation import build_prompt
+        from ai_forge_cli.data.templates.conversation import build_prompt
 
         result = build_prompt(5, "chatml", "format spec")
         assert "5" in result
@@ -744,14 +744,14 @@ class TestConversationTemplate:
 
     def test_build_prompt_with_topic(self):
         """Conversation template should include topic."""
-        from soup_cli.data.templates.conversation import build_prompt
+        from ai_forge_cli.data.templates.conversation import build_prompt
 
         result = build_prompt(3, "chatml", "spec", topic="science fiction")
         assert "science fiction" in result
 
     def test_turns_clamped(self):
         """Turns should be clamped to 2-10 range."""
-        from soup_cli.data.templates.conversation import build_prompt
+        from ai_forge_cli.data.templates.conversation import build_prompt
 
         # turns < 2 should be clamped to 2
         result = build_prompt(3, "chatml", "spec", turns=0)
@@ -767,7 +767,7 @@ class TestQATemplate:
 
     def test_build_prompt_without_context(self):
         """QA template without context should generate general QA."""
-        from soup_cli.data.templates.qa import build_prompt
+        from ai_forge_cli.data.templates.qa import build_prompt
 
         result = build_prompt(5, "alpaca", "format spec")
         assert "5" in result
@@ -775,7 +775,7 @@ class TestQATemplate:
 
     def test_build_prompt_with_context(self):
         """QA template with context should include it."""
-        from soup_cli.data.templates.qa import build_prompt
+        from ai_forge_cli.data.templates.qa import build_prompt
 
         context = "Python is a programming language created by Guido van Rossum."
         result = build_prompt(3, "alpaca", "spec", context=context)
@@ -784,7 +784,7 @@ class TestQATemplate:
 
     def test_context_truncated(self):
         """Long context should be truncated to prevent overflow."""
-        from soup_cli.data.templates.qa import build_prompt
+        from ai_forge_cli.data.templates.qa import build_prompt
 
         context = "x" * 20000
         result = build_prompt(3, "alpaca", "spec", context=context)
@@ -797,7 +797,7 @@ class TestPreferenceTemplate:
 
     def test_build_prompt_dpo(self):
         """Preference template for DPO should use chosen/rejected format."""
-        from soup_cli.data.templates.preference import build_prompt
+        from ai_forge_cli.data.templates.preference import build_prompt
 
         result = build_prompt(5, task="dpo")
         assert "chosen" in result
@@ -805,7 +805,7 @@ class TestPreferenceTemplate:
 
     def test_build_prompt_kto(self):
         """Preference template for KTO should use label format."""
-        from soup_cli.data.templates.preference import build_prompt
+        from ai_forge_cli.data.templates.preference import build_prompt
 
         result = build_prompt(5, task="kto")
         assert "label" in result
@@ -813,7 +813,7 @@ class TestPreferenceTemplate:
 
     def test_build_prompt_orpo(self):
         """Preference template for ORPO should use chosen/rejected format."""
-        from soup_cli.data.templates.preference import build_prompt
+        from ai_forge_cli.data.templates.preference import build_prompt
 
         result = build_prompt(5, task="orpo")
         assert "chosen" in result
@@ -825,28 +825,28 @@ class TestReasoningTemplate:
 
     def test_build_prompt_math(self):
         """Reasoning template for math should include math description."""
-        from soup_cli.data.templates.reasoning import build_prompt
+        from ai_forge_cli.data.templates.reasoning import build_prompt
 
         result = build_prompt(5, "alpaca", "format spec", domain="math")
         assert "math" in result.lower()
 
     def test_build_prompt_logic(self):
         """Reasoning template for logic should include logic description."""
-        from soup_cli.data.templates.reasoning import build_prompt
+        from ai_forge_cli.data.templates.reasoning import build_prompt
 
         result = build_prompt(5, "alpaca", "spec", domain="logic")
         assert "logic" in result.lower()
 
     def test_build_prompt_code(self):
         """Reasoning template for code should include code description."""
-        from soup_cli.data.templates.reasoning import build_prompt
+        from ai_forge_cli.data.templates.reasoning import build_prompt
 
         result = build_prompt(5, "alpaca", "spec", domain="code")
         assert "code" in result.lower() or "algorithm" in result.lower()
 
     def test_valid_domains(self):
         """All domains should be in the DOMAINS constant."""
-        from soup_cli.data.templates.reasoning import DOMAINS
+        from ai_forge_cli.data.templates.reasoning import DOMAINS
 
         assert "math" in DOMAINS
         assert "logic" in DOMAINS
@@ -858,7 +858,7 @@ class TestTemplateBuildPromptIntegration:
 
     def test_code_template_integration(self):
         """Code template should be built correctly via _build_template_prompt."""
-        from soup_cli.commands.generate import _build_template_prompt
+        from ai_forge_cli.commands.generate import _build_template_prompt
 
         result = _build_template_prompt(
             template="code", prompt="test", count=5, fmt="alpaca",
@@ -868,7 +868,7 @@ class TestTemplateBuildPromptIntegration:
 
     def test_conversation_template_integration(self):
         """Conversation template should be built correctly."""
-        from soup_cli.commands.generate import _build_template_prompt
+        from ai_forge_cli.commands.generate import _build_template_prompt
 
         result = _build_template_prompt(
             template="conversation", prompt="test", count=5, fmt="chatml",
@@ -878,7 +878,7 @@ class TestTemplateBuildPromptIntegration:
 
     def test_qa_template_integration(self):
         """QA template should be built correctly."""
-        from soup_cli.commands.generate import _build_template_prompt
+        from ai_forge_cli.commands.generate import _build_template_prompt
 
         result = _build_template_prompt(
             template="qa", prompt="test", count=5, fmt="alpaca",
@@ -888,7 +888,7 @@ class TestTemplateBuildPromptIntegration:
 
     def test_preference_template_integration(self):
         """Preference template should be built correctly."""
-        from soup_cli.commands.generate import _build_template_prompt
+        from ai_forge_cli.commands.generate import _build_template_prompt
 
         result = _build_template_prompt(
             template="preference", prompt="test", count=5, fmt="alpaca",
@@ -898,7 +898,7 @@ class TestTemplateBuildPromptIntegration:
 
     def test_reasoning_template_integration(self):
         """Reasoning template should be built correctly."""
-        from soup_cli.commands.generate import _build_template_prompt
+        from ai_forge_cli.commands.generate import _build_template_prompt
 
         result = _build_template_prompt(
             template="reasoning", prompt="test", count=5, fmt="alpaca",
@@ -908,7 +908,7 @@ class TestTemplateBuildPromptIntegration:
 
     def test_unknown_template_falls_back(self):
         """Unknown template should fall back to default prompt."""
-        from soup_cli.commands.generate import _build_template_prompt
+        from ai_forge_cli.commands.generate import _build_template_prompt
 
         result = _build_template_prompt(
             template="nonexistent", prompt="test topic", count=5, fmt="alpaca",
@@ -924,7 +924,7 @@ class TestValidatePipeline:
 
     def test_removes_invalid_entries(self, tmp_path):
         """Validation pipeline should remove invalid entries."""
-        from soup_cli.commands.generate import _run_validate_pipeline
+        from ai_forge_cli.commands.generate import _run_validate_pipeline
 
         data = [
             {"instruction": "valid", "input": "", "output": "ok"},
@@ -946,7 +946,7 @@ class TestValidatePipeline:
 
     def test_keeps_all_valid(self, tmp_path):
         """Validation pipeline should keep all entries when all valid."""
-        from soup_cli.commands.generate import _run_validate_pipeline
+        from ai_forge_cli.commands.generate import _run_validate_pipeline
 
         data = [
             {"instruction": "a", "input": "", "output": "b"},
@@ -965,7 +965,7 @@ class TestValidatePipeline:
 
     def test_validates_preference_format(self, tmp_path):
         """Validation pipeline should accept preference format entries."""
-        from soup_cli.commands.generate import _run_validate_pipeline
+        from ai_forge_cli.commands.generate import _run_validate_pipeline
 
         data = [
             {"prompt": "q", "chosen": "good", "rejected": "bad"},
@@ -989,7 +989,7 @@ class TestFilterPipeline:
 
     def test_filter_pipeline_runs(self, tmp_path):
         """Filter pipeline should run without error."""
-        from soup_cli.commands.generate import _run_filter_pipeline
+        from ai_forge_cli.commands.generate import _run_filter_pipeline
 
         data = [
             {"instruction": "What is Python?", "output": "Python is a programming language."},
@@ -1007,7 +1007,7 @@ class TestFilterPipeline:
 
     def test_filter_pipeline_empty(self, tmp_path):
         """Filter pipeline should handle empty file."""
-        from soup_cli.commands.generate import _run_filter_pipeline
+        from ai_forge_cli.commands.generate import _run_filter_pipeline
 
         path = tmp_path / "empty.jsonl"
         path.write_text("")
@@ -1020,7 +1020,7 @@ class TestDedupPipeline:
 
     def test_dedup_pipeline_without_datasketch(self, tmp_path):
         """Dedup pipeline should gracefully handle missing datasketch."""
-        from soup_cli.commands.generate import _run_dedup_pipeline
+        from ai_forge_cli.commands.generate import _run_dedup_pipeline
 
         data = [
             {"instruction": "a", "output": "b"},
@@ -1036,7 +1036,7 @@ class TestDedupPipeline:
 
     def test_dedup_pipeline_empty(self, tmp_path):
         """Dedup pipeline should handle empty file."""
-        from soup_cli.commands.generate import _run_dedup_pipeline
+        from ai_forge_cli.commands.generate import _run_dedup_pipeline
 
         path = tmp_path / "empty.jsonl"
         path.write_text("")
@@ -1051,7 +1051,7 @@ class TestQualityPipelineFlag:
         """--quality-pipeline should enable validate, filter, and dedup."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         # We can test this by checking the help text mentions the flag
         runner = CliRunner()
@@ -1071,19 +1071,19 @@ class TestValidatePreference:
 
     def test_dpo_format_valid(self):
         """DPO format should be valid."""
-        from soup_cli.commands.generate import _validate_preference
+        from ai_forge_cli.commands.generate import _validate_preference
 
         assert _validate_preference({"prompt": "q", "chosen": "a", "rejected": "b"})
 
     def test_kto_format_valid(self):
         """KTO format should be valid."""
-        from soup_cli.commands.generate import _validate_preference
+        from ai_forge_cli.commands.generate import _validate_preference
 
         assert _validate_preference({"prompt": "q", "completion": "a", "label": True})
 
     def test_invalid_format(self):
         """Invalid format should fail validation."""
-        from soup_cli.commands.generate import _validate_preference
+        from ai_forge_cli.commands.generate import _validate_preference
 
         assert not _validate_preference({"instruction": "q", "output": "a"})
         assert not _validate_preference({"prompt": "q"})
@@ -1099,7 +1099,7 @@ class TestPathWithinCwd:
     def test_path_within_cwd(self, tmp_path):
         """Path inside cwd should return True."""
 
-        from soup_cli.commands.generate import _path_within_cwd
+        from ai_forge_cli.commands.generate import _path_within_cwd
 
         cwd = tmp_path.resolve()
         child = (tmp_path / "subdir" / "file.jsonl").resolve()
@@ -1108,7 +1108,7 @@ class TestPathWithinCwd:
     def test_path_outside_cwd(self, tmp_path):
         """Path outside cwd should return False."""
 
-        from soup_cli.commands.generate import _path_within_cwd
+        from ai_forge_cli.commands.generate import _path_within_cwd
 
         cwd = (tmp_path / "subdir").resolve()
         outside = tmp_path.resolve()
@@ -1118,7 +1118,7 @@ class TestPathWithinCwd:
         """Absolute path to system directory should return False."""
         from pathlib import Path
 
-        from soup_cli.commands.generate import _path_within_cwd
+        from ai_forge_cli.commands.generate import _path_within_cwd
 
         cwd = Path.cwd().resolve()
         # /tmp or C:\Windows are outside typical cwd
@@ -1136,13 +1136,13 @@ class TestOutputPathSanitization:
         """Output path with '..' should be rejected."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
 
         # Mock the generation to avoid actual API call
         with mock_patch(
-            "soup_cli.commands.generate._generate_batch",
+            "ai_forge_cli.commands.generate._generate_batch",
             return_value=[{"instruction": "x", "output": "y"}],
         ):
             result = runner.invoke(app, [
@@ -1158,12 +1158,12 @@ class TestOutputPathSanitization:
         """Absolute output path outside cwd should be rejected."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
 
         with mock_patch(
-            "soup_cli.commands.generate._generate_batch",
+            "ai_forge_cli.commands.generate._generate_batch",
             return_value=[{"instruction": "x", "output": "y"}],
         ):
             result = runner.invoke(app, [
@@ -1186,7 +1186,7 @@ class TestOllamaModelShorthand:
         """--ollama-model should set provider to 'ollama'."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "generate", "--help"])
@@ -1204,7 +1204,7 @@ class TestRateLimiting:
         """Help should mention --requests-per-minute."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["data", "generate", "--help"])
@@ -1220,7 +1220,7 @@ class TestGetFormatSpec:
 
     def test_alpaca_spec(self):
         """Alpaca format spec should mention instruction and output."""
-        from soup_cli.commands.generate import _get_format_spec
+        from ai_forge_cli.commands.generate import _get_format_spec
 
         spec = _get_format_spec("alpaca")
         assert "instruction" in spec
@@ -1228,21 +1228,21 @@ class TestGetFormatSpec:
 
     def test_sharegpt_spec(self):
         """ShareGPT format spec should mention conversations."""
-        from soup_cli.commands.generate import _get_format_spec
+        from ai_forge_cli.commands.generate import _get_format_spec
 
         spec = _get_format_spec("sharegpt")
         assert "conversations" in spec
 
     def test_chatml_spec(self):
         """ChatML format spec should mention messages."""
-        from soup_cli.commands.generate import _get_format_spec
+        from ai_forge_cli.commands.generate import _get_format_spec
 
         spec = _get_format_spec("chatml")
         assert "messages" in spec
 
     def test_unknown_format_returns_alpaca(self):
         """Unknown format should fall back to alpaca spec."""
-        from soup_cli.commands.generate import _get_format_spec
+        from ai_forge_cli.commands.generate import _get_format_spec
 
         spec = _get_format_spec("unknown")
         assert "instruction" in spec
@@ -1258,18 +1258,18 @@ class TestEndToEndGeneration:
         """Full generation with Ollama provider should work."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         output_path = tmp_path / "output.jsonl"
 
         with mock_patch(
-            "soup_cli.data.providers.ollama.generate_ollama",
+            "ai_forge_cli.data.providers.ollama.generate_ollama",
             return_value=[
                 {"instruction": "What is AI?", "input": "", "output": "AI is..."},
                 {"instruction": "Explain ML", "input": "", "output": "ML is..."},
             ],
         ), mock_patch(
-            "soup_cli.commands.generate._path_within_cwd",
+            "ai_forge_cli.commands.generate._path_within_cwd",
             return_value=True,
         ):
             runner = CliRunner()
@@ -1293,17 +1293,17 @@ class TestEndToEndGeneration:
         """Generation with a template should work."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         output_path = tmp_path / "output.jsonl"
 
         with mock_patch(
-            "soup_cli.commands.generate._generate_server",
+            "ai_forge_cli.commands.generate._generate_server",
             return_value=[
                 {"instruction": "Write a function", "input": "", "output": "def foo(): pass"},
             ],
         ), mock_patch(
-            "soup_cli.commands.generate._path_within_cwd",
+            "ai_forge_cli.commands.generate._path_within_cwd",
             return_value=True,
         ):
             runner = CliRunner()
@@ -1325,17 +1325,17 @@ class TestEndToEndGeneration:
         """Full generation with Anthropic provider should work."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         output_path = tmp_path / "output.jsonl"
 
         with mock_patch(
-            "soup_cli.data.providers.anthropic.generate_anthropic",
+            "ai_forge_cli.data.providers.anthropic.generate_anthropic",
             return_value=[
                 {"instruction": "What is AI?", "input": "", "output": "AI is..."},
             ],
         ), mock_patch(
-            "soup_cli.commands.generate._path_within_cwd",
+            "ai_forge_cli.commands.generate._path_within_cwd",
             return_value=True,
         ):
             runner = CliRunner()
@@ -1356,17 +1356,17 @@ class TestEndToEndGeneration:
         """Full generation with vLLM provider should work."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         output_path = tmp_path / "output.jsonl"
 
         with mock_patch(
-            "soup_cli.data.providers.vllm.generate_vllm",
+            "ai_forge_cli.data.providers.vllm.generate_vllm",
             return_value=[
                 {"instruction": "What is AI?", "input": "", "output": "AI is..."},
             ],
         ), mock_patch(
-            "soup_cli.commands.generate._path_within_cwd",
+            "ai_forge_cli.commands.generate._path_within_cwd",
             return_value=True,
         ):
             runner = CliRunner()

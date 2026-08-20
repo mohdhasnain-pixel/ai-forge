@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import SoupConfig, TrainingConfig
+from ai_forge_cli.config.schema import SoupConfig, TrainingConfig
 
 # ─── Schema: fp8_recipe field ──────────────────────────────────────────────
 
@@ -160,7 +160,7 @@ class TestFP8RecipeDispatch:
             # Need to reimport to pick up the mocked modules
             import importlib
 
-            import soup_cli.utils.fp8 as fp8_mod
+            import ai_forge_cli.utils.fp8 as fp8_mod
 
             importlib.reload(fp8_mod)
 
@@ -194,7 +194,7 @@ class TestFP8RecipeDispatch:
         ):
             import importlib
 
-            import soup_cli.utils.fp8 as fp8_mod
+            import ai_forge_cli.utils.fp8 as fp8_mod
 
             importlib.reload(fp8_mod)
 
@@ -226,7 +226,7 @@ class TestFP8RecipeDispatch:
         ):
             import importlib
 
-            import soup_cli.utils.fp8 as fp8_mod
+            import ai_forge_cli.utils.fp8 as fp8_mod
 
             importlib.reload(fp8_mod)
 
@@ -241,9 +241,9 @@ class TestFP8RecipeDispatch:
 
     def test_apply_fp8_returns_false_when_unavailable(self):
         """When FP8 deps are missing, apply_fp8_training returns False."""
-        from soup_cli.utils.fp8 import apply_fp8_training
+        from ai_forge_cli.utils.fp8 import apply_fp8_training
 
-        with patch("soup_cli.utils.fp8.is_fp8_available", return_value=False):
+        with patch("ai_forge_cli.utils.fp8.is_fp8_available", return_value=False):
             model = MagicMock()
             assert apply_fp8_training(model, recipe="rowwise") is False
 
@@ -268,7 +268,7 @@ class TestFP8RecipeDispatch:
         ):
             import importlib
 
-            import soup_cli.utils.fp8 as fp8_mod
+            import ai_forge_cli.utils.fp8 as fp8_mod
 
             importlib.reload(fp8_mod)
 
@@ -403,8 +403,8 @@ class TestFP8RecipeViaV028Features:
         tcfg.use_cut_ce = False
         tcfg.kernel_auto_compose = False
 
-        with patch("soup_cli.utils.fp8.apply_fp8_training", return_value=True) as m:
-            from soup_cli.utils.v028_features import apply_v028_speed_memory
+        with patch("ai_forge_cli.utils.fp8.apply_fp8_training", return_value=True) as m:
+            from ai_forge_cli.utils.v028_features import apply_v028_speed_memory
 
             apply_v028_speed_memory(
                 model=MagicMock(),
@@ -439,8 +439,8 @@ class TestFP8RecipeViaV028Features:
         tcfg.use_cut_ce = False
         tcfg.kernel_auto_compose = False
 
-        with patch("soup_cli.utils.fp8.apply_fp8_training") as m:
-            from soup_cli.utils.v028_features import apply_v028_speed_memory
+        with patch("ai_forge_cli.utils.fp8.apply_fp8_training") as m:
+            from ai_forge_cli.utils.v028_features import apply_v028_speed_memory
 
             apply_v028_speed_memory(
                 model=MagicMock(),

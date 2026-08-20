@@ -19,8 +19,8 @@ import os
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import DataConfig, SoupConfig, TrainingConfig
-from soup_cli.utils.curriculum_dynamic import (
+from ai_forge_cli.config.schema import DataConfig, SoupConfig, TrainingConfig
+from ai_forge_cli.utils.curriculum_dynamic import (
     BucketStats,
     DynamicCurriculumPolicy,
     compute_bucket_weights,
@@ -462,7 +462,7 @@ def test_schema_disabled_when_dynamic_off():
 def test_curriculum_curve_cli_help():
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     runner = CliRunner()
     result = runner.invoke(app, ["runs", "curriculum-curve", "--help"])
     assert result.exit_code == 0
@@ -472,7 +472,7 @@ def test_curriculum_curve_cli_help():
 def test_curriculum_curve_run_not_found(tmp_path, monkeypatch):
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     monkeypatch.chdir(tmp_path)
     runner = CliRunner()
     result = runner.invoke(
@@ -486,7 +486,7 @@ def test_curriculum_curve_missing_history_file(tmp_path, monkeypatch):
     """When history file does not exist, exits 1 with friendly message."""
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     monkeypatch.chdir(tmp_path)
     runner = CliRunner()
     # Use --history pointing at non-existent file under cwd; the run lookup
@@ -506,7 +506,7 @@ def test_curriculum_curve_history_outside_cwd(tmp_path, monkeypatch):
     """--history outside cwd is rejected."""
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
     work = tmp_path / "work"
     work.mkdir()
     elsewhere = tmp_path / "elsewhere.jsonl"
@@ -514,7 +514,7 @@ def test_curriculum_curve_history_outside_cwd(tmp_path, monkeypatch):
     monkeypatch.chdir(work)
 
     # Need a "run" to exist; patch get_run to return a stub.
-    import soup_cli.experiment.tracker as et
+    import ai_forge_cli.experiment.tracker as et
 
     class FakeTracker:
         def get_run(self, run_id):
@@ -536,8 +536,8 @@ def test_curriculum_curve_history_outside_cwd(tmp_path, monkeypatch):
 def test_curriculum_curve_render_jsonl(tmp_path, monkeypatch):
     from typer.testing import CliRunner
 
-    import soup_cli.experiment.tracker as et
-    from soup_cli.cli import app
+    import ai_forge_cli.experiment.tracker as et
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     history = tmp_path / "history.jsonl"
@@ -598,7 +598,7 @@ def test_render_curve_rejects_bool_step_in_entry():
 def test_render_curve_caps_history_rows():
     huge = [{"step": i, "weights": [0.5, 0.5]} for i in range(101)]
     # Patch the cap to exercise the branch without 100k rows.
-    import soup_cli.utils.curriculum_dynamic as cd
+    import ai_forge_cli.utils.curriculum_dynamic as cd
 
     original = cd._MAX_HISTORY_ROWS
     try:
@@ -611,7 +611,7 @@ def test_render_curve_caps_history_rows():
 
 def test_parse_history_jsonl_caps_rows():
     huge = [{"step": i, "weights": [0.5, 0.5]} for i in range(101)]
-    import soup_cli.utils.curriculum_dynamic as cd
+    import ai_forge_cli.utils.curriculum_dynamic as cd
 
     original = cd._MAX_HISTORY_ROWS
     try:
@@ -655,8 +655,8 @@ def test_curriculum_curve_render_includes_exception_info(tmp_path, monkeypatch):
     """Use the recommended `(result.output, repr(result.exception))` assert form."""
     from typer.testing import CliRunner
 
-    import soup_cli.experiment.tracker as et
-    from soup_cli.cli import app
+    import ai_forge_cli.experiment.tracker as et
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     history = tmp_path / "history.jsonl"
@@ -680,8 +680,8 @@ def test_curriculum_curve_corrupt_history(tmp_path, monkeypatch):
     """Malformed JSONL (non-summing weights) exits 2 with 'history malformed'."""
     from typer.testing import CliRunner
 
-    import soup_cli.experiment.tracker as et
-    from soup_cli.cli import app
+    import ai_forge_cli.experiment.tracker as et
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     history = tmp_path / "h.jsonl"
@@ -705,8 +705,8 @@ def test_curriculum_curve_rejects_oversize_file(tmp_path, monkeypatch):
     """50 MB cap on curriculum history file."""
     from typer.testing import CliRunner
 
-    import soup_cli.experiment.tracker as et
-    from soup_cli.cli import app
+    import ai_forge_cli.experiment.tracker as et
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     history = tmp_path / "big.jsonl"

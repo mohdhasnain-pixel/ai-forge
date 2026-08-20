@@ -11,11 +11,11 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.config.schema import TEMPLATES, SoupConfig, TrainingConfig
-from soup_cli.recipes.catalog import RECIPES, get_recipe, list_recipes, search_recipes
-from soup_cli.utils import hubs as hubs_mod
-from soup_cli.utils.hubs import (
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig, TrainingConfig
+from ai_forge_cli.recipes.catalog import RECIPES, get_recipe, list_recipes, search_recipes
+from ai_forge_cli.utils import hubs as hubs_mod
+from ai_forge_cli.utils.hubs import (
     SUPPORTED_HUBS,
     default_endpoint,
     endpoint_env_var,
@@ -25,7 +25,7 @@ from soup_cli.utils.hubs import (
     validate_hub_endpoint,
     validate_hub_name,
 )
-from soup_cli.utils.multipack_sampler import (
+from ai_forge_cli.utils.multipack_sampler import (
     MULTIPACK_ARCHITECTURES,
     validate_multipack_architecture,
 )

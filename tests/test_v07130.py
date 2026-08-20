@@ -9,7 +9,7 @@ import inspect
 
 import pytest
 
-from soup_cli.utils.prm_reward import (
+from ai_forge_cli.utils.prm_reward import (
     AGGREGATE_MODES,
     aggregate_step_scores,
     split_steps,
@@ -38,13 +38,13 @@ class TestSplitSteps:
         assert split_steps("   \n  ") == []
 
     def test_caps_step_count(self):
-        from soup_cli.utils.prm_reward import _MAX_STEPS
+        from ai_forge_cli.utils.prm_reward import _MAX_STEPS
 
         text = "\n".join(str(i) for i in range(_MAX_STEPS + 50))
         assert len(split_steps(text)) == _MAX_STEPS
 
     def test_caps_step_chars(self):
-        from soup_cli.utils.prm_reward import _MAX_STEP_CHARS
+        from ai_forge_cli.utils.prm_reward import _MAX_STEP_CHARS
 
         long = "x" * (_MAX_STEP_CHARS + 100)
         out = split_steps(long)
@@ -117,45 +117,45 @@ def _prm_yaml(
 
 class TestPrmSchema:
     def test_default_fields(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tc = TrainingConfig()
         assert tc.prm_reward is None
         assert tc.prm_aggregate == "min"
 
     def test_happy_grpo_parses(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_prm_yaml(prm_aggregate="prod"))
         assert cfg.training.prm_reward == "./prm"
         assert cfg.training.prm_aggregate == "prod"
 
     def test_rejects_non_grpo_task(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="task='grpo'"):
             load_config_from_string(_prm_yaml(task="sft"))
 
     def test_rejects_mlx_backend(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="transformers"):
             load_config_from_string(_prm_yaml(backend="mlx"))
 
     def test_rejects_unsloth_backend(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="transformers"):
             load_config_from_string(_prm_yaml(backend="unsloth"))
 
     def test_rejects_non_text_modality(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="modality='text'"):
             load_config_from_string(_prm_yaml(modality="vision"))
 
     def test_aggregate_without_prm_reward_is_footgun(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="prm_reward"):
             load_config_from_string(
@@ -163,7 +163,7 @@ class TestPrmSchema:
             )
 
     def test_default_aggregate_without_prm_reward_ok(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         # prm_aggregate at its default is fine even without prm_reward.
         cfg = load_config_from_string(
@@ -172,19 +172,19 @@ class TestPrmSchema:
         assert cfg.training.prm_reward is None
 
     def test_rejects_empty_string(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValueError, match="empty"):
             TrainingConfig(prm_reward="")
 
     def test_rejects_null_byte(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValueError, match="null"):
             TrainingConfig(prm_reward="./prm\x00evil")
 
     def test_rejects_oversize(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValueError, match="512|chars"):
             TrainingConfig(prm_reward="x" * 5000)
@@ -192,7 +192,7 @@ class TestPrmSchema:
     def test_prm_aggregate_invalid_literal_rejected_by_schema(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError, match="prm_aggregate"):
             TrainingConfig(prm_aggregate="mean")
@@ -206,7 +206,7 @@ class TestLoadRewardHeadWeights:
         import torch
         from safetensors.torch import save_file
 
-        from soup_cli.utils.prm_reward import load_reward_head_weights
+        from ai_forge_cli.utils.prm_reward import load_reward_head_weights
 
         save_file(
             {
@@ -224,14 +224,14 @@ class TestLoadRewardHeadWeights:
         import torch
         from safetensors.torch import save_file
 
-        from soup_cli.utils.prm_reward import load_reward_head_weights
+        from ai_forge_cli.utils.prm_reward import load_reward_head_weights
 
         save_file({"model.embed": torch.zeros(4, 4)}, str(tmp_path / "model.safetensors"))
         with pytest.raises(ValueError, match="reward_head|Soup-trained PRM"):
             load_reward_head_weights(str(tmp_path))
 
     def test_non_directory_rejected(self, tmp_path):
-        from soup_cli.utils.prm_reward import load_reward_head_weights
+        from ai_forge_cli.utils.prm_reward import load_reward_head_weights
 
         with pytest.raises(ValueError, match="directory"):
             load_reward_head_weights(str(tmp_path / "does_not_exist"))
@@ -249,7 +249,7 @@ def _make_fake_scorer(aggregate="min"):
     import torch
     from torch import nn
 
-    from soup_cli.utils.prm_reward import PRMScorer
+    from ai_forge_cli.utils.prm_reward import PRMScorer
 
     hidden = 8
 
@@ -287,7 +287,7 @@ class TestPRMScorer:
         assert s.__name__ == "prm_reward"
 
     def test_bad_aggregate_rejected(self):
-        from soup_cli.utils.prm_reward import PRMScorer
+        from ai_forge_cli.utils.prm_reward import PRMScorer
 
         with pytest.raises(ValueError, match="min|prod|last"):
             PRMScorer("./prm", aggregate="mean")
@@ -382,7 +382,7 @@ def _make_capped_scorer(max_pos, aggregate="min"):
     import torch
     from torch import nn
 
-    from soup_cli.utils.prm_reward import PRMScorer
+    from ai_forge_cli.utils.prm_reward import PRMScorer
 
     hidden = 8
 
@@ -431,7 +431,7 @@ class TestPRMScorerInputCap:
 
 class TestBuildPrmRewardFn:
     def test_returns_named_scorer(self, monkeypatch):
-        import soup_cli.utils.prm_reward as mod
+        import ai_forge_cli.utils.prm_reward as mod
 
         monkeypatch.setattr(mod, "_resolve_trust", lambda *a, **k: False)
 
@@ -444,7 +444,7 @@ class TestBuildPrmRewardFn:
         assert fn.aggregate == "prod"
 
     def test_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        import soup_cli.utils.prm_reward as mod
+        import ai_forge_cli.utils.prm_reward as mod
 
         monkeypatch.setattr(mod, "_resolve_trust", lambda *a, **k: False)
         # tmp_path is outside cwd and exists on disk -> containment reject.
@@ -457,7 +457,7 @@ class TestBuildPrmRewardFn:
             mod.build_prm_reward_fn(_T(), device="cpu", trust_remote_code=False)
 
     def test_none_path_rejected(self):
-        import soup_cli.utils.prm_reward as mod
+        import ai_forge_cli.utils.prm_reward as mod
 
         class _T:
             prm_reward = None
@@ -469,7 +469,7 @@ class TestBuildPrmRewardFn:
     def test_local_existing_dir_under_cwd_accepted(self, tmp_path, monkeypatch):
         import os
 
-        import soup_cli.utils.prm_reward as mod
+        import ai_forge_cli.utils.prm_reward as mod
 
         monkeypatch.setattr(mod, "_resolve_trust", lambda *a, **k: False)
         monkeypatch.chdir(tmp_path)
@@ -485,8 +485,8 @@ class TestBuildPrmRewardFn:
 
 class TestResolveTrust:
     def test_delegates_with_requires_flag(self, monkeypatch):
-        import soup_cli.utils.trust_remote as trust_mod
-        from soup_cli.utils.prm_reward import _resolve_trust
+        import ai_forge_cli.utils.trust_remote as trust_mod
+        from ai_forge_cli.utils.prm_reward import _resolve_trust
 
         captured = {}
         monkeypatch.setattr(
@@ -509,7 +509,7 @@ class TestLoadRewardHeadMultiShard:
         import torch
         from safetensors.torch import save_file
 
-        from soup_cli.utils.prm_reward import load_reward_head_weights
+        from ai_forge_cli.utils.prm_reward import load_reward_head_weights
 
         # Head split across two shards (weight in one, bias in the other).
         save_file(
@@ -536,9 +536,9 @@ class TestEnvs:
     def test_rows_normalise(self, modname):
         import importlib
 
-        from soup_cli.utils.agent_rollout import _normalise_rollout_rows
+        from ai_forge_cli.utils.agent_rollout import _normalise_rollout_rows
 
-        mod = importlib.import_module(f"soup_cli.envs.{modname}")
+        mod = importlib.import_module(f"ai_forge_cli.envs.{modname}")
         rows = mod.rollout([])
         assert rows, "env must produce a non-empty row set"
         norm = _normalise_rollout_rows(rows, "openenv")
@@ -551,21 +551,21 @@ class TestEnvs:
     def test_deterministic(self, modname):
         import importlib
 
-        mod = importlib.import_module(f"soup_cli.envs.{modname}")
+        mod = importlib.import_module(f"ai_forge_cli.envs.{modname}")
         assert mod.rollout([]) == mod.rollout([])
 
     @pytest.mark.parametrize("modname", _ENV_MODULES)
     def test_rollout_signature_ignores_prompt_content(self, modname):
         import importlib
 
-        mod = importlib.import_module(f"soup_cli.envs.{modname}")
+        mod = importlib.import_module(f"ai_forge_cli.envs.{modname}")
         # Passing seed prompts must not crash and stays deterministic.
         assert mod.rollout(["seed a", "seed b"]) == mod.rollout(["x", "y"])
 
     def test_calculator_answers_correct(self):
         import re
 
-        from soup_cli.envs.calculator import rollout
+        from ai_forge_cli.envs.calculator import rollout
 
         for row in rollout([]):
             m = re.search(r"(-?\d+)\s*([+\-*])\s*(-?\d+)", row["prompt"])
@@ -577,7 +577,7 @@ class TestEnvs:
     def test_guess_number_answer_matches_product(self):
         import re
 
-        from soup_cli.envs.guess_number import rollout
+        from ai_forge_cli.envs.guess_number import rollout
 
         for row in rollout([]):
             m = re.search(r"equals (\d+) times (\d+)", row["prompt"])
@@ -588,7 +588,7 @@ class TestEnvs:
     def test_retrieval_qa_answer_matches_asked_fact(self):
         import re
 
-        from soup_cli.envs.retrieval_qa import rollout
+        from ai_forge_cli.envs.retrieval_qa import rollout
 
         for row in rollout([]):
             # Tie the answer to the SPECIFIC asked fact, not just "any embedded
@@ -602,14 +602,14 @@ class TestEnvs:
     def test_row_count_is_default(self, modname):
         import importlib
 
-        from soup_cli.envs._common import DEFAULT_ROWS
+        from ai_forge_cli.envs._common import DEFAULT_ROWS
 
-        mod = importlib.import_module(f"soup_cli.envs.{modname}")
+        mod = importlib.import_module(f"ai_forge_cli.envs.{modname}")
         assert len(mod.rollout([])) == DEFAULT_ROWS
 
     def test_envs_produce_distinct_output(self):
         # Guard against an accidental seed / module copy-paste across envs.
-        from soup_cli.envs import calculator, guess_number, retrieval_qa
+        from ai_forge_cli.envs import calculator, guess_number, retrieval_qa
 
         outs = [
             tuple(r["prompt"] for r in calculator.rollout([])),
@@ -628,9 +628,9 @@ class TestRecipeRolloutFunc:
 
     @pytest.mark.parametrize("name", _NEW_RECIPES)
     def test_rollout_func_resolves_and_runs(self, name):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
-        from soup_cli.utils.agent_rollout import resolve_rollout_func
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.utils.agent_rollout import resolve_rollout_func
 
         cfg = load_config_from_string(get_recipe(name).yaml_str)
         fn = resolve_rollout_func(cfg.training.rollout_func)
@@ -639,8 +639,8 @@ class TestRecipeRolloutFunc:
 
     @pytest.mark.parametrize("name", _NEW_RECIPES)
     def test_recipe_reward_matches_env(self, name):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         cfg = load_config_from_string(get_recipe(name).yaml_str)
         expected_fn, expected_domain = self._EXPECTED_REWARD[name]
@@ -653,11 +653,11 @@ class TestRecipeRolloutFunc:
 # ---------------------------------------------------------------------------
 class TestGrpoPrmWiring:
     def test_prm_reward_selected(self, monkeypatch):
-        import soup_cli.trainer.grpo as grpo
+        import ai_forge_cli.trainer.grpo as grpo
 
         sentinel = object()
         monkeypatch.setattr(
-            "soup_cli.utils.prm_reward.build_prm_reward_fn",
+            "ai_forge_cli.utils.prm_reward.build_prm_reward_fn",
             lambda tcfg, device, trust_remote_code: sentinel,
         )
 
@@ -671,7 +671,7 @@ class TestGrpoPrmWiring:
         assert out is sentinel
 
     def test_standard_reward_selected(self, monkeypatch):
-        import soup_cli.trainer.grpo as grpo
+        import ai_forge_cli.trainer.grpo as grpo
 
         captured = {}
 
@@ -679,7 +679,7 @@ class TestGrpoPrmWiring:
             captured["spec"] = spec
             return "REWARD_FN"
 
-        monkeypatch.setattr("soup_cli.trainer.rewards.load_reward_fn", _fake_load)
+        monkeypatch.setattr("ai_forge_cli.trainer.rewards.load_reward_fn", _fake_load)
 
         class _T:
             prm_reward = None
@@ -692,7 +692,7 @@ class TestGrpoPrmWiring:
         assert captured["spec"] == "accuracy"
 
     def test_verifiable_domain_threaded(self, monkeypatch):
-        import soup_cli.trainer.grpo as grpo
+        import ai_forge_cli.trainer.grpo as grpo
 
         captured = {}
 
@@ -701,7 +701,7 @@ class TestGrpoPrmWiring:
             captured["domain"] = verifiable_domain
             return "REWARD_FN"
 
-        monkeypatch.setattr("soup_cli.trainer.rewards.load_reward_fn", _fake_load)
+        monkeypatch.setattr("ai_forge_cli.trainer.rewards.load_reward_fn", _fake_load)
 
         class _T:
             prm_reward = None
@@ -720,7 +720,7 @@ class TestGrpoPrmWiring:
 class TestRecipes:
     @pytest.mark.parametrize("name", _NEW_RECIPES)
     def test_recipe_resolves(self, name):
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe(name)
         assert recipe is not None
@@ -728,17 +728,17 @@ class TestRecipes:
 
     @pytest.mark.parametrize("name", _NEW_RECIPES)
     def test_recipe_yaml_parses(self, name):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe(name)
         cfg = load_config_from_string(recipe.yaml_str)
         assert cfg.task == "grpo"
         assert cfg.training.rollout_backend == "openenv"
-        assert cfg.training.rollout_func.startswith("soup_cli.envs.")
+        assert cfg.training.rollout_func.startswith("ai_forge_cli.envs.")
 
     def test_catalog_size_is_146(self):
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         assert len(RECIPES) == 146
 
@@ -748,7 +748,7 @@ class TestRecipes:
 # ---------------------------------------------------------------------------
 class TestBuildPrmTrainResult:
     def test_has_all_summary_keys(self):
-        from soup_cli.trainer.prm import build_prm_train_result
+        from ai_forge_cli.trainer.prm import build_prm_train_result
 
         out = build_prm_train_result(
             log_history=[{"loss": 3.2}, {"loss": 1.1}],
@@ -773,7 +773,7 @@ class TestBuildPrmTrainResult:
         assert out["duration"] == "2m"
 
     def test_empty_log_history_falls_back_to_metrics(self):
-        from soup_cli.trainer.prm import build_prm_train_result
+        from ai_forge_cli.trainer.prm import build_prm_train_result
 
         out = build_prm_train_result(
             log_history=[],
@@ -791,7 +791,7 @@ class TestBuildPrmTrainResult:
         # PRM checkpoint is loadable standalone by PRMScorer.
         import inspect
 
-        from soup_cli.trainer.prm import PRMTrainerWrapper
+        from ai_forge_cli.trainer.prm import PRMTrainerWrapper
 
         src = inspect.getsource(PRMTrainerWrapper.train)
         assert "self.tokenizer.save_pretrained" in src
@@ -799,7 +799,7 @@ class TestBuildPrmTrainResult:
 
 class TestNoTopLevelTorch:
     def test_prm_reward_has_no_top_level_torch(self):
-        import soup_cli.utils.prm_reward as mod
+        import ai_forge_cli.utils.prm_reward as mod
 
         source = inspect.getsource(mod)
         tree = ast.parse(source)

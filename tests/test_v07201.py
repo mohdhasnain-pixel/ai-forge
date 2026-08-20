@@ -60,8 +60,8 @@ def _tiny_lora():
 
 
 def _build_streamed_cpu(tmp_path, n_layers=2):
-    from soup_cli.utils.layer_shard import shard_checkpoint
-    from soup_cli.utils.layer_stream_runtime import build_streamed_model
+    from ai_forge_cli.utils.layer_shard import shard_checkpoint
+    from ai_forge_cli.utils.layer_stream_runtime import build_streamed_model
 
     weights = _tiny_llama_dir(tmp_path, n_layers=n_layers)
     shards = str(tmp_path / "shards")
@@ -326,7 +326,7 @@ class TestLoadingIntoAStreamedModelStaysUnsupported:
         """
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         weights = _tiny_llama_dir(tmp_path)
         data = tmp_path / "data.jsonl"
@@ -397,8 +397,8 @@ class TestProductionSavePathWritesCanonicalKeys:
         from peft import PeftModel
         from transformers import AutoModelForCausalLM
 
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         weights = _tiny_llama_dir(tmp_path, n_layers=2)
         _write_tiny_tokenizer(weights)
@@ -480,7 +480,7 @@ class TestRefusalsNameThePostRenumberSlot:
         grows. NF4 went in v0.72.2; larger batches, gradient accumulation,
         resume, the architecture allowlist and the disk tier all went in
         v0.72.3. What remains is the pair that has NOT shipped, below."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         for field, value in (
             ("stream_source", "disk"),
@@ -496,7 +496,7 @@ class TestRefusalsNameThePostRenumberSlot:
         NOT name a release — a version number there would read as "coming soon"
         to the next maintainer and invite them to wire up something that cannot
         work."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         def _yaml(task):
             return (
@@ -512,7 +512,7 @@ class TestRefusalsNameThePostRenumberSlot:
         assert "v0.72" not in str(excinfo.value)
 
     def test_arch_allowlist_names_v0723(self):
-        from soup_cli.utils.layer_stream import stream_arch_of
+        from ai_forge_cli.utils.layer_stream import stream_arch_of
 
         class _Cfg:
             model_type = "gpt2"

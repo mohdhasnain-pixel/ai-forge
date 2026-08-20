@@ -5,8 +5,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.commands.push import _format_size, _generate_model_card
+from ai_forge_cli.cli import app
+from ai_forge_cli.commands.push import _format_size, _generate_model_card
 
 runner = CliRunner()
 
@@ -50,7 +50,7 @@ def test_model_card_adapter(tmp_path: Path):
     assert "my-model" in card
     assert "meta-llama/Llama-3.1-8B" in card
     assert "LoRA rank" in card
-    assert "soup-cli" in card
+    assert "ai-forge" in card
 
 
 def test_model_card_full_model(tmp_path: Path):
@@ -61,7 +61,7 @@ def test_model_card_full_model(tmp_path: Path):
     card = _generate_model_card(model_dir, "user/full-model", is_adapter=False)
     assert "full-model" in card
     assert "fine-tuned language model" in card
-    assert "soup-cli" in card
+    assert "ai-forge" in card
 
 
 def test_model_card_adapter_bad_config(tmp_path: Path):

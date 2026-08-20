@@ -13,33 +13,33 @@ import threading
 
 import pytest
 
-from soup_cli.commands.llama import _LLAMA_ENV_ALLOWLIST, _filtered_env
-from soup_cli.ui.plugins import (
+from ai_forge_cli.commands.llama import _LLAMA_ENV_ALLOWLIST, _filtered_env
+from ai_forge_cli.ui.plugins import (
     clear_tabs,
     list_tabs,
     load_plugins,
     register_tab,
 )
-from soup_cli.utils.checkpoint_trigger import write_trigger
-from soup_cli.utils.delinearize_llama4 import discover_weight_files
-from soup_cli.utils.fetch_examples import fetch_examples_dir
-from soup_cli.utils.fsdp_consolidate import discover_shards, plan_consolidation
-from soup_cli.utils.gpu_monitor import (
+from ai_forge_cli.utils.checkpoint_trigger import write_trigger
+from ai_forge_cli.utils.delinearize_llama4 import discover_weight_files
+from ai_forge_cli.utils.fetch_examples import fetch_examples_dir
+from ai_forge_cli.utils.fsdp_consolidate import discover_shards, plan_consolidation
+from ai_forge_cli.utils.gpu_monitor import (
     detect_apple_silicon,
     query_nvidia_smi,
 )
-from soup_cli.utils.llama_proxy import resolve
-from soup_cli.utils.llama_server_timings import format_kv_bar, parse_timings
-from soup_cli.utils.onboarding import render_onboarding_yaml
-from soup_cli.utils.qr_url import build_phone_url, render_qr_ascii, validate_token
-from soup_cli.utils.shortcuts import (
+from ai_forge_cli.utils.llama_proxy import resolve
+from ai_forge_cli.utils.llama_server_timings import format_kv_bar, parse_timings
+from ai_forge_cli.utils.onboarding import render_onboarding_yaml
+from ai_forge_cli.utils.qr_url import build_phone_url, render_qr_ascii, validate_token
+from ai_forge_cli.utils.shortcuts import (
     build_macos_command_file,
     build_windows_cmd,
 )
-from soup_cli.utils.sweep_config import parse_sweep_yaml
-from soup_cli.utils.tail_latency import percentile, summarise_latency, update_ema
-from soup_cli.utils.tool_outputs import ToolCallTimer, ToolOutputsBuffer
-from soup_cli.utils.ui_env import resolve_ui_env
+from ai_forge_cli.utils.sweep_config import parse_sweep_yaml
+from ai_forge_cli.utils.tail_latency import percentile, summarise_latency, update_ema
+from ai_forge_cli.utils.tool_outputs import ToolCallTimer, ToolOutputsBuffer
+from ai_forge_cli.utils.ui_env import resolve_ui_env
 
 # --- gpu_monitor coverage ---------------------------------------------------
 
@@ -125,7 +125,7 @@ def test_tool_outputs_concurrent_writes():
 def test_tool_outputs_ring_drops_oldest_after_overflow():
     buffer = ToolOutputsBuffer()
     # Write more than the ring's max — deque auto-evicts oldest.
-    from soup_cli.utils.tool_outputs import _MAX_RECORDS
+    from ai_forge_cli.utils.tool_outputs import _MAX_RECORDS
 
     for idx in range(_MAX_RECORDS + 5):
         buffer.record_call(
@@ -349,7 +349,7 @@ def test_fetch_examples_dir_under_realpath():
 def test_cli_fetch_force_overwrites(tmp_path, monkeypatch):
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     runner = CliRunner()
@@ -426,7 +426,7 @@ def test_summarise_latency_max_samples_cap():
 def test_graceful_save_restore_idempotent(monkeypatch):
     import signal as _signal
 
-    from soup_cli.utils.graceful_save import GracefulSaveHandler
+    from ai_forge_cli.utils.graceful_save import GracefulSaveHandler
 
     calls: list = []
     monkeypatch.setattr(_signal, "signal", lambda *_a, **_k: calls.append(_a) or _signal.SIG_DFL)
@@ -441,7 +441,7 @@ def test_graceful_save_restore_idempotent(monkeypatch):
 def test_graceful_save_install_signal_failure_swallowed(monkeypatch):
     import signal as _signal
 
-    from soup_cli.utils.graceful_save import GracefulSaveHandler
+    from ai_forge_cli.utils.graceful_save import GracefulSaveHandler
 
     def failing(*_a, **_k):
         raise ValueError("not main thread")

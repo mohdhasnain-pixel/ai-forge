@@ -29,7 +29,7 @@ class TestCmaesPlateauConvergence:
     def test_converges_on_flat_landscape(self, tmp_path, monkeypatch) -> None:
         """When eval_fn returns the same score for 3+ generations,
         ``converged=True`` and the loop short-circuits early."""
-        from soup_cli.utils.cmaes_merge import build_cmaes_plan, run_cmaes_merge
+        from ai_forge_cli.utils.cmaes_merge import build_cmaes_plan, run_cmaes_merge
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "a").mkdir()
@@ -63,28 +63,28 @@ class TestCmaesPlateauConvergence:
 
 class TestCmaesValidatorBoundaries:
     def test_population_min_accepted(self) -> None:
-        from soup_cli.utils.cmaes_merge import MIN_POPULATION, validate_population_size
+        from ai_forge_cli.utils.cmaes_merge import MIN_POPULATION, validate_population_size
 
         assert validate_population_size(MIN_POPULATION) == MIN_POPULATION
 
     def test_population_min_minus_one_rejected(self) -> None:
-        from soup_cli.utils.cmaes_merge import MIN_POPULATION, validate_population_size
+        from ai_forge_cli.utils.cmaes_merge import MIN_POPULATION, validate_population_size
 
         with pytest.raises(ValueError):
             validate_population_size(MIN_POPULATION - 1)
 
     def test_population_max_accepted(self) -> None:
-        from soup_cli.utils.cmaes_merge import MAX_POPULATION, validate_population_size
+        from ai_forge_cli.utils.cmaes_merge import MAX_POPULATION, validate_population_size
 
         assert validate_population_size(MAX_POPULATION) == MAX_POPULATION
 
     def test_generations_min_accepted(self) -> None:
-        from soup_cli.utils.cmaes_merge import MIN_GENERATIONS, validate_generations
+        from ai_forge_cli.utils.cmaes_merge import MIN_GENERATIONS, validate_generations
 
         assert validate_generations(MIN_GENERATIONS) == MIN_GENERATIONS
 
     def test_generations_max_accepted(self) -> None:
-        from soup_cli.utils.cmaes_merge import MAX_GENERATIONS, validate_generations
+        from ai_forge_cli.utils.cmaes_merge import MAX_GENERATIONS, validate_generations
 
         assert validate_generations(MAX_GENERATIONS) == MAX_GENERATIONS
 
@@ -98,7 +98,7 @@ class TestVectorBankForwardCompat:
     def test_unknown_fields_ignored(self, tmp_path, monkeypatch) -> None:
         """A bank JSON with extra unknown fields should round-trip without
         error — guards against breakage when v0.67.1+ adds new fields."""
-        from soup_cli.utils.vector_bank import load_bank
+        from ai_forge_cli.utils.vector_bank import load_bank
 
         monkeypatch.chdir(tmp_path)
         path = tmp_path / "bank.json"
@@ -127,7 +127,7 @@ class TestVectorBankForwardCompat:
     def test_write_bank_symlink_rejected(self, tmp_path, monkeypatch) -> None:
         """`write_bank` must reject a pre-placed symlink at the target path
         (TOCTOU defence — mirrors v0.55.0 / v0.56.0 policy)."""
-        from soup_cli.utils.vector_bank import VectorBank, write_bank
+        from ai_forge_cli.utils.vector_bank import VectorBank, write_bank
 
         monkeypatch.chdir(tmp_path)
         target = tmp_path / "out.json"
@@ -153,7 +153,7 @@ class TestVectorBankForwardCompat:
 
 class TestValidateUserIdBool:
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import validate_user_id
+        from ai_forge_cli.utils.vector_bank import validate_user_id
 
         with pytest.raises(TypeError):
             validate_user_id(True)  # type: ignore[arg-type]
@@ -166,7 +166,7 @@ class TestValidateUserIdBool:
 
 class TestVectorBankBoundaries:
     def test_vector_dim_at_max_accepted(self) -> None:
-        from soup_cli.utils.vector_bank import MAX_VECTOR_DIM, VectorBank
+        from ai_forge_cli.utils.vector_bank import MAX_VECTOR_DIM, VectorBank
 
         # MAX value should be accepted (use it with empty entries)
         VectorBank(
@@ -178,7 +178,7 @@ class TestVectorBankBoundaries:
         )
 
     def test_vector_dim_above_max_rejected(self) -> None:
-        from soup_cli.utils.vector_bank import MAX_VECTOR_DIM, VectorBank
+        from ai_forge_cli.utils.vector_bank import MAX_VECTOR_DIM, VectorBank
 
         with pytest.raises(ValueError):
             VectorBank(
@@ -199,7 +199,7 @@ class TestPRRenderEmptySections:
     def test_all_empty_sections(self) -> None:
         """A PR with no deltas / no samples / no dataset_diff should
         render valid Markdown without any `None` literals leaking."""
-        from soup_cli.utils.adapter_pr import AdapterPR, render_pr_markdown
+        from ai_forge_cli.utils.adapter_pr import AdapterPR, render_pr_markdown
 
         pr = AdapterPR(
             title="empty-pr",
@@ -214,7 +214,7 @@ class TestPRRenderEmptySections:
         assert "empty-pr" in md
 
     def test_json_handles_empty_sections(self) -> None:
-        from soup_cli.utils.adapter_pr import AdapterPR, render_pr_json
+        from ai_forge_cli.utils.adapter_pr import AdapterPR, render_pr_json
 
         pr = AdapterPR(
             title="t",
@@ -238,7 +238,7 @@ class TestSoupLockVersionDriftAdvisory:
     def test_version_change_not_drift(self) -> None:
         """``soup_version`` differing between expected and actual locks
         should NOT count as drift — operators upgrade Soup legitimately."""
-        from soup_cli.utils.soup_lock import SoupLock, check_lock_drift
+        from ai_forge_cli.utils.soup_lock import SoupLock, check_lock_drift
 
         base = dict(
             base_model="m",
@@ -255,7 +255,7 @@ class TestSoupLockVersionDriftAdvisory:
         assert drift.ok is True
 
     def test_created_at_change_not_drift(self) -> None:
-        from soup_cli.utils.soup_lock import SoupLock, check_lock_drift
+        from ai_forge_cli.utils.soup_lock import SoupLock, check_lock_drift
 
         base = dict(
             soup_version="0.67.0",
@@ -282,7 +282,7 @@ class TestBisectNonMonotonic:
         """If the eval_fn flips back and forth (non-monotonic regression),
         the bisect must still return a valid ``BisectResult`` rather than
         crash. The boundary it finds is undefined but must be in-range."""
-        from soup_cli.utils.adapter_bisect import (
+        from ai_forge_cli.utils.adapter_bisect import (
             BisectPlan,
             BisectResult,
             run_bisect,
@@ -315,13 +315,13 @@ class TestSourceWiringRegressions:
 
         root = Path(__file__).resolve().parent.parent
         for module in (
-            "src/soup_cli/utils/cmaes_merge.py",
-            "src/soup_cli/utils/vector_bank.py",
-            "src/soup_cli/utils/mole_routing.py",
-            "src/soup_cli/utils/adapter_pr.py",
-            "src/soup_cli/utils/soup_lock.py",
-            "src/soup_cli/utils/adapter_bisect.py",
-            "src/soup_cli/commands/lock.py",
+            "src/ai_forge_cli/utils/cmaes_merge.py",
+            "src/ai_forge_cli/utils/vector_bank.py",
+            "src/ai_forge_cli/utils/mole_routing.py",
+            "src/ai_forge_cli/utils/adapter_pr.py",
+            "src/ai_forge_cli/utils/soup_lock.py",
+            "src/ai_forge_cli/utils/adapter_bisect.py",
+            "src/ai_forge_cli/commands/lock.py",
         ):
             src = (root / module).read_text(encoding="utf-8")
             assert "from __future__ import annotations" in src, (
@@ -333,9 +333,9 @@ class TestSourceWiringRegressions:
 
         root = Path(__file__).resolve().parent.parent
         for module in (
-            "src/soup_cli/utils/vector_bank.py",
-            "src/soup_cli/utils/adapter_pr.py",
-            "src/soup_cli/utils/soup_lock.py",
+            "src/ai_forge_cli/utils/vector_bank.py",
+            "src/ai_forge_cli/utils/adapter_pr.py",
+            "src/ai_forge_cli/utils/soup_lock.py",
         ):
             src = (root / module).read_text(encoding="utf-8")
             assert "atomic_write_text" in src, (
@@ -348,13 +348,13 @@ class TestSourceWiringRegressions:
 
         root = Path(__file__).resolve().parent.parent
         for module in (
-            "src/soup_cli/utils/cmaes_merge.py",
-            "src/soup_cli/utils/vector_bank.py",
-            "src/soup_cli/utils/mole_routing.py",
-            "src/soup_cli/utils/adapter_pr.py",
-            "src/soup_cli/utils/soup_lock.py",
-            "src/soup_cli/utils/adapter_bisect.py",
-            "src/soup_cli/commands/lock.py",
+            "src/ai_forge_cli/utils/cmaes_merge.py",
+            "src/ai_forge_cli/utils/vector_bank.py",
+            "src/ai_forge_cli/utils/mole_routing.py",
+            "src/ai_forge_cli/utils/adapter_pr.py",
+            "src/ai_forge_cli/utils/soup_lock.py",
+            "src/ai_forge_cli/utils/adapter_bisect.py",
+            "src/ai_forge_cli/commands/lock.py",
         ):
             src = (root / module).read_text(encoding="utf-8")
             head = "\n".join(
@@ -370,7 +370,7 @@ class TestSourceWiringRegressions:
                 )
 
     def test_supported_strategies_has_cmaes(self) -> None:
-        from soup_cli.utils.adapter_merge import SUPPORTED_STRATEGIES
+        from ai_forge_cli.utils.adapter_merge import SUPPORTED_STRATEGIES
 
         assert "cmaes" in SUPPORTED_STRATEGIES
 
@@ -379,7 +379,7 @@ class TestSourceWiringRegressions:
         from pathlib import Path
 
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "commands" / "adapters.py").read_text(
+        src = (root / "src" / "ai_forge_cli" / "commands" / "adapters.py").read_text(
             encoding="utf-8"
         )
         # The bisect subprocess call site

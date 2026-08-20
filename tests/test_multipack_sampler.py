@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from soup_cli.utils.multipack_sampler import (
+from ai_forge_cli.utils.multipack_sampler import (
     MULTIPACK_ARCHITECTURES,
     MultipackBatchSampler,
     ffd_bin_pack,
@@ -106,11 +106,11 @@ def test_ffd_all_lengths_equal_max_len():
 
 def test_ffd_rejects_too_many_items():
     # Defence against O(N^2) DoS — cap is 1M.
-    from soup_cli.utils.multipack_sampler import _MAX_FFD_ITEMS
+    from ai_forge_cli.utils.multipack_sampler import _MAX_FFD_ITEMS
     too_many = _MAX_FFD_ITEMS + 1
     # Don't actually allocate 1M ints — just confirm the cap exists by
     # patching it lower for the test.
-    import soup_cli.utils.multipack_sampler as ms
+    import ai_forge_cli.utils.multipack_sampler as ms
     original = ms._MAX_FFD_ITEMS
     try:
         ms._MAX_FFD_ITEMS = 5

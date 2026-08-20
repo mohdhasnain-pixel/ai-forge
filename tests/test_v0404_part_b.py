@@ -17,7 +17,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from soup_cli.utils.multipack_trainer import (
+from ai_forge_cli.utils.multipack_trainer import (
     attach_multipack_state,
     make_multipack_trainer_class,
 )
@@ -111,7 +111,7 @@ class TestGetTrainDataloaderReturnsMultipackDataloader:
         dl = instance.get_train_dataloader()
         assert isinstance(dl, DataLoader)
         # The batch_sampler is a MultipackBatchSampler with real_batches=False.
-        from soup_cli.utils.multipack_sampler import MultipackBatchSampler
+        from ai_forge_cli.utils.multipack_sampler import MultipackBatchSampler
 
         assert isinstance(dl.batch_sampler, MultipackBatchSampler)
         # Sanity: real_batches=False → yields list[int] per pack
@@ -132,7 +132,7 @@ class TestGetTrainDataloaderForwardsDropLast:
         # MultipackBatchSampler. (Live-spy patching is hard because the
         # factory function captures the symbol via free-variable closure
         # at definition time.)
-        text = Path("src/soup_cli/utils/multipack_trainer.py").read_text(
+        text = Path("src/ai_forge_cli/utils/multipack_trainer.py").read_text(
             encoding="utf-8",
         )
         # The override block reads dataloader_drop_last from args.
@@ -145,7 +145,7 @@ class TestSftLiveWiring:
     """Source-level proof that sft.py instantiates the multipack subclass."""
 
     def test_sft_instantiates_subclass(self):
-        text = Path("src/soup_cli/trainer/sft.py").read_text(encoding="utf-8")
+        text = Path("src/ai_forge_cli/trainer/sft.py").read_text(encoding="utf-8")
         # The v0.40.3 yellow advisory string is GONE.
         assert "live HF Trainer wiring is deferred" not in text
         # The factory is invoked with SFTTrainer as the base.
@@ -156,7 +156,7 @@ class TestSftLiveWiring:
         assert "validate_multipack_architecture" in text
 
     def test_pretrain_instantiates_subclass(self):
-        text = Path("src/soup_cli/trainer/pretrain.py").read_text(encoding="utf-8")
+        text = Path("src/ai_forge_cli/trainer/pretrain.py").read_text(encoding="utf-8")
         assert "live HF Trainer wiring is deferred" not in text
         assert "make_multipack_trainer_class(SFTTrainer)" in text
         assert "attach_multipack_state(" in text

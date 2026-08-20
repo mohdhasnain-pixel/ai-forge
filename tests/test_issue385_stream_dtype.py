@@ -70,14 +70,14 @@ def fake_torch(monkeypatch):
 
 class TestResolveStreamDtype:
     def test_ampere_gets_bfloat16(self, fake_torch):
-        from soup_cli.utils.layer_stream import resolve_stream_dtype
+        from ai_forge_cli.utils.layer_stream import resolve_stream_dtype
 
         fake_torch(available=True, bf16=True)
         assert resolve_stream_dtype("cuda") == "bfloat16"
 
     def test_turing_gets_float16_not_bfloat16(self, fake_torch):
         """The defect. A T4 reports False here and used to be handed bf16."""
-        from soup_cli.utils.layer_stream import resolve_stream_dtype
+        from ai_forge_cli.utils.layer_stream import resolve_stream_dtype
 
         fake_torch(available=True, bf16=False)
         assert resolve_stream_dtype("cuda") == "float16"
@@ -85,7 +85,7 @@ class TestResolveStreamDtype:
     def test_the_capability_is_actually_consulted(self, fake_torch):
         """Guards the shape of the fix, not just its output: a resolver that
         hardcoded 'float16' would pass the test above and be just as wrong."""
-        from soup_cli.utils.layer_stream import resolve_stream_dtype
+        from ai_forge_cli.utils.layer_stream import resolve_stream_dtype
 
         fake = fake_torch(available=True, bf16=True)
         resolve_stream_dtype("cuda")
@@ -102,7 +102,7 @@ class TestResolveStreamDtype:
         first version of this fix did: a no-op on exactly the cards it was
         written for. The question has to be asked without emulation.
         """
-        from soup_cli.utils.layer_stream import resolve_stream_dtype
+        from ai_forge_cli.utils.layer_stream import resolve_stream_dtype
 
         fake = fake_torch(available=True, bf16=False, emulated=True)
         assert fake.is_bf16_supported() is True, "the stub must model the trap"
@@ -112,27 +112,27 @@ class TestResolveStreamDtype:
     def test_cpu_stays_float32(self, fake_torch):
         """CPU streaming is a test convenience and half-precision CPU kernels
         are not uniformly available — this must not change with the fix."""
-        from soup_cli.utils.layer_stream import resolve_stream_dtype
+        from ai_forge_cli.utils.layer_stream import resolve_stream_dtype
 
         fake_torch(available=True, bf16=True)
         assert resolve_stream_dtype("cpu") == "float32"
 
     def test_cuda_index_is_still_cuda(self, fake_torch):
-        from soup_cli.utils.layer_stream import resolve_stream_dtype
+        from ai_forge_cli.utils.layer_stream import resolve_stream_dtype
 
         fake_torch(available=True, bf16=False)
         assert resolve_stream_dtype("cuda:1") == "float16"
 
     def test_no_cuda_runtime_falls_back_to_float32(self, fake_torch):
         """A 'cuda' string on a box with no CUDA must not claim a GPU dtype."""
-        from soup_cli.utils.layer_stream import resolve_stream_dtype
+        from ai_forge_cli.utils.layer_stream import resolve_stream_dtype
 
         fake_torch(available=False, bf16=False)
         assert resolve_stream_dtype("cuda") == "float32"
 
     @pytest.mark.parametrize("bf16", [True, False])
     def test_result_is_always_a_supported_stream_dtype(self, fake_torch, bf16):
-        from soup_cli.utils.layer_stream import (
+        from ai_forge_cli.utils.layer_stream import (
             SUPPORTED_STREAM_DTYPES,
             resolve_stream_dtype,
         )
@@ -147,8 +147,8 @@ class TestResolveStreamDtype:
         dtype by a private rule is how the two drift apart."""
         import torch
 
-        from soup_cli.utils.gpu import get_compute_dtype
-        from soup_cli.utils.layer_stream import resolve_stream_dtype
+        from ai_forge_cli.utils.gpu import get_compute_dtype
+        from ai_forge_cli.utils.layer_stream import resolve_stream_dtype
 
         for bf16 in (True, False):
             fake_torch(available=True, bf16=bf16)
@@ -166,7 +166,7 @@ class TestStreamSetupUsesTheResolver:
     def _source(self) -> str:
         from pathlib import Path
 
-        import soup_cli.trainer.stream_setup as mod
+        import ai_forge_cli.trainer.stream_setup as mod
 
         return Path(mod.__file__).read_text(encoding="utf-8")
 
@@ -198,7 +198,7 @@ class TestTrainingArgumentsPrecisionAsksTheCardToo:
     """
 
     def _wrapper(self):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         wrapper = SFTTrainerWrapper.__new__(SFTTrainerWrapper)
         wrapper.device = "cuda"
@@ -223,7 +223,7 @@ class TestTrainingArgumentsPrecisionAsksTheCardToo:
         )
 
     def test_cpu_asks_for_neither(self, fake_torch):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         fake_torch(available=False, bf16=False)
         wrapper = SFTTrainerWrapper.__new__(SFTTrainerWrapper)
@@ -236,7 +236,7 @@ class TestTrainingArgumentsPrecisionAsksTheCardToo:
         and a phantom precision request only obscures the real error. This is
         also the shape CI runs in, so it is the branch that decides whether a
         GPU-less test box agrees with a GPU-ful one."""
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         fake_torch(available=False, bf16=False)
         wrapper = SFTTrainerWrapper.__new__(SFTTrainerWrapper)
@@ -247,14 +247,14 @@ class TestTrainingArgumentsPrecisionAsksTheCardToo:
 class TestEveryTrainerAsksTheCard:
     """#387 was in TWELVE wrappers, not one. Repairing only the SFT path is
     exactly the debt #359 records for DeepSpeed+LoRA ("repaired in sft.py
-    only"), so this SCANS every module in ``soup_cli/trainer/`` rather than
+    only"), so this SCANS every module in ``ai_forge_cli/trainer/`` rather than
     parametrising over a hand-written list — the list is what hides the ones
     nobody remembered."""
 
     def _trainer_sources(self):
         from pathlib import Path
 
-        import soup_cli.trainer as pkg
+        import ai_forge_cli.trainer as pkg
 
         root = Path(pkg.__file__).parent
         return {p.name: p.read_text(encoding="utf-8") for p in sorted(root.glob("*.py"))}
@@ -373,8 +373,8 @@ class TestFloat16StreamingIsBitExact:
         import torch
         from peft import get_peft_model
 
-        from soup_cli.utils.layer_shard import shard_checkpoint
-        from soup_cli.utils.layer_stream_runtime import (
+        from ai_forge_cli.utils.layer_shard import shard_checkpoint
+        from ai_forge_cli.utils.layer_stream_runtime import (
             build_meta_skeleton,
             build_streamed_model,
             quantised_layer_suffixes,
@@ -411,7 +411,7 @@ class TestFloat16StreamingIsBitExact:
             else:
                 from transformers import AutoModelForCausalLM
 
-                from soup_cli.utils.layer_stream_runtime import build_nf4_config
+                from ai_forge_cli.utils.layer_stream_runtime import build_nf4_config
 
                 base = AutoModelForCausalLM.from_pretrained(
                     weights, quantization_config=build_nf4_config(dtype),

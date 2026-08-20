@@ -8,7 +8,7 @@ import pytest
 
 class TestForgettingConfig:
     def test_defaults(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         cfg = TrainingConfig()
         assert cfg.forgetting_detection is False
@@ -20,7 +20,7 @@ class TestForgettingConfig:
     def test_threshold_bounded(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(forgetting_threshold=0.8)  # > 0.50 max
@@ -30,7 +30,7 @@ class TestForgettingConfig:
     def test_eval_steps_bounded(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(forgetting_eval_steps=5)
@@ -38,7 +38,7 @@ class TestForgettingConfig:
     def test_benchmark_literal(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(forgetting_benchmark="evil-benchmark")
@@ -46,7 +46,7 @@ class TestForgettingConfig:
 
 class TestCheckpointIntelConfig:
     def test_defaults(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         cfg = TrainingConfig()
         assert cfg.checkpoint_intelligence is False
@@ -59,7 +59,7 @@ class TestCheckpointIntelConfig:
     def test_keep_top_bounded(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(checkpoint_keep_top=0)
@@ -69,7 +69,7 @@ class TestCheckpointIntelConfig:
     def test_patience_bounded(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(early_stop_patience=0)
@@ -83,7 +83,7 @@ class TestCheckpointIntelConfig:
 
 class TestForgettingDetector:
     def test_built_in_benchmarks_exist(self):
-        from soup_cli.eval.forgetting import MINI_BENCHMARKS
+        from ai_forge_cli.eval.forgetting import MINI_BENCHMARKS
 
         assert "mini_mmlu" in MINI_BENCHMARKS
         assert "mini_common_sense" in MINI_BENCHMARKS
@@ -103,7 +103,7 @@ class TestForgettingDetector:
                 assert isinstance(item["answer"], str)
 
     def test_baseline_mocked(self):
-        from soup_cli.eval.forgetting import ForgettingDetector
+        from ai_forge_cli.eval.forgetting import ForgettingDetector
 
         def fake_gen(prompt: str) -> str:
             # Always returns the correct answer for mini_mmlu first item
@@ -116,7 +116,7 @@ class TestForgettingDetector:
         assert 0.0 <= baseline <= 1.0
 
     def test_check_forgetting_level_green(self):
-        from soup_cli.eval.forgetting import ForgettingDetector
+        from ai_forge_cli.eval.forgetting import ForgettingDetector
 
         detector = ForgettingDetector(
             generate_fn=lambda p: "dummy", benchmark="mini_mmlu",
@@ -128,7 +128,7 @@ class TestForgettingDetector:
         assert result.warning_level == "green"
 
     def test_check_forgetting_level_yellow(self):
-        from soup_cli.eval.forgetting import ForgettingDetector
+        from ai_forge_cli.eval.forgetting import ForgettingDetector
 
         detector = ForgettingDetector(
             generate_fn=lambda p: "dummy", threshold=0.10,
@@ -138,7 +138,7 @@ class TestForgettingDetector:
         assert result.warning_level == "yellow"
 
     def test_check_forgetting_level_red(self):
-        from soup_cli.eval.forgetting import ForgettingDetector
+        from ai_forge_cli.eval.forgetting import ForgettingDetector
 
         detector = ForgettingDetector(
             generate_fn=lambda p: "dummy", threshold=0.10,
@@ -149,7 +149,7 @@ class TestForgettingDetector:
 
     def test_check_forgetting_integration(self):
         """Full check_forgetting() integration: baseline then eval."""
-        from soup_cli.eval.forgetting import ForgettingDetector
+        from ai_forge_cli.eval.forgetting import ForgettingDetector
 
         # Model that returns the right answer for the first 3 questions
         calls = {"n": 0}
@@ -168,7 +168,7 @@ class TestForgettingDetector:
         assert detector._baseline_accuracy is not None
 
     def test_unknown_benchmark_rejected(self):
-        from soup_cli.eval.forgetting import ForgettingDetector
+        from ai_forge_cli.eval.forgetting import ForgettingDetector
 
         with pytest.raises(ValueError):
             ForgettingDetector(
@@ -178,7 +178,7 @@ class TestForgettingDetector:
 
     def test_forgetting_stop_schema(self):
         """forgetting_stop is a proper TrainingConfig bool with False default."""
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         default_cfg = TrainingConfig()
         assert default_cfg.forgetting_stop is False
@@ -193,13 +193,13 @@ class TestForgettingDetector:
 
 class TestCheckpointTracker:
     def test_initial_best_none(self):
-        from soup_cli.eval.checkpoint_intelligence import CheckpointTracker
+        from ai_forge_cli.eval.checkpoint_intelligence import CheckpointTracker
 
         tracker = CheckpointTracker(metric="composite")
         assert tracker.best is None
 
     def test_record_becomes_best(self):
-        from soup_cli.eval.checkpoint_intelligence import CheckpointTracker
+        from ai_forge_cli.eval.checkpoint_intelligence import CheckpointTracker
 
         tracker = CheckpointTracker(metric="composite")
         tracker.record(step=100, score=0.8)
@@ -208,7 +208,7 @@ class TestCheckpointTracker:
         assert tracker.best.step == 100
 
     def test_record_better_replaces_best(self):
-        from soup_cli.eval.checkpoint_intelligence import CheckpointTracker
+        from ai_forge_cli.eval.checkpoint_intelligence import CheckpointTracker
 
         tracker = CheckpointTracker(metric="composite")
         tracker.record(step=100, score=0.6)
@@ -217,7 +217,7 @@ class TestCheckpointTracker:
         assert tracker.best.step == 200
 
     def test_record_worse_keeps_best(self):
-        from soup_cli.eval.checkpoint_intelligence import CheckpointTracker
+        from ai_forge_cli.eval.checkpoint_intelligence import CheckpointTracker
 
         tracker = CheckpointTracker(metric="composite")
         tracker.record(step=100, score=0.9)
@@ -226,7 +226,7 @@ class TestCheckpointTracker:
         assert tracker.best.step == 100
 
     def test_should_early_stop_no_regression(self):
-        from soup_cli.eval.checkpoint_intelligence import CheckpointTracker
+        from ai_forge_cli.eval.checkpoint_intelligence import CheckpointTracker
 
         tracker = CheckpointTracker(metric="composite", patience=2)
         tracker.record(step=100, score=0.7)
@@ -235,7 +235,7 @@ class TestCheckpointTracker:
         assert tracker.should_early_stop() is False
 
     def test_should_early_stop_on_patience(self):
-        from soup_cli.eval.checkpoint_intelligence import CheckpointTracker
+        from ai_forge_cli.eval.checkpoint_intelligence import CheckpointTracker
 
         tracker = CheckpointTracker(metric="composite", patience=2)
         tracker.record(step=100, score=0.9)
@@ -244,7 +244,7 @@ class TestCheckpointTracker:
         assert tracker.should_early_stop() is True
 
     def test_prune_keeps_top_n(self, tmp_path):
-        from soup_cli.eval.checkpoint_intelligence import CheckpointTracker
+        from ai_forge_cli.eval.checkpoint_intelligence import CheckpointTracker
 
         tracker = CheckpointTracker(metric="composite", keep_top=2)
 
@@ -268,7 +268,7 @@ class TestCheckpointTracker:
         assert not (tmp_path / "checkpoint-400").exists()
 
     def test_prune_refuses_non_checkpoint_dirs(self, tmp_path):
-        from soup_cli.eval.checkpoint_intelligence import CheckpointTracker
+        from ai_forge_cli.eval.checkpoint_intelligence import CheckpointTracker
 
         tracker = CheckpointTracker(metric="composite", keep_top=1)
         tracker.record(step=100, score=0.9)
@@ -287,30 +287,30 @@ class TestCheckpointTracker:
         assert (sibling / "file.txt").exists()
 
     def test_composite_metric_weights(self):
-        from soup_cli.eval.checkpoint_intelligence import compute_composite
+        from ai_forge_cli.eval.checkpoint_intelligence import compute_composite
 
         composite = compute_composite(judge=0.8, mmlu=0.6, custom=0.9)
         assert 0.6 < composite < 0.9
 
     def test_composite_all_zero(self):
-        from soup_cli.eval.checkpoint_intelligence import compute_composite
+        from ai_forge_cli.eval.checkpoint_intelligence import compute_composite
 
         assert compute_composite(judge=0.0, mmlu=0.0, custom=0.0) == 0.0
 
     def test_composite_all_ones(self):
-        from soup_cli.eval.checkpoint_intelligence import compute_composite
+        from ai_forge_cli.eval.checkpoint_intelligence import compute_composite
 
         assert compute_composite(judge=1.0, mmlu=1.0, custom=1.0) == 1.0
 
     def test_composite_missing_metrics(self):
         """None-valued metrics drop out of the weighted average."""
-        from soup_cli.eval.checkpoint_intelligence import compute_composite
+        from ai_forge_cli.eval.checkpoint_intelligence import compute_composite
 
         # Only judge supplied — composite equals judge score exactly.
         assert compute_composite(judge=0.7, mmlu=None, custom=None) == 0.7
 
     def test_composite_all_none_returns_zero(self):
-        from soup_cli.eval.checkpoint_intelligence import compute_composite
+        from ai_forge_cli.eval.checkpoint_intelligence import compute_composite
 
         assert compute_composite() == 0.0
 
@@ -321,7 +321,7 @@ class TestCheckpointTracker:
 
 class TestTrackerSchema:
     def test_checkpoint_quality_table_created(self, tmp_path):
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         db_path = tmp_path / "experiments.db"
         tracker = ExperimentTracker(db_path=db_path)
@@ -338,7 +338,7 @@ class TestTrackerSchema:
         conn.close()
 
     def test_forgetting_eval_table_created(self, tmp_path):
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         db_path = tmp_path / "experiments.db"
         tracker = ExperimentTracker(db_path=db_path)

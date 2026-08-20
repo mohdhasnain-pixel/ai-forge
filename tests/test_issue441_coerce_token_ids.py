@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.data.loss_mask import IGNORE_INDEX, coerce_token_ids
+from ai_forge_cli.data.loss_mask import IGNORE_INDEX, coerce_token_ids
 
 
 class _DuckMapping:
@@ -77,7 +77,7 @@ class TestPublicSharedHelper:
         """Fails if data_doctor grows its own coerce, or goes back to
         importing the underscore-prefixed name — the drift the shared
         helper exists to prevent."""
-        import soup_cli.utils.data_doctor as doctor
+        import ai_forge_cli.utils.data_doctor as doctor
 
         tree = ast.parse(Path(doctor.__file__).read_text(encoding="utf-8"))
         imported: set[str] = set()
@@ -85,7 +85,7 @@ class TestPublicSharedHelper:
         for node in ast.walk(tree):
             if (
                 isinstance(node, ast.ImportFrom)
-                and node.module == "soup_cli.data.loss_mask"
+                and node.module == "ai_forge_cli.data.loss_mask"
             ):
                 for alias in node.names:
                     imported.add(alias.name)
@@ -104,13 +104,13 @@ class TestPublicSharedHelper:
         assert not defined, f"data_doctor grew its own copy of the helper: {defined}"
 
     def test_no_module_imports_loss_mask_private_coerce(self):
-        src_root = Path(__file__).resolve().parents[1] / "src" / "soup_cli"
+        src_root = Path(__file__).resolve().parents[1] / "src" / "ai_forge_cli"
         offenders: list[str] = []
         for path in src_root.rglob("*.py"):
             if path.name == "loss_mask.py":
                 continue
             text = path.read_text(encoding="utf-8")
-            if "from soup_cli.data.loss_mask import" in text and "_coerce_token_ids" in text:
+            if "from ai_forge_cli.data.loss_mask import" in text and "_coerce_token_ids" in text:
                 offenders.append(str(path.relative_to(src_root.parent.parent)))
         assert offenders == [], (
             "underscore-prefixed coerce imported across modules: " + ", ".join(offenders)
@@ -136,7 +136,7 @@ class TestDuckTypedMapping:
         ``_apply_template_with_mask`` still returns None: the fallback
         unmasks the whole assistant span (two tokens here), the mask path
         keeps only the last token."""
-        from soup_cli.data.loss_mask import build_assistant_only_labels
+        from ai_forge_cli.data.loss_mask import build_assistant_only_labels
 
         class _DuckMaskTokenizer:
             chat_template = "x"
@@ -177,7 +177,7 @@ class TestOneMappingPredicate:
         unit test of the other. Pinning that both sites call the shared
         predicate — and that ``isinstance(out, Mapping)`` lives in exactly
         one place — is the mutation #441 asks for."""
-        import soup_cli.data.loss_mask as mod
+        import ai_forge_cli.data.loss_mask as mod
 
         src = Path(mod.__file__).read_text(encoding="utf-8")
         assert src.count("isinstance(out, Mapping)") == 1

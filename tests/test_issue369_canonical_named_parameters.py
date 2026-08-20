@@ -102,8 +102,8 @@ def _build_streamed_dpo_wrapper(tmp_path, monkeypatch):
     """The real ``setup()`` path, streaming, task=dpo, device=cpu."""
     import yaml
 
-    from soup_cli.config.loader import load_config_from_string
-    from soup_cli.trainer.dpo import DPOTrainerWrapper
+    from ai_forge_cli.config.loader import load_config_from_string
+    from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
     weights, resident = _tiny_llama_dir(tmp_path)
     _write_tiny_tokenizer(weights)
@@ -168,7 +168,7 @@ class TestCanonicalNamedParameters:
 
     def test_canonical_names_strip_the_inner_segment(self, tmp_path, monkeypatch):
         _requires_train_extra()
-        from soup_cli.utils.layer_stream_runtime import canonical_named_parameters
+        from ai_forge_cli.utils.layer_stream_runtime import canonical_named_parameters
 
         wrapper, _ = _build_streamed_dpo_wrapper(tmp_path, monkeypatch)
         raw_names = [name for name, _ in wrapper.model.named_parameters()]
@@ -184,7 +184,7 @@ class TestCanonicalNamedParameters:
         _requires_train_extra()
         from peft import get_peft_model
 
-        from soup_cli.utils.layer_stream_runtime import canonical_named_parameters
+        from ai_forge_cli.utils.layer_stream_runtime import canonical_named_parameters
 
         wrapper, resident = _build_streamed_dpo_wrapper(tmp_path, monkeypatch)
         resident_peft = get_peft_model(resident, _lora_config())
@@ -202,7 +202,7 @@ class TestAssertCanonicalParametersIntersect:
         import torch
         import torch.nn as nn
 
-        from soup_cli.utils.layer_stream_runtime import assert_canonical_parameters_intersect
+        from ai_forge_cli.utils.layer_stream_runtime import assert_canonical_parameters_intersect
 
         a = nn.Module()
         a.x = nn.Parameter(torch.zeros(1))
@@ -215,7 +215,7 @@ class TestAssertCanonicalParametersIntersect:
         _requires_train_extra()
         from peft import get_peft_model
 
-        from soup_cli.utils.layer_stream_runtime import assert_canonical_parameters_intersect
+        from ai_forge_cli.utils.layer_stream_runtime import assert_canonical_parameters_intersect
 
         wrapper, resident = _build_streamed_dpo_wrapper(tmp_path, monkeypatch)
         resident_peft = get_peft_model(resident, _lora_config())

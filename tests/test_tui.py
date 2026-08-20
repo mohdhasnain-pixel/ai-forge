@@ -7,7 +7,7 @@ import sys
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 # tui_app imports textual at module-load time. Skip the build-row tests when
 # textual isn't available; the CLI surface tests still run.
@@ -42,7 +42,7 @@ class TestCli:
 
     def test_missing_textual_friendly_error(self, monkeypatch):
         # Force ImportError on tui_app
-        monkeypatch.setitem(sys.modules, "soup_cli.tui_app", None)
+        monkeypatch.setitem(sys.modules, "ai_forge_cli.tui_app", None)
         runner = CliRunner()
         result = runner.invoke(app, ["tui"])
         assert result.exit_code != 0
@@ -52,7 +52,7 @@ class TestCli:
 @pytest.mark.skipif(not textual_available, reason="textual not installed")
 class TestRowBuilders:
     def test_build_runs_table_rows(self):
-        from soup_cli.tui_app import build_runs_table_rows
+        from ai_forge_cli.tui_app import build_runs_table_rows
 
         runs = [{
             "run_id": "run_123",
@@ -71,7 +71,7 @@ class TestRowBuilders:
         assert "$1.23" in rows[0][7]
 
     def test_build_runs_table_rows_missing_fields(self):
-        from soup_cli.tui_app import build_runs_table_rows
+        from ai_forge_cli.tui_app import build_runs_table_rows
 
         rows = build_runs_table_rows([{}])
         assert len(rows) == 1
@@ -80,7 +80,7 @@ class TestRowBuilders:
         assert rows[0][7] == "—"  # format_cost_usd(None)
 
     def test_build_run_detail(self):
-        from soup_cli.tui_app import build_run_detail
+        from ai_forge_cli.tui_app import build_run_detail
 
         run = {
             "run_id": "run_x",

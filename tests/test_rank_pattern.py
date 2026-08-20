@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import LoraConfig
-from soup_cli.utils.peft_builder import build_peft_config
+from ai_forge_cli.config.schema import LoraConfig
+from ai_forge_cli.utils.peft_builder import build_peft_config
 
 
 class TestRankPatternSchema:

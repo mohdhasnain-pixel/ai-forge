@@ -10,7 +10,7 @@ from types import MappingProxyType
 
 import pytest
 
-from soup_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.loader import load_config_from_string
 
 # ---------------------------------------------------------------------------
 # Part A — Unsloth Dynamic 2.0 GGUF ladder
@@ -19,7 +19,7 @@ from soup_cli.config.loader import load_config_from_string
 
 class TestUDGGUF:
     def test_ud_formats_frozenset(self):
-        from soup_cli.utils.gguf_quant import UD_GGUF_FORMATS
+        from ai_forge_cli.utils.gguf_quant import UD_GGUF_FORMATS
 
         assert isinstance(UD_GGUF_FORMATS, frozenset)
         # 6 K-XL + 8 IQ variants = 14 total
@@ -36,7 +36,7 @@ class TestUDGGUF:
         ],
     )
     def test_validate_ud_canonical_case_insensitive(self, name):
-        from soup_cli.utils.gguf_quant import UD_GGUF_FORMATS, validate_ud_gguf_format
+        from ai_forge_cli.utils.gguf_quant import UD_GGUF_FORMATS, validate_ud_gguf_format
 
         result = validate_ud_gguf_format(name)
         # Returns the canonical entry from the allowlist regardless of input case.
@@ -57,13 +57,13 @@ class TestUDGGUF:
         ],
     )
     def test_validate_ud_rejects(self, bad, exc):
-        from soup_cli.utils.gguf_quant import validate_ud_gguf_format
+        from ai_forge_cli.utils.gguf_quant import validate_ud_gguf_format
 
         with pytest.raises(exc):
             validate_ud_gguf_format(bad)
 
     def test_is_ud_gguf_format(self):
-        from soup_cli.utils.gguf_quant import is_ud_gguf_format
+        from ai_forge_cli.utils.gguf_quant import is_ud_gguf_format
 
         assert is_ud_gguf_format("UD-Q4_K_XL") is True
         assert is_ud_gguf_format("ud-iq1_m") is True
@@ -74,7 +74,7 @@ class TestUDGGUF:
         assert is_ud_gguf_format(123) is False
 
     def test_spec_frozen(self):
-        from soup_cli.utils.gguf_quant import get_gguf_spec
+        from ai_forge_cli.utils.gguf_quant import get_gguf_spec
 
         spec = get_gguf_spec("UD-Q4_K_XL")
         assert spec.family == "ud"
@@ -83,7 +83,7 @@ class TestUDGGUF:
             spec.live_wired = True  # type: ignore[misc]
 
     def test_calibration_data_validator(self):
-        from soup_cli.utils.gguf_quant import validate_calibration_data_path
+        from ai_forge_cli.utils.gguf_quant import validate_calibration_data_path
 
         assert validate_calibration_data_path("calib.jsonl") == "calib.jsonl"
 
@@ -98,7 +98,7 @@ class TestUDGGUF:
         ],
     )
     def test_calibration_data_rejects(self, bad, exc):
-        from soup_cli.utils.gguf_quant import validate_calibration_data_path
+        from ai_forge_cli.utils.gguf_quant import validate_calibration_data_path
 
         with pytest.raises(exc):
             validate_calibration_data_path(bad)
@@ -111,7 +111,7 @@ class TestUDGGUF:
         which is exactly the regression we want as proof the live wiring
         is in place.
         """
-        from soup_cli.utils.gguf_quant import export_advanced_gguf
+        from ai_forge_cli.utils.gguf_quant import export_advanced_gguf
 
         with pytest.raises(TypeError):
             export_advanced_gguf()  # type: ignore[call-arg]
@@ -124,7 +124,7 @@ class TestUDGGUF:
 
 class TestIQAppleARMGGUF:
     def test_iq_frozenset(self):
-        from soup_cli.utils.gguf_quant import IQ_GGUF_FORMATS
+        from ai_forge_cli.utils.gguf_quant import IQ_GGUF_FORMATS
 
         assert isinstance(IQ_GGUF_FORMATS, frozenset)
         assert "IQ1_S" in IQ_GGUF_FORMATS
@@ -133,7 +133,7 @@ class TestIQAppleARMGGUF:
         assert all(not n.startswith("UD-") for n in IQ_GGUF_FORMATS)
 
     def test_apple_arm_frozenset(self):
-        from soup_cli.utils.gguf_quant import APPLE_ARM_GGUF_FORMATS
+        from ai_forge_cli.utils.gguf_quant import APPLE_ARM_GGUF_FORMATS
 
         assert isinstance(APPLE_ARM_GGUF_FORMATS, frozenset)
         assert "Q4_NL" in APPLE_ARM_GGUF_FORMATS
@@ -144,25 +144,25 @@ class TestIQAppleARMGGUF:
         "name", ["IQ1_S", "iq2_m", "IQ3_XXS", "IQ4_NL"],
     )
     def test_validate_iq_canonical(self, name):
-        from soup_cli.utils.gguf_quant import validate_iq_gguf_format
+        from ai_forge_cli.utils.gguf_quant import validate_iq_gguf_format
 
         result = validate_iq_gguf_format(name)
         assert result.startswith("IQ")
 
     def test_validate_iq_rejects_ud(self):
-        from soup_cli.utils.gguf_quant import validate_iq_gguf_format
+        from ai_forge_cli.utils.gguf_quant import validate_iq_gguf_format
 
         with pytest.raises(ValueError, match="not supported"):
             validate_iq_gguf_format("UD-IQ1_M")
 
     def test_validate_apple_arm_canonical(self):
-        from soup_cli.utils.gguf_quant import validate_apple_arm_gguf_format
+        from ai_forge_cli.utils.gguf_quant import validate_apple_arm_gguf_format
 
         assert validate_apple_arm_gguf_format("Q4_NL") == "Q4_NL"
         assert validate_apple_arm_gguf_format("q5_k_m") == "Q5_K_M"
 
     def test_is_iq_and_apple_arm(self):
-        from soup_cli.utils.gguf_quant import (
+        from ai_forge_cli.utils.gguf_quant import (
             is_apple_arm_gguf_format,
             is_iq_gguf_format,
         )
@@ -173,7 +173,7 @@ class TestIQAppleARMGGUF:
         assert is_apple_arm_gguf_format("IQ1_S") is False
 
     def test_is_advanced_gguf_format(self):
-        from soup_cli.utils.gguf_quant import is_advanced_gguf_format
+        from ai_forge_cli.utils.gguf_quant import is_advanced_gguf_format
 
         assert is_advanced_gguf_format("UD-Q4_K_XL") is True
         assert is_advanced_gguf_format("IQ2_M") is True
@@ -182,7 +182,7 @@ class TestIQAppleARMGGUF:
         assert is_advanced_gguf_format(123) is False
 
     def test_all_advanced_no_overlap(self):
-        from soup_cli.utils.gguf_quant import (
+        from ai_forge_cli.utils.gguf_quant import (
             APPLE_ARM_GGUF_FORMATS,
             IQ_GGUF_FORMATS,
             UD_GGUF_FORMATS,
@@ -201,7 +201,7 @@ class TestIQAppleARMGGUF:
 
 class TestKVCache:
     def test_kv_cache_types_frozenset(self):
-        from soup_cli.utils.kv_cache import KV_CACHE_TYPES
+        from ai_forge_cli.utils.kv_cache import KV_CACHE_TYPES
 
         assert isinstance(KV_CACHE_TYPES, frozenset)
         assert KV_CACHE_TYPES == {"q8_0", "bf16", "f16", "fp8"}
@@ -210,7 +210,7 @@ class TestKVCache:
         "name", ["q8_0", "Q8_0", "bf16", "BF16", "f16", "fp8", "FP8"],
     )
     def test_validate_kv_canonical(self, name):
-        from soup_cli.utils.kv_cache import validate_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import validate_kv_cache_type
 
         assert validate_kv_cache_type(name) == name.lower()
 
@@ -226,13 +226,13 @@ class TestKVCache:
         ],
     )
     def test_validate_kv_rejects(self, bad, exc):
-        from soup_cli.utils.kv_cache import validate_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import validate_kv_cache_type
 
         with pytest.raises(exc):
             validate_kv_cache_type(bad)
 
     def test_requires_hopper(self):
-        from soup_cli.utils.kv_cache import requires_hopper
+        from ai_forge_cli.utils.kv_cache import requires_hopper
 
         assert requires_hopper("fp8") is True
         assert requires_hopper("FP8") is True
@@ -241,7 +241,7 @@ class TestKVCache:
         assert requires_hopper(None) is False
 
     def test_spec_frozen_and_metadata(self):
-        from soup_cli.utils.kv_cache import get_kv_cache_spec
+        from ai_forge_cli.utils.kv_cache import get_kv_cache_spec
 
         spec = get_kv_cache_spec("fp8")
         assert spec.requires_hopper is True
@@ -252,7 +252,7 @@ class TestKVCache:
     def test_apply_live_v07114(self):
         # v0.71.14 #140 lifted the v0.53.1 stub: apply_kv_cache_type now
         # returns a runtime plan for the transformers backend.
-        from soup_cli.utils.kv_cache import KvCacheRuntime, apply_kv_cache_type
+        from ai_forge_cli.utils.kv_cache import KvCacheRuntime, apply_kv_cache_type
 
         rt = apply_kv_cache_type("bf16", backend="transformers")
         assert isinstance(rt, KvCacheRuntime)
@@ -262,7 +262,7 @@ class TestKVCache:
             apply_kv_cache_type("q8_0", backend="vllm")
 
     def test_metadata_immutable(self):
-        from soup_cli.utils.kv_cache import _KV_CACHE_METADATA
+        from ai_forge_cli.utils.kv_cache import _KV_CACHE_METADATA
 
         assert isinstance(_KV_CACHE_METADATA, MappingProxyType)
         with pytest.raises(TypeError):
@@ -336,7 +336,7 @@ class TestKVCacheSchema:
 
 class TestFP8Attention:
     def test_compat_off_no_check(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_fp8_attention_compat,
         )
 
@@ -345,7 +345,7 @@ class TestFP8Attention:
         )
 
     def test_compat_happy(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_fp8_attention_compat,
         )
 
@@ -354,7 +354,7 @@ class TestFP8Attention:
         )
 
     def test_compat_requires_fp8_qat(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_fp8_attention_compat,
         )
 
@@ -365,7 +365,7 @@ class TestFP8Attention:
             )
 
     def test_compat_rejects_mlx(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_fp8_attention_compat,
         )
 
@@ -375,7 +375,7 @@ class TestFP8Attention:
             )
 
     def test_compat_bool_guard(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_fp8_attention_compat,
         )
 
@@ -414,7 +414,7 @@ class TestFP8Attention:
 
     def test_apply_live_gated(self):
         """v0.71.21 #141 lifted the stub — now a friendly hw/dep gate."""
-        from soup_cli.utils.advanced_precision import apply_fp8_attention
+        from ai_forge_cli.utils.advanced_precision import apply_fp8_attention
 
         with pytest.raises((RuntimeError, ValueError), match="(?i)torchao|hopper"):
             apply_fp8_attention(object())
@@ -422,27 +422,27 @@ class TestFP8Attention:
 
 class TestNVFP4:
     def test_compat_off_no_check(self):
-        from soup_cli.utils.advanced_precision import validate_nvfp4_compat
+        from ai_forge_cli.utils.advanced_precision import validate_nvfp4_compat
 
         validate_nvfp4_compat(
             nvfp4=False, backend="transformers", modality="text",
         )
 
     def test_compat_happy(self):
-        from soup_cli.utils.advanced_precision import validate_nvfp4_compat
+        from ai_forge_cli.utils.advanced_precision import validate_nvfp4_compat
 
         validate_nvfp4_compat(
             nvfp4=True, backend="transformers", modality="text",
         )
 
     def test_compat_rejects_mlx(self):
-        from soup_cli.utils.advanced_precision import validate_nvfp4_compat
+        from ai_forge_cli.utils.advanced_precision import validate_nvfp4_compat
 
         with pytest.raises(ValueError, match="mlx"):
             validate_nvfp4_compat(nvfp4=True, backend="mlx", modality="text")
 
     def test_compat_rejects_vision(self):
-        from soup_cli.utils.advanced_precision import validate_nvfp4_compat
+        from ai_forge_cli.utils.advanced_precision import validate_nvfp4_compat
 
         with pytest.raises(ValueError, match="text"):
             validate_nvfp4_compat(
@@ -450,7 +450,7 @@ class TestNVFP4:
             )
 
     def test_compat_bool_guard(self):
-        from soup_cli.utils.advanced_precision import validate_nvfp4_compat
+        from ai_forge_cli.utils.advanced_precision import validate_nvfp4_compat
 
         with pytest.raises(TypeError, match="bool"):
             validate_nvfp4_compat(
@@ -498,7 +498,7 @@ class TestNVFP4:
 
     def test_apply_live_gated(self):
         """v0.71.21 #141 lifted the stub — now a friendly Blackwell gate."""
-        from soup_cli.utils.advanced_precision import apply_nvfp4
+        from ai_forge_cli.utils.advanced_precision import apply_nvfp4
 
         with pytest.raises(RuntimeError, match="Blackwell"):
             apply_nvfp4(object())
@@ -506,7 +506,7 @@ class TestNVFP4:
 
 class TestUnslothBNB4Bit:
     def test_compat_off_no_check(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_unsloth_bnb_4bit_compat,
         )
 
@@ -515,7 +515,7 @@ class TestUnslothBNB4Bit:
         )
 
     def test_compat_happy(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_unsloth_bnb_4bit_compat,
         )
 
@@ -524,7 +524,7 @@ class TestUnslothBNB4Bit:
         )
 
     def test_compat_requires_unsloth(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_unsloth_bnb_4bit_compat,
         )
 
@@ -535,7 +535,7 @@ class TestUnslothBNB4Bit:
             )
 
     def test_compat_requires_4bit(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_unsloth_bnb_4bit_compat,
         )
 
@@ -777,13 +777,13 @@ class TestLFParity:
 
 class TestSaveFormats:
     def test_merge_save_formats_frozenset(self):
-        from soup_cli.utils.save_formats import MERGE_SAVE_FORMATS
+        from ai_forge_cli.utils.save_formats import MERGE_SAVE_FORMATS
 
         assert isinstance(MERGE_SAVE_FORMATS, frozenset)
         assert MERGE_SAVE_FORMATS == {"fp16", "4bit", "4bit_forced"}
 
     def test_torchao_schemes_frozenset(self):
-        from soup_cli.utils.save_formats import TORCHAO_PTQ_SCHEMES
+        from ai_forge_cli.utils.save_formats import TORCHAO_PTQ_SCHEMES
 
         assert isinstance(TORCHAO_PTQ_SCHEMES, frozenset)
         assert "Int4WeightOnly" in TORCHAO_PTQ_SCHEMES
@@ -793,7 +793,7 @@ class TestSaveFormats:
         "name", ["fp16", "FP16", "4bit", "4BIT", "4bit_forced"],
     )
     def test_validate_merge_canonical(self, name):
-        from soup_cli.utils.save_formats import validate_merge_save_format
+        from ai_forge_cli.utils.save_formats import validate_merge_save_format
 
         assert validate_merge_save_format(name) == name.lower()
 
@@ -808,13 +808,13 @@ class TestSaveFormats:
         ],
     )
     def test_validate_merge_rejects(self, bad, exc):
-        from soup_cli.utils.save_formats import validate_merge_save_format
+        from ai_forge_cli.utils.save_formats import validate_merge_save_format
 
         with pytest.raises(exc):
             validate_merge_save_format(bad)
 
     def test_validate_torchao_case_sensitive(self):
-        from soup_cli.utils.save_formats import validate_torchao_scheme
+        from ai_forge_cli.utils.save_formats import validate_torchao_scheme
 
         assert validate_torchao_scheme("Int4WeightOnly") == "Int4WeightOnly"
         with pytest.raises(ValueError, match="not supported"):
@@ -830,13 +830,13 @@ class TestSaveFormats:
         ],
     )
     def test_validate_torchao_rejects(self, bad, exc):
-        from soup_cli.utils.save_formats import validate_torchao_scheme
+        from ai_forge_cli.utils.save_formats import validate_torchao_scheme
 
         with pytest.raises(exc):
             validate_torchao_scheme(bad)
 
     def test_quant_config_path(self):
-        from soup_cli.utils.save_formats import validate_quant_config_path
+        from ai_forge_cli.utils.save_formats import validate_quant_config_path
 
         assert validate_quant_config_path("cfg.yaml") == "cfg.yaml"
 
@@ -849,13 +849,13 @@ class TestSaveFormats:
         ],
     )
     def test_quant_config_path_rejects(self, bad, exc):
-        from soup_cli.utils.save_formats import validate_quant_config_path
+        from ai_forge_cli.utils.save_formats import validate_quant_config_path
 
         with pytest.raises(exc):
             validate_quant_config_path(bad)
 
     def test_spec_frozen(self):
-        from soup_cli.utils.save_formats import (
+        from ai_forge_cli.utils.save_formats import (
             get_merge_save_spec,
             get_torchao_spec,
         )
@@ -870,7 +870,7 @@ class TestSaveFormats:
             t.live_wired = True  # type: ignore[misc]
 
     def test_merge_metadata_immutable(self):
-        from soup_cli.utils.save_formats import (
+        from ai_forge_cli.utils.save_formats import (
             _MERGE_METADATA,
             _TORCHAO_METADATA,
         )
@@ -880,7 +880,7 @@ class TestSaveFormats:
 
     def test_merge_4bit_now_live(self):
         """v0.53.1 #142 — live wiring landed; signature now requires kwargs."""
-        from soup_cli.utils.save_formats import merge_4bit
+        from ai_forge_cli.utils.save_formats import merge_4bit
 
         with pytest.raises(TypeError):
             merge_4bit()  # type: ignore[call-arg]
@@ -889,7 +889,7 @@ class TestSaveFormats:
         """#321 — the 4-bit save path threads its ``double_quant`` argument into
         the BNB kwargs instead of hardcoding True. Dict-shaped helper keeps this
         assertable without constructing the heavy config."""
-        from soup_cli.utils.save_formats import _build_merge_4bit_bnb_kwargs
+        from ai_forge_cli.utils.save_formats import _build_merge_4bit_bnb_kwargs
 
         off = _build_merge_4bit_bnb_kwargs(
             compute_dtype="bfloat16", forced=False, double_quant=False
@@ -908,7 +908,7 @@ class TestSaveFormats:
 
     def test_merge_4bit_rejects_non_bool_double_quant(self):
         """Matches the existing ``forced``/``dtype`` type guards."""
-        from soup_cli.utils.save_formats import merge_4bit
+        from ai_forge_cli.utils.save_formats import merge_4bit
 
         with pytest.raises(TypeError, match="double_quant must be bool"):
             merge_4bit(
@@ -919,7 +919,7 @@ class TestSaveFormats:
 
     def test_export_torchao_now_live(self):
         """v0.53.1 #142 — live wiring landed; signature now requires kwargs."""
-        from soup_cli.utils.save_formats import export_torchao
+        from ai_forge_cli.utils.save_formats import export_torchao
 
         with pytest.raises(TypeError):
             export_torchao()  # type: ignore[call-arg]
@@ -952,14 +952,14 @@ class TestCrossCutting:
         assert cfg.training.bnb_4bit_use_double_quant is True
 
     def test_gguf_metadata_immutable(self):
-        from soup_cli.utils.gguf_quant import _GGUF_METADATA
+        from ai_forge_cli.utils.gguf_quant import _GGUF_METADATA
 
         assert isinstance(_GGUF_METADATA, MappingProxyType)
         with pytest.raises(TypeError):
             _GGUF_METADATA["evil"] = None  # type: ignore[index]
 
     def test_total_advanced_gguf_count(self):
-        from soup_cli.utils.gguf_quant import (
+        from ai_forge_cli.utils.gguf_quant import (
             ALL_ADVANCED_GGUF_FORMATS,
             APPLE_ARM_GGUF_FORMATS,
             IQ_GGUF_FORMATS,
@@ -978,19 +978,19 @@ class TestReviewFollowups:
 
     # --- gguf_quant ----------------------------------------------------------
     def test_get_gguf_spec_unknown_raises(self):
-        from soup_cli.utils.gguf_quant import get_gguf_spec
+        from ai_forge_cli.utils.gguf_quant import get_gguf_spec
 
         with pytest.raises(ValueError, match="not in v0.53.0 catalog"):
             get_gguf_spec("Q4_0")  # legacy llama.cpp, not in v0.53.0 allowlist
 
     def test_get_gguf_spec_non_string_raises(self):
-        from soup_cli.utils.gguf_quant import get_gguf_spec
+        from ai_forge_cli.utils.gguf_quant import get_gguf_spec
 
         with pytest.raises(TypeError, match="str"):
             get_gguf_spec(123)  # type: ignore[arg-type]
 
     def test_calibration_path_exact_boundary(self):
-        from soup_cli.utils.gguf_quant import validate_calibration_data_path
+        from ai_forge_cli.utils.gguf_quant import validate_calibration_data_path
 
         # 4096 chars — accepted at boundary
         ok = "a" * 4096
@@ -1000,7 +1000,7 @@ class TestReviewFollowups:
             validate_calibration_data_path("a" * 4097)
 
     def test_lower_index_immutable(self):
-        from soup_cli.utils.gguf_quant import _LOWER_INDEX
+        from ai_forge_cli.utils.gguf_quant import _LOWER_INDEX
 
         assert isinstance(_LOWER_INDEX, MappingProxyType)
         with pytest.raises(TypeError):
@@ -1008,7 +1008,7 @@ class TestReviewFollowups:
 
     # --- kv_cache ------------------------------------------------------------
     def test_get_kv_cache_spec_unknown(self):
-        from soup_cli.utils.kv_cache import get_kv_cache_spec
+        from ai_forge_cli.utils.kv_cache import get_kv_cache_spec
 
         with pytest.raises(ValueError, match="not supported"):
             get_kv_cache_spec("int8")
@@ -1016,7 +1016,7 @@ class TestReviewFollowups:
     def test_requires_hopper_reads_from_spec(self):
         # requires_hopper now delegates to _KV_CACHE_METADATA so a future
         # spec edit would be picked up automatically.
-        from soup_cli.utils.kv_cache import (
+        from ai_forge_cli.utils.kv_cache import (
             _KV_CACHE_METADATA,
             requires_hopper,
         )
@@ -1026,7 +1026,7 @@ class TestReviewFollowups:
 
     # --- advanced_precision bool guards on string params --------------------
     def test_fp8_attention_backend_bool_rejected(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_fp8_attention_compat,
         )
 
@@ -1038,7 +1038,7 @@ class TestReviewFollowups:
             )
 
     def test_nvfp4_backend_bool_rejected(self):
-        from soup_cli.utils.advanced_precision import validate_nvfp4_compat
+        from ai_forge_cli.utils.advanced_precision import validate_nvfp4_compat
 
         with pytest.raises(TypeError, match="backend must not be bool"):
             validate_nvfp4_compat(
@@ -1048,7 +1048,7 @@ class TestReviewFollowups:
             )
 
     def test_nvfp4_modality_bool_rejected(self):
-        from soup_cli.utils.advanced_precision import validate_nvfp4_compat
+        from ai_forge_cli.utils.advanced_precision import validate_nvfp4_compat
 
         with pytest.raises(TypeError, match="modality must not be bool"):
             validate_nvfp4_compat(
@@ -1058,7 +1058,7 @@ class TestReviewFollowups:
             )
 
     def test_unsloth_bnb_backend_bool_rejected(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_unsloth_bnb_4bit_compat,
         )
 
@@ -1070,7 +1070,7 @@ class TestReviewFollowups:
             )
 
     def test_unsloth_bnb_quantization_bool_rejected(self):
-        from soup_cli.utils.advanced_precision import (
+        from ai_forge_cli.utils.advanced_precision import (
             validate_unsloth_bnb_4bit_compat,
         )
 
@@ -1083,7 +1083,7 @@ class TestReviewFollowups:
 
     # --- save_formats boundary + symmetric behavior --------------------------
     def test_quant_config_path_exact_boundary(self):
-        from soup_cli.utils.save_formats import validate_quant_config_path
+        from ai_forge_cli.utils.save_formats import validate_quant_config_path
 
         ok = "a" * 4096
         assert validate_quant_config_path(ok) == ok
@@ -1091,7 +1091,7 @@ class TestReviewFollowups:
             validate_quant_config_path("a" * 4097)
 
     def test_merge_save_format_normalises_to_lowercase(self):
-        from soup_cli.utils.save_formats import validate_merge_save_format
+        from ai_forge_cli.utils.save_formats import validate_merge_save_format
 
         assert validate_merge_save_format("4BIT_FORCED") == "4bit_forced"
         assert validate_merge_save_format("FP16") == "fp16"

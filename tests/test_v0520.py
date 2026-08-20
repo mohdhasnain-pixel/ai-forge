@@ -12,7 +12,7 @@ from types import MappingProxyType
 
 import pytest
 
-from soup_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.loader import load_config_from_string
 
 # ---------------------------------------------------------------------------
 # Part A — TTS
@@ -21,7 +21,7 @@ from soup_cli.config.loader import load_config_from_string
 
 class TestTTSUtils:
     def test_supported_families_frozenset(self):
-        from soup_cli.utils.tts import SUPPORTED_TTS_FAMILIES
+        from ai_forge_cli.utils.tts import SUPPORTED_TTS_FAMILIES
 
         assert isinstance(SUPPORTED_TTS_FAMILIES, frozenset)
         assert SUPPORTED_TTS_FAMILIES == {
@@ -32,7 +32,7 @@ class TestTTSUtils:
         "name", ["orpheus", "ORPHEUS", "Sesame_CSM", "llasa", "spark", "oute"],
     )
     def test_validate_family_canonical(self, name):
-        from soup_cli.utils.tts import validate_tts_family
+        from ai_forge_cli.utils.tts import validate_tts_family
 
         assert validate_tts_family(name) == name.lower()
 
@@ -47,51 +47,51 @@ class TestTTSUtils:
         ],
     )
     def test_validate_family_rejects(self, bad, exc):
-        from soup_cli.utils.tts import validate_tts_family
+        from ai_forge_cli.utils.tts import validate_tts_family
 
         with pytest.raises(exc):
             validate_tts_family(bad)
 
     def test_family_metadata_frozen(self):
-        from soup_cli.utils.tts import get_tts_family_spec
+        from ai_forge_cli.utils.tts import get_tts_family_spec
 
         spec = get_tts_family_spec("orpheus")
         with pytest.raises(Exception):
             spec.name = "evil"  # type: ignore[misc]
 
     def test_supports_emotion(self):
-        from soup_cli.utils.tts import family_supports_emotion
+        from ai_forge_cli.utils.tts import family_supports_emotion
 
         assert family_supports_emotion("orpheus") is True
         assert family_supports_emotion("oute") is True
         assert family_supports_emotion("llasa") is False
 
     def test_emotion_tag_orpheus_happy(self):
-        from soup_cli.utils.tts import validate_emotion_tag
+        from ai_forge_cli.utils.tts import validate_emotion_tag
 
         assert validate_emotion_tag("happy", family="orpheus") == "happy"
         assert validate_emotion_tag("HAPPY", family="orpheus") == "happy"
 
     def test_emotion_tag_orpheus_unknown(self):
-        from soup_cli.utils.tts import validate_emotion_tag
+        from ai_forge_cli.utils.tts import validate_emotion_tag
 
         with pytest.raises(ValueError, match="orpheus allowlist"):
             validate_emotion_tag("euphoric", family="orpheus")
 
     def test_emotion_tag_unsupported_family(self):
-        from soup_cli.utils.tts import validate_emotion_tag
+        from ai_forge_cli.utils.tts import validate_emotion_tag
 
         with pytest.raises(ValueError, match="does not support emotion"):
             validate_emotion_tag("happy", family="llasa")
 
     def test_emotion_tag_bool_rejected(self):
-        from soup_cli.utils.tts import validate_emotion_tag
+        from ai_forge_cli.utils.tts import validate_emotion_tag
 
         with pytest.raises(TypeError):
             validate_emotion_tag(True, family="orpheus")
 
     def test_validate_tts_compat_happy(self):
-        from soup_cli.utils.tts import validate_tts_compat
+        from ai_forge_cli.utils.tts import validate_tts_compat
 
         validate_tts_compat(task="tts", modality="audio_out", backend="transformers")
 
@@ -103,7 +103,7 @@ class TestTTSUtils:
         ],
     )
     def test_validate_tts_compat_rejects(self, kwargs, match):
-        from soup_cli.utils.tts import validate_tts_compat
+        from ai_forge_cli.utils.tts import validate_tts_compat
 
         with pytest.raises(ValueError, match=match):
             validate_tts_compat(**kwargs)
@@ -112,7 +112,7 @@ class TestTTSUtils:
         """v0.52.0 shipped as a NotImplementedError stub; v0.71.20 #131 lifts it
         into a real TTSTrainerWrapper factory taking ``config``. No-arg call now
         raises TypeError rather than NotImplementedError."""
-        from soup_cli.utils.tts import build_tts_trainer
+        from ai_forge_cli.utils.tts import build_tts_trainer
 
         with pytest.raises(TypeError):
             build_tts_trainer()
@@ -190,30 +190,30 @@ data: {train: ./d.jsonl, format: audio}
 
 class TestClassifierUtils:
     def test_classifier_tasks_frozenset(self):
-        from soup_cli.utils.classifier import CLASSIFIER_TASKS
+        from ai_forge_cli.utils.classifier import CLASSIFIER_TASKS
 
         assert CLASSIFIER_TASKS == {"classifier", "reranker", "cross_encoder"}
 
     @pytest.mark.parametrize("task", ["classifier", "reranker", "cross_encoder"])
     def test_is_classifier_task_true(self, task):
-        from soup_cli.utils.classifier import is_classifier_task
+        from ai_forge_cli.utils.classifier import is_classifier_task
 
         assert is_classifier_task(task) is True
 
     @pytest.mark.parametrize("task", ["sft", "dpo", "", True, 123, None])
     def test_is_classifier_task_false(self, task):
-        from soup_cli.utils.classifier import is_classifier_task
+        from ai_forge_cli.utils.classifier import is_classifier_task
 
         assert is_classifier_task(task) is False
 
     def test_get_classifier_spec_paired_input(self):
-        from soup_cli.utils.classifier import get_classifier_spec
+        from ai_forge_cli.utils.classifier import get_classifier_spec
 
         assert get_classifier_spec("cross_encoder").paired_input is True
         assert get_classifier_spec("classifier").paired_input is False
 
     def test_get_classifier_spec_unknown(self):
-        from soup_cli.utils.classifier import get_classifier_spec
+        from ai_forge_cli.utils.classifier import get_classifier_spec
 
         with pytest.raises(ValueError, match="classifier task"):
             get_classifier_spec("sft")
@@ -229,19 +229,19 @@ class TestClassifierUtils:
         ],
     )
     def test_validate_num_labels_rejects(self, value, exc):
-        from soup_cli.utils.classifier import validate_num_labels
+        from ai_forge_cli.utils.classifier import validate_num_labels
 
         with pytest.raises(exc):
             validate_num_labels(value)
 
     def test_validate_num_labels_happy(self):
-        from soup_cli.utils.classifier import validate_num_labels
+        from ai_forge_cli.utils.classifier import validate_num_labels
 
         assert validate_num_labels(3) == 3
         assert validate_num_labels(1024) == 1024
 
     def test_validate_label_names_dedup(self):
-        from soup_cli.utils.classifier import validate_label_names
+        from ai_forge_cli.utils.classifier import validate_label_names
 
         with pytest.raises(ValueError, match="unique"):
             validate_label_names(["a", "a", "b"])
@@ -256,20 +256,20 @@ class TestClassifierUtils:
         ],
     )
     def test_validate_label_names_rejects(self, value, exc):
-        from soup_cli.utils.classifier import validate_label_names
+        from ai_forge_cli.utils.classifier import validate_label_names
 
         with pytest.raises(exc):
             validate_label_names(value)
 
     def test_validate_label_names_defensive_copy(self):
-        from soup_cli.utils.classifier import validate_label_names
+        from ai_forge_cli.utils.classifier import validate_label_names
 
         src = ["a", "b"]
         out = validate_label_names(src)
         assert out is not src
 
     def test_validate_classifier_compat_mlx_reject(self):
-        from soup_cli.utils.classifier import validate_classifier_compat
+        from ai_forge_cli.utils.classifier import validate_classifier_compat
 
         with pytest.raises(ValueError, match="mlx"):
             validate_classifier_compat(
@@ -277,7 +277,7 @@ class TestClassifierUtils:
             )
 
     def test_validate_classifier_compat_non_text(self):
-        from soup_cli.utils.classifier import validate_classifier_compat
+        from ai_forge_cli.utils.classifier import validate_classifier_compat
 
         with pytest.raises(ValueError, match="text"):
             validate_classifier_compat(
@@ -288,7 +288,7 @@ class TestClassifierUtils:
         """v0.52.0 shipped as a NotImplementedError stub; v0.53.2 #132 lifts it
         to a live factory returning ClassifierTrainerWrapper. The argless call
         now raises TypeError (missing ``config``) rather than NotImplementedError."""
-        from soup_cli.utils.classifier import build_classifier_trainer
+        from ai_forge_cli.utils.classifier import build_classifier_trainer
 
         with pytest.raises(TypeError):
             build_classifier_trainer()  # type: ignore[call-arg]
@@ -335,7 +335,7 @@ class TestClassifierSchema:
 
 class TestDistillUtils:
     def test_divergence_canonical(self):
-        from soup_cli.utils.distill import validate_divergence
+        from ai_forge_cli.utils.distill import validate_divergence
 
         assert validate_divergence("kl") == "forward_kl"
         assert validate_divergence("KL") == "forward_kl"
@@ -354,13 +354,13 @@ class TestDistillUtils:
         ],
     )
     def test_validate_divergence_rejects(self, bad, exc):
-        from soup_cli.utils.distill import validate_divergence
+        from ai_forge_cli.utils.distill import validate_divergence
 
         with pytest.raises(exc):
             validate_divergence(bad)
 
     def test_get_divergence_spec_symmetric(self):
-        from soup_cli.utils.distill import get_divergence_spec
+        from ai_forge_cli.utils.distill import get_divergence_spec
 
         assert get_divergence_spec("js").symmetric is True
         assert get_divergence_spec("forward_kl").symmetric is False
@@ -377,13 +377,13 @@ class TestDistillUtils:
         ],
     )
     def test_validate_distill_temperature_rejects(self, value, exc):
-        from soup_cli.utils.distill import validate_distill_temperature
+        from ai_forge_cli.utils.distill import validate_distill_temperature
 
         with pytest.raises(exc):
             validate_distill_temperature(value)
 
     def test_validate_distill_temperature_happy(self):
-        from soup_cli.utils.distill import validate_distill_temperature
+        from ai_forge_cli.utils.distill import validate_distill_temperature
 
         assert validate_distill_temperature(2.0) == 2.0
         assert validate_distill_temperature(0.05) == 0.05
@@ -398,13 +398,13 @@ class TestDistillUtils:
         ],
     )
     def test_validate_teacher_model_rejects(self, bad, exc):
-        from soup_cli.utils.distill import validate_teacher_model
+        from ai_forge_cli.utils.distill import validate_teacher_model
 
         with pytest.raises(exc):
             validate_teacher_model(bad)
 
     def test_validate_distill_compat_no_teacher(self):
-        from soup_cli.utils.distill import validate_distill_compat
+        from ai_forge_cli.utils.distill import validate_distill_compat
 
         with pytest.raises(ValueError, match="teacher_model"):
             validate_distill_compat(
@@ -412,7 +412,7 @@ class TestDistillUtils:
             )
 
     def test_validate_distill_compat_mlx(self):
-        from soup_cli.utils.distill import validate_distill_compat
+        from ai_forge_cli.utils.distill import validate_distill_compat
 
         with pytest.raises(ValueError, match="mlx"):
             validate_distill_compat(
@@ -423,7 +423,7 @@ class TestDistillUtils:
         """v0.52.0 shipped as a NotImplementedError stub; v0.53.2 #133 lifts it
         to a live factory returning DistillTrainerWrapper. The argless call
         now raises TypeError (missing ``config``) rather than NotImplementedError."""
-        from soup_cli.utils.distill import build_distill_trainer
+        from ai_forge_cli.utils.distill import build_distill_trainer
 
         with pytest.raises(TypeError):
             build_distill_trainer()
@@ -473,7 +473,7 @@ class TestDistillSchema:
 
 class TestBitNetUtils:
     def test_bitnet_quant_formats_frozenset(self):
-        from soup_cli.utils.bitnet import BITNET_EXPORT_FORMATS, BITNET_QUANT_FORMATS
+        from ai_forge_cli.utils.bitnet import BITNET_EXPORT_FORMATS, BITNET_QUANT_FORMATS
 
         assert isinstance(BITNET_QUANT_FORMATS, frozenset)
         assert isinstance(BITNET_EXPORT_FORMATS, frozenset)
@@ -491,19 +491,19 @@ class TestBitNetUtils:
         ],
     )
     def test_is_bitnet_quant(self, value, expected):
-        from soup_cli.utils.bitnet import is_bitnet_quant
+        from ai_forge_cli.utils.bitnet import is_bitnet_quant
 
         assert is_bitnet_quant(value) is expected
 
     def test_get_bitnet_spec(self):
-        from soup_cli.utils.bitnet import get_bitnet_spec
+        from ai_forge_cli.utils.bitnet import get_bitnet_spec
 
         spec = get_bitnet_spec("bitnet_1.58")
         assert spec.bits == 1.58
         assert spec.live_wired is False
 
     def test_get_bitnet_spec_unknown(self):
-        from soup_cli.utils.bitnet import get_bitnet_spec
+        from ai_forge_cli.utils.bitnet import get_bitnet_spec
 
         with pytest.raises(ValueError, match="bitnet"):
             get_bitnet_spec("4bit")
@@ -522,18 +522,18 @@ class TestBitNetUtils:
         ],
     )
     def test_is_bitnet_model(self, name, expected):
-        from soup_cli.utils.bitnet import is_bitnet_model
+        from ai_forge_cli.utils.bitnet import is_bitnet_model
 
         assert is_bitnet_model(name) is expected
 
     def test_validate_bitnet_compat_mlx_reject(self):
-        from soup_cli.utils.bitnet import validate_bitnet_compat
+        from ai_forge_cli.utils.bitnet import validate_bitnet_compat
 
         with pytest.raises(ValueError, match="mlx"):
             validate_bitnet_compat(task="sft", backend="mlx", modality="text")
 
     def test_validate_bitnet_compat_vision_reject(self):
-        from soup_cli.utils.bitnet import validate_bitnet_compat
+        from ai_forge_cli.utils.bitnet import validate_bitnet_compat
 
         with pytest.raises(ValueError, match="text"):
             validate_bitnet_compat(
@@ -541,7 +541,7 @@ class TestBitNetUtils:
             )
 
     def test_validate_bitnet_compat_grpo_reject(self):
-        from soup_cli.utils.bitnet import validate_bitnet_compat
+        from ai_forge_cli.utils.bitnet import validate_bitnet_compat
 
         with pytest.raises(ValueError, match="task"):
             validate_bitnet_compat(
@@ -549,7 +549,7 @@ class TestBitNetUtils:
             )
 
     def test_validate_bitnet_export_canonical(self):
-        from soup_cli.utils.bitnet import validate_bitnet_export
+        from ai_forge_cli.utils.bitnet import validate_bitnet_export
 
         assert validate_bitnet_export("bitnet") == "bitnet"
         assert validate_bitnet_export("TQ1_0") == "tq1_0"
@@ -564,7 +564,7 @@ class TestBitNetUtils:
         ],
     )
     def test_validate_bitnet_export_rejects(self, bad, exc):
-        from soup_cli.utils.bitnet import validate_bitnet_export
+        from ai_forge_cli.utils.bitnet import validate_bitnet_export
 
         with pytest.raises(exc):
             validate_bitnet_export(bad)
@@ -572,7 +572,7 @@ class TestBitNetUtils:
     def test_build_bitnet_trainer_lifted_v07120(self):
         """v0.52.0 stub lifted in v0.71.20 #134 to a BitNetTrainerWrapper
         factory taking ``config``. No-arg call now raises TypeError."""
-        from soup_cli.utils.bitnet import build_bitnet_trainer
+        from ai_forge_cli.utils.bitnet import build_bitnet_trainer
 
         with pytest.raises(TypeError):
             build_bitnet_trainer()
@@ -580,7 +580,7 @@ class TestBitNetUtils:
     def test_export_bitnet_gguf_lifted_v07120(self):
         """v0.52.0 stub lifted in v0.71.20 #134 to a real export taking
         required kwargs. No-arg call now raises TypeError."""
-        from soup_cli.utils.bitnet import export_bitnet_gguf
+        from ai_forge_cli.utils.bitnet import export_bitnet_gguf
 
         with pytest.raises(TypeError):
             export_bitnet_gguf()
@@ -625,14 +625,14 @@ class TestBitNetSchema:
 
 class TestEbftGdpoUtils:
     def test_ebft_variants(self):
-        from soup_cli.utils.ebft_gdpo import EBFT_VARIANTS, validate_ebft_variant
+        from ai_forge_cli.utils.ebft_gdpo import EBFT_VARIANTS, validate_ebft_variant
 
         assert EBFT_VARIANTS == {"structured", "strided"}
         assert validate_ebft_variant("structured") == "structured"
         assert validate_ebft_variant("STRIDED") == "strided"
 
     def test_gdpo_variants(self):
-        from soup_cli.utils.ebft_gdpo import GDPO_VARIANTS, validate_gdpo_variant
+        from ai_forge_cli.utils.ebft_gdpo import GDPO_VARIANTS, validate_gdpo_variant
 
         assert GDPO_VARIANTS == {"standard", "length_normalized", "margin"}
         assert validate_gdpo_variant("Margin") == "margin"
@@ -647,13 +647,13 @@ class TestEbftGdpoUtils:
         ],
     )
     def test_validate_ebft_variant_rejects(self, bad, exc):
-        from soup_cli.utils.ebft_gdpo import validate_ebft_variant
+        from ai_forge_cli.utils.ebft_gdpo import validate_ebft_variant
 
         with pytest.raises(exc):
             validate_ebft_variant(bad)
 
     def test_ebft_temperature_bounds(self):
-        from soup_cli.utils.ebft_gdpo import validate_ebft_temperature
+        from ai_forge_cli.utils.ebft_gdpo import validate_ebft_temperature
 
         assert validate_ebft_temperature(1.0) == 1.0
         for bad in (True, float("nan"), float("inf"), 0.0, 1000.0):
@@ -661,13 +661,13 @@ class TestEbftGdpoUtils:
                 validate_ebft_temperature(bad)
 
     def test_validate_ebft_compat_dpo_rejected(self):
-        from soup_cli.utils.ebft_gdpo import validate_ebft_compat
+        from ai_forge_cli.utils.ebft_gdpo import validate_ebft_compat
 
         with pytest.raises(ValueError, match="sft"):
             validate_ebft_compat(task="dpo", backend="transformers")
 
     def test_validate_gdpo_compat_sft_rejected(self):
-        from soup_cli.utils.ebft_gdpo import validate_gdpo_compat
+        from ai_forge_cli.utils.ebft_gdpo import validate_gdpo_compat
 
         with pytest.raises(ValueError, match="dpo"):
             validate_gdpo_compat(task="sft", backend="transformers")
@@ -675,7 +675,7 @@ class TestEbftGdpoUtils:
     def test_get_ebft_spec(self):
         # v0.53.2 #135 lifted EBFT + GDPO live_wired flags from False to True
         # (kernel + attach hooks shipped).
-        from soup_cli.utils.ebft_gdpo import get_ebft_spec, get_gdpo_spec
+        from ai_forge_cli.utils.ebft_gdpo import get_ebft_spec, get_gdpo_spec
 
         assert get_ebft_spec("structured").live_wired is True
         assert get_gdpo_spec("margin").live_wired is True
@@ -684,7 +684,7 @@ class TestEbftGdpoUtils:
         """v0.52.0 shipped both as NotImplementedError stubs; v0.53.2 #135
         lifts them to live tensor kernels. The argless invocation now raises
         TypeError (missing required args) rather than NotImplementedError."""
-        from soup_cli.utils.ebft_gdpo import apply_ebft_loss, apply_gdpo_loss
+        from ai_forge_cli.utils.ebft_gdpo import apply_ebft_loss, apply_gdpo_loss
 
         with pytest.raises(TypeError):
             apply_ebft_loss()  # type: ignore[call-arg]
@@ -740,7 +740,7 @@ class TestEbftGdpoSchema:
 
 class TestMoeQuantUtils:
     def test_moe_expert_quant_formats(self):
-        from soup_cli.utils.moe_quant import (
+        from ai_forge_cli.utils.moe_quant import (
             MOE_EXPERT_QUANT_FORMATS,
             validate_moe_expert_quant,
         )
@@ -758,19 +758,19 @@ class TestMoeQuantUtils:
         ],
     )
     def test_validate_moe_expert_quant_rejects(self, bad, exc):
-        from soup_cli.utils.moe_quant import validate_moe_expert_quant
+        from ai_forge_cli.utils.moe_quant import validate_moe_expert_quant
 
         with pytest.raises(exc):
             validate_moe_expert_quant(bad)
 
     def test_get_moe_expert_quant_spec_bits(self):
-        from soup_cli.utils.moe_quant import get_moe_expert_quant_spec
+        from ai_forge_cli.utils.moe_quant import get_moe_expert_quant_spec
 
         assert get_moe_expert_quant_spec("nf4").bits == 4
         assert get_moe_expert_quant_spec("int8_rowwise").bits == 8
 
     def test_moe_expert_quant_requires_moe_lora(self):
-        from soup_cli.utils.moe_quant import validate_moe_expert_quant_compat
+        from ai_forge_cli.utils.moe_quant import validate_moe_expert_quant_compat
 
         with pytest.raises(ValueError, match="moe_lora"):
             validate_moe_expert_quant_compat(
@@ -778,7 +778,7 @@ class TestMoeQuantUtils:
             )
 
     def test_train_router_only_requires_moe_lora(self):
-        from soup_cli.utils.moe_quant import validate_train_router_only_compat
+        from ai_forge_cli.utils.moe_quant import validate_train_router_only_compat
 
         with pytest.raises(ValueError, match="moe_lora"):
             validate_train_router_only_compat(
@@ -786,7 +786,7 @@ class TestMoeQuantUtils:
             )
 
     def test_validate_moe_expert_quant_compat_mlx(self):
-        from soup_cli.utils.moe_quant import validate_moe_expert_quant_compat
+        from ai_forge_cli.utils.moe_quant import validate_moe_expert_quant_compat
 
         with pytest.raises(ValueError, match="mlx"):
             validate_moe_expert_quant_compat(backend="mlx", moe_lora=True)
@@ -794,7 +794,7 @@ class TestMoeQuantUtils:
     def test_apply_moe_expert_quant_lifted_v07120(self):
         """v0.52.0 stub lifted in v0.71.20 #136 to take (model, quant_format).
         No-arg call now raises TypeError."""
-        from soup_cli.utils.moe_quant import apply_moe_expert_quant
+        from ai_forge_cli.utils.moe_quant import apply_moe_expert_quant
 
         with pytest.raises(TypeError):
             apply_moe_expert_quant()
@@ -839,7 +839,7 @@ class TestMoeQuantSchema:
 
 class TestReasoningEffortUtils:
     def test_levels(self):
-        from soup_cli.utils.reasoning_effort import (
+        from ai_forge_cli.utils.reasoning_effort import (
             REASONING_EFFORT_LEVELS,
             validate_reasoning_effort,
         )
@@ -858,7 +858,7 @@ class TestReasoningEffortUtils:
         ],
     )
     def test_validate_reasoning_effort_rejects(self, bad, exc):
-        from soup_cli.utils.reasoning_effort import validate_reasoning_effort
+        from ai_forge_cli.utils.reasoning_effort import validate_reasoning_effort
 
         with pytest.raises(exc):
             validate_reasoning_effort(bad)
@@ -894,17 +894,17 @@ class TestReasoningEffortSchema:
 
 class TestModuleSurface:
     def test_tts_metadata_mapping_proxy(self):
-        from soup_cli.utils.tts import _TTS_FAMILY_METADATA  # type: ignore
+        from ai_forge_cli.utils.tts import _TTS_FAMILY_METADATA  # type: ignore
 
         assert isinstance(_TTS_FAMILY_METADATA, MappingProxyType)
 
     def test_classifier_metadata_mapping_proxy(self):
-        from soup_cli.utils.classifier import _CLASSIFIER_METADATA  # type: ignore
+        from ai_forge_cli.utils.classifier import _CLASSIFIER_METADATA  # type: ignore
 
         assert isinstance(_CLASSIFIER_METADATA, MappingProxyType)
 
     def test_distill_metadata_mapping_proxy(self):
-        from soup_cli.utils.distill import (  # type: ignore
+        from ai_forge_cli.utils.distill import (  # type: ignore
             _DIVERGENCE_ALIASES,
             _DIVERGENCE_METADATA,
         )
@@ -913,12 +913,12 @@ class TestModuleSurface:
         assert isinstance(_DIVERGENCE_ALIASES, MappingProxyType)
 
     def test_bitnet_metadata_mapping_proxy(self):
-        from soup_cli.utils.bitnet import _BITNET_METADATA  # type: ignore
+        from ai_forge_cli.utils.bitnet import _BITNET_METADATA  # type: ignore
 
         assert isinstance(_BITNET_METADATA, MappingProxyType)
 
     def test_ebft_gdpo_metadata_mapping_proxy(self):
-        from soup_cli.utils.ebft_gdpo import (  # type: ignore
+        from ai_forge_cli.utils.ebft_gdpo import (  # type: ignore
             _EBFT_METADATA,
             _GDPO_METADATA,
         )
@@ -927,7 +927,7 @@ class TestModuleSurface:
         assert isinstance(_GDPO_METADATA, MappingProxyType)
 
     def test_moe_quant_metadata_mapping_proxy(self):
-        from soup_cli.utils.moe_quant import (  # type: ignore
+        from ai_forge_cli.utils.moe_quant import (  # type: ignore
             _MOE_EXPERT_QUANT_METADATA,
         )
 
@@ -946,7 +946,7 @@ class TestV0520Recipes:
 
     @pytest.mark.parametrize("name", NEW_RECIPES)
     def test_recipe_loads(self, name):
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         recipe = RECIPES[name]
         cfg = load_config_from_string(recipe.yaml_str)
@@ -962,7 +962,7 @@ class TestV0520Recipes:
         ],
     )
     def test_tts_recipe_family(self, name, expected_family):
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         cfg = load_config_from_string(RECIPES[name].yaml_str)
         assert cfg.training.tts_family == expected_family
@@ -970,13 +970,13 @@ class TestV0520Recipes:
         assert cfg.modality == "audio_out"
 
     def test_falcon_e_bitnet_quant(self):
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         cfg = load_config_from_string(RECIPES["falcon-e-bitnet-sft"].yaml_str)
         assert cfg.training.quantization == "bitnet_1.58"
 
     def test_total_catalog_size_grew(self):
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         # v0.51.0 shipped 106; v0.52.0 adds 6 (5 TTS + Falcon-E BitNet).
         assert len(RECIPES) >= 112
@@ -996,7 +996,7 @@ class TestTddReviewGaps:
         ],
     )
     def test_validate_ebft_variant_oversize_etc(self, bad, exc):
-        from soup_cli.utils.ebft_gdpo import validate_ebft_variant
+        from ai_forge_cli.utils.ebft_gdpo import validate_ebft_variant
 
         with pytest.raises(exc):
             validate_ebft_variant(bad)
@@ -1012,7 +1012,7 @@ class TestTddReviewGaps:
         ],
     )
     def test_validate_gdpo_variant_full_matrix(self, bad, exc):
-        from soup_cli.utils.ebft_gdpo import validate_gdpo_variant
+        from ai_forge_cli.utils.ebft_gdpo import validate_gdpo_variant
 
         with pytest.raises(exc):
             validate_gdpo_variant(bad)
@@ -1028,7 +1028,7 @@ class TestTddReviewGaps:
         ],
     )
     def test_validate_ebft_temperature_explicit_exc(self, bad, exc):
-        from soup_cli.utils.ebft_gdpo import validate_ebft_temperature
+        from ai_forge_cli.utils.ebft_gdpo import validate_ebft_temperature
 
         with pytest.raises(exc):
             validate_ebft_temperature(bad)
@@ -1044,7 +1044,7 @@ class TestTddReviewGaps:
         ],
     )
     def test_validate_tts_compat_input_guards(self, kwargs, exc):
-        from soup_cli.utils.tts import validate_tts_compat
+        from ai_forge_cli.utils.tts import validate_tts_compat
 
         with pytest.raises(exc):
             validate_tts_compat(**kwargs)
@@ -1085,7 +1085,7 @@ class TestTddReviewGaps:
 
     def test_tts_recipe_model_id_no_null_or_whitespace(self):
         # Drift guard mirroring tests/test_v0510.py model-id safety check.
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         new = (
             "orpheus-tts-sft", "sesame-csm-tts", "llasa-tts",
@@ -1105,7 +1105,7 @@ class TestBitnetExportCli:
     (see test_v07120.py for the live bitnet-export CLI coverage)."""
 
     def test_export_format_bitnet_lists_in_help(self):
-        from soup_cli.commands.export import SUPPORTED_FORMATS
+        from ai_forge_cli.commands.export import SUPPORTED_FORMATS
 
         assert "bitnet" in SUPPORTED_FORMATS
         assert "tq1_0" in SUPPORTED_FORMATS
@@ -1148,7 +1148,7 @@ class TestReviewFixes:
             load_config_from_string(yaml)
 
     def test_oute_emotion_allowlist(self):
-        from soup_cli.utils.tts import validate_emotion_tag
+        from ai_forge_cli.utils.tts import validate_emotion_tag
 
         assert validate_emotion_tag("happy", family="oute") == "happy"
         with pytest.raises(ValueError, match="oute allowlist"):
@@ -1164,19 +1164,19 @@ class TestReviewFixes:
         assert cfg.training.distill_divergence == "forward_kl"
 
     def test_divergences_derived_from_aliases(self):
-        from soup_cli.utils.distill import _DIVERGENCE_ALIASES, DIVERGENCES
+        from ai_forge_cli.utils.distill import _DIVERGENCE_ALIASES, DIVERGENCES
 
         # Drift guard — adding a new alias updates both surfaces.
         assert DIVERGENCES == set(_DIVERGENCE_ALIASES.keys())
 
     def test_validate_tts_compat_bool_rejected(self):
-        from soup_cli.utils.tts import validate_tts_compat
+        from ai_forge_cli.utils.tts import validate_tts_compat
 
         with pytest.raises(TypeError):
             validate_tts_compat(task=True, modality="audio_out", backend="transformers")
 
     def test_validate_moe_quant_bool_moe_lora_rejected(self):
-        from soup_cli.utils.moe_quant import validate_moe_expert_quant_compat
+        from ai_forge_cli.utils.moe_quant import validate_moe_expert_quant_compat
 
         with pytest.raises(TypeError):
             validate_moe_expert_quant_compat(backend="transformers", moe_lora=1)  # type: ignore[arg-type]
@@ -1184,7 +1184,7 @@ class TestReviewFixes:
 
 def test_v0520_finite_helper():
     """Sanity guard: distill temperature must use math.isfinite (not just le)."""
-    from soup_cli.utils.distill import validate_distill_temperature
+    from ai_forge_cli.utils.distill import validate_distill_temperature
 
     # math.isfinite is the canonical rejector; Pydantic le=100 also rejects inf
     # but only NaN slips through Field bounds incidentally.

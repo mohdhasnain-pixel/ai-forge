@@ -30,7 +30,7 @@ import pytest
 
 
 def test_module_imports():
-    from soup_cli.utils import probe_pack
+    from ai_forge_cli.utils import probe_pack
 
     for name in (
         "ProbeEntry",
@@ -47,7 +47,7 @@ def test_module_imports():
 
 
 def test_probe_kinds_frozen():
-    from soup_cli.utils.probe_pack import PROBE_KINDS
+    from ai_forge_cli.utils.probe_pack import PROBE_KINDS
 
     assert isinstance(PROBE_KINDS, frozenset)
     # Should cover sleeper + sae + truth + harm
@@ -58,7 +58,7 @@ def test_probe_kinds_frozen():
 def test_bundled_packs_immutable():
     from types import MappingProxyType
 
-    from soup_cli.utils.probe_pack import BUNDLED_PACKS
+    from ai_forge_cli.utils.probe_pack import BUNDLED_PACKS
 
     assert isinstance(BUNDLED_PACKS, MappingProxyType)
     with pytest.raises(TypeError):
@@ -67,8 +67,8 @@ def test_bundled_packs_immutable():
 
 def test_bundled_packs_overlap_with_sleeper_bases():
     """Every base in BUNDLED_PACKS must have a sleeper probe entry."""
-    from soup_cli.utils.probe_pack import BUNDLED_PACKS
-    from soup_cli.utils.sleeper_probe import BUNDLED_PROBES
+    from ai_forge_cli.utils.probe_pack import BUNDLED_PACKS
+    from ai_forge_cli.utils.sleeper_probe import BUNDLED_PROBES
 
     for base, pack in BUNDLED_PACKS.items():
         assert base in BUNDLED_PROBES, f"{base} missing from sleeper catalogue"
@@ -78,7 +78,7 @@ def test_bundled_packs_overlap_with_sleeper_bases():
 
 
 def test_list_probe_bases_sorted():
-    from soup_cli.utils.probe_pack import BUNDLED_PACKS, list_probe_bases
+    from ai_forge_cli.utils.probe_pack import BUNDLED_PACKS, list_probe_bases
 
     result = list_probe_bases()
     assert isinstance(result, tuple)
@@ -92,49 +92,49 @@ def test_list_probe_bases_sorted():
 
 
 def test_validate_pack_base_happy():
-    from soup_cli.utils.probe_pack import BUNDLED_PACKS, validate_pack_base
+    from ai_forge_cli.utils.probe_pack import BUNDLED_PACKS, validate_pack_base
 
     base = next(iter(BUNDLED_PACKS))
     assert validate_pack_base(base) == base
 
 
 def test_validate_pack_base_case_insensitive():
-    from soup_cli.utils.probe_pack import BUNDLED_PACKS, validate_pack_base
+    from ai_forge_cli.utils.probe_pack import BUNDLED_PACKS, validate_pack_base
 
     base = next(iter(BUNDLED_PACKS))
     assert validate_pack_base(base.upper()) == base
 
 
 def test_validate_pack_base_unknown_raises():
-    from soup_cli.utils.probe_pack import validate_pack_base
+    from ai_forge_cli.utils.probe_pack import validate_pack_base
 
     with pytest.raises(ValueError, match="no probe pack"):
         validate_pack_base("unknown/model")
 
 
 def test_validate_pack_base_bool_rejected():
-    from soup_cli.utils.probe_pack import validate_pack_base
+    from ai_forge_cli.utils.probe_pack import validate_pack_base
 
     with pytest.raises(TypeError):
         validate_pack_base(True)
 
 
 def test_validate_pack_base_non_string_rejected():
-    from soup_cli.utils.probe_pack import validate_pack_base
+    from ai_forge_cli.utils.probe_pack import validate_pack_base
 
     with pytest.raises(TypeError):
         validate_pack_base(42)
 
 
 def test_validate_pack_base_empty_rejected():
-    from soup_cli.utils.probe_pack import validate_pack_base
+    from ai_forge_cli.utils.probe_pack import validate_pack_base
 
     with pytest.raises(ValueError):
         validate_pack_base("")
 
 
 def test_validate_pack_base_null_byte_rejected():
-    from soup_cli.utils.probe_pack import BUNDLED_PACKS, validate_pack_base
+    from ai_forge_cli.utils.probe_pack import BUNDLED_PACKS, validate_pack_base
 
     base = next(iter(BUNDLED_PACKS))
     with pytest.raises(ValueError, match="null"):
@@ -142,7 +142,7 @@ def test_validate_pack_base_null_byte_rejected():
 
 
 def test_validate_pack_base_oversize_rejected():
-    from soup_cli.utils.probe_pack import validate_pack_base
+    from ai_forge_cli.utils.probe_pack import validate_pack_base
 
     with pytest.raises(ValueError):
         validate_pack_base("a" * 1000)
@@ -154,7 +154,7 @@ def test_validate_pack_base_oversize_rejected():
 
 
 def test_probe_entry_frozen():
-    from soup_cli.utils.probe_pack import ProbeEntry
+    from ai_forge_cli.utils.probe_pack import ProbeEntry
 
     e = ProbeEntry(name="x", kind="sleeper", hidden_dim=4096, description="d")
     with pytest.raises((AttributeError, Exception)):
@@ -162,35 +162,35 @@ def test_probe_entry_frozen():
 
 
 def test_probe_entry_rejects_unknown_kind():
-    from soup_cli.utils.probe_pack import ProbeEntry
+    from ai_forge_cli.utils.probe_pack import ProbeEntry
 
     with pytest.raises(ValueError, match="kind"):
         ProbeEntry(name="x", kind="weird", hidden_dim=4096, description="d")
 
 
 def test_probe_entry_rejects_empty_name():
-    from soup_cli.utils.probe_pack import ProbeEntry
+    from ai_forge_cli.utils.probe_pack import ProbeEntry
 
     with pytest.raises(ValueError):
         ProbeEntry(name="", kind="sleeper", hidden_dim=4096, description="d")
 
 
 def test_probe_entry_rejects_negative_hidden_dim():
-    from soup_cli.utils.probe_pack import ProbeEntry
+    from ai_forge_cli.utils.probe_pack import ProbeEntry
 
     with pytest.raises(ValueError):
         ProbeEntry(name="x", kind="sleeper", hidden_dim=-1, description="d")
 
 
 def test_probe_entry_rejects_bool_hidden_dim():
-    from soup_cli.utils.probe_pack import ProbeEntry
+    from ai_forge_cli.utils.probe_pack import ProbeEntry
 
     with pytest.raises(TypeError):
         ProbeEntry(name="x", kind="sleeper", hidden_dim=True, description="d")
 
 
 def test_probe_entry_rejects_null_byte_name():
-    from soup_cli.utils.probe_pack import ProbeEntry
+    from ai_forge_cli.utils.probe_pack import ProbeEntry
 
     with pytest.raises(ValueError):
         ProbeEntry(name="a\x00b", kind="sleeper", hidden_dim=4096, description="d")
@@ -202,7 +202,7 @@ def test_probe_entry_rejects_null_byte_name():
 
 
 def test_probe_pack_frozen():
-    from soup_cli.utils.probe_pack import ProbeEntry, ProbePack
+    from ai_forge_cli.utils.probe_pack import ProbeEntry, ProbePack
 
     p = ProbePack(
         base="b",
@@ -214,7 +214,7 @@ def test_probe_pack_frozen():
 
 
 def test_probe_pack_rejects_non_tuple_probes():
-    from soup_cli.utils.probe_pack import ProbeEntry, ProbePack
+    from ai_forge_cli.utils.probe_pack import ProbeEntry, ProbePack
 
     with pytest.raises(TypeError):
         ProbePack(
@@ -227,14 +227,14 @@ def test_probe_pack_rejects_non_tuple_probes():
 
 
 def test_probe_pack_rejects_empty_probes():
-    from soup_cli.utils.probe_pack import ProbePack
+    from ai_forge_cli.utils.probe_pack import ProbePack
 
     with pytest.raises(ValueError, match="at least"):
         ProbePack(base="b", probes=tuple(), soup_version="0.66.0")
 
 
 def test_probe_pack_rejects_duplicate_probe_names():
-    from soup_cli.utils.probe_pack import ProbeEntry, ProbePack
+    from ai_forge_cli.utils.probe_pack import ProbeEntry, ProbePack
 
     e1 = ProbeEntry(name="x", kind="sleeper", hidden_dim=4, description="d")
     e2 = ProbeEntry(name="x", kind="sae", hidden_dim=4, description="d")
@@ -243,7 +243,7 @@ def test_probe_pack_rejects_duplicate_probe_names():
 
 
 def test_probe_pack_rejects_empty_base():
-    from soup_cli.utils.probe_pack import ProbeEntry, ProbePack
+    from ai_forge_cli.utils.probe_pack import ProbeEntry, ProbePack
 
     with pytest.raises(ValueError):
         ProbePack(
@@ -256,7 +256,7 @@ def test_probe_pack_rejects_empty_base():
 
 
 def test_probe_pack_rejects_null_byte_base():
-    from soup_cli.utils.probe_pack import ProbeEntry, ProbePack
+    from ai_forge_cli.utils.probe_pack import ProbeEntry, ProbePack
 
     with pytest.raises(ValueError):
         ProbePack(
@@ -274,7 +274,7 @@ def test_probe_pack_rejects_null_byte_base():
 
 
 def test_get_probe_pack_happy():
-    from soup_cli.utils.probe_pack import BUNDLED_PACKS, ProbePack, get_probe_pack
+    from ai_forge_cli.utils.probe_pack import BUNDLED_PACKS, ProbePack, get_probe_pack
 
     base = next(iter(BUNDLED_PACKS))
     pack = get_probe_pack(base)
@@ -283,14 +283,14 @@ def test_get_probe_pack_happy():
 
 
 def test_get_probe_pack_unknown_raises():
-    from soup_cli.utils.probe_pack import get_probe_pack
+    from ai_forge_cli.utils.probe_pack import get_probe_pack
 
     with pytest.raises(ValueError, match="no probe pack"):
         get_probe_pack("unknown/model")
 
 
 def test_get_probe_pack_case_insensitive():
-    from soup_cli.utils.probe_pack import BUNDLED_PACKS, get_probe_pack
+    from ai_forge_cli.utils.probe_pack import BUNDLED_PACKS, get_probe_pack
 
     base = next(iter(BUNDLED_PACKS))
     upper = base.upper()
@@ -304,7 +304,7 @@ def test_get_probe_pack_case_insensitive():
 
 
 def test_render_pack_json_roundtrip():
-    from soup_cli.utils.probe_pack import (
+    from ai_forge_cli.utils.probe_pack import (
         ProbeEntry,
         ProbePack,
         render_pack_json,
@@ -325,14 +325,14 @@ def test_render_pack_json_roundtrip():
 
 
 def test_render_pack_json_rejects_non_pack():
-    from soup_cli.utils.probe_pack import render_pack_json
+    from ai_forge_cli.utils.probe_pack import render_pack_json
 
     with pytest.raises(TypeError):
         render_pack_json("nope")
 
 
 def test_render_pack_markdown_renders_probes():
-    from soup_cli.utils.probe_pack import (
+    from ai_forge_cli.utils.probe_pack import (
         ProbeEntry,
         ProbePack,
         render_pack_markdown,
@@ -352,7 +352,7 @@ def test_render_pack_markdown_renders_probes():
 
 
 def test_render_pack_markdown_rejects_non_pack():
-    from soup_cli.utils.probe_pack import render_pack_markdown
+    from ai_forge_cli.utils.probe_pack import render_pack_markdown
 
     with pytest.raises(TypeError):
         render_pack_markdown(None)
@@ -366,7 +366,7 @@ def test_render_pack_markdown_rejects_non_pack():
 def test_no_heavy_top_level_imports():
     import inspect
 
-    from soup_cli.utils import probe_pack
+    from ai_forge_cli.utils import probe_pack
 
     source = inspect.getsource(probe_pack)
     top_level_imports = [

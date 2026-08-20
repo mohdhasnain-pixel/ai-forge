@@ -2,7 +2,7 @@
 
 import pytest
 
-from soup_cli.config.schema import LoraConfig, SoupConfig, TrainingConfig
+from ai_forge_cli.config.schema import LoraConfig, SoupConfig, TrainingConfig
 
 # ---------------------------------------------------------------------------
 # NEFTune config tests
@@ -131,7 +131,7 @@ class TestNEFTuneSweep:
 
     def test_neftune_in_sweep_shortcuts(self):
         """neftune_alpha is a valid sweep parameter."""
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config_dict = {
             "base": "test",
@@ -228,7 +228,7 @@ class TestRsLoRASweep:
 
     def test_rslora_in_sweep_shortcuts(self):
         """use_rslora is a valid sweep parameter."""
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config_dict = {
             "base": "test",

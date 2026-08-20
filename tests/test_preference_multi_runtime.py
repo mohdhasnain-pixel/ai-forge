@@ -2,7 +2,7 @@
 
 Closes the v0.40.0 Part D NotImplementedError stub. The wrapper now
 combines 2-5 preference losses on the same forward pass via
-:mod:`soup_cli.utils.preference_combine`.
+:mod:`ai_forge_cli.utils.preference_combine`.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import math
 
 import pytest
 
-from soup_cli.utils import preference_combine as pc
+from ai_forge_cli.utils import preference_combine as pc
 
 # ---------------------------------------------------------------------------
 # Pure-function math tests (no torch surrogate; we use real torch tensors)
@@ -193,7 +193,7 @@ def test_needs_reference_model_mixed():
 
 
 def _make_multi_objective_cfg(weights):
-    from soup_cli.config.schema import (
+    from ai_forge_cli.config.schema import (
         DataConfig,
         SoupConfig,
         TrainingConfig,
@@ -210,7 +210,7 @@ def _make_multi_objective_cfg(weights):
 
 def test_wrapper_setup_no_longer_raises_for_paired_blend(tmp_path, monkeypatch):
     """The v0.40.0 NotImplementedError stub is gone for paired blends."""
-    from soup_cli.trainer.preference import PreferenceTrainerWrapper
+    from ai_forge_cli.trainer.preference import PreferenceTrainerWrapper
 
     cfg = _make_multi_objective_cfg({"dpo": 0.6, "simpo": 0.4})
     wrapper = PreferenceTrainerWrapper(cfg, device="cpu")
@@ -229,7 +229,7 @@ def test_wrapper_setup_no_longer_raises_for_paired_blend(tmp_path, monkeypatch):
 
 
 def test_wrapper_setup_rejects_bco_mixed_with_paired(monkeypatch):
-    from soup_cli.trainer.preference import PreferenceTrainerWrapper
+    from ai_forge_cli.trainer.preference import PreferenceTrainerWrapper
 
     cfg = _make_multi_objective_cfg({"bco": 0.5, "dpo": 0.5})
     wrapper = PreferenceTrainerWrapper(cfg, device="cpu")
@@ -242,7 +242,7 @@ def test_wrapper_describes_active_blend():
     the helper's source contains the user-facing blend description."""
     import inspect
 
-    from soup_cli.trainer.preference import PreferenceTrainerWrapper
+    from ai_forge_cli.trainer.preference import PreferenceTrainerWrapper
 
     src = inspect.getsource(PreferenceTrainerWrapper._build_multi_objective)
     assert "describe_blend" in src

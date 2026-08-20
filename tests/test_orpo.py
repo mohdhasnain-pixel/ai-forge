@@ -6,7 +6,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TEMPLATES, SoupConfig
+from ai_forge_cli.config.schema import TEMPLATES, SoupConfig
 
 # ─── Config Tests ───────────────────────────────────────────────────────────
 
@@ -88,14 +88,14 @@ class TestORPODataFormat:
 
     def test_dpo_format_works_for_orpo(self):
         """DPO format signature should detect preference data."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         data = [{"prompt": "Q", "chosen": "A", "rejected": "B"}]
         assert detect_format(data) == "dpo"
 
     def test_convert_dpo_row_for_orpo(self):
         """format_to_messages should convert DPO rows correctly."""
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {"prompt": "What is 2+2?", "chosen": "4", "rejected": "Fish"}
         result = format_to_messages(row, "dpo")
@@ -138,13 +138,13 @@ class TestORPOTrainRouting:
 
     def test_orpo_import_exists(self):
         """ORPOTrainerWrapper should be importable."""
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
 
         assert ORPOTrainerWrapper is not None
 
     def test_orpo_wrapper_init(self):
         """ORPOTrainerWrapper should initialize without error."""
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -159,7 +159,7 @@ class TestORPOTrainRouting:
 
     def test_orpo_wrapper_init_with_options(self):
         """ORPOTrainerWrapper should accept all constructor options."""
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -180,14 +180,14 @@ class TestORPOSweepParams:
     """Test ORPO parameter shortcuts in sweep."""
 
     def test_orpo_beta_shortcut(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {"training": {"orpo_beta": 0.1}}
         _set_nested_param(config, "orpo_beta", 0.05)
         assert config["training"]["orpo_beta"] == 0.05
 
     def test_orpo_beta_shortcut_creates_nested_key(self):
-        from soup_cli.commands.sweep import _set_nested_param
+        from ai_forge_cli.commands.sweep import _set_nested_param
 
         config = {}
         _set_nested_param(config, "orpo_beta", 0.2)
@@ -195,7 +195,7 @@ class TestORPOSweepParams:
 
     def test_sweep_run_single_routes_to_orpo_trainer(self):
         """_run_single should instantiate ORPOTrainerWrapper for orpo task."""
-        from soup_cli.commands.sweep import _run_single
+        from ai_forge_cli.commands.sweep import _run_single
 
         cfg = SoupConfig(
             base="some-model",
@@ -218,14 +218,14 @@ class TestORPOSweepParams:
         }
 
         fake_gpu_info = {"memory_total": "0 MB", "memory_total_bytes": 0}
-        with mock_patch("soup_cli.data.loader.load_dataset", return_value=fake_dataset), \
-             mock_patch("soup_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
-             mock_patch("soup_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
-             mock_patch("soup_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
-             mock_patch("soup_cli.monitoring.display.TrainingDisplay"), \
-             mock_patch("soup_cli.trainer.orpo.ORPOTrainerWrapper.setup"), \
+        with mock_patch("ai_forge_cli.data.loader.load_dataset", return_value=fake_dataset), \
+             mock_patch("ai_forge_cli.utils.gpu.detect_device", return_value=("cpu", "CPU")), \
+             mock_patch("ai_forge_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info), \
+             mock_patch("ai_forge_cli.experiment.tracker.ExperimentTracker") as mock_tracker_cls, \
+             mock_patch("ai_forge_cli.monitoring.display.TrainingDisplay"), \
+             mock_patch("ai_forge_cli.trainer.orpo.ORPOTrainerWrapper.setup"), \
              mock_patch(
-                 "soup_cli.trainer.orpo.ORPOTrainerWrapper.train", return_value=fake_result
+                 "ai_forge_cli.trainer.orpo.ORPOTrainerWrapper.train", return_value=fake_result
              ) as mock_train:
             mock_tracker = MagicMock()
             mock_tracker.start_run.return_value = "run-orpo-1"
@@ -272,7 +272,7 @@ class TestORPOConfigEdgeCases:
         assert cfg.task == "orpo"
 
     def test_orpo_tokenizer_none_before_setup(self):
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -283,7 +283,7 @@ class TestORPOConfigEdgeCases:
         assert wrapper.tokenizer is None
 
     def test_orpo_output_dir_none_before_setup(self):
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -301,7 +301,7 @@ class TestORPOTrainGuard:
     """Test the RuntimeError guard when train() is called before setup()."""
 
     def test_train_before_setup_raises_runtime_error(self):
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -320,7 +320,7 @@ class TestORPOTrainResults:
     """Test the result dict returned by train() using a mocked trainer."""
 
     def _make_wrapper_with_mock_trainer(self, log_history=None, global_step=20):
-        from soup_cli.trainer.orpo import ORPOTrainerWrapper
+        from ai_forge_cli.trainer.orpo import ORPOTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -391,7 +391,7 @@ class TestORPOInitTemplate:
     def test_init_orpo_template_creates_file(self, tmp_path):
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -408,8 +408,8 @@ class TestORPOInitTemplate:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
-        from soup_cli.config.loader import load_config
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.config.loader import load_config
 
         runner = CliRunner()
         output = tmp_path / "soup.yaml"
@@ -426,9 +426,9 @@ class TestORPOWizardPath:
     """Test the interactive wizard auto-sets format for ORPO task."""
 
     def test_wizard_orpo_task_sets_dpo_format(self):
-        from soup_cli.commands.init import _interactive_wizard
+        from ai_forge_cli.commands.init import _interactive_wizard
 
-        with mock_patch("soup_cli.commands.init.Prompt.ask", side_effect=[
+        with mock_patch("ai_forge_cli.commands.init.Prompt.ask", side_effect=[
             "some-model",
             "orpo",
             "./data.jsonl",
@@ -442,7 +442,7 @@ class TestORPOWizardPath:
         assert "orpo_beta: 0.1" in config_text
 
     def test_wizard_orpo_does_not_prompt_for_format(self):
-        from soup_cli.commands.init import _interactive_wizard
+        from ai_forge_cli.commands.init import _interactive_wizard
 
         prompt_calls = []
 
@@ -457,7 +457,7 @@ class TestORPOWizardPath:
             }
             return answers.get(question, kwargs.get("default", ""))
 
-        with mock_patch("soup_cli.commands.init.Prompt.ask", side_effect=record_prompt):
+        with mock_patch("ai_forge_cli.commands.init.Prompt.ask", side_effect=record_prompt):
             _interactive_wizard()
 
         assert not any("format" in call.lower() for call in prompt_calls)
@@ -470,7 +470,7 @@ class TestORPOConfigLoaderRoundTrip:
     """Test ORPO template YAML survives round-trip."""
 
     def test_orpo_template_round_trip(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(TEMPLATES["orpo"])
         assert cfg.task == "orpo"
@@ -478,7 +478,7 @@ class TestORPOConfigLoaderRoundTrip:
         assert cfg.data.format == "dpo"
 
     def test_orpo_custom_yaml_round_trip(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: custom-model/llama-7b

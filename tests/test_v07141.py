@@ -14,8 +14,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app as soup_app
-from soup_cli.utils import reward_stress as rst
+from ai_forge_cli.cli import app as soup_app
+from ai_forge_cli.utils import reward_stress as rst
 
 runner = CliRunner()
 
@@ -192,7 +192,7 @@ class TestRunStress:
             rst.run_stress(nan_fn, ["42"])
 
     def test_real_accuracy_builtin_gold_path_robust(self):
-        from soup_cli.trainer.rewards import load_reward_fn
+        from ai_forge_cli.trainer.rewards import load_reward_fn
 
         rep = rst.run_stress(load_reward_fn("accuracy"), ["42", "7"])
         # accuracy compares the completion tail against the gold; junk never matches,

@@ -12,7 +12,7 @@ class TestDeepSpeedConfigs:
 
     def test_zero2_config_structure(self):
         """ZeRO Stage 2 config should have correct structure."""
-        from soup_cli.utils.deepspeed import get_deepspeed_config
+        from ai_forge_cli.utils.deepspeed import get_deepspeed_config
 
         config = get_deepspeed_config("zero2")
         assert config["zero_optimization"]["stage"] == 2
@@ -21,7 +21,7 @@ class TestDeepSpeedConfigs:
 
     def test_zero3_config_structure(self):
         """ZeRO Stage 3 config should have correct structure."""
-        from soup_cli.utils.deepspeed import get_deepspeed_config
+        from ai_forge_cli.utils.deepspeed import get_deepspeed_config
 
         config = get_deepspeed_config("zero3")
         assert config["zero_optimization"]["stage"] == 3
@@ -29,7 +29,7 @@ class TestDeepSpeedConfigs:
 
     def test_zero2_offload_config(self):
         """ZeRO Stage 2 with offload should enable CPU offloading."""
-        from soup_cli.utils.deepspeed import get_deepspeed_config
+        from ai_forge_cli.utils.deepspeed import get_deepspeed_config
 
         config = get_deepspeed_config("zero2_offload")
         assert config["zero_optimization"]["stage"] == 2
@@ -43,7 +43,7 @@ class TestDeepSpeedConfigs:
         offload config Soup shipped was stage 2, optimizer-only, so the
         H100 comparison in benchmarks/gate-h100-validation.md (STEP 3) had to
         supply hand-written JSON."""
-        from soup_cli.utils.deepspeed import get_deepspeed_config
+        from ai_forge_cli.utils.deepspeed import get_deepspeed_config
 
         config = get_deepspeed_config("zero3_offload")
         assert config["zero_optimization"]["stage"] == 3
@@ -61,7 +61,7 @@ class TestDeepSpeedConfigs:
         it mandatory would make the preset unusable on such a box, so it is off
         — which is also the fairer comparison against layer streaming, whose
         optimizer covers only the LoRA parameters and stays on the GPU."""
-        from soup_cli.utils.deepspeed import get_deepspeed_config
+        from ai_forge_cli.utils.deepspeed import get_deepspeed_config
 
         config = get_deepspeed_config("zero3_offload")
         assert config["zero_optimization"]["offload_optimizer"]["device"] == "none"
@@ -70,7 +70,7 @@ class TestDeepSpeedConfigs:
         """A regression guard with a control: the plain `zero3` preset must keep
         offloading nothing, or every existing multi-GPU run silently changes
         behaviour."""
-        from soup_cli.utils.deepspeed import get_deepspeed_config
+        from ai_forge_cli.utils.deepspeed import get_deepspeed_config
 
         plain = get_deepspeed_config("zero3")
         assert plain["zero_optimization"]["offload_param"]["device"] == "none"
@@ -78,14 +78,14 @@ class TestDeepSpeedConfigs:
 
     def test_invalid_config_name(self):
         """Should raise ValueError for unknown config name."""
-        from soup_cli.utils.deepspeed import get_deepspeed_config
+        from ai_forge_cli.utils.deepspeed import get_deepspeed_config
 
         with pytest.raises(ValueError, match="Unknown DeepSpeed config"):
             get_deepspeed_config("zero99")
 
     def test_get_config_returns_copy(self):
         """Should return a copy, not the original."""
-        from soup_cli.utils.deepspeed import get_deepspeed_config
+        from ai_forge_cli.utils.deepspeed import get_deepspeed_config
 
         config1 = get_deepspeed_config("zero2")
         config2 = get_deepspeed_config("zero2")
@@ -94,7 +94,7 @@ class TestDeepSpeedConfigs:
 
     def test_all_configs_have_auto_fields(self):
         """All configs should have 'auto' for batch sizes."""
-        from soup_cli.utils.deepspeed import CONFIGS
+        from ai_forge_cli.utils.deepspeed import CONFIGS
 
         for name, config in CONFIGS.items():
             assert config["train_batch_size"] == "auto", f"{name} missing auto train_batch_size"
@@ -108,7 +108,7 @@ class TestWriteDeepSpeedConfig:
 
     def test_write_creates_file(self):
         """Should create a valid JSON file."""
-        from soup_cli.utils.deepspeed import write_deepspeed_config
+        from ai_forge_cli.utils.deepspeed import write_deepspeed_config
 
         path = write_deepspeed_config("zero2")
         assert os.path.exists(path)
@@ -122,7 +122,7 @@ class TestWriteDeepSpeedConfig:
 
     def test_write_file_is_valid_json(self):
         """Written file should be parseable JSON."""
-        from soup_cli.utils.deepspeed import write_deepspeed_config
+        from ai_forge_cli.utils.deepspeed import write_deepspeed_config
 
         for stage in ["zero2", "zero3", "zero2_offload", "zero3_offload"]:
             path = write_deepspeed_config(stage)
@@ -137,7 +137,7 @@ class TestDetectMultiGPU:
 
     def test_detect_no_gpu(self):
         """Should return 0 GPUs when CUDA not available."""
-        from soup_cli.utils.deepspeed import detect_multi_gpu
+        from ai_forge_cli.utils.deepspeed import detect_multi_gpu
 
         with patch("torch.cuda.is_available", return_value=False):
             result = detect_multi_gpu()
@@ -146,7 +146,7 @@ class TestDetectMultiGPU:
 
     def test_detect_single_gpu(self):
         """Should detect a single GPU."""
-        from soup_cli.utils.deepspeed import detect_multi_gpu
+        from ai_forge_cli.utils.deepspeed import detect_multi_gpu
 
         mock_props = MagicMock()
         mock_props.name = "NVIDIA RTX 4090"
@@ -163,7 +163,7 @@ class TestDetectMultiGPU:
 
     def test_detect_multiple_gpus(self):
         """Should detect multiple GPUs."""
-        from soup_cli.utils.deepspeed import detect_multi_gpu
+        from ai_forge_cli.utils.deepspeed import detect_multi_gpu
 
         mock_props = MagicMock()
         mock_props.name = "NVIDIA A100"
@@ -178,7 +178,7 @@ class TestDetectMultiGPU:
 
     def test_detect_without_torch(self):
         """Should handle missing torch gracefully."""
-        from soup_cli.utils.deepspeed import detect_multi_gpu
+        from ai_forge_cli.utils.deepspeed import detect_multi_gpu
 
         with patch.dict("sys.modules", {"torch": None}):
             # Import error should be caught
@@ -191,7 +191,7 @@ class TestResolveDeepSpeed:
 
     def test_resolve_named_preset(self):
         """Should resolve named presets like 'zero2'."""
-        from soup_cli.commands.train import _resolve_deepspeed
+        from ai_forge_cli.commands.train import _resolve_deepspeed
 
         path = _resolve_deepspeed("zero2")
         assert os.path.exists(path)
@@ -205,7 +205,7 @@ class TestResolveDeepSpeed:
         """`--deepspeed zero3_offload` must reach the same resolver path every
         other preset does, or the config exists but is unreachable from the CLI.
         """
-        from soup_cli.commands.train import _resolve_deepspeed
+        from ai_forge_cli.commands.train import _resolve_deepspeed
 
         path = _resolve_deepspeed("zero3_offload")
         try:
@@ -218,7 +218,7 @@ class TestResolveDeepSpeed:
 
     def test_resolve_json_file(self, tmp_path):
         """Should resolve path to JSON file."""
-        from soup_cli.commands.train import _resolve_deepspeed
+        from ai_forge_cli.commands.train import _resolve_deepspeed
 
         config_file = tmp_path / "ds_config.json"
         config_file.write_text(json.dumps({"zero_optimization": {"stage": 2}}))
@@ -230,7 +230,7 @@ class TestResolveDeepSpeed:
         """Should raise exit for invalid name."""
         from click.exceptions import Exit
 
-        from soup_cli.commands.train import _resolve_deepspeed
+        from ai_forge_cli.commands.train import _resolve_deepspeed
 
         with pytest.raises(Exit):
             _resolve_deepspeed("invalid_config")
@@ -241,8 +241,8 @@ class TestTrainerDeepSpeedParam:
 
     def test_sft_trainer_accepts_deepspeed(self):
         """SFTTrainerWrapper should accept deepspeed_config."""
-        from soup_cli.config.schema import SoupConfig
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.schema import SoupConfig
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -253,8 +253,8 @@ class TestTrainerDeepSpeedParam:
 
     def test_dpo_trainer_accepts_deepspeed(self):
         """DPOTrainerWrapper should accept deepspeed_config."""
-        from soup_cli.config.schema import SoupConfig
-        from soup_cli.trainer.dpo import DPOTrainerWrapper
+        from ai_forge_cli.config.schema import SoupConfig
+        from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -266,8 +266,8 @@ class TestTrainerDeepSpeedParam:
 
     def test_sft_trainer_default_no_deepspeed(self):
         """SFTTrainerWrapper should default to no DeepSpeed."""
-        from soup_cli.config.schema import SoupConfig
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.schema import SoupConfig
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -284,7 +284,7 @@ class TestTrainDeepSpeedFlag:
         """Train help should mention --deepspeed option."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["train", "--help"])

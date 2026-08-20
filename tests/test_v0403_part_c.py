@@ -11,14 +11,14 @@ from unittest.mock import MagicMock
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app as soup_app
-from soup_cli.data.traces.pair_builder import PreferencePair
-from soup_cli.data.traces.quality import (
+from ai_forge_cli.cli import app as soup_app
+from ai_forge_cli.data.traces.pair_builder import PreferencePair
+from ai_forge_cli.data.traces.quality import (
     DEFAULT_MIN_CONFIDENCE,
     JudgeFilterReport,
     judge_filter_pairs,
 )
-from soup_cli.monitoring.trace_logger import (
+from ai_forge_cli.monitoring.trace_logger import (
     DEFAULT_CAP_MB,
     TraceLogWriter,
 )
@@ -212,7 +212,7 @@ class TestFromTracesJudgeCli:
                     weighted_score=5.0 if "good" in response else 1.0,
                 )
 
-        monkeypatch.setattr("soup_cli.eval.judge.JudgeEvaluator", FakeJudgeCls)
+        monkeypatch.setattr("ai_forge_cli.eval.judge.JudgeEvaluator", FakeJudgeCls)
 
         runner = CliRunner()
         result = runner.invoke(
@@ -547,7 +547,7 @@ class TestServeTraceLogWiring:
     def test_create_app_accepts_trace_log_writer(self, tmp_path, monkeypatch):
         # Not building a real model — just assert the parameter is accepted
         # and stored on app.state.
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         monkeypatch.chdir(tmp_path)
         writer = TraceLogWriter(str(tmp_path / "log.jsonl"))
@@ -569,7 +569,7 @@ class TestServeTraceLogWiring:
         reason="fastapi not installed (only required for `serve` extras)",
     )
     def test_create_app_default_writer_is_none(self, tmp_path, monkeypatch):
-        from soup_cli.commands.serve import _create_app
+        from ai_forge_cli.commands.serve import _create_app
 
         monkeypatch.chdir(tmp_path)
         tokenizer = MagicMock()

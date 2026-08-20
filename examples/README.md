@@ -110,7 +110,7 @@ soup init --template moe         # Mixture-of-Experts (Qwen3, Mixtral, DeepSeek 
 soup init --template longcontext # RoPE scaling for 128k+ context
 soup init --template embedding   # sentence embeddings (BGE, E5, GTE)
 soup init --template vision      # vision-language
-soup init --template audio       # audio/speech — needs pip install "soup-cli[audio]"
+soup init --template audio       # audio/speech — needs pip install "ai-forge[audio]"
 soup train
 ```
 
@@ -228,7 +228,7 @@ soup train --config your_config.yaml
 ## Config shape
 
 Configs are nested: `base`, `task`, `data`, `training`, `output` at the top level.
-[`config/schema.py`](../src/soup_cli/config/schema.py) is the single source of truth.
+[`config/schema.py`](../src/ai_forge_cli/config/schema.py) is the single source of truth.
 
 ### Minimal
 
@@ -354,6 +354,6 @@ soup train --config your_config.yaml --wandb
 
 ## Questions?
 
-- [GitHub Discussions](https://github.com/MakazhanAlpamys/Soup/discussions)
-- [Issues](https://github.com/MakazhanAlpamys/Soup/issues)
+- [GitHub Discussions](https://github.com/mohdhasnain-pixel/ai-forge/discussions)
+- [Issues](https://github.com/mohdhasnain-pixel/ai-forge/issues)
 - [SECURITY.md](../SECURITY.md)

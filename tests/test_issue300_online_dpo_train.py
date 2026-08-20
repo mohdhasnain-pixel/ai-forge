@@ -28,8 +28,8 @@ from __future__ import annotations
 
 import pytest
 
-from soup_cli.eval.judge import JudgeScore
-from soup_cli.trainer.online_dpo import _trl_has_judges
+from ai_forge_cli.eval.judge import JudgeScore
+from ai_forge_cli.trainer.online_dpo import _trl_has_judges
 
 _TRL_HAS_JUDGES = _trl_has_judges()
 
@@ -68,9 +68,9 @@ class TestOnlineDpoTrainLogsReward:
         0.19.x it drives the judge path. Either way the reward signal is applied
         and TRL logs rewards/*.
         """
-        import soup_cli.trainer.online_dpo as od
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
+        import ai_forge_cli.trainer.online_dpo as od
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
 
         monkeypatch.chdir(tmp_path)
         cfg = load_config_from_string(
@@ -124,9 +124,9 @@ class TestOnlineDpoTrainLogsReward:
         if _TRL_HAS_JUDGES:
             pytest.skip("trl 0.19.x (pairwise judge API) — reward_funcs path is trl 1.x")
 
-        import soup_cli.trainer.online_dpo as od
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
+        import ai_forge_cli.trainer.online_dpo as od
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.online_dpo import OnlineDPOTrainerWrapper
 
         cfg = load_config_from_string(
             "base: hf-internal-testing/tiny-random-gpt2\ntask: online_dpo\n"

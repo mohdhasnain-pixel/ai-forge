@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.config.loader import load_config
-from soup_cli.config.schema import SoupConfig
+from ai_forge_cli.config.loader import load_config
+from ai_forge_cli.config.schema import SoupConfig
 
 
 def test_load_valid_config(sample_config: Path):

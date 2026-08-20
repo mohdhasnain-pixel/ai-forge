@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.utils import magpie
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils import magpie
 
 
 def _write(path: Path, text: str) -> Path:
@@ -332,7 +332,7 @@ class TestMagpieCli:
 class TestSourceWiring:
     def test_no_heavy_imports(self) -> None:
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "utils" / "magpie.py").read_text(encoding="utf-8")
+        src = (root / "src" / "ai_forge_cli" / "utils" / "magpie.py").read_text(encoding="utf-8")
         for forbidden in (
             "\nimport torch",
             "\nimport transformers",
@@ -342,11 +342,11 @@ class TestSourceWiring:
 
     def test_cli_registered(self) -> None:
         root = Path(__file__).resolve().parent.parent
-        cli = (root / "src" / "soup_cli" / "commands" / "data.py").read_text(encoding="utf-8")
+        cli = (root / "src" / "ai_forge_cli" / "commands" / "data.py").read_text(encoding="utf-8")
         assert "magpie" in cli.lower() or "gen-magpie" in cli
 
     def test_version_bumped(self) -> None:
-        from soup_cli import __version__
+        from ai_forge_cli import __version__
 
         major_minor = tuple(int(x) for x in __version__.split(".")[:2])
         assert major_minor >= (0, 69)

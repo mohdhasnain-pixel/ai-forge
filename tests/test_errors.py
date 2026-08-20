@@ -7,8 +7,8 @@ import pytest
 from rich.console import Console
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.utils.errors import format_friendly_error
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils.errors import format_friendly_error
 
 runner = CliRunner()
 
@@ -20,7 +20,7 @@ def test_cuda_oom_error():
     """CUDA OOM gets a friendly message."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = RuntimeError("CUDA out of memory. Tried to allocate 2.00 GiB")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
@@ -35,29 +35,29 @@ def test_missing_fastapi_error():
     """Missing fastapi gives install hint."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ModuleNotFoundError("No module named 'fastapi'")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
-    assert "soup-cli[serve]" in output
+    assert "ai-forge[serve]" in output
 
 
 def test_missing_datasketch_error():
     """Missing datasketch gives install hint."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ModuleNotFoundError("No module named 'datasketch'")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
-    assert "soup-cli[data]" in output
+    assert "ai-forge[data]" in output
 
 
 def test_missing_wandb_error():
     """Missing wandb gives install hint."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ModuleNotFoundError("No module named 'wandb'")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
@@ -68,11 +68,11 @@ def test_missing_deepspeed_error():
     """Missing deepspeed gives install hint."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ModuleNotFoundError("No module named 'deepspeed'")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
-    assert "soup-cli[deepspeed]" in output
+    assert "ai-forge[deepspeed]" in output
 
 
 @pytest.mark.parametrize(
@@ -83,12 +83,12 @@ def test_missing_train_dep_points_at_train_extra(module):
     """v0.71.0 — any missing heavy training dep points at the [train] extra."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ModuleNotFoundError(f"No module named '{module}'")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
     # The `\[train]` escape renders to a literal `[train]` in the output.
-    assert "soup-cli[train]" in output
+    assert "ai-forge[train]" in output
     assert "[train] extra" in output
 
 
@@ -96,7 +96,7 @@ def test_connection_error():
     """Connection error gets friendly message."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ConnectionError("Failed to connect")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
@@ -107,7 +107,7 @@ def test_unknown_error_shows_type():
     """Unknown errors show the exception type and message."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = ZeroDivisionError("division by zero")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
@@ -120,7 +120,7 @@ def test_verbose_shows_traceback():
     """Verbose mode shows full traceback."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         try:
             raise RuntimeError("CUDA out of memory. Tried to allocate")
         except RuntimeError as exc:
@@ -134,7 +134,7 @@ def test_verbose_unknown_error():
     """Verbose mode for unknown errors shows traceback."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         try:
             raise ValueError("something weird")
         except ValueError as exc:
@@ -148,7 +148,7 @@ def test_yaml_error():
     """YAML syntax error gets friendly message."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = Exception("yaml.scanner.ScannerError: mapping values are not allowed here")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
@@ -159,7 +159,7 @@ def test_validation_error():
     """Pydantic validation error gets friendly message."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = Exception("2 validation error for SoupConfig")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
@@ -170,7 +170,7 @@ def test_auth_401_error():
     """401 error gets auth hint."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = Exception("401 Client Error: Unauthorized")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
@@ -181,7 +181,7 @@ def test_file_not_found_error():
     """File not found gets friendly message."""
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = FileNotFoundError("No such file or directory: 'model.bin'")
         format_friendly_error(exc, verbose=False)
     output = buf.getvalue()
@@ -211,7 +211,7 @@ def test_cuda_oom_mentions_gradient_checkpointing():
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
 
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = RuntimeError("CUDA out of memory")
         format_friendly_error(exc, verbose=False)
 
@@ -225,7 +225,7 @@ def test_gated_repo_error():
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
 
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = Exception("GatedRepoError: Cannot access gated repo")
         format_friendly_error(exc, verbose=False)
 
@@ -239,7 +239,7 @@ def test_gated_repo_hyphenated_error():
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
 
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = Exception("Access denied to gated-repo")
         format_friendly_error(exc, verbose=False)
 
@@ -252,7 +252,7 @@ def test_trust_remote_code_error():
     buf = StringIO()
     test_console = Console(file=buf, stderr=False)
 
-    with patch("soup_cli.utils.errors.console", test_console):
+    with patch("ai_forge_cli.utils.errors.console", test_console):
         exc = Exception(
             "This repository requires you to execute the configuration file"
         )

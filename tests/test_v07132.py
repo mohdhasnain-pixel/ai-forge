@@ -21,78 +21,78 @@ import pytest
 
 class TestAsrMetrics:
     def test_normalize_text_lower_punct_ws(self):
-        from soup_cli.utils.asr_metrics import normalize_text
+        from ai_forge_cli.utils.asr_metrics import normalize_text
 
         assert normalize_text("The Cat, sat!") == "the cat sat"
         assert normalize_text("the   cat    sat") == "the cat sat"
         assert normalize_text("HELLO") == "hello"
 
     def test_normalize_text_opt_out(self):
-        from soup_cli.utils.asr_metrics import normalize_text
+        from ai_forge_cli.utils.asr_metrics import normalize_text
 
         assert normalize_text("The Cat!", lower=False, strip_punct=False) == "The Cat!"
 
     def test_wer_identity_zero(self):
-        from soup_cli.utils.asr_metrics import wer
+        from ai_forge_cli.utils.asr_metrics import wer
 
         assert wer("the cat sat", "the cat sat") == 0.0
 
     def test_wer_all_substitutions_one(self):
-        from soup_cli.utils.asr_metrics import wer
+        from ai_forge_cli.utils.asr_metrics import wer
 
         assert wer("the cat sat", "a dog ran") == 1.0
 
     def test_wer_single_deletion(self):
-        from soup_cli.utils.asr_metrics import wer
+        from ai_forge_cli.utils.asr_metrics import wer
 
         assert wer("the cat sat", "the cat") == pytest.approx(1 / 3)
 
     def test_wer_single_insertion(self):
-        from soup_cli.utils.asr_metrics import wer
+        from ai_forge_cli.utils.asr_metrics import wer
 
         assert wer("the cat", "the cat sat") == pytest.approx(1 / 2)
 
     def test_wer_single_substitution(self):
-        from soup_cli.utils.asr_metrics import wer
+        from ai_forge_cli.utils.asr_metrics import wer
 
         assert wer("the cat sat", "the dog sat") == pytest.approx(1 / 3)
 
     def test_wer_normalizes_by_default(self):
-        from soup_cli.utils.asr_metrics import wer
+        from ai_forge_cli.utils.asr_metrics import wer
 
         assert wer("The cat, sat.", "the cat sat") == 0.0
 
     def test_wer_empty_both_zero(self):
-        from soup_cli.utils.asr_metrics import wer
+        from ai_forge_cli.utils.asr_metrics import wer
 
         assert wer("", "") == 0.0
 
     def test_wer_empty_ref_nonempty_hyp_one(self):
-        from soup_cli.utils.asr_metrics import wer
+        from ai_forge_cli.utils.asr_metrics import wer
 
         assert wer("", "hello world") == 1.0
 
     def test_cer_char_level(self):
-        from soup_cli.utils.asr_metrics import cer
+        from ai_forge_cli.utils.asr_metrics import cer
 
         assert cer("abc", "abc") == 0.0
         assert cer("cat", "cot") == pytest.approx(1 / 3)
 
     def test_word_accuracy_is_one_minus_wer(self):
-        from soup_cli.utils.asr_metrics import word_accuracy
+        from ai_forge_cli.utils.asr_metrics import word_accuracy
 
         assert word_accuracy("the cat sat", "the cat sat") == 1.0
         # all-wrong -> wer 1.0 -> accuracy 0.0 (clamped, never negative)
         assert word_accuracy("the cat sat", "a dog ran") == 0.0
 
     def test_word_accuracy_clamps_at_zero(self):
-        from soup_cli.utils.asr_metrics import word_accuracy
+        from ai_forge_cli.utils.asr_metrics import word_accuracy
 
         # many insertions push wer > 1.0; accuracy must clamp to 0.0
         assert word_accuracy("cat", "a b c d e f") == 0.0
 
     def test_corpus_wer_is_not_mean(self):
-        from soup_cli.utils.asr_metrics import corpus_wer
+        from ai_forge_cli.utils.asr_metrics import corpus_wer
 
         # per-example wers are 0.0 and 1.0 -> mean would be 0.5.
         # corpus = (0 edits + 1 edit) / (3 + 1 ref words) = 0.25.
@@ -100,13 +100,13 @@ class TestAsrMetrics:
         assert val == pytest.approx(0.25)
 
     def test_corpus_wer_length_mismatch_raises(self):
-        from soup_cli.utils.asr_metrics import corpus_wer
+        from ai_forge_cli.utils.asr_metrics import corpus_wer
 
         with pytest.raises(ValueError, match="same length"):
             corpus_wer(["a"], ["a", "b"])
 
     def test_seq_cap_raises(self):
-        from soup_cli.utils.asr_metrics import _MAX_SEQ, wer
+        from ai_forge_cli.utils.asr_metrics import _MAX_SEQ, wer
 
         long_ref = " ".join(["w"] * (_MAX_SEQ + 1))
         with pytest.raises(ValueError, match="too long"):
@@ -118,7 +118,7 @@ class TestWhisperSizeGate:
     # 7.0-billion default for whisper checkpoints, making the hardware-fit gate
     # predict ~19 GB and block ASR training on any consumer GPU.
     def test_whisper_sizes_not_default(self):
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         assert model_size_from_name("openai/whisper-tiny") == pytest.approx(0.039)
         assert model_size_from_name("openai/whisper-base") == pytest.approx(0.074)
@@ -126,7 +126,7 @@ class TestWhisperSizeGate:
         assert model_size_from_name("openai/whisper-large-v3") == pytest.approx(1.55)
 
     def test_non_whisper_still_defaults(self):
-        from soup_cli.utils.gpu import model_size_from_name
+        from ai_forge_cli.utils.gpu import model_size_from_name
 
         # unchanged behaviour for a nameless model
         assert model_size_from_name("some/unknown-model") == 7.0
@@ -135,13 +135,13 @@ class TestWhisperSizeGate:
 
 class TestAsrMetricsBranches:
     def test_normalize_text_type_error(self):
-        from soup_cli.utils.asr_metrics import normalize_text
+        from ai_forge_cli.utils.asr_metrics import normalize_text
 
         with pytest.raises(TypeError):
             normalize_text(123)
 
     def test_wer_empty_hyp_nonempty_ref(self):
-        from soup_cli.utils.asr_metrics import wer
+        from ai_forge_cli.utils.asr_metrics import wer
 
         # 3 ref words, empty hyp -> 3 deletions / 3 = 1.0
         assert wer("the cat sat", "") == 1.0
@@ -149,7 +149,7 @@ class TestAsrMetricsBranches:
     def test_corpus_wer_mixed_empty_ref_counts_hallucination(self):
         # Regression for the tdd-review correctness gap: an empty-ref row with a
         # hallucinated hypothesis must NOT vanish from the numerator.
-        from soup_cli.utils.asr_metrics import corpus_wer
+        from ai_forge_cli.utils.asr_metrics import corpus_wer
 
         # row0: ref='' hyp='x' -> 1 insertion; row1: ref='a b' hyp='a b' -> 0.
         # edits=1, ref words=2 -> 0.5 (would be 0.0 if the empty-ref row dropped).
@@ -158,7 +158,7 @@ class TestAsrMetricsBranches:
 
 class TestNoTopLevelTorch:
     def test_asr_metrics_has_no_heavy_top_level_import(self):
-        import soup_cli.utils.asr_metrics as mod
+        import ai_forge_cli.utils.asr_metrics as mod
 
         src = Path(mod.__file__).read_text(encoding="utf-8")
         tree = ast.parse(src)
@@ -206,7 +206,7 @@ def _asr_yaml(
 
 class TestAsrSchema:
     def test_happy_parse_defaults(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_asr_yaml())
         assert cfg.task == "asr"
@@ -215,63 +215,63 @@ class TestAsrSchema:
         assert cfg.training.asr_task == "transcribe"
 
     def test_language_and_task_parse(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_asr_yaml(asr_language="en", asr_task="translate"))
         assert cfg.training.asr_language == "en"
         assert cfg.training.asr_task == "translate"
 
     def test_reject_mlx_backend(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="transformers"):
             load_config_from_string(_asr_yaml(backend="mlx"))
 
     def test_reject_unsloth_backend(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="transformers"):
             load_config_from_string(_asr_yaml(backend="unsloth"))
 
     def test_footgun_language_on_non_asr(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="asr"):
             load_config_from_string(_asr_yaml(task="sft", fmt="alpaca", asr_language="en"))
 
     def test_footgun_translate_on_non_asr(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="asr"):
             load_config_from_string(_asr_yaml(task="sft", fmt="alpaca", asr_task="translate"))
 
     def test_field_validator_empty_language(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="asr_language"):
             load_config_from_string(_asr_yaml(asr_language='"   "'))
 
     def test_field_validator_oversize_language(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="asr_language"):
             load_config_from_string(_asr_yaml(asr_language="x" * 40))
 
     def test_invalid_asr_task_literal(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError):
             load_config_from_string(_asr_yaml(asr_task="frobnicate"))
 
     def test_asr_rejects_wrong_data_format(self):
         # task=asr must pin data.format to asr/auto (python-review MEDIUM).
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="data.format"):
             load_config_from_string(_asr_yaml(fmt="alpaca"))
 
     def test_asr_allows_auto_format(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_asr_yaml(fmt="auto"))
         assert cfg.data.format == "auto"
@@ -307,7 +307,7 @@ def _write_sine_wav(path, *, seconds: float = 1.0, sr: int = 16000):
 
 class TestAsrRow:
     def test_validate_asr_row_ok(self):
-        from soup_cli.trainer.asr import _validate_asr_row
+        from ai_forge_cli.trainer.asr import _validate_asr_row
 
         assert _validate_asr_row({"audio": "a.wav", "text": "hello"}) == (
             "a.wav",
@@ -315,25 +315,25 @@ class TestAsrRow:
         )
 
     def test_validate_asr_row_missing_audio(self):
-        from soup_cli.trainer.asr import _validate_asr_row
+        from ai_forge_cli.trainer.asr import _validate_asr_row
 
         with pytest.raises(ValueError, match="audio"):
             _validate_asr_row({"text": "hi"})
 
     def test_validate_asr_row_missing_text(self):
-        from soup_cli.trainer.asr import _validate_asr_row
+        from ai_forge_cli.trainer.asr import _validate_asr_row
 
         with pytest.raises(ValueError, match="text"):
             _validate_asr_row({"audio": "a.wav"})
 
     def test_validate_asr_row_non_str_audio(self):
-        from soup_cli.trainer.asr import _validate_asr_row
+        from ai_forge_cli.trainer.asr import _validate_asr_row
 
         with pytest.raises((ValueError, TypeError)):
             _validate_asr_row({"audio": 123, "text": "hi"})
 
     def test_validate_asr_row_empty_audio_string(self):
-        from soup_cli.trainer.asr import _validate_asr_row
+        from ai_forge_cli.trainer.asr import _validate_asr_row
 
         with pytest.raises(ValueError, match="audio"):
             _validate_asr_row({"audio": "   ", "text": "hi"})
@@ -341,7 +341,7 @@ class TestAsrRow:
 
 class TestAsrArchGuard:
     def test_require_whisper_rejects_non_whisper(self, monkeypatch):
-        from soup_cli.trainer import asr as asrmod
+        from ai_forge_cli.trainer import asr as asrmod
 
         class _FakeCfg:
             model_type = "gpt2"
@@ -351,7 +351,7 @@ class TestAsrArchGuard:
             asrmod._require_whisper_base("some/gpt2-model", False)
 
     def test_require_whisper_accepts_whisper(self, monkeypatch):
-        from soup_cli.trainer import asr as asrmod
+        from ai_forge_cli.trainer import asr as asrmod
 
         class _FakeCfg:
             model_type = "whisper"
@@ -363,19 +363,19 @@ class TestAsrArchGuard:
 
 class TestAsrPrefixCustomized:
     def test_default_is_not_customized(self):
-        from soup_cli.trainer.asr import _prefix_customized
+        from ai_forge_cli.trainer.asr import _prefix_customized
 
         assert _prefix_customized(None, "transcribe") is False
 
     def test_language_customizes(self):
-        from soup_cli.trainer.asr import _prefix_customized
+        from ai_forge_cli.trainer.asr import _prefix_customized
 
         assert _prefix_customized("en", "transcribe") is True
 
     def test_bare_translate_customizes(self):
         # python-review HIGH: asr_task='translate' with no language must NOT
         # silently fall back to transcribe.
-        from soup_cli.trainer.asr import _prefix_customized
+        from ai_forge_cli.trainer.asr import _prefix_customized
 
         assert _prefix_customized(None, "translate") is True
 
@@ -385,7 +385,7 @@ class TestAsrCollatorStrip:
     def test_strips_leading_decoder_start(self):
         import torch
 
-        from soup_cli.trainer.asr import _strip_decoder_start
+        from ai_forge_cli.trainer.asr import _strip_decoder_start
 
         labels = torch.tensor([[50258, 100, 200, 50257], [50258, 300, 400, 50257]])
         out = _strip_decoder_start(labels, 50258)
@@ -396,7 +396,7 @@ class TestAsrCollatorStrip:
     def test_does_not_strip_when_not_all_start(self):
         import torch
 
-        from soup_cli.trainer.asr import _strip_decoder_start
+        from ai_forge_cli.trainer.asr import _strip_decoder_start
 
         labels = torch.tensor([[50258, 100], [999, 100]])
         out = _strip_decoder_start(labels, 50258)
@@ -406,7 +406,7 @@ class TestAsrCollatorStrip:
     def test_none_decoder_start_is_noop(self):
         import torch
 
-        from soup_cli.trainer.asr import _strip_decoder_start
+        from ai_forge_cli.trainer.asr import _strip_decoder_start
 
         labels = torch.tensor([[50258, 100]])
         assert _strip_decoder_start(labels, None).shape[1] == 2
@@ -417,7 +417,7 @@ class TestAsrCollatorCall:
     def test_masks_pad_and_strips_decoder_start(self):
         import torch
 
-        from soup_cli.trainer.asr import _SpeechSeq2SeqCollator
+        from ai_forge_cli.trainer.asr import _SpeechSeq2SeqCollator
 
         class _FE:
             def pad(self, feats, return_tensors="pt"):
@@ -446,19 +446,19 @@ class TestAsrCollatorCall:
 
 class TestAsrGenPrefix:
     def test_flag_beats_sidecar(self):
-        from soup_cli.commands.infer import _resolve_asr_gen_prefix
+        from ai_forge_cli.commands.infer import _resolve_asr_gen_prefix
 
         got = _resolve_asr_gen_prefix("en", "translate", {"language": "es", "task": "transcribe"})
         assert got == {"language": "en", "task": "translate"}
 
     def test_sidecar_when_no_flag(self):
-        from soup_cli.commands.infer import _resolve_asr_gen_prefix
+        from ai_forge_cli.commands.infer import _resolve_asr_gen_prefix
 
         got = _resolve_asr_gen_prefix(None, None, {"language": "es", "task": "translate"})
         assert got == {"language": "es", "task": "translate"}
 
     def test_empty_when_neither(self):
-        from soup_cli.commands.infer import _resolve_asr_gen_prefix
+        from ai_forge_cli.commands.infer import _resolve_asr_gen_prefix
 
         assert _resolve_asr_gen_prefix(None, None, {}) == {}
 
@@ -469,7 +469,7 @@ class TestAsrBuildTranscriberGuards:
 
         import typer
 
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         (tmp_path / "adapter_config.json").write_text(json.dumps({}), encoding="utf-8")
         with pytest.raises(typer.Exit) as exc:
@@ -483,7 +483,7 @@ class TestAsrInferExitPaths:
     def test_output_outside_cwd_exits(self, tmp_path, monkeypatch):
         import typer
 
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "in.jsonl").write_text('{"audio": "a.wav"}\n', encoding="utf-8")
@@ -497,7 +497,7 @@ class TestAsrInferExitPaths:
     def test_audio_dir_outside_cwd_exits(self, tmp_path, monkeypatch):
         import typer
 
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "in.jsonl").write_text('{"audio": "a.wav"}\n', encoding="utf-8")
@@ -512,7 +512,7 @@ class TestAsrInferExitPaths:
     def test_zero_rows_exits(self, tmp_path, monkeypatch):
         import typer
 
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "in.jsonl").write_text('{"text": "no audio"}\n', encoding="utf-8")
@@ -526,7 +526,7 @@ class TestAsrInferExitPaths:
     def test_build_importerror_exits_1(self, tmp_path, monkeypatch):
         import typer
 
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "in.jsonl").write_text('{"audio": "a.wav"}\n', encoding="utf-8")
@@ -546,7 +546,7 @@ class TestAsrInferExitPaths:
     def test_build_valueerror_exits_2(self, tmp_path, monkeypatch):
         import typer
 
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         monkeypatch.chdir(tmp_path)
         (tmp_path / "in.jsonl").write_text('{"audio": "a.wav"}\n', encoding="utf-8")
@@ -566,25 +566,25 @@ class TestAsrInferExitPaths:
 
 class TestAsrSidecar:
     def test_write_read_roundtrip(self, tmp_path):
-        from soup_cli.trainer.asr import read_asr_sidecar, write_asr_sidecar
+        from ai_forge_cli.trainer.asr import read_asr_sidecar, write_asr_sidecar
 
         write_asr_sidecar(str(tmp_path), "spanish", "translate")
         got = read_asr_sidecar(str(tmp_path))
         assert got == {"language": "spanish", "task": "translate"}
 
     def test_read_absent_is_empty(self, tmp_path):
-        from soup_cli.trainer.asr import read_asr_sidecar
+        from ai_forge_cli.trainer.asr import read_asr_sidecar
 
         assert read_asr_sidecar(str(tmp_path)) == {}
 
     def test_read_malformed_json_is_empty(self, tmp_path):
-        from soup_cli.trainer.asr import _ASR_SIDECAR, read_asr_sidecar
+        from ai_forge_cli.trainer.asr import _ASR_SIDECAR, read_asr_sidecar
 
         (tmp_path / _ASR_SIDECAR).write_text("{not json", encoding="utf-8")
         assert read_asr_sidecar(str(tmp_path)) == {}
 
     def test_read_non_dict_is_empty(self, tmp_path):
-        from soup_cli.trainer.asr import _ASR_SIDECAR, read_asr_sidecar
+        from ai_forge_cli.trainer.asr import _ASR_SIDECAR, read_asr_sidecar
 
         (tmp_path / _ASR_SIDECAR).write_text("[1, 2, 3]", encoding="utf-8")
         assert read_asr_sidecar(str(tmp_path)) == {}
@@ -592,7 +592,7 @@ class TestAsrSidecar:
 
 class TestAsrUnwrapModel:
     def test_unwraps_peft(self):
-        from soup_cli.trainer.asr import AsrTrainerWrapper
+        from ai_forge_cli.trainer.asr import AsrTrainerWrapper
 
         class _Base:
             pass
@@ -608,7 +608,7 @@ class TestAsrUnwrapModel:
         assert w._unwrapped_model() is base
 
     def test_returns_plain_model(self):
-        from soup_cli.trainer.asr import AsrTrainerWrapper
+        from ai_forge_cli.trainer.asr import AsrTrainerWrapper
 
         plain = object()
         w = object.__new__(AsrTrainerWrapper)
@@ -620,8 +620,8 @@ class TestAsrTrainSidecar:
     def _fake_wrapper(self, tmp_path, *, prefix_customized, language, task):
         from types import SimpleNamespace
 
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.asr import AsrTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.asr import AsrTrainerWrapper
 
         yaml = _asr_yaml(asr_language=language, asr_task=task)
         cfg = load_config_from_string(yaml)
@@ -642,7 +642,7 @@ class TestAsrTrainSidecar:
         return w
 
     def test_writes_sidecar_when_customized(self, tmp_path):
-        from soup_cli.trainer.asr import read_asr_sidecar
+        from ai_forge_cli.trainer.asr import read_asr_sidecar
 
         w = self._fake_wrapper(
             tmp_path, prefix_customized=True, language="es", task="translate"
@@ -653,7 +653,7 @@ class TestAsrTrainSidecar:
     def test_no_sidecar_when_default(self, tmp_path):
         import os
 
-        from soup_cli.trainer.asr import _ASR_SIDECAR
+        from ai_forge_cli.trainer.asr import _ASR_SIDECAR
 
         w = self._fake_wrapper(
             tmp_path, prefix_customized=False, language=None, task=None
@@ -664,16 +664,16 @@ class TestAsrTrainSidecar:
 
 class TestAsrLoraGate:
     def test_default_is_full_ft(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.asr import AsrTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.asr import AsrTrainerWrapper
 
         cfg = load_config_from_string(_asr_yaml())
         # Bare task: asr with the schema-default lora block must NOT enable LoRA.
         assert AsrTrainerWrapper._should_use_lora(None, cfg.training) is False
 
     def test_opt_in_enables_lora(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.asr import AsrTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.asr import AsrTrainerWrapper
 
         yaml = _asr_yaml() + "  asr_lora: true\n  lora:\n    r: 8\n"
         cfg = load_config_from_string(yaml)
@@ -681,15 +681,15 @@ class TestAsrLoraGate:
         assert AsrTrainerWrapper._should_use_lora(None, cfg.training) is True
 
     def test_opt_in_but_zero_rank_stays_off(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.asr import AsrTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.asr import AsrTrainerWrapper
 
         yaml = _asr_yaml() + "  asr_lora: true\n  lora:\n    r: 0\n"
         cfg = load_config_from_string(yaml)
         assert AsrTrainerWrapper._should_use_lora(None, cfg.training) is False
 
     def test_asr_lora_footgun_on_non_asr(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml = (
             "base: HuggingFaceTB/SmolLM2-135M-Instruct\n"
@@ -703,32 +703,32 @@ class TestAsrLoraGate:
 
 class TestAsrDataFormat:
     def test_is_audio_format_includes_asr(self):
-        from soup_cli.data.formats import is_audio_format
+        from ai_forge_cli.data.formats import is_audio_format
 
         assert is_audio_format("asr")
 
     def test_format_to_messages_asr_passthrough(self):
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = format_to_messages({"audio": "a.wav", "text": "hi there"}, "asr")
         assert row == {"audio": "a.wav", "text": "hi there"}
 
     def test_format_to_messages_asr_missing_text(self):
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         assert format_to_messages({"audio": "a.wav"}, "asr") is None
 
     def test_detect_format_asr_not_plaintext(self):
         # {"audio","text"} must auto-detect as asr, NOT plaintext (which would
         # silently drop the audio path). Regression for the python-review HIGH.
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         assert detect_format([{"audio": "clip.wav", "text": "hello"}]) == "asr"
 
     def test_convert_asr_delegates_to_validate(self):
         # _convert_asr reuses the trainer's canonical validator (single source
         # of truth) — a missing text still yields None via the wrapper.
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         assert format_to_messages({"audio": "a.wav", "text": 5}, "asr") is None
 
@@ -737,7 +737,7 @@ class TestAsrRouting:
     def test_train_routes_asr(self):
         import inspect
 
-        import soup_cli.commands.train as train_mod
+        import ai_forge_cli.commands.train as train_mod
 
         src = inspect.getsource(train_mod)
         assert 'cfg.task == "asr"' in src
@@ -748,8 +748,8 @@ class TestAsrTrainerSetup:
     @pytest.mark.skipif(not _TORCH, reason="needs torch + transformers")
     def test_setup_builds_seq2seq_trainer(self, tmp_path):
         pytest.importorskip("soundfile")
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.asr import AsrTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.asr import AsrTrainerWrapper
 
         clip = tmp_path / "clip0.wav"
         _write_sine_wav(clip)
@@ -793,7 +793,7 @@ class TestAsrInfer:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         # Wide COLUMNS + ANSI-strip: Rich splits flag names with color codes and
         # wraps at a narrow CI terminal, so a raw substring check is flaky
@@ -806,7 +806,7 @@ class TestAsrInfer:
     def test_infer_asr_writes_transcriptions_and_wer(self, tmp_path, monkeypatch):
         import json
 
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         # Test seam: skip the real Whisper load, return a fixed hypothesis.
         monkeypatch.setattr(
@@ -840,7 +840,7 @@ class TestAsrInfer:
     def test_read_asr_rows_rejects_missing_audio(self, tmp_path):
         import json
 
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         p = tmp_path / "bad.jsonl"
         p.write_text(json.dumps({"text": "no audio"}) + "\n", encoding="utf-8")
@@ -849,19 +849,19 @@ class TestAsrInfer:
         assert rows == []
 
     def test_resolve_asr_audio_rejects_traversal(self, tmp_path):
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         with pytest.raises(ValueError, match="under"):
             infer_mod._resolve_asr_audio("../../etc/passwd", tmp_path)
 
     def test_resolve_asr_audio_rejects_unc(self, tmp_path):
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         with pytest.raises(ValueError, match="UNC"):
             infer_mod._resolve_asr_audio("\\\\attacker\\share\\x.wav", tmp_path)
 
     def test_resolve_asr_audio_allows_contained(self, tmp_path):
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         got = infer_mod._resolve_asr_audio("clip.wav", tmp_path)
         assert got == str(tmp_path / "clip.wav")
@@ -869,7 +869,7 @@ class TestAsrInfer:
     def test_infer_asr_skips_traversal_row(self, tmp_path, monkeypatch):
         import json
 
-        import soup_cli.commands.infer as infer_mod
+        import ai_forge_cli.commands.infer as infer_mod
 
         monkeypatch.setattr(
             infer_mod, "_ASR_TRANSCRIBER_OVERRIDE", lambda audio_path: "hi"
@@ -894,7 +894,7 @@ class TestAsrInfer:
 
 class TestAsrMetricsDoS:
     def test_raw_char_cap(self):
-        from soup_cli.utils.asr_metrics import _MAX_RAW_CHARS, wer
+        from ai_forge_cli.utils.asr_metrics import _MAX_RAW_CHARS, wer
 
         huge = "a" * (_MAX_RAW_CHARS + 1)
         with pytest.raises(ValueError, match="too long"):
@@ -905,7 +905,7 @@ class TestAsrSidecarValidation:
     def test_read_sidecar_drops_hostile_values(self, tmp_path):
         import json
 
-        from soup_cli.trainer.asr import _ASR_SIDECAR, read_asr_sidecar
+        from ai_forge_cli.trainer.asr import _ASR_SIDECAR, read_asr_sidecar
 
         (tmp_path / _ASR_SIDECAR).write_text(
             json.dumps({"language": "x" * 100, "task": "rm -rf"}), encoding="utf-8"
@@ -921,7 +921,7 @@ class TestAsrSidecarValidation:
 
 class TestAsrRecipes:
     def test_new_recipes_resolve(self):
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         for name in (
             "whisper-tiny-asr",
@@ -932,8 +932,8 @@ class TestAsrRecipes:
             assert get_recipe(name) is not None, name
 
     def test_whisper_recipes_are_asr(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         for name in ("whisper-tiny-asr", "whisper-base-asr", "whisper-large-v3-asr"):
             recipe = get_recipe(name)
@@ -942,8 +942,8 @@ class TestAsrRecipes:
             assert cfg.data.format == "asr", name
 
     def test_smolvlm_recipe_is_vision_sft(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("smolvlm-256m-sft")
         cfg = load_config_from_string(recipe.yaml_str)
@@ -951,6 +951,6 @@ class TestAsrRecipes:
         assert cfg.modality == "vision"
 
     def test_catalog_size_is_146(self):
-        from soup_cli.recipes.catalog import RECIPES
+        from ai_forge_cli.recipes.catalog import RECIPES
 
         assert len(RECIPES) == 146

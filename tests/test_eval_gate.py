@@ -8,7 +8,7 @@ import pytest
 import yaml
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -20,19 +20,19 @@ runner = CliRunner()
 
 class TestEvalGateConfig:
     def test_default_disabled(self):
-        from soup_cli.config.schema import EvalGateConfig
+        from ai_forge_cli.config.schema import EvalGateConfig
 
         cfg = EvalGateConfig()
         assert cfg.enabled is False
 
     def test_enabled_requires_suite(self):
-        from soup_cli.config.schema import EvalGateConfig
+        from ai_forge_cli.config.schema import EvalGateConfig
 
         with pytest.raises(ValueError, match="suite"):
             EvalGateConfig(enabled=True, suite=None)
 
     def test_regression_threshold_bounds(self):
-        from soup_cli.config.schema import EvalGateConfig
+        from ai_forge_cli.config.schema import EvalGateConfig
 
         with pytest.raises(ValueError):
             EvalGateConfig(suite="x.yaml", regression_threshold=-0.1)
@@ -40,7 +40,7 @@ class TestEvalGateConfig:
             EvalGateConfig(suite="x.yaml", regression_threshold=1.5)
 
     def test_every_n_epochs_bounds(self):
-        from soup_cli.config.schema import EvalGateConfig
+        from ai_forge_cli.config.schema import EvalGateConfig
 
         with pytest.raises(ValueError):
             EvalGateConfig(suite="x.yaml", every_n_epochs=0)
@@ -48,7 +48,7 @@ class TestEvalGateConfig:
             EvalGateConfig(suite="x.yaml", every_n_epochs=101)
 
     def test_on_regression_literal(self):
-        from soup_cli.config.schema import EvalGateConfig
+        from ai_forge_cli.config.schema import EvalGateConfig
 
         # Valid
         EvalGateConfig(suite="x.yaml", on_regression="stop")
@@ -66,7 +66,7 @@ class TestEvalGateConfig:
 class TestEvalSuiteLoading:
     def test_load_valid_suite(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.gate import load_suite
+        from ai_forge_cli.eval.gate import load_suite
 
         suite_path = tmp_path / "gate.yaml"
         suite_path.write_text(
@@ -88,7 +88,7 @@ class TestEvalSuiteLoading:
 
     def test_load_rejects_unknown_task_type(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.gate import load_suite
+        from ai_forge_cli.eval.gate import load_suite
 
         suite_path = tmp_path / "gate.yaml"
         suite_path.write_text(
@@ -103,14 +103,14 @@ class TestEvalSuiteLoading:
 
     def test_load_rejects_path_traversal(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.gate import load_suite
+        from ai_forge_cli.eval.gate import load_suite
 
         with pytest.raises(ValueError, match="outside|cwd"):
             load_suite(str(tmp_path.parent / "escape.yaml"))
 
     def test_load_missing_file_raises(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.gate import load_suite
+        from ai_forge_cli.eval.gate import load_suite
 
         with pytest.raises(FileNotFoundError):
             load_suite(str(tmp_path / "nope.yaml"))
@@ -124,8 +124,8 @@ class TestEvalSuiteLoading:
 class TestBaseline:
     def test_resolve_from_registry(self, tmp_path, monkeypatch):
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
-        from soup_cli.eval.gate import resolve_baseline
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.eval.gate import resolve_baseline
+        from ai_forge_cli.registry.store import RegistryStore
 
         store = RegistryStore()
         eid = store.push(name="baseline", tag="v1", base_model="llama",
@@ -139,7 +139,7 @@ class TestBaseline:
 
     def test_resolve_from_file(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.gate import resolve_baseline
+        from ai_forge_cli.eval.gate import resolve_baseline
 
         baseline_file = tmp_path / "baseline.json"
         baseline_file.write_text('{"math_acc": 0.80, "helpfulness": 7.5}',
@@ -149,7 +149,7 @@ class TestBaseline:
 
     def test_resolve_file_path_traversal_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.gate import resolve_baseline
+        from ai_forge_cli.eval.gate import resolve_baseline
 
         outside = tmp_path.parent / "outside_baseline.json"
         outside.write_text("{}", encoding="utf-8")
@@ -160,14 +160,14 @@ class TestBaseline:
             outside.unlink(missing_ok=True)
 
     def test_resolve_none_returns_empty(self):
-        from soup_cli.eval.gate import resolve_baseline
+        from ai_forge_cli.eval.gate import resolve_baseline
 
         assert resolve_baseline(None) == {}
         assert resolve_baseline("") == {}
 
     def test_resolve_missing_registry_entry_raises(self, tmp_path, monkeypatch):
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
-        from soup_cli.eval.gate import resolve_baseline
+        from ai_forge_cli.eval.gate import resolve_baseline
 
         with pytest.raises(ValueError, match="not found|missing"):
             resolve_baseline("registry://nonexistent_entry")
@@ -190,7 +190,7 @@ class TestRunGate:
 
     def test_run_gate_passing(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.gate import EvalSuite, GateTask, run_gate
+        from ai_forge_cli.eval.gate import EvalSuite, GateTask, run_gate
 
         tasks_file = self._suite_with_custom_task(tmp_path)
         suite = EvalSuite(
@@ -210,7 +210,7 @@ class TestRunGate:
 
     def test_run_gate_failing_on_threshold(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.gate import EvalSuite, GateTask, run_gate
+        from ai_forge_cli.eval.gate import EvalSuite, GateTask, run_gate
 
         tasks_file = self._suite_with_custom_task(tmp_path)
         suite = EvalSuite(
@@ -231,7 +231,7 @@ class TestRunGate:
     def test_run_gate_regression_vs_baseline(self, tmp_path, monkeypatch):
         """Gate fails when score drops more than regression_threshold below baseline."""
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.gate import EvalSuite, GateTask, run_gate
+        from ai_forge_cli.eval.gate import EvalSuite, GateTask, run_gate
 
         tasks_file = self._suite_with_custom_task(tmp_path)
         suite = EvalSuite(
@@ -255,7 +255,7 @@ class TestRunGate:
 
     def test_run_gate_no_regression(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.eval.gate import EvalSuite, GateTask, run_gate
+        from ai_forge_cli.eval.gate import EvalSuite, GateTask, run_gate
 
         tasks_file = self._suite_with_custom_task(tmp_path)
         suite = EvalSuite(
@@ -285,8 +285,8 @@ class TestRunGate:
 
 class TestCallbackIntegration:
     def test_callback_runs_gate_on_epoch_end(self, tmp_path):
-        from soup_cli.eval.gate import EvalSuite, GateResult, GateTaskResult
-        from soup_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.eval.gate import EvalSuite, GateResult, GateTaskResult
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
         display = MagicMock()
 
         cb = SoupTrainerCallback(
@@ -324,8 +324,8 @@ class TestCallbackIntegration:
         assert control.should_training_stop is False
 
     def test_callback_stops_training_on_regression(self, tmp_path):
-        from soup_cli.eval.gate import EvalSuite, GateResult, GateTaskResult
-        from soup_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.eval.gate import EvalSuite, GateResult, GateTaskResult
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
         display = MagicMock()
 
         cb = SoupTrainerCallback(
@@ -359,7 +359,7 @@ class TestCallbackIntegration:
         assert control.should_training_stop is True
 
     def test_callback_skips_gate_when_disabled(self):
-        from soup_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
         display = MagicMock()
         cb = SoupTrainerCallback(
             display=display, tracker=None, run_id="test_run",
@@ -375,8 +375,8 @@ class TestCallbackIntegration:
 
     def test_callback_skips_when_not_epoch_boundary(self):
         """every_n_epochs=2 → must NOT run the gate on epoch 1."""
-        from soup_cli.eval.gate import EvalSuite
-        from soup_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.eval.gate import EvalSuite
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
 
         display = MagicMock()
 
@@ -400,8 +400,8 @@ class TestCallbackIntegration:
 
     def test_callback_continue_on_regression_does_not_stop(self):
         """on_regression='continue' → regression is silent, no stop."""
-        from soup_cli.eval.gate import EvalSuite, GateResult, GateTaskResult
-        from soup_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.eval.gate import EvalSuite, GateResult, GateTaskResult
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
 
         display = MagicMock()
         cb = SoupTrainerCallback(
@@ -427,8 +427,8 @@ class TestCallbackIntegration:
 
     def test_callback_structured_error_triggers_stop(self):
         """Gate errors should stop training under on_regression='stop'."""
-        from soup_cli.eval.gate import EvalSuite
-        from soup_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.eval.gate import EvalSuite
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
 
         display = MagicMock()
         cb = SoupTrainerCallback(
@@ -500,7 +500,7 @@ class TestTrainGateFlag:
         assert "eval-gated" in cleaned
 class TestJudgeModelValidation:
     def test_rejects_localhost_prefix_bypass(self):
-        from soup_cli.eval.gate import GateTask
+        from ai_forge_cli.eval.gate import GateTask
 
         with pytest.raises(ValueError, match="judge_model"):
             GateTask(

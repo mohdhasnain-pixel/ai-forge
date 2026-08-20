@@ -1,6 +1,6 @@
 """Tests for data/validator.py — validate_and_stats + extended_stats."""
 
-from soup_cli.data.validator import (
+from ai_forge_cli.data.validator import (
     _percentile,
     extended_stats,
     validate_and_stats,

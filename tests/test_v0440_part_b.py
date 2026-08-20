@@ -12,20 +12,20 @@ from pathlib import Path
 import pytest
 import yaml
 
-from soup_cli.utils.checkpoint_trigger import (
+from ai_forge_cli.utils.checkpoint_trigger import (
     TRIGGER_FILENAME,
     consume_trigger,
     should_save_now,
     trigger_path,
     write_trigger,
 )
-from soup_cli.utils.graceful_save import GracefulSaveHandler
-from soup_cli.utils.onboarding import (
+from ai_forge_cli.utils.graceful_save import GracefulSaveHandler
+from ai_forge_cli.utils.onboarding import (
     VALID_QUANT,
     VALID_TASKS,
     render_onboarding_yaml,
 )
-from soup_cli.utils.shortcuts import (
+from ai_forge_cli.utils.shortcuts import (
     build_for_current_platform,
     build_linux_desktop_entry,
     build_macos_command_file,
@@ -174,7 +174,7 @@ def test_detect_platform_known():
 def test_build_linux_desktop_entry():
     spec = build_linux_desktop_entry(name="Soup CLI", command="soup ui")
     assert spec.platform == "linux"
-    assert spec.filename == "soup-cli.desktop"
+    assert spec.filename == "ai-forge.desktop"
     assert "Exec=soup ui" in spec.content
     assert "Categories=Development;" in spec.content
 

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import TrainingConfig
+from ai_forge_cli.config.schema import TrainingConfig
 
 
 class TestReLoRASchema:
@@ -58,38 +58,38 @@ class TestReLoRAPolicy:
     def test_policy_frozen(self):
         from dataclasses import FrozenInstanceError
 
-        from soup_cli.utils.relora import ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRAPolicy
         p = ReLoRAPolicy(steps=500, warmup_ratio=0.1, reset_optimizer=True, prune_ratio=0.9)
         with pytest.raises(FrozenInstanceError):
             p.steps = 999  # type: ignore
 
     def test_policy_should_fire_step_zero_no(self):
-        from soup_cli.utils.relora import ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRAPolicy
         p = ReLoRAPolicy(steps=500)
         assert p.should_fire(global_step=0) is False
 
     def test_policy_should_fire_at_multiple(self):
-        from soup_cli.utils.relora import ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRAPolicy
         p = ReLoRAPolicy(steps=500)
         assert p.should_fire(global_step=500) is True
         assert p.should_fire(global_step=1000) is True
 
     def test_policy_should_fire_skips_warmup(self):
-        from soup_cli.utils.relora import ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRAPolicy
         # warmup_ratio=0.5 over total 1000 = first 500 skipped
         p = ReLoRAPolicy(steps=200, warmup_ratio=0.5)
         assert p.should_fire(global_step=200, total_steps=1000) is False
         assert p.should_fire(global_step=600, total_steps=1000) is True
 
     def test_policy_rejects_invalid_steps(self):
-        from soup_cli.utils.relora import ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRAPolicy
         with pytest.raises(ValueError):
             ReLoRAPolicy(steps=0)
         with pytest.raises(ValueError):
             ReLoRAPolicy(steps=-1)
 
     def test_policy_rejects_invalid_prune_ratio(self):
-        from soup_cli.utils.relora import ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRAPolicy
         with pytest.raises(ValueError):
             ReLoRAPolicy(steps=500, prune_ratio=0.0)
         with pytest.raises(ValueError):
@@ -104,7 +104,7 @@ class TestMagnitudePrune:
             import torch
         except ImportError:
             pytest.skip("torch not available")
-        from soup_cli.utils.relora import magnitude_prune_tensor
+        from ai_forge_cli.utils.relora import magnitude_prune_tensor
 
         x = torch.tensor([0.01, 0.02, 0.5, 1.0, 2.0])
         # prune_ratio=0.6 → keep top 40% (2 of 5) → smallest 3 zeroed
@@ -120,7 +120,7 @@ class TestMagnitudePrune:
             import torch
         except ImportError:
             pytest.skip("torch not available")
-        from soup_cli.utils.relora import magnitude_prune_tensor
+        from ai_forge_cli.utils.relora import magnitude_prune_tensor
 
         # 1-element tensor — kthvalue(_, 0) would raise; helper must short-circuit.
         x = torch.tensor([3.14])
@@ -133,7 +133,7 @@ class TestMagnitudePrune:
             import torch
         except ImportError:
             pytest.skip("torch not available")
-        from soup_cli.utils.relora import magnitude_prune_tensor
+        from ai_forge_cli.utils.relora import magnitude_prune_tensor
 
         x = torch.tensor([1.0, 2.0, 3.0])
         out = magnitude_prune_tensor(x.clone(), prune_ratio=0.001)
@@ -145,7 +145,7 @@ class TestMagnitudePrune:
             import torch
         except ImportError:
             pytest.skip("torch not available")
-        from soup_cli.utils.relora import magnitude_prune_tensor
+        from ai_forge_cli.utils.relora import magnitude_prune_tensor
         x = torch.zeros(3)
         with pytest.raises(ValueError):
             magnitude_prune_tensor(x, prune_ratio=0.0)
@@ -157,7 +157,7 @@ class TestMagnitudePrune:
             import torch  # noqa: F401
         except ImportError:
             pytest.skip("torch not available")
-        from soup_cli.utils.relora import magnitude_prune_tensor
+        from ai_forge_cli.utils.relora import magnitude_prune_tensor
         with pytest.raises(TypeError):
             magnitude_prune_tensor([1.0, 2.0, 3.0], prune_ratio=0.5)
         with pytest.raises(TypeError):
@@ -166,7 +166,7 @@ class TestMagnitudePrune:
 
 class TestReLoRACallback:
     def test_callback_disabled_no_op(self):
-        from soup_cli.utils.relora import ReLoRACallback
+        from ai_forge_cli.utils.relora import ReLoRACallback
         cb = ReLoRACallback(policy=None)
         # disabled callback never fires
         state = MagicMock(global_step=500, max_steps=1000)
@@ -176,7 +176,7 @@ class TestReLoRACallback:
         assert cb.fire_count == 0
 
     def test_callback_fires_on_relora_step(self):
-        from soup_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
         cb = ReLoRACallback(policy=ReLoRAPolicy(steps=100))
         # mock model with PEFT-style lora_A / lora_B parameters
         cb._prune_and_reset = MagicMock()  # type: ignore[method-assign]
@@ -188,7 +188,7 @@ class TestReLoRACallback:
         cb._prune_and_reset.assert_called_once()
 
     def test_callback_does_not_fire_off_step(self):
-        from soup_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
         cb = ReLoRACallback(policy=ReLoRAPolicy(steps=100))
         cb._prune_and_reset = MagicMock()  # type: ignore[method-assign]
         state = MagicMock(global_step=99, max_steps=1000)
@@ -197,7 +197,7 @@ class TestReLoRACallback:
         cb._prune_and_reset.assert_not_called()
 
     def test_callback_skips_warmup(self):
-        from soup_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
         cb = ReLoRACallback(policy=ReLoRAPolicy(steps=100, warmup_ratio=0.5))
         cb._prune_and_reset = MagicMock()  # type: ignore[method-assign]
         # at step 100 with total 1000 → warmup is 500 → skip
@@ -219,7 +219,7 @@ class TestReLoRATaskGate:
     def test_sft_accepted(self):
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
         cfg = load_config_from_string(yaml.safe_dump(self._base_cfg("sft")))
         assert cfg.training.relora_steps == 100
 
@@ -232,7 +232,7 @@ class TestReLoRATaskGate:
         # v0.40.6 (#67) — multi-trainer expansion lifted the SFT-only gate.
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
         cfg = load_config_from_string(yaml.safe_dump(self._base_cfg(task)))
         assert cfg.training.relora_steps == 100
         assert cfg.task == task
@@ -240,7 +240,7 @@ class TestReLoRATaskGate:
     def test_mlx_backend_rejected(self):
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
         with pytest.raises(ValueError, match="mlx"):
             load_config_from_string(yaml.safe_dump(self._base_cfg("sft", "mlx")))
 
@@ -248,7 +248,7 @@ class TestReLoRATaskGate:
         # multi-task without relora_steps stays valid
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
         d = self._base_cfg("dpo")
         d["training"].pop("relora_steps")
         cfg = load_config_from_string(yaml.safe_dump(d))
@@ -262,7 +262,7 @@ class TestPruneAndReset:
             import torch.nn as nn
         except ImportError:
             pytest.skip("torch not available")
-        from soup_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
 
         class FakeLoraModule(nn.Module):
             def __init__(self):
@@ -302,7 +302,7 @@ class TestPruneAndReset:
             import torch.nn as nn
         except ImportError:
             pytest.skip("torch not available")
-        from soup_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
 
         class FakeLoraModule(nn.Module):
             def __init__(self):
@@ -333,7 +333,7 @@ class TestPruneAndReset:
             import torch.nn as nn
         except ImportError:
             pytest.skip("torch not available")
-        from soup_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
+        from ai_forge_cli.utils.relora import ReLoRACallback, ReLoRAPolicy
 
         class FakeLoraModule(nn.Module):
             def __init__(self):

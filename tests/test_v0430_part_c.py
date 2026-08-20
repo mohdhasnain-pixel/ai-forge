@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.utils.profiling_v0_43 import (
+from ai_forge_cli.utils.profiling_v0_43 import (
     BandwidthExpectation,
     detect_anomaly_context,
     expected_bandwidth,
@@ -15,7 +15,7 @@ from soup_cli.utils.profiling_v0_43 import (
     nccl_bandwidth_check,
     resolve_snapshot_path,
 )
-from soup_cli.utils.vscode_setup import build_launch_json, write_vscode_launch
+from ai_forge_cli.utils.vscode_setup import build_launch_json, write_vscode_launch
 
 # ----------------- snapshot path -----------------
 
@@ -215,7 +215,7 @@ class TestBuildLaunchJson:
         assert len(configs) >= 2
         train = next(c for c in configs if c["name"] == "soup train")
         assert "soup.yaml" in train["args"]
-        assert train["module"] == "soup_cli.cli"
+        assert train["module"] == "ai_forge_cli.cli"
 
     def test_custom_config_path(self):
         payload = build_launch_json(config_path="my-cfg.yaml")

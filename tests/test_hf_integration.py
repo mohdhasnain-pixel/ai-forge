@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -35,7 +35,7 @@ class TestResolveToken:
     def test_env_hf_token_wins(self, monkeypatch, tmp_path):
         monkeypatch.setenv("HF_TOKEN", "env-token")
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        from soup_cli.utils.hf import resolve_token
+        from ai_forge_cli.utils.hf import resolve_token
 
         assert resolve_token() == "env-token"
 
@@ -46,7 +46,7 @@ class TestResolveToken:
         token_file.parent.mkdir(parents=True)
         token_file.write_text("cached-token\n")
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        from soup_cli.utils.hf import resolve_token
+        from ai_forge_cli.utils.hf import resolve_token
 
         assert resolve_token() == "cached-token"
 
@@ -57,13 +57,13 @@ class TestResolveToken:
         token_file.parent.mkdir(parents=True)
         token_file.write_text("legacy-token")
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        from soup_cli.utils.hf import resolve_token
+        from ai_forge_cli.utils.hf import resolve_token
 
         assert resolve_token() == "legacy-token"
 
     def test_explicit_token_overrides_env(self, monkeypatch):
         monkeypatch.setenv("HF_TOKEN", "env-token")
-        from soup_cli.utils.hf import resolve_token
+        from ai_forge_cli.utils.hf import resolve_token
 
         assert resolve_token(explicit="explicit-token") == "explicit-token"
 
@@ -71,7 +71,7 @@ class TestResolveToken:
         monkeypatch.delenv("HF_TOKEN", raising=False)
         monkeypatch.setenv("HUGGINGFACE_HUB_TOKEN", "hh-token")
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        from soup_cli.utils.hf import resolve_token
+        from ai_forge_cli.utils.hf import resolve_token
 
         assert resolve_token() == "hh-token"
 
@@ -79,7 +79,7 @@ class TestResolveToken:
         monkeypatch.delenv("HF_TOKEN", raising=False)
         monkeypatch.delenv("HUGGINGFACE_HUB_TOKEN", raising=False)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        from soup_cli.utils.hf import resolve_token
+        from ai_forge_cli.utils.hf import resolve_token
 
         assert resolve_token() is None
 
@@ -87,32 +87,32 @@ class TestResolveToken:
 class TestResolveEndpoint:
     def test_default_endpoint(self, monkeypatch):
         monkeypatch.delenv("HF_ENDPOINT", raising=False)
-        from soup_cli.utils.hf import resolve_endpoint
+        from ai_forge_cli.utils.hf import resolve_endpoint
 
         assert resolve_endpoint() == "https://huggingface.co"
 
     def test_custom_endpoint_env(self, monkeypatch):
         monkeypatch.setenv("HF_ENDPOINT", "https://hf.internal.example.com")
-        from soup_cli.utils.hf import resolve_endpoint
+        from ai_forge_cli.utils.hf import resolve_endpoint
 
         assert resolve_endpoint() == "https://hf.internal.example.com"
 
     def test_endpoint_strips_trailing_slash(self, monkeypatch):
         monkeypatch.setenv("HF_ENDPOINT", "https://hf.internal.example.com/")
-        from soup_cli.utils.hf import resolve_endpoint
+        from ai_forge_cli.utils.hf import resolve_endpoint
 
         assert resolve_endpoint() == "https://hf.internal.example.com"
 
     def test_endpoint_rejects_non_https_remote(self, monkeypatch):
         monkeypatch.setenv("HF_ENDPOINT", "http://evil.example.com")
-        from soup_cli.utils.hf import resolve_endpoint
+        from ai_forge_cli.utils.hf import resolve_endpoint
 
         with pytest.raises(ValueError, match="HTTPS"):
             resolve_endpoint()
 
     def test_endpoint_allows_localhost_http(self, monkeypatch):
         monkeypatch.setenv("HF_ENDPOINT", "http://localhost:8080")
-        from soup_cli.utils.hf import resolve_endpoint
+        from ai_forge_cli.utils.hf import resolve_endpoint
 
         assert resolve_endpoint() == "http://localhost:8080"
 
@@ -120,17 +120,17 @@ class TestResolveEndpoint:
         # OS-level setenv rejects null bytes on macOS/Windows before
         # ``resolve_endpoint`` ever runs, so patch the dict directly.
         monkeypatch.setattr(
-            "soup_cli.utils.hf.os.environ",
+            "ai_forge_cli.utils.hf.os.environ",
             {"HF_ENDPOINT": "https://hf.example.com\x00"},
         )
-        from soup_cli.utils.hf import resolve_endpoint
+        from ai_forge_cli.utils.hf import resolve_endpoint
 
         with pytest.raises(ValueError):
             resolve_endpoint()
 
     def test_endpoint_rejects_bad_scheme(self, monkeypatch):
         monkeypatch.setenv("HF_ENDPOINT", "file:///etc/passwd")
-        from soup_cli.utils.hf import resolve_endpoint
+        from ai_forge_cli.utils.hf import resolve_endpoint
 
         with pytest.raises(ValueError):
             resolve_endpoint()
@@ -138,73 +138,73 @@ class TestResolveEndpoint:
 
 class TestValidateRepoId:
     def test_valid_user_repo(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         validate_repo_id("user/my-model")
 
     def test_valid_repo_only(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         validate_repo_id("my-model")
 
     def test_rejects_empty(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         with pytest.raises(ValueError):
             validate_repo_id("")
 
     def test_rejects_slash_at_start(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         with pytest.raises(ValueError):
             validate_repo_id("/my-model")
 
     def test_rejects_double_slash(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         with pytest.raises(ValueError):
             validate_repo_id("user//model")
 
     def test_rejects_path_traversal(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         with pytest.raises(ValueError):
             validate_repo_id("../../secrets")
 
     def test_rejects_null_byte(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         with pytest.raises(ValueError):
             validate_repo_id("user/model\x00")
 
     def test_rejects_whitespace(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         with pytest.raises(ValueError):
             validate_repo_id("user/my model")
 
     def test_rejects_too_long(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         with pytest.raises(ValueError):
             validate_repo_id("user/" + ("a" * 200))
 
     def test_accepts_dots_underscores_hyphens(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         validate_repo_id("user/my_model.v2-beta")
 
 
 class TestGetHfApi:
     def test_requires_huggingface_hub(self, monkeypatch):
-        from soup_cli.utils.hf import get_hf_api
+        from ai_forge_cli.utils.hf import get_hf_api
 
         monkeypatch.setitem(sys.modules, "huggingface_hub", None)
         with pytest.raises(ImportError):
             get_hf_api()
 
     def test_passes_token_and_endpoint(self, monkeypatch):
-        from soup_cli.utils import hf
+        from ai_forge_cli.utils import hf
 
         fake_hub = types.ModuleType("huggingface_hub")
 
@@ -253,17 +253,17 @@ class TestPushAsCLIFlag:
 
 class TestHFPushCallback:
     def test_callback_import(self):
-        from soup_cli.monitoring.hf_push import HFPushCallback  # noqa: F401
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback  # noqa: F401
 
     def test_callback_uploads_checkpoint_on_save(self, tmp_path, monkeypatch):
-        from soup_cli.monitoring.hf_push import HFPushCallback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback
 
         ckpt_dir = tmp_path / "checkpoint-100"
         ckpt_dir.mkdir()
         (ckpt_dir / "adapter_config.json").write_text("{}")
 
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api)
 
         callback = HFPushCallback(
             repo_id="user/my-model",
@@ -287,7 +287,7 @@ class TestHFPushCallback:
         assert "checkpoint-100" in kwargs["commit_message"]
 
     def test_callback_swallows_upload_errors(self, tmp_path, monkeypatch):
-        from soup_cli.monitoring.hf_push import HFPushCallback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback
 
         ckpt_dir = tmp_path / "checkpoint-50"
         ckpt_dir.mkdir()
@@ -295,7 +295,7 @@ class TestHFPushCallback:
 
         fake_api = MagicMock()
         fake_api.upload_folder.side_effect = RuntimeError("network")
-        monkeypatch.setattr("soup_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api)
 
         callback = HFPushCallback(
             repo_id="user/my-model",
@@ -309,10 +309,10 @@ class TestHFPushCallback:
         callback.on_save(args, state, control)
 
     def test_callback_skips_missing_checkpoint(self, tmp_path, monkeypatch):
-        from soup_cli.monitoring.hf_push import HFPushCallback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback
 
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api)
 
         callback = HFPushCallback(
             repo_id="user/my-model",
@@ -330,7 +330,7 @@ class TestHFPushCallback:
 
 class TestResolveLatestRevision:
     def test_returns_latest_step(self, tmp_path, monkeypatch):
-        from soup_cli.monitoring.hf_push import resolve_latest_checkpoint_revision
+        from ai_forge_cli.monitoring.hf_push import resolve_latest_checkpoint_revision
 
         fake_api = MagicMock()
         fake_api.list_repo_refs.return_value = types.SimpleNamespace(
@@ -342,31 +342,31 @@ class TestResolveLatestRevision:
             ]
         )
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api
+            "ai_forge_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api
         )
         result = resolve_latest_checkpoint_revision("user/my-model", token="t1")
         assert result == "checkpoint-150"
 
     def test_returns_none_when_no_checkpoints(self, monkeypatch):
-        from soup_cli.monitoring.hf_push import resolve_latest_checkpoint_revision
+        from ai_forge_cli.monitoring.hf_push import resolve_latest_checkpoint_revision
 
         fake_api = MagicMock()
         fake_api.list_repo_refs.return_value = types.SimpleNamespace(
             branches=[types.SimpleNamespace(name="main")]
         )
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api
+            "ai_forge_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api
         )
         result = resolve_latest_checkpoint_revision("user/my-model", token="t1")
         assert result is None
 
     def test_returns_none_on_api_error(self, monkeypatch):
-        from soup_cli.monitoring.hf_push import resolve_latest_checkpoint_revision
+        from ai_forge_cli.monitoring.hf_push import resolve_latest_checkpoint_revision
 
         fake_api = MagicMock()
         fake_api.list_repo_refs.side_effect = RuntimeError("no such repo")
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api
+            "ai_forge_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api
         )
         result = resolve_latest_checkpoint_revision("user/my-model", token="t1")
         assert result is None
@@ -379,7 +379,7 @@ class TestResolveLatestRevision:
 
 class TestModelCardV2:
     def test_generate_enhanced_card_basic(self, tmp_path):
-        from soup_cli.commands.push import generate_model_card_v2
+        from ai_forge_cli.commands.push import generate_model_card_v2
 
         adapter_dir = tmp_path / "adapter"
         adapter_dir.mkdir()
@@ -395,21 +395,21 @@ class TestModelCardV2:
         card = generate_model_card_v2(adapter_dir, repo_id="user/my-model")
         assert "my-model" in card
         assert "meta-llama/Llama-3.1-8B" in card
-        assert "soup-cli" in card
+        assert "ai-forge" in card
         assert "LoRA" in card
 
     def test_generate_full_model_card(self, tmp_path):
-        from soup_cli.commands.push import generate_model_card_v2
+        from ai_forge_cli.commands.push import generate_model_card_v2
 
         model_dir = tmp_path / "model"
         model_dir.mkdir()
         (model_dir / "config.json").write_text("{}")
         card = generate_model_card_v2(model_dir, repo_id="user/full-model")
         assert "full-model" in card
-        assert "soup-cli" in card
+        assert "ai-forge" in card
 
     def test_card_includes_training_config_when_present(self, tmp_path):
-        from soup_cli.commands.push import generate_model_card_v2
+        from ai_forge_cli.commands.push import generate_model_card_v2
 
         adapter_dir = tmp_path / "adapter"
         adapter_dir.mkdir()
@@ -422,7 +422,7 @@ class TestModelCardV2:
         assert "0.0002" in card or "lr" in card
 
     def test_card_includes_eval_scorecard_when_registry_available(self, tmp_path):
-        from soup_cli.commands.push import generate_model_card_v2
+        from ai_forge_cli.commands.push import generate_model_card_v2
 
         adapter_dir = tmp_path / "adapter"
         adapter_dir.mkdir()
@@ -441,7 +441,7 @@ class TestModelCardV2:
         assert "0.612" in card or "61.2" in card
 
     def test_card_safe_against_malformed_config(self, tmp_path):
-        from soup_cli.commands.push import generate_model_card_v2
+        from ai_forge_cli.commands.push import generate_model_card_v2
 
         adapter_dir = tmp_path / "adapter"
         adapter_dir.mkdir()
@@ -461,10 +461,10 @@ class TestCollections:
         assert "--collection" in _plain(result.output)
 
     def test_add_to_collection_calls_api(self, monkeypatch):
-        from soup_cli.utils.hf import add_to_collection
+        from ai_forge_cli.utils.hf import add_to_collection
 
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
         add_to_collection(
             collection_slug="user/collection-abc123",
             repo_id="user/my-model",
@@ -477,10 +477,10 @@ class TestCollections:
         assert kwargs["item_type"] == "model"
 
     def test_add_to_collection_rejects_invalid_slug(self, monkeypatch):
-        from soup_cli.utils.hf import add_to_collection
+        from ai_forge_cli.utils.hf import add_to_collection
 
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
         with pytest.raises(ValueError):
             add_to_collection(
                 collection_slug="../../escape",
@@ -489,11 +489,11 @@ class TestCollections:
             )
 
     def test_add_to_collection_survives_duplicate(self, monkeypatch):
-        from soup_cli.utils.hf import add_to_collection
+        from ai_forge_cli.utils.hf import add_to_collection
 
         fake_api = MagicMock()
         fake_api.add_collection_item.side_effect = RuntimeError("already exists")
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
         add_to_collection(
             collection_slug="user/collection-abc123",
             repo_id="user/my-model",
@@ -593,7 +593,7 @@ class TestDataPush:
         (tmp_path / "data.jsonl").write_text('{"text":"a"}\n{"text":"b"}\n')
 
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
 
         result = runner.invoke(
             app,
@@ -649,7 +649,7 @@ class TestDeployHfSpace:
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("HF_TOKEN", "t1")
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
         result = runner.invoke(
             app,
             [
@@ -692,7 +692,7 @@ class TestDeployHfSpace:
         monkeypatch.setenv("HF_TOKEN", "t1")
 
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
 
         result = runner.invoke(
             app,
@@ -712,7 +712,7 @@ class TestDeployHfSpace:
         assert fake_api.create_repo.called
 
     def test_render_gradio_chat_template(self):
-        from soup_cli.commands.deploy import render_space_template
+        from ai_forge_cli.commands.deploy import render_space_template
 
         rendered = render_space_template("gradio-chat", model_repo="user/my-model")
         assert "gradio" in rendered["app.py"].lower()
@@ -721,20 +721,20 @@ class TestDeployHfSpace:
         assert "README.md" in rendered
 
     def test_render_streamlit_chat_template(self):
-        from soup_cli.commands.deploy import render_space_template
+        from ai_forge_cli.commands.deploy import render_space_template
 
         rendered = render_space_template("streamlit-chat", model_repo="user/my-model")
         assert "streamlit" in rendered["app.py"].lower()
         assert "user/my-model" in rendered["app.py"]
 
     def test_render_unknown_template_raises(self):
-        from soup_cli.commands.deploy import render_space_template
+        from ai_forge_cli.commands.deploy import render_space_template
 
         with pytest.raises(ValueError):
             render_space_template("bogus", model_repo="user/my-model")
 
     def test_readme_sets_sdk_to_match_template(self):
-        from soup_cli.commands.deploy import render_space_template
+        from ai_forge_cli.commands.deploy import render_space_template
 
         gradio = render_space_template("gradio-chat", model_repo="user/my-model")
         assert "sdk: gradio" in gradio["README.md"]
@@ -742,7 +742,7 @@ class TestDeployHfSpace:
         assert "sdk: streamlit" in streamlit["README.md"]
 
     def test_template_escapes_model_repo_id(self):
-        from soup_cli.commands.deploy import render_space_template
+        from ai_forge_cli.commands.deploy import render_space_template
 
         with pytest.raises(ValueError):
             render_space_template("gradio-chat", model_repo="../../escape")
@@ -759,7 +759,7 @@ class TestAutoResume:
         assert "--hf-resume" in _plain(result.output)
 
     def test_prepare_hf_resume_downloads_latest(self, tmp_path, monkeypatch):
-        from soup_cli.monitoring.hf_push import prepare_hf_resume
+        from ai_forge_cli.monitoring.hf_push import prepare_hf_resume
 
         monkeypatch.chdir(tmp_path)
         out_dir = tmp_path / "runs" / "experiment"
@@ -774,11 +774,11 @@ class TestAutoResume:
             return local_dir
 
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push.resolve_latest_checkpoint_revision",
+            "ai_forge_cli.monitoring.hf_push.resolve_latest_checkpoint_revision",
             lambda repo_id, token=None, endpoint=None: "checkpoint-300",
         )
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push._download_checkpoint", fake_download
+            "ai_forge_cli.monitoring.hf_push._download_checkpoint", fake_download
         )
 
         result = prepare_hf_resume(
@@ -790,13 +790,13 @@ class TestAutoResume:
         assert called["revision"] == "checkpoint-300"
 
     def test_prepare_hf_resume_no_checkpoint_returns_none(self, monkeypatch, tmp_path):
-        from soup_cli.monitoring.hf_push import prepare_hf_resume
+        from ai_forge_cli.monitoring.hf_push import prepare_hf_resume
 
         monkeypatch.chdir(tmp_path)
         out_dir = tmp_path / "runs"
         out_dir.mkdir()
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push.resolve_latest_checkpoint_revision",
+            "ai_forge_cli.monitoring.hf_push.resolve_latest_checkpoint_revision",
             lambda repo_id, token=None, endpoint=None: None,
         )
         result = prepare_hf_resume(
@@ -811,7 +811,7 @@ class TestAutoResume:
     ):
         import pytest
 
-        from soup_cli.monitoring.hf_push import prepare_hf_resume
+        from ai_forge_cli.monitoring.hf_push import prepare_hf_resume
 
         cwd = tmp_path / "project"
         cwd.mkdir()
@@ -834,7 +834,7 @@ class TestAutoResume:
 
 class TestHfUtilsModule:
     def test_module_exports(self):
-        from soup_cli.utils import hf
+        from ai_forge_cli.utils import hf
 
         assert hasattr(hf, "resolve_token")
         assert hasattr(hf, "resolve_endpoint")
@@ -849,7 +849,7 @@ class TestHfUtilsModule:
         token_file.parent.mkdir(parents=True)
         token_file.write_text("  padded-token  \n")
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        from soup_cli.utils.hf import resolve_token
+        from ai_forge_cli.utils.hf import resolve_token
 
         assert resolve_token() == "padded-token"
 
@@ -863,42 +863,42 @@ class TestHfUtilsModule:
 
 class TestValidateCollectionSlug:
     def test_accepts_valid(self):
-        from soup_cli.utils.hf import validate_collection_slug
+        from ai_forge_cli.utils.hf import validate_collection_slug
 
         validate_collection_slug("user/my-collection-abc12345")
 
     def test_rejects_empty(self):
-        from soup_cli.utils.hf import validate_collection_slug
+        from ai_forge_cli.utils.hf import validate_collection_slug
 
         with pytest.raises(ValueError):
             validate_collection_slug("")
 
     def test_rejects_whitespace(self):
-        from soup_cli.utils.hf import validate_collection_slug
+        from ai_forge_cli.utils.hf import validate_collection_slug
 
         with pytest.raises(ValueError):
             validate_collection_slug("user/my coll")
 
     def test_rejects_null_byte(self):
-        from soup_cli.utils.hf import validate_collection_slug
+        from ai_forge_cli.utils.hf import validate_collection_slug
 
         with pytest.raises(ValueError):
             validate_collection_slug("user/my-coll\x00")
 
     def test_rejects_path_traversal(self):
-        from soup_cli.utils.hf import validate_collection_slug
+        from ai_forge_cli.utils.hf import validate_collection_slug
 
         with pytest.raises(ValueError):
             validate_collection_slug("../../escape")
 
     def test_rejects_too_long(self):
-        from soup_cli.utils.hf import validate_collection_slug
+        from ai_forge_cli.utils.hf import validate_collection_slug
 
         with pytest.raises(ValueError):
             validate_collection_slug("user/" + ("a" * 300))
 
     def test_rejects_missing_slash(self):
-        from soup_cli.utils.hf import validate_collection_slug
+        from ai_forge_cli.utils.hf import validate_collection_slug
 
         with pytest.raises(ValueError):
             validate_collection_slug("onlyname")
@@ -906,11 +906,11 @@ class TestValidateCollectionSlug:
 
 class TestAddToCollectionExtras:
     def test_raises_on_duplicate_when_ignore_false(self, monkeypatch):
-        from soup_cli.utils.hf import add_to_collection
+        from ai_forge_cli.utils.hf import add_to_collection
 
         fake_api = MagicMock()
         fake_api.add_collection_item.side_effect = RuntimeError("already exists")
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
         with pytest.raises(RuntimeError):
             add_to_collection(
                 collection_slug="user/my-coll-abc12345",
@@ -920,11 +920,11 @@ class TestAddToCollectionExtras:
             )
 
     def test_raises_on_unrelated_error(self, monkeypatch):
-        from soup_cli.utils.hf import add_to_collection
+        from ai_forge_cli.utils.hf import add_to_collection
 
         fake_api = MagicMock()
         fake_api.add_collection_item.side_effect = RuntimeError("auth required")
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
         with pytest.raises(RuntimeError):
             add_to_collection(
                 collection_slug="user/my-coll-abc12345",
@@ -933,10 +933,10 @@ class TestAddToCollectionExtras:
             )
 
     def test_rejects_invalid_item_type(self, monkeypatch):
-        from soup_cli.utils.hf import add_to_collection
+        from ai_forge_cli.utils.hf import add_to_collection
 
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
         with pytest.raises(ValueError, match="item_type"):
             add_to_collection(
                 collection_slug="user/my-coll-abc12345",
@@ -948,7 +948,7 @@ class TestAddToCollectionExtras:
 
 class TestBuildPushCallback:
     def test_returns_none_when_no_token(self, monkeypatch, tmp_path):
-        from soup_cli.monitoring.hf_push import build_push_callback
+        from ai_forge_cli.monitoring.hf_push import build_push_callback
 
         monkeypatch.delenv("HF_TOKEN", raising=False)
         monkeypatch.delenv("HUGGINGFACE_HUB_TOKEN", raising=False)
@@ -959,7 +959,7 @@ class TestBuildPushCallback:
         assert cb is None
 
     def test_returns_none_on_bad_endpoint(self, monkeypatch, tmp_path):
-        from soup_cli.monitoring.hf_push import build_push_callback
+        from ai_forge_cli.monitoring.hf_push import build_push_callback
 
         monkeypatch.setenv("HF_TOKEN", "t1")
         monkeypatch.setenv("HF_ENDPOINT", "http://evil.example.com")
@@ -969,7 +969,7 @@ class TestBuildPushCallback:
         assert cb is None
 
     def test_happy_path_returns_callback(self, monkeypatch, tmp_path):
-        from soup_cli.monitoring.hf_push import HFPushCallback, build_push_callback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback, build_push_callback
 
         monkeypatch.setenv("HF_TOKEN", "t1")
         monkeypatch.delenv("HF_ENDPOINT", raising=False)
@@ -984,12 +984,12 @@ class TestCallbackLifecycle:
     def _fake_api(self, monkeypatch):
         fake_api = MagicMock()
         monkeypatch.setattr(
-            "soup_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api
+            "ai_forge_cli.monitoring.hf_push.get_hf_api", lambda **_: fake_api
         )
         return fake_api
 
     def test_on_train_begin_creates_repo(self, monkeypatch):
-        from soup_cli.monitoring.hf_push import HFPushCallback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback
 
         fake_api = self._fake_api(monkeypatch)
         cb = HFPushCallback(
@@ -1005,7 +1005,7 @@ class TestCallbackLifecycle:
         )
 
     def test_on_train_begin_swallows_failure(self, monkeypatch):
-        from soup_cli.monitoring.hf_push import HFPushCallback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback
 
         fake_api = self._fake_api(monkeypatch)
         fake_api.create_repo.side_effect = RuntimeError("auth")
@@ -1021,7 +1021,7 @@ class TestCallbackLifecycle:
         assert cb._repo_created is False
 
     def test_create_repo_called_once_across_saves(self, tmp_path, monkeypatch):
-        from soup_cli.monitoring.hf_push import HFPushCallback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback
 
         fake_api = self._fake_api(monkeypatch)
         for step in (50, 100, 150):
@@ -1042,7 +1042,7 @@ class TestCallbackLifecycle:
         assert fake_api.upload_folder.call_count == 3
 
     def test_no_upload_after_repo_creation_fails(self, tmp_path, monkeypatch):
-        from soup_cli.monitoring.hf_push import HFPushCallback
+        from ai_forge_cli.monitoring.hf_push import HFPushCallback
 
         fake_api = self._fake_api(monkeypatch)
         fake_api.create_repo.side_effect = RuntimeError("auth forbidden")
@@ -1079,21 +1079,21 @@ class TestPrivateIPSSRF:
     )
     def test_private_ip_http_rejected(self, monkeypatch, host):
         monkeypatch.setenv("HF_ENDPOINT", host)
-        from soup_cli.utils.hf import resolve_endpoint
+        from ai_forge_cli.utils.hf import resolve_endpoint
 
         with pytest.raises(ValueError):
             resolve_endpoint()
 
     def test_zero_address_rejected(self, monkeypatch):
         monkeypatch.setenv("HF_ENDPOINT", "http://0.0.0.0:8080")
-        from soup_cli.utils.hf import resolve_endpoint
+        from ai_forge_cli.utils.hf import resolve_endpoint
 
         with pytest.raises(ValueError, match="0.0.0.0"):
             resolve_endpoint()
 
     def test_127_allowed(self, monkeypatch):
         monkeypatch.setenv("HF_ENDPOINT", "http://127.0.0.1:8080")
-        from soup_cli.utils.hf import resolve_endpoint
+        from ai_forge_cli.utils.hf import resolve_endpoint
 
         assert resolve_endpoint() == "http://127.0.0.1:8080"
 
@@ -1102,18 +1102,18 @@ class TestResolveTokenEdgeCases:
     def test_whitespace_env_falls_through(self, monkeypatch, tmp_path):
         monkeypatch.setenv("HF_TOKEN", "   ")
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path / "no-creds")
-        from soup_cli.utils.hf import resolve_token
+        from ai_forge_cli.utils.hf import resolve_token
 
         assert resolve_token() is None
 
     def test_empty_explicit_falls_through_to_env(self, monkeypatch):
         monkeypatch.setenv("HF_TOKEN", "from-env")
-        from soup_cli.utils.hf import resolve_token
+        from ai_forge_cli.utils.hf import resolve_token
 
         assert resolve_token(explicit="") == "from-env"
 
     def test_explicit_non_printable_raises(self):
-        from soup_cli.utils.hf import resolve_token
+        from ai_forge_cli.utils.hf import resolve_token
 
         with pytest.raises(ValueError):
             resolve_token(explicit="abc\x01\x02")
@@ -1121,12 +1121,12 @@ class TestResolveTokenEdgeCases:
 
 class TestValidateRepoIdBoundaries:
     def test_accepts_max_length_component(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         validate_repo_id("u/" + ("a" * 96))
 
     def test_rejects_oversized_component(self):
-        from soup_cli.utils.hf import validate_repo_id
+        from ai_forge_cli.utils.hf import validate_repo_id
 
         with pytest.raises(ValueError):
             validate_repo_id("u/" + ("a" * 97))
@@ -1134,14 +1134,14 @@ class TestValidateRepoIdBoundaries:
 
 class TestEvalScorecardEdgeCases:
     def test_non_numeric_score(self):
-        from soup_cli.commands.push import _render_eval_scorecard
+        from ai_forge_cli.commands.push import _render_eval_scorecard
 
         rendered = _render_eval_scorecard({"gsm8k": "N/A"})
         assert "N/A" in rendered
         assert "gsm8k" in rendered
 
     def test_escapes_pipe_in_task_name(self):
-        from soup_cli.commands.push import _render_eval_scorecard
+        from ai_forge_cli.commands.push import _render_eval_scorecard
 
         rendered = _render_eval_scorecard({"math|injection": 0.5})
         # The pipe must be neutralised to avoid breaking the markdown table.
@@ -1151,7 +1151,7 @@ class TestEvalScorecardEdgeCases:
                 assert line.count("|") == 3
 
     def test_escapes_markdown_injection(self):
-        from soup_cli.commands.push import _render_eval_scorecard
+        from ai_forge_cli.commands.push import _render_eval_scorecard
 
         rendered = _render_eval_scorecard({"task\n| fake | 0.99": 0.5})
         assert "fake" in rendered  # literal preserved as text
@@ -1179,9 +1179,9 @@ class TestDataPushHappyPathExtras:
         (tmp_path / "data.jsonl").write_text('{"text":"a"}\n')
 
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
         monkeypatch.setattr(
-            "soup_cli.commands.data.get_hf_api", lambda **_: fake_api, raising=False
+            "ai_forge_cli.commands.data.get_hf_api", lambda **_: fake_api, raising=False
         )
 
         result = runner.invoke(
@@ -1204,7 +1204,7 @@ class TestHfSpaceHappyPathExtras:
         monkeypatch.setenv("HF_TOKEN", "t1")
 
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
 
         result = runner.invoke(
             app,

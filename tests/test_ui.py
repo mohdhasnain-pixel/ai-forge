@@ -9,7 +9,7 @@ import pytest
 
 def _auth_headers():
     """Return auth headers with the current UI token."""
-    from soup_cli.ui.app import get_auth_token
+    from ai_forge_cli.ui.app import get_auth_token
     return {"Authorization": f"Bearer {get_auth_token()}"}
 
 
@@ -20,7 +20,7 @@ class TestUICommand:
         """soup ui should be a registered command."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["ui", "--help"])
@@ -31,7 +31,7 @@ class TestUICommand:
         """soup ui should fail gracefully if FastAPI not installed."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         with patch.dict("sys.modules", {"fastapi": None, "uvicorn": None}):
@@ -42,7 +42,7 @@ class TestUICommand:
         """soup ui should accept --port, --host, --no-browser options."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["ui", "--help"])
@@ -64,7 +64,7 @@ class TestCreateApp:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         app = create_app()
         assert isinstance(app, FastAPI)
@@ -76,7 +76,7 @@ class TestCreateApp:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         app = create_app()
         routes = [route.path for route in app.routes]
@@ -106,7 +106,7 @@ class TestHealthEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/health")
@@ -124,7 +124,7 @@ class TestIndexEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/")
@@ -139,7 +139,7 @@ class TestIndexEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/")
@@ -160,7 +160,7 @@ class TestSystemEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/system")
@@ -183,7 +183,7 @@ class TestTemplatesEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/templates")
@@ -203,7 +203,7 @@ class TestTemplatesEndpoint:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/api/templates")
@@ -223,7 +223,7 @@ class TestConfigValidation:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         yaml_str = """
@@ -250,7 +250,7 @@ data:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -270,7 +270,7 @@ data:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.post(
@@ -293,7 +293,7 @@ class TestRunsEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.ui.app import create_app
 
             client = TestClient(create_app())
             response = client.get("/api/runs")
@@ -309,8 +309,8 @@ class TestRunsEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             # Create a run
             tracker = ExperimentTracker(db_path=db_path)
@@ -338,8 +338,8 @@ class TestRunsEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_id = tracker.start_run(
@@ -366,7 +366,7 @@ class TestRunsEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.ui.app import create_app
 
             client = TestClient(create_app())
             response = client.get("/api/runs/nonexistent_run_id")
@@ -381,8 +381,8 @@ class TestRunsEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_id = tracker.start_run(
@@ -413,7 +413,7 @@ class TestRunsEndpoint:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.ui.app import create_app
 
             client = TestClient(create_app())
             response = client.delete(
@@ -434,8 +434,8 @@ class TestRunMetrics:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_id = tracker.start_run(
@@ -468,7 +468,7 @@ class TestRunMetrics:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.ui.app import create_app
 
             client = TestClient(create_app())
             response = client.get("/api/runs/nonexistent/metrics")
@@ -487,8 +487,8 @@ class TestRunEval:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.experiment.tracker import ExperimentTracker
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.experiment.tracker import ExperimentTracker
+            from ai_forge_cli.ui.app import create_app
 
             tracker = ExperimentTracker(db_path=db_path)
             run_id = tracker.start_run(
@@ -525,7 +525,7 @@ class TestDataInspect:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         data_file = tmp_path / "train.jsonl"
         entries = [
@@ -536,7 +536,7 @@ class TestDataInspect:
         data_file.write_text("\n".join(json.dumps(e) for e in entries), encoding="utf-8")
 
         client = TestClient(create_app())
-        with patch("soup_cli.ui.app.Path.cwd", return_value=tmp_path):
+        with patch("ai_forge_cli.ui.app.Path.cwd", return_value=tmp_path):
             response = client.post(
                 "/api/data/inspect",
                 json={"path": str(data_file), "limit": 10},
@@ -556,10 +556,10 @@ class TestDataInspect:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
-        with patch("soup_cli.ui.app.Path.cwd", return_value=tmp_path):
+        with patch("ai_forge_cli.ui.app.Path.cwd", return_value=tmp_path):
             response = client.post(
                 "/api/data/inspect",
                 json={"path": str(tmp_path / "nonexistent.jsonl")},
@@ -574,7 +574,7 @@ class TestDataInspect:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         data_file = tmp_path / "data.jsonl"
         entries = [
@@ -586,7 +586,7 @@ class TestDataInspect:
         )
 
         client = TestClient(create_app())
-        with patch("soup_cli.ui.app.Path.cwd", return_value=tmp_path):
+        with patch("ai_forge_cli.ui.app.Path.cwd", return_value=tmp_path):
             response = client.post(
                 "/api/data/inspect",
                 json={"path": str(data_file), "limit": 5},
@@ -604,7 +604,7 @@ class TestDataInspect:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         data_file = tmp_path / "data.json"
         entries = [
@@ -613,7 +613,7 @@ class TestDataInspect:
         data_file.write_text(json.dumps(entries), encoding="utf-8")
 
         client = TestClient(create_app())
-        with patch("soup_cli.ui.app.Path.cwd", return_value=tmp_path):
+        with patch("ai_forge_cli.ui.app.Path.cwd", return_value=tmp_path):
             response = client.post(
                 "/api/data/inspect",
                 json={"path": str(data_file)},
@@ -633,8 +633,8 @@ class TestTrainEndpoints:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_app_module
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_app_module
+        from ai_forge_cli.ui.app import create_app
 
         # Reset global state
         ui_app_module._train_process = None
@@ -651,8 +651,8 @@ class TestTrainEndpoints:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_app_module
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_app_module
+        from ai_forge_cli.ui.app import create_app
 
         ui_app_module._train_process = None
 
@@ -668,8 +668,8 @@ class TestTrainEndpoints:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_app_module
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_app_module
+        from ai_forge_cli.ui.app import create_app
 
         ui_app_module._train_process = None
 
@@ -677,7 +677,7 @@ class TestTrainEndpoints:
         mock_popen.poll.return_value = None
         mock_popen.pid = 12345
 
-        with patch("soup_cli.ui.app.subprocess.Popen", return_value=mock_popen):
+        with patch("ai_forge_cli.ui.app.subprocess.Popen", return_value=mock_popen):
             client = TestClient(create_app())
             response = client.post(
                 "/api/train/start",
@@ -701,8 +701,8 @@ class TestTrainEndpoints:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        import soup_cli.ui.app as ui_app_module
-        from soup_cli.ui.app import create_app
+        import ai_forge_cli.ui.app as ui_app_module
+        from ai_forge_cli.ui.app import create_app
 
         # Simulate running process
         mock_proc = MagicMock()
@@ -728,7 +728,7 @@ class TestConfigLoader:
 
     def test_load_valid_config(self):
         """Should parse valid YAML config."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         config = load_config_from_string("""
 base: meta-llama/Llama-3.1-8B
@@ -741,21 +741,21 @@ data:
 
     def test_load_empty_config(self):
         """Should raise ValueError for empty config."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="empty"):
             load_config_from_string("")
 
     def test_load_invalid_config(self):
         """Should raise ValueError for invalid config."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError):
             load_config_from_string("invalid: true\nno_base: 1")
 
     def test_load_config_with_all_fields(self):
         """Should parse config with all fields."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         config = load_config_from_string("""
 base: codellama/CodeLlama-7b-Instruct-hf
@@ -790,7 +790,7 @@ class TestStaticFiles:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/static/style.css")
@@ -804,7 +804,7 @@ class TestStaticFiles:
         except ImportError:
             pytest.skip("FastAPI not installed")
 
-        from soup_cli.ui.app import create_app
+        from ai_forge_cli.ui.app import create_app
 
         client = TestClient(create_app())
         response = client.get("/static/app.js")
@@ -813,7 +813,7 @@ class TestStaticFiles:
 
     def test_static_dir_exists(self):
         """Static directory should exist with required files."""
-        from soup_cli.ui.app import STATIC_DIR
+        from ai_forge_cli.ui.app import STATIC_DIR
 
         assert STATIC_DIR.exists()
         assert (STATIC_DIR / "index.html").exists()
@@ -833,7 +833,7 @@ class TestRunsLimitParam:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.ui.app import create_app
 
             client = TestClient(create_app())
             response = client.get("/api/runs")
@@ -848,7 +848,7 @@ class TestRunsLimitParam:
 
         db_path = tmp_path / "test.db"
         with patch.dict(os.environ, {"SOUP_DB_PATH": str(db_path)}):
-            from soup_cli.ui.app import create_app
+            from ai_forge_cli.ui.app import create_app
 
             client = TestClient(create_app())
             response = client.get("/api/runs?limit=10")

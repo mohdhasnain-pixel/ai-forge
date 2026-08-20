@@ -4,8 +4,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.config.schema import TEMPLATES
+from ai_forge_cli.cli import app
+from ai_forge_cli.config.schema import TEMPLATES
 
 runner = CliRunner()
 

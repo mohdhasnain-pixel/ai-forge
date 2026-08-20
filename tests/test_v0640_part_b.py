@@ -18,7 +18,7 @@ runner = CliRunner()
 
 
 def test_module_imports():
-    from soup_cli.utils import terraform_plan
+    from ai_forge_cli.utils import terraform_plan
 
     assert hasattr(terraform_plan, "TrainingPlan")
     assert hasattr(terraform_plan, "TrainingState")
@@ -36,7 +36,7 @@ def test_module_imports():
 
 
 def test_compute_config_sha_deterministic():
-    from soup_cli.utils.terraform_plan import compute_config_sha
+    from ai_forge_cli.utils.terraform_plan import compute_config_sha
 
     a = compute_config_sha({"a": 1, "b": 2})
     b = compute_config_sha({"b": 2, "a": 1})  # key order shouldn't matter
@@ -45,13 +45,13 @@ def test_compute_config_sha_deterministic():
 
 
 def test_compute_config_sha_changes_with_content():
-    from soup_cli.utils.terraform_plan import compute_config_sha
+    from ai_forge_cli.utils.terraform_plan import compute_config_sha
 
     assert compute_config_sha({"a": 1}) != compute_config_sha({"a": 2})
 
 
 def test_compute_config_sha_rejects_non_dict():
-    from soup_cli.utils.terraform_plan import compute_config_sha
+    from ai_forge_cli.utils.terraform_plan import compute_config_sha
 
     with pytest.raises(TypeError):
         compute_config_sha("not a dict")  # type: ignore[arg-type]
@@ -63,7 +63,7 @@ def test_compute_config_sha_rejects_non_dict():
 
 
 def test_training_plan_frozen():
-    from soup_cli.utils.terraform_plan import TrainingPlan
+    from ai_forge_cli.utils.terraform_plan import TrainingPlan
 
     p = TrainingPlan(
         base="meta-llama/Llama-3.2-1B",
@@ -80,7 +80,7 @@ def test_training_plan_frozen():
 
 
 def test_training_plan_rejects_short_sha():
-    from soup_cli.utils.terraform_plan import TrainingPlan
+    from ai_forge_cli.utils.terraform_plan import TrainingPlan
 
     with pytest.raises(ValueError, match="sha"):
         TrainingPlan(
@@ -96,7 +96,7 @@ def test_training_plan_rejects_short_sha():
 
 
 def test_training_plan_rejects_non_finite_cost():
-    from soup_cli.utils.terraform_plan import TrainingPlan
+    from ai_forge_cli.utils.terraform_plan import TrainingPlan
 
     with pytest.raises(ValueError, match="finite"):
         TrainingPlan(
@@ -112,7 +112,7 @@ def test_training_plan_rejects_non_finite_cost():
 
 
 def test_training_plan_rejects_bool_cost():
-    from soup_cli.utils.terraform_plan import TrainingPlan
+    from ai_forge_cli.utils.terraform_plan import TrainingPlan
 
     with pytest.raises(TypeError, match="bool"):
         TrainingPlan(
@@ -128,7 +128,7 @@ def test_training_plan_rejects_bool_cost():
 
 
 def test_training_plan_rejects_negative_cost():
-    from soup_cli.utils.terraform_plan import TrainingPlan
+    from ai_forge_cli.utils.terraform_plan import TrainingPlan
 
     with pytest.raises(ValueError, match="negative"):
         TrainingPlan(
@@ -149,7 +149,7 @@ def test_training_plan_rejects_negative_cost():
 
 
 def test_build_plan_happy(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import build_plan
+    from ai_forge_cli.utils.terraform_plan import build_plan
 
     monkeypatch.chdir(tmp_path)
     dataset = tmp_path / "data.jsonl"
@@ -170,7 +170,7 @@ def test_build_plan_happy(tmp_path, monkeypatch):
 
 
 def test_build_plan_rejects_missing_base(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import build_plan
+    from ai_forge_cli.utils.terraform_plan import build_plan
 
     monkeypatch.chdir(tmp_path)
     config = {"task": "sft", "data": {"train": "x.jsonl"}}
@@ -179,7 +179,7 @@ def test_build_plan_rejects_missing_base(tmp_path, monkeypatch):
 
 
 def test_build_plan_rejects_non_dict():
-    from soup_cli.utils.terraform_plan import build_plan
+    from ai_forge_cli.utils.terraform_plan import build_plan
 
     with pytest.raises(TypeError):
         build_plan("not a dict")  # type: ignore[arg-type]
@@ -191,7 +191,7 @@ def test_build_plan_rejects_non_dict():
 
 
 def test_write_state_roundtrip(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import (
+    from ai_forge_cli.utils.terraform_plan import (
         TrainingPlan,
         TrainingState,
         read_state,
@@ -219,7 +219,7 @@ def test_write_state_roundtrip(tmp_path, monkeypatch):
 
 
 def test_write_state_outside_cwd_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import TrainingPlan, TrainingState, write_state
+    from ai_forge_cli.utils.terraform_plan import TrainingPlan, TrainingState, write_state
 
     monkeypatch.chdir(tmp_path)
     plan = TrainingPlan(
@@ -235,7 +235,7 @@ def test_write_state_outside_cwd_rejected(tmp_path, monkeypatch):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlinks")
 def test_write_state_symlink_rejected(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import TrainingPlan, TrainingState, write_state
+    from ai_forge_cli.utils.terraform_plan import TrainingPlan, TrainingState, write_state
 
     monkeypatch.chdir(tmp_path)
     plan = TrainingPlan(
@@ -253,7 +253,7 @@ def test_write_state_symlink_rejected(tmp_path, monkeypatch):
 
 
 def test_read_state_missing(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import read_state
+    from ai_forge_cli.utils.terraform_plan import read_state
 
     monkeypatch.chdir(tmp_path)
     with pytest.raises(FileNotFoundError):
@@ -266,7 +266,7 @@ def test_read_state_missing(tmp_path, monkeypatch):
 
 
 def test_detect_drift_clean(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import (
+    from ai_forge_cli.utils.terraform_plan import (
         TrainingState,
         build_plan,
         detect_drift,
@@ -290,7 +290,7 @@ def test_detect_drift_clean(tmp_path, monkeypatch):
 
 
 def test_detect_drift_dirty(tmp_path, monkeypatch):
-    from soup_cli.utils.terraform_plan import (
+    from ai_forge_cli.utils.terraform_plan import (
         TrainingState,
         build_plan,
         detect_drift,
@@ -317,7 +317,7 @@ def test_detect_drift_dirty(tmp_path, monkeypatch):
 
 
 def test_detect_drift_rejects_non_state():
-    from soup_cli.utils.terraform_plan import detect_drift
+    from ai_forge_cli.utils.terraform_plan import detect_drift
 
     with pytest.raises(TypeError):
         detect_drift("not state", "not plan")  # type: ignore[arg-type]
@@ -342,21 +342,21 @@ def _write_minimal_config(path):
 
 
 def test_cli_plan_help():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["plan", "--help"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
 
 
 def test_cli_apply_help():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["apply", "--help"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
 
 
 def test_cli_plan_happy(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     cfg = tmp_path / "soup.yaml"
@@ -368,7 +368,7 @@ def test_cli_plan_happy(tmp_path, monkeypatch):
 
 
 def test_cli_plan_outside_cwd_config(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     outside_cfg = tmp_path.parent / "evil.yaml"
@@ -378,7 +378,7 @@ def test_cli_plan_outside_cwd_config(tmp_path, monkeypatch):
 
 
 def test_cli_apply_drift_refused(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     cfg = tmp_path / "soup.yaml"
@@ -397,7 +397,7 @@ def test_cli_apply_drift_refused(tmp_path, monkeypatch):
 
 def test_cli_apply_clean(tmp_path, monkeypatch):
     """apply with --dry-run after a plan should succeed clean."""
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     cfg = tmp_path / "soup.yaml"
@@ -415,7 +415,7 @@ def test_cli_apply_clean(tmp_path, monkeypatch):
 
 
 def test_drift_report_frozen():
-    from soup_cli.utils.terraform_plan import DriftReport
+    from ai_forge_cli.utils.terraform_plan import DriftReport
 
     d = DriftReport(has_drift=False, changed_fields=())
     with pytest.raises(dataclasses.FrozenInstanceError):
@@ -423,7 +423,7 @@ def test_drift_report_frozen():
 
 
 def test_drift_report_changed_fields_is_tuple():
-    from soup_cli.utils.terraform_plan import DriftReport
+    from ai_forge_cli.utils.terraform_plan import DriftReport
 
     with pytest.raises(TypeError, match="tuple"):
         DriftReport(has_drift=True, changed_fields=["x"])  # type: ignore[arg-type]
@@ -437,7 +437,7 @@ def test_drift_report_changed_fields_is_tuple():
 def test_cli_registers_plan_apply():
     from pathlib import Path
 
-    src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "cli.py"
+    src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "cli.py"
     text = src.read_text(encoding="utf-8")
     assert '"plan"' in text or "'plan'" in text or "name=\"plan\"" in text
 
@@ -447,7 +447,7 @@ def test_no_heavy_top_level_imports():
 
     src = (
         Path(__file__).resolve().parent.parent
-        / "src" / "soup_cli" / "utils" / "terraform_plan.py"
+        / "src" / "ai_forge_cli" / "utils" / "terraform_plan.py"
     )
     text = src.read_text(encoding="utf-8")
     import re

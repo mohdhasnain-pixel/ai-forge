@@ -11,7 +11,7 @@ runner = CliRunner()
 
 
 def test_module_imports():
-    from soup_cli.utils import license_advisor
+    from ai_forge_cli.utils import license_advisor
 
     assert hasattr(license_advisor, "DEPLOY_TARGETS")
     assert hasattr(license_advisor, "validate_deploy_target")
@@ -27,7 +27,7 @@ def test_module_imports():
 
 
 def test_deploy_targets_exact():
-    from soup_cli.utils.license_advisor import DEPLOY_TARGETS
+    from ai_forge_cli.utils.license_advisor import DEPLOY_TARGETS
 
     assert "b2c" in DEPLOY_TARGETS
     assert "defense" in DEPLOY_TARGETS
@@ -35,7 +35,7 @@ def test_deploy_targets_exact():
 
 
 def test_deploy_targets_is_frozenset():
-    from soup_cli.utils.license_advisor import DEPLOY_TARGETS
+    from ai_forge_cli.utils.license_advisor import DEPLOY_TARGETS
 
     assert isinstance(DEPLOY_TARGETS, frozenset)
 
@@ -47,13 +47,13 @@ def test_deploy_targets_is_frozenset():
 
 @pytest.mark.parametrize("v", ["b2c", "defense", "embedded"])
 def test_validate_deploy_target_happy(v):
-    from soup_cli.utils.license_advisor import validate_deploy_target
+    from ai_forge_cli.utils.license_advisor import validate_deploy_target
 
     assert validate_deploy_target(v) == v
 
 
 def test_validate_deploy_target_case_insensitive():
-    from soup_cli.utils.license_advisor import validate_deploy_target
+    from ai_forge_cli.utils.license_advisor import validate_deploy_target
 
     assert validate_deploy_target("B2C") == "b2c"
 
@@ -63,14 +63,14 @@ def test_validate_deploy_target_case_insensitive():
     [True, False, None, "", "consumer", "x" * 33],
 )
 def test_validate_deploy_target_rejects(bad):
-    from soup_cli.utils.license_advisor import validate_deploy_target
+    from ai_forge_cli.utils.license_advisor import validate_deploy_target
 
     with pytest.raises((TypeError, ValueError)):
         validate_deploy_target(bad)
 
 
 def test_validate_deploy_target_null_byte():
-    from soup_cli.utils.license_advisor import validate_deploy_target
+    from ai_forge_cli.utils.license_advisor import validate_deploy_target
 
     with pytest.raises(ValueError, match="null"):
         validate_deploy_target("b\x002c")
@@ -82,7 +82,7 @@ def test_validate_deploy_target_null_byte():
 
 
 def test_license_recommendation_frozen():
-    from soup_cli.utils.license_advisor import LicenseRecommendation
+    from ai_forge_cli.utils.license_advisor import LicenseRecommendation
 
     r = LicenseRecommendation(
         target="b2c",
@@ -95,7 +95,7 @@ def test_license_recommendation_frozen():
 
 
 def test_license_recommendation_tuples():
-    from soup_cli.utils.license_advisor import LicenseRecommendation
+    from ai_forge_cli.utils.license_advisor import LicenseRecommendation
 
     # Lists rejected (frozen=True doesn't make lists immutable)
     with pytest.raises(TypeError, match="tuple"):
@@ -113,7 +113,7 @@ def test_license_recommendation_tuples():
 
 
 def test_advise_license_b2c():
-    from soup_cli.utils.license_advisor import advise_license_for_target
+    from ai_forge_cli.utils.license_advisor import advise_license_for_target
 
     rec = advise_license_for_target("b2c")
     # B2C must include broadly-permissive options
@@ -124,7 +124,7 @@ def test_advise_license_b2c():
 
 
 def test_advise_license_defense():
-    from soup_cli.utils.license_advisor import advise_license_for_target
+    from ai_forge_cli.utils.license_advisor import advise_license_for_target
 
     rec = advise_license_for_target("defense")
     # Defense forbids restricted-use community licenses
@@ -132,7 +132,7 @@ def test_advise_license_defense():
 
 
 def test_advise_license_embedded():
-    from soup_cli.utils.license_advisor import advise_license_for_target
+    from ai_forge_cli.utils.license_advisor import advise_license_for_target
 
     rec = advise_license_for_target("embedded")
     # Embedded systems should avoid strong copyleft
@@ -140,14 +140,14 @@ def test_advise_license_embedded():
 
 
 def test_advise_license_rejects_unknown_target():
-    from soup_cli.utils.license_advisor import advise_license_for_target
+    from ai_forge_cli.utils.license_advisor import advise_license_for_target
 
     with pytest.raises(ValueError):
         advise_license_for_target("bogus")
 
 
 def test_advise_license_rejects_bool():
-    from soup_cli.utils.license_advisor import advise_license_for_target
+    from ai_forge_cli.utils.license_advisor import advise_license_for_target
 
     with pytest.raises(TypeError):
         advise_license_for_target(True)  # type: ignore[arg-type]
@@ -159,7 +159,7 @@ def test_advise_license_rejects_bool():
 
 
 def test_downstream_risk_frozen():
-    from soup_cli.utils.license_advisor import DownstreamRisk
+    from ai_forge_cli.utils.license_advisor import DownstreamRisk
 
     r = DownstreamRisk(ok=True, severity="ok", reason="permissive license")
     with pytest.raises(dataclasses.FrozenInstanceError):
@@ -167,7 +167,7 @@ def test_downstream_risk_frozen():
 
 
 def test_downstream_risk_severity_allowlist():
-    from soup_cli.utils.license_advisor import DownstreamRisk
+    from ai_forge_cli.utils.license_advisor import DownstreamRisk
 
     with pytest.raises(ValueError, match="severity"):
         DownstreamRisk(ok=False, severity="weird", reason="x")
@@ -179,7 +179,7 @@ def test_downstream_risk_severity_allowlist():
 
 
 def test_flag_downstream_risk_apache_b2c_ok():
-    from soup_cli.utils.license_advisor import flag_downstream_risk
+    from ai_forge_cli.utils.license_advisor import flag_downstream_risk
 
     r = flag_downstream_risk(license_id="apache-2.0", target="b2c", monthly_active_users=10_000)
     assert r.ok is True
@@ -188,7 +188,7 @@ def test_flag_downstream_risk_apache_b2c_ok():
 
 def test_flag_downstream_risk_llama_community_high_mau():
     """Llama community license + commercial use > 700M MAU is the canonical risk."""
-    from soup_cli.utils.license_advisor import flag_downstream_risk
+    from ai_forge_cli.utils.license_advisor import flag_downstream_risk
 
     r = flag_downstream_risk(
         license_id="llama-3", target="b2c", monthly_active_users=800_000_000
@@ -199,7 +199,7 @@ def test_flag_downstream_risk_llama_community_high_mau():
 
 def test_flag_downstream_risk_llama_community_low_mau_warns():
     """Llama community on small B2C: warning, not block."""
-    from soup_cli.utils.license_advisor import flag_downstream_risk
+    from ai_forge_cli.utils.license_advisor import flag_downstream_risk
 
     r = flag_downstream_risk(
         license_id="llama-3", target="b2c", monthly_active_users=10_000
@@ -209,7 +209,7 @@ def test_flag_downstream_risk_llama_community_low_mau_warns():
 
 
 def test_flag_downstream_risk_nc_b2c_blocked():
-    from soup_cli.utils.license_advisor import flag_downstream_risk
+    from ai_forge_cli.utils.license_advisor import flag_downstream_risk
 
     r = flag_downstream_risk(
         license_id="cc-by-nc-4.0", target="b2c", monthly_active_users=100
@@ -218,7 +218,7 @@ def test_flag_downstream_risk_nc_b2c_blocked():
 
 
 def test_flag_downstream_risk_rejects_negative_mau():
-    from soup_cli.utils.license_advisor import flag_downstream_risk
+    from ai_forge_cli.utils.license_advisor import flag_downstream_risk
 
     with pytest.raises(ValueError, match="monthly_active_users"):
         flag_downstream_risk(
@@ -227,7 +227,7 @@ def test_flag_downstream_risk_rejects_negative_mau():
 
 
 def test_flag_downstream_risk_rejects_bool_mau():
-    from soup_cli.utils.license_advisor import flag_downstream_risk
+    from ai_forge_cli.utils.license_advisor import flag_downstream_risk
 
     with pytest.raises(TypeError, match="bool"):
         flag_downstream_risk(
@@ -237,7 +237,7 @@ def test_flag_downstream_risk_rejects_bool_mau():
 
 
 def test_flag_downstream_risk_unknown_license_warns():
-    from soup_cli.utils.license_advisor import flag_downstream_risk
+    from ai_forge_cli.utils.license_advisor import flag_downstream_risk
 
     r = flag_downstream_risk(
         license_id="unknown-soup-test-license", target="b2c", monthly_active_users=1
@@ -252,21 +252,21 @@ def test_flag_downstream_risk_unknown_license_warns():
 
 
 def test_cli_license_advisor_help():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["license-advisor", "--help"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
 
 
 def test_cli_license_advisor_b2c():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["license-advisor", "--target", "b2c"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
 
 
 def test_cli_license_advisor_unknown_target():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["license-advisor", "--target", "bogus"])
     assert result.exit_code != 0
@@ -274,7 +274,7 @@ def test_cli_license_advisor_unknown_target():
 
 def test_cli_license_advisor_check_license():
     """--license is the per-license-id risk-check mode."""
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(
         app,
@@ -292,7 +292,7 @@ def test_cli_license_advisor_check_license():
 
 
 def test_cli_license_advisor_check_llama_block():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(
         app,
@@ -320,7 +320,7 @@ def test_no_heavy_top_level_imports():
 
     src = (
         Path(__file__).resolve().parent.parent
-        / "src" / "soup_cli" / "utils" / "license_advisor.py"
+        / "src" / "ai_forge_cli" / "utils" / "license_advisor.py"
     )
     text = src.read_text(encoding="utf-8")
     import re

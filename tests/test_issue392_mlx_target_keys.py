@@ -36,7 +36,7 @@ def _lora(target_modules):
 class TestTheResolverIsOneAnswer:
     @pytest.mark.parametrize("raw", ["auto", ["auto"], None, []])
     def test_auto_and_empty_resolve_to_the_trained_default(self, raw):
-        from soup_cli.trainer.mlx_sft import resolve_mlx_target_keys
+        from ai_forge_cli.trainer.mlx_sft import resolve_mlx_target_keys
 
         assert resolve_mlx_target_keys(_lora(raw)) == [
             "self_attn.q_proj",
@@ -44,19 +44,19 @@ class TestTheResolverIsOneAnswer:
         ]
 
     def test_an_explicit_list_is_passed_through(self):
-        from soup_cli.trainer.mlx_sft import resolve_mlx_target_keys
+        from ai_forge_cli.trainer.mlx_sft import resolve_mlx_target_keys
 
         assert resolve_mlx_target_keys(_lora(["self_attn.k_proj"])) == ["self_attn.k_proj"]
 
     def test_an_explicit_string_becomes_a_one_item_list(self):
-        from soup_cli.trainer.mlx_sft import resolve_mlx_target_keys
+        from ai_forge_cli.trainer.mlx_sft import resolve_mlx_target_keys
 
         assert resolve_mlx_target_keys(_lora("mlp.down_proj")) == ["mlp.down_proj"]
 
     def test_the_resolved_value_never_contains_auto(self):
         """The whole defect in one assertion: whatever comes back is a module
         list mlx_lm can match, never the placeholder."""
-        from soup_cli.trainer.mlx_sft import resolve_mlx_target_keys
+        from ai_forge_cli.trainer.mlx_sft import resolve_mlx_target_keys
 
         for raw in ("auto", ["auto"], None, []):
             assert "auto" not in resolve_mlx_target_keys(_lora(raw))
@@ -67,7 +67,7 @@ class TestTheWrittenConfigMatchesWhatWasTrained:
         """CONTROL for the reported failure: with the schema default
         (`target_modules: auto`) the file must carry the real modules, because
         `{"keys": ["auto"]}` matches nothing and silently drops every tensor."""
-        from soup_cli.trainer.mlx_sft import build_mlx_adapter_config
+        from ai_forge_cli.trainer.mlx_sft import build_mlx_adapter_config
 
         written = build_mlx_adapter_config(_lora("auto"), adapter_path="/tmp/out")
         keys = written["lora_parameters"]["keys"]
@@ -76,7 +76,7 @@ class TestTheWrittenConfigMatchesWhatWasTrained:
 
     def test_the_written_keys_are_exactly_what_apply_lora_would_train(self):
         """The two must not be able to disagree — that disagreement IS #392."""
-        from soup_cli.trainer.mlx_sft import build_mlx_adapter_config, resolve_mlx_target_keys
+        from ai_forge_cli.trainer.mlx_sft import build_mlx_adapter_config, resolve_mlx_target_keys
 
         for raw in ("auto", ["auto"], ["self_attn.k_proj"], "mlp.down_proj", None):
             cfg = _lora(raw)
@@ -88,7 +88,7 @@ class TestTheWrittenConfigMatchesWhatWasTrained:
     def test_rank_scale_and_dropout_still_come_from_the_config(self):
         """CONTROL. A repair that hardcoded the whole block would also make the
         assertions above pass."""
-        from soup_cli.trainer.mlx_sft import build_mlx_adapter_config
+        from ai_forge_cli.trainer.mlx_sft import build_mlx_adapter_config
 
         params = build_mlx_adapter_config(_lora("auto"), adapter_path="/tmp/out")[
             "lora_parameters"

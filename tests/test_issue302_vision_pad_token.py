@@ -79,7 +79,7 @@ class TestEnsureVisionProcessorPadToken:
             _ = proc.pad_token
 
     def test_sets_pad_token_from_eos(self):
-        from soup_cli.trainer.sft import _ensure_vision_processor_pad_token
+        from ai_forge_cli.trainer.sft import _ensure_vision_processor_pad_token
 
         proc = _FakeIdefics3Processor(_FakeTokenizer(pad_token=None, eos_token="</s>"))
         _ensure_vision_processor_pad_token(proc)
@@ -90,7 +90,7 @@ class TestEnsureVisionProcessorPadToken:
         assert proc.eos_token == "</s>"
 
     def test_trl_resolution_no_longer_crashes(self):
-        from soup_cli.trainer.sft import _ensure_vision_processor_pad_token
+        from ai_forge_cli.trainer.sft import _ensure_vision_processor_pad_token
 
         proc = _FakeIdefics3Processor(_FakeTokenizer(pad_token=None))
         _ensure_vision_processor_pad_token(proc)
@@ -100,7 +100,7 @@ class TestEnsureVisionProcessorPadToken:
         assert proc.convert_tokens_to_ids(pad) == 2
 
     def test_preserves_existing_pad_token(self):
-        from soup_cli.trainer.sft import _ensure_vision_processor_pad_token
+        from ai_forge_cli.trainer.sft import _ensure_vision_processor_pad_token
 
         tok = _FakeTokenizer(pad_token="<pad>", eos_token="</s>")
         proc = _FakeIdefics3Processor(tok)
@@ -110,14 +110,14 @@ class TestEnsureVisionProcessorPadToken:
 
     def test_tokenizer_like_processor_unchanged(self):
         # A processing_class that already exposes pad_token must not be clobbered.
-        from soup_cli.trainer.sft import _ensure_vision_processor_pad_token
+        from ai_forge_cli.trainer.sft import _ensure_vision_processor_pad_token
 
         proc = _TokenizerLikeProcessor()
         _ensure_vision_processor_pad_token(proc)
         assert proc.pad_token == "<pad>"
 
     def test_no_nested_tokenizer_is_noop(self):
-        from soup_cli.trainer.sft import _ensure_vision_processor_pad_token
+        from ai_forge_cli.trainer.sft import _ensure_vision_processor_pad_token
 
         class _NoTok:
             pad_token = "<pad>"
@@ -128,7 +128,7 @@ class TestEnsureVisionProcessorPadToken:
         assert proc.pad_token == "<pad>"
 
     def test_convert_tokens_to_ids_mirrored(self):
-        from soup_cli.trainer.sft import _ensure_vision_processor_pad_token
+        from ai_forge_cli.trainer.sft import _ensure_vision_processor_pad_token
 
         proc = _FakeIdefics3Processor(_FakeTokenizer(pad_token=None))
         _ensure_vision_processor_pad_token(proc)
@@ -136,14 +136,14 @@ class TestEnsureVisionProcessorPadToken:
         assert proc.convert_tokens_to_ids("</s>") == 2
 
     def test_eos_token_id_mirrored(self):
-        from soup_cli.trainer.sft import _ensure_vision_processor_pad_token
+        from ai_forge_cli.trainer.sft import _ensure_vision_processor_pad_token
 
         proc = _FakeIdefics3Processor(_FakeTokenizer(pad_token=None))
         _ensure_vision_processor_pad_token(proc)
         assert proc.eos_token_id == 2
 
     def test_pad_token_id_mirrored(self):
-        from soup_cli.trainer.sft import _ensure_vision_processor_pad_token
+        from ai_forge_cli.trainer.sft import _ensure_vision_processor_pad_token
 
         proc = _FakeIdefics3Processor(_FakeTokenizer(pad_token=None))
         _ensure_vision_processor_pad_token(proc)
@@ -153,7 +153,7 @@ class TestEnsureVisionProcessorPadToken:
     def test_readonly_attr_degrades_gracefully(self):
         # A processor whose attributes can't be set (e.g. __slots__) must not
         # make the helper raise — the try/except degrades gracefully.
-        from soup_cli.trainer.sft import _ensure_vision_processor_pad_token
+        from ai_forge_cli.trainer.sft import _ensure_vision_processor_pad_token
 
         class _SlotsProcessor:
             __slots__ = ("tokenizer",)
@@ -176,8 +176,8 @@ class TestVisionSetupWiring:
 
         import transformers
 
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         fake_proc = _FakeIdefics3Processor(_FakeTokenizer(pad_token=None))
         monkeypatch.setattr(
@@ -192,11 +192,11 @@ class TestVisionSetupWiring:
 
         monkeypatch.setattr(peft, "get_peft_model", lambda model, cfg: model)
         monkeypatch.setattr(
-            "soup_cli.utils.quant_menu.build_quantization_config_for_loader",
+            "ai_forge_cli.utils.quant_menu.build_quantization_config_for_loader",
             lambda **k: None,
         )
         monkeypatch.setattr(
-            "soup_cli.utils.data_pipeline.apply_vocab_expansion",
+            "ai_forge_cli.utils.data_pipeline.apply_vocab_expansion",
             lambda *a, **k: None,
         )
         monkeypatch.setattr(

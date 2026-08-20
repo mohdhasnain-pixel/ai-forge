@@ -28,7 +28,7 @@ import numpy as np
 import pytest
 from typer.testing import CliRunner
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "soup_cli"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli"
 
 runner = CliRunner()
 
@@ -88,21 +88,21 @@ def _write_tiny_safetensors(dir_path: Path) -> Path:
 # ---------------------------------------------------------------------------
 class TestEstimateSigma:
     def test_iqr_over_1349(self):
-        from soup_cli.utils.spectrum_scan import estimate_sigma
+        from ai_forge_cli.utils.spectrum_scan import estimate_sigma
 
         s = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         q75, q25 = np.percentile(s, [75, 25])
         assert estimate_sigma(s) == pytest.approx((q75 - q25) / 1.349)
 
     def test_constant_singular_values_zero_sigma(self):
-        from soup_cli.utils.spectrum_scan import estimate_sigma
+        from ai_forge_cli.utils.spectrum_scan import estimate_sigma
 
         assert estimate_sigma(np.array([2.0, 2.0, 2.0])) == pytest.approx(0.0)
 
 
 class TestMarchenkoPasturThreshold:
     def test_symmetric_in_n_m(self):
-        from soup_cli.utils.spectrum_scan import marchenko_pastur_threshold
+        from ai_forge_cli.utils.spectrum_scan import marchenko_pastur_threshold
 
         # beta = min/max, so (n, m) and (m, n) give the same threshold.
         assert marchenko_pastur_threshold(1.0, 64, 32) == pytest.approx(
@@ -110,13 +110,13 @@ class TestMarchenkoPasturThreshold:
         )
 
     def test_square_matrix_beta_one(self):
-        from soup_cli.utils.spectrum_scan import marchenko_pastur_threshold
+        from ai_forge_cli.utils.spectrum_scan import marchenko_pastur_threshold
 
         # beta=1 → threshold = sigma * (1 + sqrt(1)) = 2*sigma.
         assert marchenko_pastur_threshold(3.0, 16, 16) == pytest.approx(6.0)
 
     def test_matches_reference_form(self):
-        from soup_cli.utils.spectrum_scan import marchenko_pastur_threshold
+        from ai_forge_cli.utils.spectrum_scan import marchenko_pastur_threshold
 
         sigma, n, m = 1.7, 48, 96
         beta = min(n, m) / max(n, m)
@@ -124,7 +124,7 @@ class TestMarchenkoPasturThreshold:
         assert marchenko_pastur_threshold(sigma, n, m) == pytest.approx(expected)
 
     def test_non_positive_dims_return_zero(self):
-        from soup_cli.utils.spectrum_scan import marchenko_pastur_threshold
+        from ai_forge_cli.utils.spectrum_scan import marchenko_pastur_threshold
 
         assert marchenko_pastur_threshold(1.0, 0, 8) == 0.0
         assert marchenko_pastur_threshold(1.0, 8, -1) == 0.0
@@ -132,7 +132,7 @@ class TestMarchenkoPasturThreshold:
 
 class TestComputeSnr:
     def test_signal_beats_pure_noise(self):
-        from soup_cli.utils.spectrum_scan import compute_snr
+        from ai_forge_cli.utils.spectrum_scan import compute_snr
 
         rng = np.random.default_rng(0)
         noise = rng.standard_normal((64, 64))
@@ -142,26 +142,26 @@ class TestComputeSnr:
         assert compute_snr(signal) > compute_snr(noise)
 
     def test_transpose_invariant(self):
-        from soup_cli.utils.spectrum_scan import compute_snr
+        from ai_forge_cli.utils.spectrum_scan import compute_snr
 
         rng = np.random.default_rng(1)
         w = rng.standard_normal((48, 96))
         assert compute_snr(w) == pytest.approx(compute_snr(w.T), rel=1e-9)
 
     def test_deterministic(self):
-        from soup_cli.utils.spectrum_scan import compute_snr
+        from ai_forge_cli.utils.spectrum_scan import compute_snr
 
         rng = np.random.default_rng(2)
         w = rng.standard_normal((40, 40))
         assert compute_snr(w) == compute_snr(w.copy())
 
     def test_zero_matrix_returns_zero(self):
-        from soup_cli.utils.spectrum_scan import compute_snr
+        from ai_forge_cli.utils.spectrum_scan import compute_snr
 
         assert compute_snr(np.zeros((8, 8))) == 0.0
 
     def test_always_finite(self):
-        from soup_cli.utils.spectrum_scan import compute_snr
+        from ai_forge_cli.utils.spectrum_scan import compute_snr
 
         rng = np.random.default_rng(3)
         for shape in [(8, 8), (1, 1), (3, 9), (9, 3)]:
@@ -169,7 +169,7 @@ class TestComputeSnr:
             assert math.isfinite(val), shape
 
     def test_non_2d_raises(self):
-        from soup_cli.utils.spectrum_scan import compute_snr
+        from ai_forge_cli.utils.spectrum_scan import compute_snr
 
         with pytest.raises(ValueError, match="2"):
             compute_snr(np.zeros((4, 4, 4)))
@@ -192,12 +192,12 @@ class TestClassifyModule:
         ],
     )
     def test_classification(self, name, expected):
-        from soup_cli.utils.spectrum_scan import classify_module
+        from ai_forge_cli.utils.spectrum_scan import classify_module
 
         assert classify_module(name) == expected
 
     def test_non_weight_returns_none(self):
-        from soup_cli.utils.spectrum_scan import classify_module
+        from ai_forge_cli.utils.spectrum_scan import classify_module
 
         # a layernorm weight is a real .weight but neither mlp nor attn
         assert classify_module("model.layers.0.input_layernorm.weight") == "other"
@@ -216,7 +216,7 @@ class TestLayerTypeSignature:
         ],
     )
     def test_strips_layer_index(self, name, sig):
-        from soup_cli.utils.spectrum_scan import layer_type_signature
+        from ai_forge_cli.utils.spectrum_scan import layer_type_signature
 
         assert layer_type_signature(name) == sig
 
@@ -226,7 +226,7 @@ class TestLayerTypeSignature:
 # ---------------------------------------------------------------------------
 class TestIterWeightMatrices:
     def test_yields_only_2d_weights(self, tmp_path):
-        from soup_cli.utils.spectrum_scan import iter_weight_matrices
+        from ai_forge_cli.utils.spectrum_scan import iter_weight_matrices
 
         _write_tiny_safetensors(tmp_path)
         names = {name for name, _ in iter_weight_matrices(str(tmp_path))}
@@ -238,7 +238,7 @@ class TestIterWeightMatrices:
         assert len(names) == 13
 
     def test_modules_filter_excludes_other(self, tmp_path):
-        from soup_cli.utils.spectrum_scan import iter_weight_matrices
+        from ai_forge_cli.utils.spectrum_scan import iter_weight_matrices
 
         _write_tiny_safetensors(tmp_path)
         names = {
@@ -249,7 +249,7 @@ class TestIterWeightMatrices:
         assert "model.layers.0.mlp.gate_proj.weight" in names
 
     def test_arrays_are_2d_float(self, tmp_path):
-        from soup_cli.utils.spectrum_scan import iter_weight_matrices
+        from ai_forge_cli.utils.spectrum_scan import iter_weight_matrices
 
         _write_tiny_safetensors(tmp_path)
         for _name, arr in iter_weight_matrices(str(tmp_path)):
@@ -258,7 +258,7 @@ class TestIterWeightMatrices:
 
 class TestScanWeightsDir:
     def test_returns_finite_snr_per_matrix(self, tmp_path):
-        from soup_cli.utils.spectrum_scan import scan_weights_dir
+        from ai_forge_cli.utils.spectrum_scan import scan_weights_dir
 
         _write_tiny_safetensors(tmp_path)
         layers = scan_weights_dir(str(tmp_path))
@@ -268,7 +268,7 @@ class TestScanWeightsDir:
             assert ls.module_type in ("attn", "mlp", "other")
 
     def test_groups_carry_signature(self, tmp_path):
-        from soup_cli.utils.spectrum_scan import scan_weights_dir
+        from ai_forge_cli.utils.spectrum_scan import scan_weights_dir
 
         _write_tiny_safetensors(tmp_path)
         layers = scan_weights_dir(str(tmp_path))
@@ -279,7 +279,7 @@ class TestScanWeightsDir:
 
 class TestSelectUnfrozenParameters:
     def _fake_layers(self):
-        from soup_cli.utils.spectrum_scan import LayerSNR
+        from ai_forge_cli.utils.spectrum_scan import LayerSNR
 
         out = []
         # 4 q_proj layers with distinct SNR
@@ -296,7 +296,7 @@ class TestSelectUnfrozenParameters:
         return out
 
     def test_top_50_percent_per_group(self):
-        from soup_cli.utils.spectrum_scan import select_unfrozen_parameters
+        from ai_forge_cli.utils.spectrum_scan import select_unfrozen_parameters
 
         kept = select_unfrozen_parameters(self._fake_layers(), top_percent=50)
         # top 2 of 4 by SNR: layers 3 (0.9) and 1 (0.4)
@@ -306,21 +306,21 @@ class TestSelectUnfrozenParameters:
         ]
 
     def test_at_least_one_kept_per_group(self):
-        from soup_cli.utils.spectrum_scan import select_unfrozen_parameters
+        from ai_forge_cli.utils.spectrum_scan import select_unfrozen_parameters
 
         kept = select_unfrozen_parameters(self._fake_layers(), top_percent=1)
         # ceil(0.01*4) = 1 → the single best (layer 3)
         assert kept == ["model.layers.3.self_attn.q_proj"]
 
     def test_top_percent_bounds(self):
-        from soup_cli.utils.spectrum_scan import select_unfrozen_parameters
+        from ai_forge_cli.utils.spectrum_scan import select_unfrozen_parameters
 
         for bad in (0, -5, 101, 1000):
             with pytest.raises(ValueError, match="top_percent"):
                 select_unfrozen_parameters(self._fake_layers(), top_percent=bad)
 
     def test_modules_filter(self):
-        from soup_cli.utils.spectrum_scan import LayerSNR, select_unfrozen_parameters
+        from ai_forge_cli.utils.spectrum_scan import LayerSNR, select_unfrozen_parameters
 
         layers = self._fake_layers() + [
             LayerSNR(
@@ -342,14 +342,14 @@ class TestSelectUnfrozenParameters:
 # ---------------------------------------------------------------------------
 class TestModelSlug:
     def test_sanitizes_separators(self):
-        from soup_cli.utils.spectrum_scan import model_slug
+        from ai_forge_cli.utils.spectrum_scan import model_slug
 
         slug = model_slug("meta-llama/Llama-3-8B")
         assert "/" not in slug and "\\" not in slug
         assert slug
 
     def test_rejects_traversal(self):
-        from soup_cli.utils.spectrum_scan import model_slug
+        from ai_forge_cli.utils.spectrum_scan import model_slug
 
         # ".." path components must not survive into a filename
         slug = model_slug("../../etc/passwd")
@@ -359,7 +359,7 @@ class TestModelSlug:
 
 class TestScanCache:
     def test_roundtrip(self, tmp_path):
-        from soup_cli.utils.spectrum_scan import (
+        from ai_forge_cli.utils.spectrum_scan import (
             ScanResult,
             read_cached_scan,
             scan_weights_dir,
@@ -379,12 +379,12 @@ class TestScanCache:
         assert {ls.name for ls in loaded.layers} == {ls.name for ls in layers}
 
     def test_missing_returns_none(self, tmp_path):
-        from soup_cli.utils.spectrum_scan import read_cached_scan
+        from ai_forge_cli.utils.spectrum_scan import read_cached_scan
 
         assert read_cached_scan("absent/model", cache_dir=str(tmp_path)) is None
 
     def test_modules_mismatch_returns_none(self, tmp_path):
-        from soup_cli.utils.spectrum_scan import (
+        from ai_forge_cli.utils.spectrum_scan import (
             ScanResult,
             read_cached_scan,
             write_cached_scan,
@@ -398,13 +398,13 @@ class TestScanCache:
 
 class TestCacheDirOverride:
     def test_default_under_dot_soup(self):
-        from soup_cli.utils.spectrum_scan import default_spectrum_cache_dir
+        from ai_forge_cli.utils.spectrum_scan import default_spectrum_cache_dir
 
         d = default_spectrum_cache_dir()
         assert d.endswith(str(Path(".soup") / "spectrum"))
 
     def test_env_override_under_cwd(self, tmp_path, monkeypatch):
-        from soup_cli.utils import spectrum_scan
+        from ai_forge_cli.utils import spectrum_scan
 
         target = Path.cwd() / "spectrum-cache-test"
         monkeypatch.setenv("SOUP_SPECTRUM_CACHE_DIR", str(target))
@@ -416,7 +416,7 @@ class TestCacheDirOverride:
                 target.rmdir()
 
     def test_env_override_control_char_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils import spectrum_scan
+        from ai_forge_cli.utils import spectrum_scan
 
         monkeypatch.setenv("SOUP_SPECTRUM_CACHE_DIR", "bad\nvalue")
         # falls through to the default rather than honouring a CRLF-laden path
@@ -435,21 +435,21 @@ class TestNoTopLevelHeavyImport:
 # ---------------------------------------------------------------------------
 class TestSpectrumScanCli:
     def test_help_lists_scan(self):
-        from soup_cli.commands import spectrum as spectrum_cmd
+        from ai_forge_cli.commands import spectrum as spectrum_cmd
 
         res = runner.invoke(spectrum_cmd.app, ["--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
         assert "scan" in res.output
 
     def test_registered_in_main_app(self):
-        from soup_cli.cli import app as main_app
+        from ai_forge_cli.cli import app as main_app
 
         res = runner.invoke(main_app, ["spectrum", "--help"])
         assert res.exit_code == 0, (res.output, repr(res.exception))
         assert "scan" in res.output
 
     def test_scan_prints_table_and_yaml(self, tmp_path):
-        from soup_cli.commands import spectrum as spectrum_cmd
+        from ai_forge_cli.commands import spectrum as spectrum_cmd
 
         model_dir = tmp_path / "m"
         _write_tiny_safetensors(model_dir)
@@ -464,7 +464,7 @@ class TestSpectrumScanCli:
     def test_scan_writes_output_patch(self):
         import yaml
 
-        from soup_cli.commands import spectrum as spectrum_cmd
+        from ai_forge_cli.commands import spectrum as spectrum_cmd
 
         with runner.isolated_filesystem():
             model_dir = Path("m")
@@ -491,7 +491,7 @@ class TestSpectrumScanCli:
             assert all(isinstance(p, str) for p in params)
 
     def test_modules_filter_excludes_embeddings(self, tmp_path):
-        from soup_cli.commands import spectrum as spectrum_cmd
+        from ai_forge_cli.commands import spectrum as spectrum_cmd
 
         model_dir = tmp_path / "m"
         _write_tiny_safetensors(model_dir)
@@ -510,7 +510,7 @@ class TestSpectrumScanCli:
         assert "embed_tokens" not in res.output
 
     def test_bad_top_percent_rejected(self, tmp_path):
-        from soup_cli.commands import spectrum as spectrum_cmd
+        from ai_forge_cli.commands import spectrum as spectrum_cmd
 
         model_dir = tmp_path / "m"
         _write_tiny_safetensors(model_dir)
@@ -523,7 +523,7 @@ class TestSpectrumScanCli:
             assert "top-percent" in res.output.lower() or "top_percent" in res.output
 
     def test_output_outside_cwd_rejected(self, tmp_path):
-        from soup_cli.commands import spectrum as spectrum_cmd
+        from ai_forge_cli.commands import spectrum as spectrum_cmd
 
         model_dir = tmp_path / "m"
         _write_tiny_safetensors(model_dir)
@@ -543,7 +543,7 @@ class TestSpectrumScanCli:
         assert "cwd" in res.output.lower()
 
     def test_missing_model_friendly_error(self, tmp_path):
-        from soup_cli.commands import spectrum as spectrum_cmd
+        from ai_forge_cli.commands import spectrum as spectrum_cmd
 
         res = runner.invoke(
             spectrum_cmd.app,
@@ -579,7 +579,7 @@ def _sft_yaml(extra_training: str = "") -> str:
 
 class TestUnfrozenParametersSchema:
     def test_happy_path_parses(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(_sft_yaml())
         assert cfg.training.unfrozen_parameters == [
@@ -588,7 +588,7 @@ class TestUnfrozenParametersSchema:
         ]
 
     def test_default_none(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(
             f"base: {_BASE}\ntask: sft\ndata:\n  train: d.jsonl\n"
@@ -596,7 +596,7 @@ class TestUnfrozenParametersSchema:
         assert cfg.training.unfrozen_parameters is None
 
     def test_empty_string_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         bad = (
             f"base: {_BASE}\ntask: sft\ndata:\n  train: d.jsonl\n"
@@ -607,7 +607,7 @@ class TestUnfrozenParametersSchema:
         assert "unfrozen_parameters" in str(exc.value)
 
     def test_null_byte_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         bad = (
             f"base: {_BASE}\ntask: sft\ndata:\n  train: d.jsonl\n"
@@ -618,7 +618,7 @@ class TestUnfrozenParametersSchema:
         assert "null" in str(exc.value).lower()
 
     def test_invalid_regex_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         bad = (
             f"base: {_BASE}\ntask: sft\ndata:\n  train: d.jsonl\n"
@@ -629,7 +629,7 @@ class TestUnfrozenParametersSchema:
         assert "regex" in str(exc.value).lower()
 
     def test_pattern_length_boundary(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         head = f"base: {_BASE}\ntask: sft\ndata:\n  train: d.jsonl\n"
         # 512 chars accepted, 513 rejected
@@ -646,7 +646,7 @@ class TestUnfrozenParametersSchema:
         assert "512" in str(exc.value)
 
     def test_too_many_patterns_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         patterns = "\n".join(f"  - p{i}" for i in range(50_001))
         bad = (
@@ -659,7 +659,7 @@ class TestUnfrozenParametersSchema:
 
     @pytest.mark.parametrize("redos", ["(x+)+y", "(a*)*", "(a+)*b", "(.*)*"])
     def test_redos_pattern_rejected(self, redos):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         # a catastrophic-backtracking regex compiles fine but would hang
         # re.search during training — reject the pattern class at parse time.
@@ -673,7 +673,7 @@ class TestUnfrozenParametersSchema:
         assert "redos" in str(exc.value).lower() or "quantifier" in str(exc.value).lower()
 
     def test_literal_prefix_with_parens_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         # a normal alternation group (no nested unbounded quantifier) is fine
         cfg = load_config_from_string(
@@ -705,14 +705,14 @@ class TestUnfrozenParametersCrossValidators:
         ],
     )
     def test_mutually_exclusive(self, extra, keyword):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(Exception) as exc:
             load_config_from_string(_sft_yaml(extra))
         assert keyword in str(exc.value).lower()
 
     def test_rejected_on_non_sft_task(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         bad = (
             f"base: {_BASE}\ntask: dpo\ndata:\n  train: d.jsonl\n"
@@ -723,7 +723,7 @@ class TestUnfrozenParametersCrossValidators:
         assert "sft" in str(exc.value).lower()
 
     def test_rejected_on_mlx_backend(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         bad = (
             f"base: {_BASE}\ntask: sft\nbackend: mlx\ndata:\n  train: d.jsonl\n"
@@ -734,7 +734,7 @@ class TestUnfrozenParametersCrossValidators:
         assert "transformers" in str(exc.value).lower()
 
     def test_rejected_when_quantized(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         # Spectrum is full fine-tuning of float weights — a quantized load
         # (the 4bit default) cannot be trained directly.
@@ -748,7 +748,7 @@ class TestUnfrozenParametersCrossValidators:
         assert "quantization" in str(exc.value).lower()
 
     def test_rejected_on_vision_modality(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         # the Spectrum branch is wired only in the text SFT trainer; a
         # vision/audio config would silently no-op without this gate.
@@ -777,7 +777,7 @@ class TestApplyUnfrozenParameters:
 
     def test_freezes_all_then_unfreezes_matching(self):
         model = self._tiny_model()
-        from soup_cli.utils.freeze import apply_unfrozen_parameters
+        from ai_forge_cli.utils.freeze import apply_unfrozen_parameters
 
         n = apply_unfrozen_parameters(model, ["layers.1"])
         # layers.1 has weight + bias = 2 tensors unfrozen
@@ -790,27 +790,27 @@ class TestApplyUnfrozenParameters:
 
     def test_multiple_patterns(self):
         model = self._tiny_model()
-        from soup_cli.utils.freeze import apply_unfrozen_parameters
+        from ai_forge_cli.utils.freeze import apply_unfrozen_parameters
 
         n = apply_unfrozen_parameters(model, ["layers.0", "layers.2"])
         assert n == 4  # (0 + 2) × (weight + bias)
 
     def test_no_match_returns_zero_all_frozen(self):
         model = self._tiny_model()
-        from soup_cli.utils.freeze import apply_unfrozen_parameters
+        from ai_forge_cli.utils.freeze import apply_unfrozen_parameters
 
         n = apply_unfrozen_parameters(model, ["nonexistent.module"])
         assert n == 0
         assert all(not p.requires_grad for p in model.parameters())
 
     def test_empty_patterns_rejected(self):
-        from soup_cli.utils.freeze import apply_unfrozen_parameters
+        from ai_forge_cli.utils.freeze import apply_unfrozen_parameters
 
         with pytest.raises(ValueError, match="non-empty"):
             apply_unfrozen_parameters(self._tiny_model(), [])
 
     def test_invalid_regex_rejected(self):
-        from soup_cli.utils.freeze import apply_unfrozen_parameters
+        from ai_forge_cli.utils.freeze import apply_unfrozen_parameters
 
         with pytest.raises(ValueError, match="invalid regex"):
             apply_unfrozen_parameters(self._tiny_model(), ["model.layers.[0"])
@@ -830,7 +830,7 @@ class TestApplyUnfrozenParameters:
                 )
 
         model = M()
-        from soup_cli.utils.freeze import apply_unfrozen_parameters
+        from ai_forge_cli.utils.freeze import apply_unfrozen_parameters
 
         n = apply_unfrozen_parameters(model, ["w", "idx"])
         assert n == 2  # w.weight + w.bias; idx skipped (non-float)
@@ -856,7 +856,7 @@ class TestSftUnfrozenWiring:
         pytest.importorskip("transformers")
         from transformers import LlamaConfig, LlamaForCausalLM
 
-        from soup_cli.utils.freeze import apply_unfrozen_parameters
+        from ai_forge_cli.utils.freeze import apply_unfrozen_parameters
 
         cfg = LlamaConfig(
             vocab_size=64, hidden_size=32, intermediate_size=64,
@@ -875,7 +875,7 @@ class TestSftUnfrozenWiring:
 
 class TestSpectrumScanRobustness:
     def test_oversized_matrix_skipped(self, tmp_path, monkeypatch):
-        from soup_cli.utils import spectrum_scan
+        from ai_forge_cli.utils import spectrum_scan
 
         _write_tiny_safetensors(tmp_path)
         # cap below the 32×32 attn matrices (1024 elements) → all skipped
@@ -887,7 +887,7 @@ class TestSpectrumScanRobustness:
         os.name == "nt", reason="symlink creation needs privilege on Windows"
     )
     def test_symlinked_shard_skipped(self, tmp_path):
-        from soup_cli.utils.spectrum_scan import _discover_safetensors
+        from ai_forge_cli.utils.spectrum_scan import _discover_safetensors
 
         _write_tiny_safetensors(tmp_path)
         real = tmp_path / "model.safetensors"
@@ -900,7 +900,7 @@ class TestSpectrumScanRobustness:
 
 class TestParamPrefix:
     def test_strips_weight_suffix(self):
-        from soup_cli.utils.spectrum_scan import param_prefix
+        from ai_forge_cli.utils.spectrum_scan import param_prefix
 
         assert param_prefix("model.layers.0.mlp.down_proj.weight") == (
             "model.layers.0.mlp.down_proj"

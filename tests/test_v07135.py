@@ -17,8 +17,8 @@ import typer
 import yaml
 from typer.testing import CliRunner
 
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.templates import list_templates, load_template
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.templates import list_templates, load_template
 
 runner = CliRunner()
 
@@ -70,14 +70,14 @@ class TestComplianceTemplates:
         assert any(tok in lowered for tok in ("bom", "attest", "repro-receipt", "sign"))
 
     def test_manifest_lists_compliance_templates(self):
-        import soup_cli.templates as tpl
+        import ai_forge_cli.templates as tpl
 
         manifest = tpl._load_manifest()
         for name in COMPLIANCE_TEMPLATES:
             assert name in manifest["templates"]
 
     def test_init_writes_compliance_template(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         out = tmp_path / "soup.yaml"
@@ -93,7 +93,7 @@ class TestComplianceTemplates:
 # --------------------------------------------------------------------------- #
 def _make_entry(db_path, *, notes=None, with_eval=False, with_artifact=None, parent=False):
     """Seed a registry entry (and optional artifact / lineage) in a temp DB."""
-    from soup_cli.registry.store import RegistryStore
+    from ai_forge_cli.registry.store import RegistryStore
 
     with RegistryStore(db_path=db_path) as store:
         parent_id = None
@@ -120,7 +120,7 @@ def _make_entry(db_path, *, notes=None, with_eval=False, with_artifact=None, par
 
 class TestBuildModelCard:
     def test_pure_card_has_core_sections(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         entry = {
             "id": "reg_x", "name": "my-model", "base_model": "Qwen/Qwen2.5-7B-Instruct",
@@ -137,7 +137,7 @@ class TestBuildModelCard:
         assert "## Training" in md
 
     def test_notes_html_escaped(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         entry = {
             "id": "reg_x", "name": "m", "base_model": "b", "task": "sft",
@@ -150,7 +150,7 @@ class TestBuildModelCard:
         assert "&lt;script&gt;" in md
 
     def test_eval_scorecard_rendered(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         entry = {
             "id": "r", "name": "m", "base_model": "b", "task": "sft",
@@ -165,7 +165,7 @@ class TestBuildModelCard:
 
     def test_frontmatter_yaml_safe_base(self):
         """A hostile base_model must not break the YAML frontmatter."""
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         entry = {
             "id": "r", "name": "m", "base_model": 'evil"\ninjected: true',
@@ -181,13 +181,13 @@ class TestBuildModelCard:
 
 class TestCardCli:
     def test_help(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = runner.invoke(app, ["card", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
 
     def test_card_happy(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         db = tmp_path / "reg.db"
         eid = _make_entry(db)
@@ -200,7 +200,7 @@ class TestCardCli:
         assert "Qwen/Qwen2.5-7B-Instruct" in card
 
     def test_card_with_lineage_and_artifact(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         db = tmp_path / "reg.db"
         monkeypatch.chdir(tmp_path)
@@ -215,7 +215,7 @@ class TestCardCli:
         assert "model.q4_k_m.gguf" in card  # artifact link
 
     def test_card_not_found(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         db = tmp_path / "reg.db"
         _make_entry(db)
@@ -226,7 +226,7 @@ class TestCardCli:
         assert "not found" in _clean(result.output).lower()
 
     def test_card_output_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         db = tmp_path / "reg.db"
         eid = _make_entry(db)
@@ -241,7 +241,7 @@ class TestCardCli:
 
 class TestPushCardRider:
     def test_push_has_card_option(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         # Wide COLUMNS + ANSI-strip: Rich splits flag names with color codes and
         # wraps at a narrow CI terminal, so a raw substring check is flaky
@@ -251,7 +251,7 @@ class TestPushCardRider:
         assert "--card" in _clean(result.output)
 
     def test_build_card_for_ref_unknown_raises(self, tmp_path, monkeypatch):
-        from soup_cli.commands.card import CardError, build_card_for_ref
+        from ai_forge_cli.commands.card import CardError, build_card_for_ref
 
         db = tmp_path / "reg.db"
         _make_entry(db)
@@ -266,7 +266,7 @@ class TestPushCardRider:
 # --------------------------------------------------------------------------- #
 class TestRenderWorkflow:
     def test_render_is_valid_yaml_with_gate_steps(self):
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         body = render_soup_gate_workflow(
             data_path="./data/train.jsonl",
@@ -282,7 +282,7 @@ class TestRenderWorkflow:
         assert "soup ship --evidence" in runs
 
     def test_render_defaults_python_and_branch(self):
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         body = render_soup_gate_workflow(
             data_path="data/train.jsonl",
@@ -295,7 +295,7 @@ class TestRenderWorkflow:
         assert "pull_request" in body
 
     def test_render_shell_quotes_injection(self):
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         body = render_soup_gate_workflow(
             data_path="data/train.jsonl; rm -rf /",
@@ -308,7 +308,7 @@ class TestRenderWorkflow:
 
     @pytest.mark.parametrize("bad", ["", "a\nb", "a\x00b", "../escape.jsonl"])
     def test_render_rejects_bad_path(self, bad):
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         with pytest.raises((ValueError, TypeError)):
             render_soup_gate_workflow(
@@ -317,7 +317,7 @@ class TestRenderWorkflow:
 
     @pytest.mark.parametrize("bad_py", ["3", "3.x", "3.11; rm", "abc"])
     def test_render_rejects_bad_python(self, bad_py):
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         with pytest.raises(ValueError):
             render_soup_gate_workflow(
@@ -327,7 +327,7 @@ class TestRenderWorkflow:
 
     @pytest.mark.parametrize("bad_branch", ["a b", "a$b", "a;b", ""])
     def test_render_rejects_bad_branch(self, bad_branch):
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         with pytest.raises(ValueError):
             render_soup_gate_workflow(
@@ -338,13 +338,13 @@ class TestRenderWorkflow:
 
 class TestCiInitCli:
     def test_help(self):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         result = runner.invoke(app, ["ci", "init", "--help"])
         assert result.exit_code == 0, (result.output, repr(result.exception))
 
     def test_ci_init_writes_workflow(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         result = runner.invoke(app, ["ci", "init", "--data", "data/train.jsonl"])
@@ -355,7 +355,7 @@ class TestCiInitCli:
         assert "soup-gate" in doc["jobs"]
 
     def test_ci_init_refuses_overwrite_without_force(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         first = runner.invoke(app, ["ci", "init"])
@@ -367,7 +367,7 @@ class TestCiInitCli:
         assert forced.exit_code == 0, (forced.output, repr(forced.exception))
 
     def test_ci_init_rejects_bad_python(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         result = runner.invoke(app, ["ci", "init", "--python", "3.x"])
@@ -383,17 +383,17 @@ class TestCodeReviewFixes:
         tree, but `soup ci init` targets a DOWNSTREAM fine-tuning repo (no
         pyproject.toml), so the workflow's first step would break for every
         real user."""
-        from soup_cli.utils.ci_workflow import render_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import render_soup_gate_workflow
 
         body = render_soup_gate_workflow(
             data_path="d.jsonl", suite_path="s.yaml", evidence_path="e.json",
         )
         assert "pip install -e" not in body
-        assert "pip install soup-cli" in body
+        assert "pip install ai-forge" in body
 
     def test_usage_snippet_survives_quote_in_base_model(self):
         """LOW: a `\"` in base_model must not emit broken Python."""
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         entry = {
             "id": "r", "name": "m", "base_model": 'we"ird/model',
@@ -414,7 +414,7 @@ class TestSecurityReviewFixes:
         """HIGH: `base`/`scheduler` have no charset validator in SoupConfig, so
         a crafted config could smuggle raw HTML (or a backtick breaking out of
         the code span) into a card published to the public HF Hub."""
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         hostile = '` </code><script>alert(1)</script><code> `'
         entry = {
@@ -439,19 +439,19 @@ class TestSecurityReviewFixes:
 
     def test_safe_md_cell_strips_control_bytes(self):
         """LOW: an ESC byte in registry text must not survive into the card."""
-        from soup_cli.commands.push import _safe_md_cell
+        from ai_forge_cli.commands.push import _safe_md_cell
 
         assert "\x1b" not in _safe_md_cell("a\x1b[31mred\x1b[0m")
         assert "\x00" not in _safe_md_cell("a\x00b")
 
     def test_safe_md_cell_neutralises_backtick(self):
-        from soup_cli.commands.push import _safe_md_cell
+        from ai_forge_cli.commands.push import _safe_md_cell
 
         assert "`" not in _safe_md_cell("br`eak")
 
     def test_card_notes_are_truncated(self):
         """LOW/INFO: unbounded registry notes must not render an unbounded card."""
-        from soup_cli.commands.card import _MAX_NOTES_CHARS, build_model_card
+        from ai_forge_cli.commands.card import _MAX_NOTES_CHARS, build_model_card
 
         entry = {
             "id": "r", "name": "m", "base_model": "b", "task": "sft",
@@ -463,7 +463,7 @@ class TestSecurityReviewFixes:
         assert "[truncated]" in md
 
     def test_card_rows_are_capped(self):
-        from soup_cli.commands.card import _MAX_ROWS, build_model_card
+        from ai_forge_cli.commands.card import _MAX_ROWS, build_model_card
 
         arts = [
             {"kind": "gguf", "path": f"m{i}.gguf", "sha256": "x"}
@@ -482,7 +482,7 @@ class TestSecurityReviewFixes:
         """MEDIUM: the hand-rolled S_ISLNK guard missed Windows junctions."""
         import inspect
 
-        from soup_cli.utils import ci_workflow
+        from ai_forge_cli.utils import ci_workflow
 
         src = inspect.getsource(ci_workflow)
         assert "enforce_under_cwd_and_no_symlink" in src
@@ -491,7 +491,7 @@ class TestSecurityReviewFixes:
         assert "stat.S_ISLNK" not in src
 
     def test_ci_workflow_output_outside_cwd_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ci_workflow import write_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import write_soup_gate_workflow
 
         work = tmp_path / "work"
         work.mkdir()
@@ -520,7 +520,7 @@ class TestPushCardIntegration:
     def test_push_card_uploads_registry_card(self, tmp_path, monkeypatch):
         from unittest.mock import MagicMock
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("HF_TOKEN", "t1")
@@ -529,7 +529,7 @@ class TestPushCardIntegration:
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(db))
         _model_dir(tmp_path)
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
 
         result = runner.invoke(
             app, ["push", "--model", "out", "--repo", "user/m", "--card", eid]
@@ -547,7 +547,7 @@ class TestPushCardIntegration:
     def test_push_card_error_exits_1_before_network(self, tmp_path, monkeypatch):
         from unittest.mock import MagicMock
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("HF_TOKEN", "t1")
@@ -556,7 +556,7 @@ class TestPushCardIntegration:
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(db))
         _model_dir(tmp_path)
         fake_api = MagicMock()
-        monkeypatch.setattr("soup_cli.utils.hf.get_hf_api", lambda **_: fake_api)
+        monkeypatch.setattr("ai_forge_cli.utils.hf.get_hf_api", lambda **_: fake_api)
 
         result = runner.invoke(
             app, ["push", "--model", "out", "--repo", "user/m", "--card", "reg_nope"]
@@ -568,7 +568,7 @@ class TestPushCardIntegration:
         assert not fake_api.upload_folder.called
 
     def test_push_card_non_hf_hub_warns_and_ignores(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("HF_TOKEN", "t1")
@@ -581,7 +581,7 @@ class TestPushCardIntegration:
         def _fake_upload_repo(hub, repo, **kwargs):
             uploaded["hub"] = hub
 
-        monkeypatch.setattr("soup_cli.utils.hubs.upload_repo", _fake_upload_repo)
+        monkeypatch.setattr("ai_forge_cli.utils.hubs.upload_repo", _fake_upload_repo)
         result = runner.invoke(
             app,
             ["push", "--model", "out", "--repo", "user/m", "--hub", "modelscope",
@@ -596,7 +596,7 @@ class TestCardErrorPaths:
     def test_ambiguous_ref_raises_card_error(self, tmp_path, monkeypatch):
         """M1 — every entry id shares the reg_ prefix, so a bare prefix is
         ambiguous once 2 entries exist."""
-        from soup_cli.commands.card import CardError, build_card_for_ref
+        from ai_forge_cli.commands.card import CardError, build_card_for_ref
 
         db = tmp_path / "reg.db"
         monkeypatch.chdir(tmp_path)
@@ -607,7 +607,7 @@ class TestCardErrorPaths:
             build_card_for_ref("reg_")
 
     def test_ambiguous_ref_cli_exits_1(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         db = tmp_path / "reg.db"
         monkeypatch.chdir(tmp_path)
@@ -619,7 +619,7 @@ class TestCardErrorPaths:
 
     def test_card_write_oserror_is_friendly(self, tmp_path, monkeypatch):
         """M2 — `-o .` is a directory: passes containment, fails on os.replace."""
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         db = tmp_path / "reg.db"
         eid = _make_entry(db)
@@ -631,7 +631,7 @@ class TestCardErrorPaths:
 
     def test_card_overwrites_existing_output(self, tmp_path, monkeypatch):
         """L7 — pin the intended behaviour: regeneration overwrites, no --force."""
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         db = tmp_path / "reg.db"
         eid = _make_entry(db)
@@ -646,7 +646,7 @@ class TestCardErrorPaths:
 class TestBuildModelCardEdges:
     def test_empty_entry_uses_defaults(self):
         """M3 — name -> 'model', no base_model frontmatter line, no crash."""
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         md = build_model_card({}, [], [], [])
         assert "# model" in md
@@ -656,7 +656,7 @@ class TestBuildModelCardEdges:
 
     def test_scorecard_drops_none_fields(self):
         """M4 — rows with a None benchmark/score must be dropped, not rendered."""
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         entry = {
             "id": "r", "name": "m", "base_model": "b", "task": "sft",
@@ -673,7 +673,7 @@ class TestBuildModelCardEdges:
         assert "gsm8k" not in md
 
     def test_scorecard_duplicate_benchmark_last_wins(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         entry = {
             "id": "r", "name": "m", "base_model": "b", "task": "sft",
@@ -686,7 +686,7 @@ class TestBuildModelCardEdges:
         assert "0.100" not in md
 
     def test_malformed_config_json_does_not_crash(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         entry = {
             "id": "r", "name": "m", "base_model": "b", "task": "sft",
@@ -698,7 +698,7 @@ class TestBuildModelCardEdges:
 
     def test_yaml_dq_unit(self):
         """L5 — direct unit coverage of the frontmatter escaper."""
-        from soup_cli.commands.card import _yaml_dq
+        from ai_forge_cli.commands.card import _yaml_dq
 
         assert _yaml_dq("plain") == '"plain"'
         assert _yaml_dq('a"b') == '"a\\"b"'
@@ -708,7 +708,7 @@ class TestBuildModelCardEdges:
 
     def test_truncate_boundary(self):
         """L6 — exactly at the limit must NOT truncate."""
-        from soup_cli.commands.card import _truncate
+        from ai_forge_cli.commands.card import _truncate
 
         assert _truncate("abcde", 5) == "abcde"
         assert "[truncated]" in _truncate("abcdef", 5)
@@ -716,7 +716,7 @@ class TestBuildModelCardEdges:
 
 class TestCiWorkflowEdges:
     def test_write_rejects_non_bool_overwrite(self):
-        from soup_cli.utils.ci_workflow import write_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import write_soup_gate_workflow
 
         with pytest.raises(TypeError):
             write_soup_gate_workflow(
@@ -726,7 +726,7 @@ class TestCiWorkflowEdges:
 
     @pytest.mark.parametrize("bad_out", ["", None, True])
     def test_write_rejects_bad_output_path(self, bad_out):
-        from soup_cli.utils.ci_workflow import write_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import write_soup_gate_workflow
 
         with pytest.raises((ValueError, TypeError)):
             write_soup_gate_workflow(
@@ -737,7 +737,7 @@ class TestCiWorkflowEdges:
     def test_size_cap_fires(self, tmp_path, monkeypatch):
         """L4 — the 64 KiB cap is unreachable via normal input (path len is
         capped at 4096); pin that the guard still fires when tripped."""
-        from soup_cli.utils import ci_workflow
+        from ai_forge_cli.utils import ci_workflow
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(ci_workflow, "_MAX_FILE_BYTES", 10)
@@ -749,7 +749,7 @@ class TestCiWorkflowEdges:
     @pytest.mark.skipif(os.name != "posix", reason="POSIX symlink semantics")
     def test_write_rejects_symlink_output(self, tmp_path, monkeypatch):
         """L1 — live symlink coverage at ci_workflow's own call site."""
-        from soup_cli.utils.ci_workflow import write_soup_gate_workflow
+        from ai_forge_cli.utils.ci_workflow import write_soup_gate_workflow
 
         monkeypatch.chdir(tmp_path)
         target = tmp_path / "real.yml"
@@ -764,7 +764,7 @@ class TestCiWorkflowEdges:
 
     def test_ci_init_bad_python_names_the_problem(self, tmp_path, monkeypatch):
         """L3 — assert the message, not just the exit code."""
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         result = runner.invoke(app, ["ci", "init", "--python", "3.x"])
@@ -786,7 +786,7 @@ class TestAdapterInference:
         }
 
     def test_lora_config_without_artifacts_is_adapter(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         md = build_model_card(
             self._entry({"training": {"lora": {"r": 4, "alpha": 8}}}), [], [], []
@@ -796,20 +796,20 @@ class TestAdapterInference:
         assert "Full model" not in md
 
     def test_no_lora_is_full_model(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         md = build_model_card(self._entry({"training": {"epochs": 1}}), [], [], [])
         assert "Full model" in md
         assert "library_name: transformers" in md
 
     def test_zero_rank_lora_is_full_model(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         md = build_model_card(self._entry({"training": {"lora": {"r": 0}}}), [], [], [])
         assert "Full model" in md
 
     def test_adapter_artifact_is_definitive(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         md = build_model_card(
             self._entry({"training": {}}),
@@ -819,7 +819,7 @@ class TestAdapterInference:
 
     def test_dense_export_artifact_beats_lora_config(self):
         """A merged/gguf export is a standalone model even if trained via LoRA."""
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         md = build_model_card(
             self._entry({"training": {"lora": {"r": 8}}}),
@@ -830,7 +830,7 @@ class TestAdapterInference:
     def test_spectrum_full_ft_is_not_adapter(self):
         """unfrozen_parameters = full FT; the dumped config still carries a
         default lora block, which must NOT be read as 'adapter'."""
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         md = build_model_card(
             self._entry({"training": {"unfrozen_parameters": ["q_proj"],
@@ -839,7 +839,7 @@ class TestAdapterInference:
         assert "Full model" in md
 
     def test_lisa_full_ft_is_not_adapter(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         md = build_model_card(
             self._entry({"training": {"lisa_enabled": True, "lora": {"r": 8}}}), [], [], [],
@@ -847,7 +847,7 @@ class TestAdapterInference:
         assert "Full model" in md
 
     def test_malformed_lora_block_does_not_crash(self):
-        from soup_cli.commands.card import build_model_card
+        from ai_forge_cli.commands.card import build_model_card
 
         md = build_model_card(self._entry({"training": {"lora": "nonsense"}}), [], [], [])
         assert "Full model" in md
@@ -864,7 +864,7 @@ class TestGgufWindowsFixes:
         build/bin/Release/, not the flat build/bin/ a Make/Ninja build makes.
         Without this, `soup export --format gguf` cannot find a correctly-built
         llama.cpp on Windows."""
-        from soup_cli.commands.export import _find_quantize_binary
+        from ai_forge_cli.commands.export import _find_quantize_binary
 
         llama = tmp_path / "llama.cpp"
         rel = llama / "build" / "bin" / "Release"
@@ -878,7 +878,7 @@ class TestGgufWindowsFixes:
 
     def test_flat_single_config_layout_still_found(self, tmp_path):
         """Make/Ninja layout must keep working."""
-        from soup_cli.commands.export import _find_quantize_binary
+        from ai_forge_cli.commands.export import _find_quantize_binary
 
         llama = tmp_path / "llama.cpp"
         bindir = llama / "build" / "bin"
@@ -887,7 +887,7 @@ class TestGgufWindowsFixes:
         assert _find_quantize_binary(llama) is not None
 
     def test_missing_binary_returns_none(self, tmp_path, monkeypatch):
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         monkeypatch.setattr(export_mod.shutil, "which", lambda _: None)
         llama = tmp_path / "llama.cpp"
@@ -901,7 +901,7 @@ class TestGgufWindowsFixes:
         install the convert script's EXTRA deps, unpinned."""
         import inspect
 
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         src = inspect.getsource(export_mod._find_llama_cpp)
         assert "requirements.txt" not in src
@@ -910,7 +910,7 @@ class TestGgufWindowsFixes:
         assert "gguf" in export_mod._CONVERT_EXTRA_DEPS
 
     def test_install_convert_deps_is_unpinned_and_targeted(self, monkeypatch):
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         calls = {}
 
@@ -939,7 +939,7 @@ class TestGgufWindowsFixes:
         """A pip failure must warn, not abort the export."""
         import subprocess as sp
 
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         def _boom(cmd, **kwargs):
             raise sp.CalledProcessError(1, cmd, stderr="network down")
@@ -956,7 +956,7 @@ class TestOllamaModelfileAbsolutePath:
     GGUF-on-Windows validation."""
 
     def test_modelfile_from_is_absolute(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ollama import create_modelfile
+        from ai_forge_cli.utils.ollama import create_modelfile
 
         monkeypatch.chdir(tmp_path)
         gguf = tmp_path / "m.q8_0.gguf"
@@ -969,7 +969,7 @@ class TestOllamaModelfileAbsolutePath:
         assert emitted.endswith("m.q8_0.gguf")
 
     def test_absolute_input_stays_absolute(self, tmp_path):
-        from soup_cli.utils.ollama import create_modelfile
+        from ai_forge_cli.utils.ollama import create_modelfile
 
         gguf = tmp_path / "m.gguf"
         gguf.write_text("stub", encoding="utf-8")
@@ -977,7 +977,7 @@ class TestOllamaModelfileAbsolutePath:
         assert os.path.isabs(body.splitlines()[0][len("FROM "):])
 
     def test_other_directives_still_render(self, tmp_path, monkeypatch):
-        from soup_cli.utils.ollama import create_modelfile
+        from ai_forge_cli.utils.ollama import create_modelfile
 
         monkeypatch.chdir(tmp_path)
         body = create_modelfile("m.gguf", template="chatml", system_prompt="be nice")
@@ -994,7 +994,7 @@ class TestLlamaCppHomeAnchor:
     def test_finds_llama_cpp_under_home_not_cwd(self, tmp_path, monkeypatch):
         from pathlib import Path
 
-        from soup_cli.commands import export as export_mod
+        from ai_forge_cli.commands import export as export_mod
 
         fake_home = tmp_path / "home"
         llama = fake_home / ".soup" / "llama.cpp"
@@ -1033,7 +1033,7 @@ class TestBomAttestRegistryKinds:
     closing the one gap in the otherwise self-contained provenance story."""
 
     def test_add_artifact_accepts_bom_and_attestation(self, tmp_path, monkeypatch):
-        from soup_cli.registry.store import _VALID_KINDS, RegistryStore
+        from ai_forge_cli.registry.store import _VALID_KINDS, RegistryStore
 
         assert "bom" in _VALID_KINDS
         assert "attestation" in _VALID_KINDS
@@ -1053,8 +1053,8 @@ class TestBomAttestRegistryKinds:
         assert {"bom", "attestation"} <= kinds
 
     def test_bom_emit_attaches_to_registry(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.registry.store import RegistryStore
 
         db = tmp_path / "reg.db"
         eid = _make_entry(db)
@@ -1072,8 +1072,8 @@ class TestBomAttestRegistryKinds:
         assert arts[0]["path"].endswith("bom.cdx.json")
 
     def test_bom_emit_both_attaches_each_file(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.registry.store import RegistryStore
 
         db = tmp_path / "reg.db"
         eid = _make_entry(db)
@@ -1090,8 +1090,8 @@ class TestBomAttestRegistryKinds:
         assert names == ["bom.cdx.json", "bom.spdx.json"]
 
     def test_bom_emit_attach_without_output_is_usage_error(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.registry.store import RegistryStore
 
         db = tmp_path / "reg.db"
         eid = _make_entry(db)
@@ -1108,8 +1108,8 @@ class TestBomAttestRegistryKinds:
             assert store.get_artifacts(eid) == []
 
     def test_attest_emit_attaches_to_registry(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.registry.store import RegistryStore
 
         db = tmp_path / "reg.db"
         eid = _make_entry(db)
@@ -1126,9 +1126,9 @@ class TestBomAttestRegistryKinds:
         assert arts[0]["path"].endswith("att.json")
 
     def test_signed_attest_emit_attaches_signature_sidecar(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.commands import attest as attest_cmd
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.commands import attest as attest_cmd
+        from ai_forge_cli.registry.store import RegistryStore
 
         db = tmp_path / "reg.db"
         eid = _make_entry(db)
@@ -1155,8 +1155,8 @@ class TestBomAttestRegistryKinds:
         assert paths == ["signed.attest.json", "signed.attest.json.sig"]
 
     def test_attest_emit_attach_without_output_is_usage_error(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.cli import app
+        from ai_forge_cli.registry.store import RegistryStore
 
         db = tmp_path / "reg.db"
         eid = _make_entry(db)
@@ -1184,7 +1184,7 @@ class TestBomAttestRegistryKinds:
     def test_emit_registry_failure_exits_one_and_preserves_output(
         self, tmp_path, monkeypatch, command_args, output_name,
     ):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(tmp_path / "reg.db"))
         monkeypatch.chdir(tmp_path)
@@ -1197,8 +1197,8 @@ class TestBomAttestRegistryKinds:
         assert (tmp_path / output_name).is_file()
 
     @pytest.mark.parametrize("command_module,helper_name", [
-        ("soup_cli.commands.attest", "_attach_attestation"),
-        ("soup_cli.commands.bom", "_attach_bom"),
+        ("ai_forge_cli.commands.attest", "_attach_attestation"),
+        ("ai_forge_cli.commands.bom", "_attach_bom"),
     ])
     def test_attach_helpers_fail_when_registry_helper_is_unavailable(
         self, monkeypatch, capsys, command_module, helper_name,
@@ -1210,7 +1210,7 @@ class TestBomAttestRegistryKinds:
         real_import = builtins.__import__
 
         def unavailable_registry_helper(name, *args, **kwargs):
-            if name == "soup_cli.registry.attach":
+            if name == "ai_forge_cli.registry.attach":
                 raise ImportError("registry unavailable")
             return real_import(name, *args, **kwargs)
 
@@ -1221,15 +1221,15 @@ class TestBomAttestRegistryKinds:
         assert "could not import registry attach helper" in _clean(capsys.readouterr().out)
 
     @pytest.mark.parametrize("command_module,helper_name", [
-        ("soup_cli.commands.attest", "_attach_attestation"),
-        ("soup_cli.commands.bom", "_attach_bom"),
+        ("ai_forge_cli.commands.attest", "_attach_attestation"),
+        ("ai_forge_cli.commands.bom", "_attach_bom"),
     ])
     def test_attach_helpers_fail_after_attach_failure(
         self, monkeypatch, capsys, command_module, helper_name,
     ):
         import importlib
 
-        from soup_cli.registry import attach as registry_attach
+        from ai_forge_cli.registry import attach as registry_attach
 
         module = importlib.import_module(command_module)
         attached = []
@@ -1250,7 +1250,7 @@ class TestBomAttestRegistryKinds:
         assert "could not attach to registry" in _clean(capsys.readouterr().out)
 
     def test_card_lists_attached_bom_and_attestation(self, tmp_path, monkeypatch):
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         db = tmp_path / "reg.db"
         monkeypatch.chdir(tmp_path)
@@ -1259,7 +1259,7 @@ class TestBomAttestRegistryKinds:
         att = tmp_path / "m.attest.json"
         att.write_text("{}", encoding="utf-8")
         eid = _make_entry(db, with_artifact=("bom", str(bom)))
-        from soup_cli.registry.store import RegistryStore
+        from ai_forge_cli.registry.store import RegistryStore
         with RegistryStore(db_path=db) as store:
             store.add_artifact(entry_id=eid, kind="attestation", path=str(att))
         monkeypatch.setenv("SOUP_REGISTRY_DB_PATH", str(db))

@@ -17,9 +17,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli import __version__
-from soup_cli.cli import app
-from soup_cli.utils.diagnose import (
+from ai_forge_cli import __version__
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils.diagnose import (
     FAILURE_MODES,
     FailureReport,
     FailureScore,
@@ -27,25 +27,25 @@ from soup_cli.utils.diagnose import (
     compose_report,
     overall_verdict,
 )
-from soup_cli.utils.diagnose.badge import render_badge_svg
-from soup_cli.utils.diagnose.contamination import score_contamination
-from soup_cli.utils.diagnose.forgetting import score_forgetting
-from soup_cli.utils.diagnose.format import (
+from ai_forge_cli.utils.diagnose.badge import render_badge_svg
+from ai_forge_cli.utils.diagnose.contamination import score_contamination
+from ai_forge_cli.utils.diagnose.forgetting import score_forgetting
+from ai_forge_cli.utils.diagnose.format import (
     is_valid_json,
     is_valid_tool_call,
     matches_regex,
     score_format,
 )
-from soup_cli.utils.diagnose.memorization import score_memorization, split_prefix
-from soup_cli.utils.diagnose.mode_collapse import score_mode_collapse
-from soup_cli.utils.diagnose.refusal import looks_like_refusal, score_refusal
-from soup_cli.utils.diagnose.report import THRESHOLDS
-from soup_cli.utils.diagnose.report import classify_score as classify_v2
-from soup_cli.utils.diagnose.runner import (
+from ai_forge_cli.utils.diagnose.memorization import score_memorization, split_prefix
+from ai_forge_cli.utils.diagnose.mode_collapse import score_mode_collapse
+from ai_forge_cli.utils.diagnose.refusal import looks_like_refusal, score_refusal
+from ai_forge_cli.utils.diagnose.report import THRESHOLDS
+from ai_forge_cli.utils.diagnose.report import classify_score as classify_v2
+from ai_forge_cli.utils.diagnose.runner import (
     build_report,
     write_report,
 )
-from soup_cli.utils.diagnose.runner import (
+from ai_forge_cli.utils.diagnose.runner import (
     diagnose as diagnose_sdk,
 )
 
@@ -553,7 +553,7 @@ class TestBadge:
 
 class TestRegistryKind:
     def test_diagnose_report_in_valid_kinds(self) -> None:
-        from soup_cli.registry.store import _VALID_KINDS
+        from ai_forge_cli.registry.store import _VALID_KINDS
 
         assert "diagnose_report" in _VALID_KINDS
 
@@ -683,7 +683,7 @@ class TestTrainDiagnoseGate:
         )
         import typer
 
-        from soup_cli.commands.train import _run_diagnose_gate
+        from ai_forge_cli.commands.train import _run_diagnose_gate
 
         with pytest.raises(typer.Exit) as excinfo:
             _run_diagnose_gate(str(evidence), "run1", "base", "adapter")
@@ -706,17 +706,17 @@ class TestTrainDiagnoseGate:
             ),
             encoding="utf-8",
         )
-        from soup_cli.commands.train import _run_diagnose_gate
+        from ai_forge_cli.commands.train import _run_diagnose_gate
         _run_diagnose_gate(str(evidence), "run1", "base", "adapter")
 
     def test_diagnose_gate_skips_nonzero_local_rank(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.commands.train import _should_run_diagnose_gate_on_rank
+        from ai_forge_cli.commands.train import _should_run_diagnose_gate_on_rank
 
         monkeypatch.setenv("LOCAL_RANK", "1")
         assert _should_run_diagnose_gate_on_rank() is False
 
     def test_diagnose_gate_runs_on_rank_zero(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from soup_cli.commands.train import _should_run_diagnose_gate_on_rank
+        from ai_forge_cli.commands.train import _should_run_diagnose_gate_on_rank
 
         monkeypatch.setenv("LOCAL_RANK", "0")
         assert _should_run_diagnose_gate_on_rank() is True
@@ -725,7 +725,7 @@ class TestTrainDiagnoseGate:
         self, monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Garbage LOCAL_RANK falls back to True -- safer to over-run than skip."""
-        from soup_cli.commands.train import _should_run_diagnose_gate_on_rank
+        from ai_forge_cli.commands.train import _should_run_diagnose_gate_on_rank
 
         monkeypatch.setenv("LOCAL_RANK", "not-an-int")
         assert _should_run_diagnose_gate_on_rank() is True
@@ -736,7 +736,7 @@ class TestTrainDiagnoseGate:
         os.chdir(tmp_path)
         evidence = tmp_path / "ev.json"
         evidence.write_text("[]", encoding="utf-8")
-        from soup_cli.commands.train import _run_diagnose_gate
+        from ai_forge_cli.commands.train import _run_diagnose_gate
 
         with pytest.raises(ValueError, match="JSON object"):
             _run_diagnose_gate(str(evidence), "run1", "base", "adapter")
@@ -747,7 +747,7 @@ class TestTrainDiagnoseGate:
 
 class TestSourceWiring:
     def test_cli_registers_diagnose(self) -> None:
-        source = (_PROJECT_ROOT / "src" / "soup_cli" / "cli.py").read_text(encoding="utf-8")
+        source = (_PROJECT_ROOT / "src" / "ai_forge_cli" / "cli.py").read_text(encoding="utf-8")
         assert 'name="diagnose"' in source
         assert "_diagnose_cmd" in source
 
@@ -755,18 +755,18 @@ class TestSourceWiring:
         # All probe + report modules must be torch/transformers-free
         # (citation.py added in v0.71.10 #202).
         probe_modules = [
-            "src/soup_cli/utils/diagnose/__init__.py",
-            "src/soup_cli/utils/diagnose/report.py",
-            "src/soup_cli/utils/diagnose/_common.py",
-            "src/soup_cli/utils/diagnose/forgetting.py",
-            "src/soup_cli/utils/diagnose/refusal.py",
-            "src/soup_cli/utils/diagnose/format.py",
-            "src/soup_cli/utils/diagnose/mode_collapse.py",
-            "src/soup_cli/utils/diagnose/memorization.py",
-            "src/soup_cli/utils/diagnose/contamination.py",
-            "src/soup_cli/utils/diagnose/citation.py",
-            "src/soup_cli/utils/diagnose/badge.py",
-            "src/soup_cli/utils/diagnose/runner.py",
+            "src/ai_forge_cli/utils/diagnose/__init__.py",
+            "src/ai_forge_cli/utils/diagnose/report.py",
+            "src/ai_forge_cli/utils/diagnose/_common.py",
+            "src/ai_forge_cli/utils/diagnose/forgetting.py",
+            "src/ai_forge_cli/utils/diagnose/refusal.py",
+            "src/ai_forge_cli/utils/diagnose/format.py",
+            "src/ai_forge_cli/utils/diagnose/mode_collapse.py",
+            "src/ai_forge_cli/utils/diagnose/memorization.py",
+            "src/ai_forge_cli/utils/diagnose/contamination.py",
+            "src/ai_forge_cli/utils/diagnose/citation.py",
+            "src/ai_forge_cli/utils/diagnose/badge.py",
+            "src/ai_forge_cli/utils/diagnose/runner.py",
         ]
         for relative in probe_modules:
             source = (_PROJECT_ROOT / relative).read_text(encoding="utf-8")
@@ -804,7 +804,7 @@ class TestReviewFixCoverage:
     # python-review HIGH — write_report uses realpath, not abspath.
     def test_write_report_uses_realpath(self) -> None:
         source = (
-            _PROJECT_ROOT / "src" / "soup_cli" / "utils" / "diagnose" / "runner.py"
+            _PROJECT_ROOT / "src" / "ai_forge_cli" / "utils" / "diagnose" / "runner.py"
         ).read_text(
             encoding="utf-8"
         )
@@ -813,7 +813,7 @@ class TestReviewFixCoverage:
 
     # code-review HIGH — neutral_score is the single source of truth.
     def test_neutral_score_centralised(self) -> None:
-        from soup_cli.utils.diagnose.runner import neutral_score
+        from ai_forge_cli.utils.diagnose.runner import neutral_score
 
         sc = neutral_score("forgetting", "skipped")
         assert sc.mode == "forgetting"
@@ -822,7 +822,7 @@ class TestReviewFixCoverage:
 
     # code-review HIGH — sys.exit replaced with typer.Exit.
     def test_diagnose_uses_typer_exit_not_sys_exit(self) -> None:
-        source = (_PROJECT_ROOT / "src" / "soup_cli" / "commands" / "diagnose.py").read_text(
+        source = (_PROJECT_ROOT / "src" / "ai_forge_cli" / "commands" / "diagnose.py").read_text(
             encoding="utf-8"
         )
         assert "sys.exit(" not in source
@@ -830,7 +830,7 @@ class TestReviewFixCoverage:
 
     # security-review HIGH — atomic badge write with TOCTOU guard.
     def test_badge_write_atomic_and_symlink_safe(self) -> None:
-        source = (_PROJECT_ROOT / "src" / "soup_cli" / "commands" / "diagnose.py").read_text(
+        source = (_PROJECT_ROOT / "src" / "ai_forge_cli" / "commands" / "diagnose.py").read_text(
             encoding="utf-8"
         )
         assert "_write_badge" in source
@@ -844,7 +844,7 @@ class TestReviewFixCoverage:
         target.write_text("<svg/>", encoding="utf-8")
         link = tmp_path / "link.svg"
         os.symlink(target, link)
-        from soup_cli.commands.diagnose import _write_badge
+        from ai_forge_cli.commands.diagnose import _write_badge
 
         with pytest.raises(ValueError, match="symlink"):
             _write_badge(str(link), "<svg/>")
@@ -861,7 +861,7 @@ class TestReviewFixCoverage:
         ev.write_text("{}", encoding="utf-8")
         from unittest.mock import MagicMock, patch
 
-        from soup_cli.commands.diagnose import _load_evidence
+        from ai_forge_cli.commands.diagnose import _load_evidence
 
         fake_stat = MagicMock(st_size=20 * 1024 * 1024)
         with patch("os.fstat", return_value=fake_stat):
@@ -874,7 +874,7 @@ class TestReviewFixCoverage:
         ev.write_text("{}", encoding="utf-8")
         from unittest.mock import patch
 
-        from soup_cli.commands.train import _run_diagnose_gate
+        from ai_forge_cli.commands.train import _run_diagnose_gate
 
         with patch("os.path.getsize", return_value=20 * 1024 * 1024):
             with pytest.raises(ValueError, match="exceeds 16 MiB"):
@@ -888,7 +888,7 @@ class TestReviewFixCoverage:
         assert matches_regex("abc123", r"\d+")
         # Source-grep — confirm the ReDoS probe wiring exists.
         source = (
-            _PROJECT_ROOT / "src" / "soup_cli" / "utils" / "diagnose" / "format.py"
+            _PROJECT_ROOT / "src" / "ai_forge_cli" / "utils" / "diagnose" / "format.py"
         ).read_text(
             encoding="utf-8"
         )
@@ -896,7 +896,7 @@ class TestReviewFixCoverage:
 
     # security-review MEDIUM — looks_like_refusal caps input length.
     def test_refusal_input_capped(self) -> None:
-        from soup_cli.utils.diagnose.refusal import _MAX_REFUSAL_SCAN
+        from ai_forge_cli.utils.diagnose.refusal import _MAX_REFUSAL_SCAN
 
         assert _MAX_REFUSAL_SCAN == 8192
         # An adversarially huge input should still resolve quickly.
@@ -941,7 +941,7 @@ class TestReviewFixCoverage:
         # Build two small lists but stub the product check.
         # Simpler: just verify the cap exists in source.
         source = (
-            _PROJECT_ROOT / "src" / "soup_cli" / "utils" / "diagnose" / "contamination.py"
+            _PROJECT_ROOT / "src" / "ai_forge_cli" / "utils" / "diagnose" / "contamination.py"
         ).read_text(
             encoding="utf-8"
         )
@@ -950,14 +950,14 @@ class TestReviewFixCoverage:
 
     # code-review MEDIUM — _VALID_KINDS is frozenset.
     def test_format_valid_kinds_frozenset(self) -> None:
-        from soup_cli.utils.diagnose.format import _VALID_KINDS
+        from ai_forge_cli.utils.diagnose.format import _VALID_KINDS
 
         assert isinstance(_VALID_KINDS, frozenset)
 
     # code-review MEDIUM — tokenize delegates to _eval_text.
     def test_tokenize_delegates(self) -> None:
-        from soup_cli.utils._eval_text import tokenize as shared
-        from soup_cli.utils.diagnose._common import tokenize as local
+        from ai_forge_cli.utils._eval_text import tokenize as shared
+        from ai_forge_cli.utils.diagnose._common import tokenize as local
 
         # Both produce the same token sequence.
         text = "Hello World 123"
@@ -965,7 +965,7 @@ class TestReviewFixCoverage:
 
     # code-review HIGH — extract_row_text shared across modules.
     def test_extract_row_text(self) -> None:
-        from soup_cli.utils.diagnose._common import extract_row_text
+        from ai_forge_cli.utils.diagnose._common import extract_row_text
 
         assert extract_row_text({"text": "x"}) == "x"
         assert extract_row_text({"content": "y"}) == "y"
@@ -994,7 +994,7 @@ class TestReviewFixCoverage:
     def test_run_diagnose_gate_outside_cwd(self, tmp_path: Path) -> None:
         os.chdir(tmp_path)
         outside = os.path.realpath(os.path.join(tmp_path, "..", "evil.json"))
-        from soup_cli.commands.train import _run_diagnose_gate
+        from ai_forge_cli.commands.train import _run_diagnose_gate
 
         with pytest.raises(ValueError, match="cwd"):
             _run_diagnose_gate(outside, "r1", "base", "adapter")

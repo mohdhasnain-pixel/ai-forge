@@ -17,16 +17,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from soup_cli.utils import gpu as gpu_utils
-from soup_cli.utils.gpu import resolve_quantization
+from ai_forge_cli.utils import gpu as gpu_utils
+from ai_forge_cli.utils.gpu import resolve_quantization
 
 
 class TestMLXDeviceDetection:
     """Test suite for detect_device(), get_gpu_info(), and quantization guards."""
 
-    @patch("soup_cli.utils.mlx.is_apple_silicon", return_value=True)
-    @patch("soup_cli.utils.mlx.detect_mlx", return_value=True)
-    @patch("soup_cli.utils.mlx.get_chip_info", return_value={"chip": "Apple M2 Max"})
+    @patch("ai_forge_cli.utils.mlx.is_apple_silicon", return_value=True)
+    @patch("ai_forge_cli.utils.mlx.detect_mlx", return_value=True)
+    @patch("ai_forge_cli.utils.mlx.get_chip_info", return_value={"chip": "Apple M2 Max"})
     def test_detect_device_pure_apple_silicon_mlx(
         self, mock_chip, mock_detect, mock_apple
     ):
@@ -35,9 +35,9 @@ class TestMLXDeviceDetection:
         assert device == "mlx"
         assert name == "Apple Silicon (Apple M2 Max)"
 
-    @patch("soup_cli.utils.mlx.is_apple_silicon", return_value=True)
-    @patch("soup_cli.utils.mlx.detect_mlx", return_value=True)
-    @patch("soup_cli.utils.mlx.get_chip_info", return_value={"chip": "Apple M3 Pro"})
+    @patch("ai_forge_cli.utils.mlx.is_apple_silicon", return_value=True)
+    @patch("ai_forge_cli.utils.mlx.detect_mlx", return_value=True)
+    @patch("ai_forge_cli.utils.mlx.get_chip_info", return_value={"chip": "Apple M3 Pro"})
     def test_detect_device_dual_stack_mlx_requested(
         self, mock_chip, mock_detect, mock_apple
     ):
@@ -51,8 +51,8 @@ class TestMLXDeviceDetection:
             assert device == "mlx"
             assert "Apple Silicon (Apple M3 Pro)" in name
 
-    @patch("soup_cli.utils.mlx.is_apple_silicon", return_value=True)
-    @patch("soup_cli.utils.mlx.detect_mlx", return_value=True)
+    @patch("ai_forge_cli.utils.mlx.is_apple_silicon", return_value=True)
+    @patch("ai_forge_cli.utils.mlx.detect_mlx", return_value=True)
     def test_detect_device_dual_stack_transformers_requested(
         self, mock_detect, mock_apple
     ):
@@ -66,10 +66,10 @@ class TestMLXDeviceDetection:
             assert device == "mps"
             assert name == "Apple Silicon (MPS)"
 
-    @patch("soup_cli.utils.mlx.is_apple_silicon", return_value=True)
-    @patch("soup_cli.utils.mlx.detect_mlx", return_value=True)
+    @patch("ai_forge_cli.utils.mlx.is_apple_silicon", return_value=True)
+    @patch("ai_forge_cli.utils.mlx.detect_mlx", return_value=True)
     @patch(
-        "soup_cli.utils.mlx.get_unified_memory_bytes", return_value=68719476736
+        "ai_forge_cli.utils.mlx.get_unified_memory_bytes", return_value=68719476736
     )  # 64 GB
     def test_get_gpu_info_apple_silicon_unified_memory(
         self, mock_mem, mock_detect, mock_apple
@@ -98,7 +98,7 @@ class TestMLXDeviceDetection:
             assert info["memory_total_bytes"] == 0
             assert info["gpu_count"] == 1
 
-    @patch("soup_cli.utils.mlx.is_apple_silicon", return_value=False)
+    @patch("ai_forge_cli.utils.mlx.is_apple_silicon", return_value=False)
     def test_detect_device_cpu_fallback_on_non_apple(self, mock_apple):
         """Gracefully falls back to CPU on non-Apple machines without GPUs.
 
@@ -209,7 +209,7 @@ class TestHardwareFitGateIsMlxAware:
     def _cfg(self, backend: str):
         import yaml
 
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         body = {
             "base": "Qwen/Qwen2.5-3B",
@@ -231,7 +231,7 @@ class TestHardwareFitGateIsMlxAware:
         otherwise this test proves nothing about the MLX branch."""
         import typer
 
-        from soup_cli.commands.train import _hardware_fit_preflight
+        from ai_forge_cli.commands.train import _hardware_fit_preflight
 
         gpu = {"memory_total_bytes": 4 * 10**9}
         with pytest.raises(typer.Exit):
@@ -242,7 +242,7 @@ class TestHardwareFitGateIsMlxAware:
     def test_mlx_run_is_not_blocked_by_the_resident_prediction(self):
         """``backend='mlx'`` with real unified memory bytes must not trip the
         CUDA VRAM gate — the predictor is skipped entirely."""
-        from soup_cli.commands.train import _hardware_fit_preflight
+        from ai_forge_cli.commands.train import _hardware_fit_preflight
 
         gpu = {"memory_total_bytes": 4 * 10**9}  # real bytes, not zero
         # Must not raise typer.Exit.

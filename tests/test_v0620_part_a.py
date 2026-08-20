@@ -15,7 +15,7 @@ import yaml
 
 class TestConvertRaft:
     def test_happy_path(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         row = {
             "query": "What year was Python released?",
@@ -33,7 +33,7 @@ class TestConvertRaft:
         assert out["answer"] == row["answer"]
 
     def test_empty_distractors_ok(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         out = _convert_raft({
             "query": "q",
@@ -44,7 +44,7 @@ class TestConvertRaft:
         assert out["distractor_docs"] == []
 
     def test_missing_query_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises((KeyError, ValueError)):
             _convert_raft({
@@ -54,7 +54,7 @@ class TestConvertRaft:
             })
 
     def test_missing_golden_doc_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises((KeyError, ValueError)):
             _convert_raft({
@@ -64,7 +64,7 @@ class TestConvertRaft:
             })
 
     def test_missing_answer_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises((KeyError, ValueError)):
             _convert_raft({
@@ -74,7 +74,7 @@ class TestConvertRaft:
             })
 
     def test_empty_query_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises(ValueError, match="query"):
             _convert_raft({
@@ -85,7 +85,7 @@ class TestConvertRaft:
             })
 
     def test_empty_golden_doc_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises(ValueError, match="golden_doc"):
             _convert_raft({
@@ -96,7 +96,7 @@ class TestConvertRaft:
             })
 
     def test_empty_answer_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises(ValueError, match="answer"):
             _convert_raft({
@@ -107,7 +107,7 @@ class TestConvertRaft:
             })
 
     def test_non_string_query_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises(ValueError, match="query"):
             _convert_raft({
@@ -118,7 +118,7 @@ class TestConvertRaft:
             })
 
     def test_non_list_distractors_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises(ValueError, match="distractor_docs"):
             _convert_raft({
@@ -129,7 +129,7 @@ class TestConvertRaft:
             })
 
     def test_non_string_distractor_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises(ValueError, match="distractor"):
             _convert_raft({
@@ -140,7 +140,7 @@ class TestConvertRaft:
             })
 
     def test_null_byte_query_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises(ValueError, match="null"):
             _convert_raft({
@@ -151,7 +151,7 @@ class TestConvertRaft:
             })
 
     def test_distractor_cap(self):
-        from soup_cli.data.formats import _MAX_RAFT_DISTRACTORS, _convert_raft
+        from ai_forge_cli.data.formats import _MAX_RAFT_DISTRACTORS, _convert_raft
 
         # exactly cap accepted
         out = _convert_raft({
@@ -163,7 +163,7 @@ class TestConvertRaft:
         assert len(out["distractor_docs"]) == _MAX_RAFT_DISTRACTORS
 
     def test_distractor_overcap_rejected(self):
-        from soup_cli.data.formats import _MAX_RAFT_DISTRACTORS, _convert_raft
+        from ai_forge_cli.data.formats import _MAX_RAFT_DISTRACTORS, _convert_raft
 
         with pytest.raises(ValueError, match="distractor"):
             _convert_raft({
@@ -179,7 +179,7 @@ class TestConvertRaft:
 
 class TestFormatDispatcher:
     def test_format_to_messages_dispatches_raft(self):
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         row = {
             "query": "q",
@@ -193,7 +193,7 @@ class TestFormatDispatcher:
         assert out["answer"] == "a"
 
     def test_format_to_messages_invalid_raft_returns_none(self):
-        from soup_cli.data.formats import format_to_messages
+        from ai_forge_cli.data.formats import format_to_messages
 
         # missing key — wrapper catches and returns None
         assert format_to_messages({"query": "q"}, "raft") is None
@@ -204,13 +204,13 @@ class TestFormatDispatcher:
 
 class TestSchemaIntegration:
     def test_data_format_raft_accepted(self):
-        from soup_cli.config.schema import DataConfig
+        from ai_forge_cli.config.schema import DataConfig
 
         cfg = DataConfig(train="data.jsonl", format="raft")
         assert cfg.format == "raft"
 
     def test_soup_config_raft_roundtrip(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """\
 base: meta-llama/Llama-3.1-8B-Instruct
@@ -238,7 +238,7 @@ output: ./output
 
 class TestRaftRecipe:
     def test_recipe_present(self):
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("raft-llama3-8b")
         assert recipe is not None
@@ -246,8 +246,8 @@ class TestRaftRecipe:
         assert "raft" in recipe.tags or "rag" in recipe.tags
 
     def test_recipe_yaml_loads(self):
-        from soup_cli.config.loader import load_config_from_string
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.config.loader import load_config_from_string
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("raft-llama3-8b")
         assert recipe is not None
@@ -255,7 +255,7 @@ class TestRaftRecipe:
         assert cfg.data.format == "raft"
 
     def test_recipe_yaml_parses_as_dict(self):
-        from soup_cli.recipes.catalog import get_recipe
+        from ai_forge_cli.recipes.catalog import get_recipe
 
         recipe = get_recipe("raft-llama3-8b")
         assert recipe is not None
@@ -264,7 +264,7 @@ class TestRaftRecipe:
         assert parsed["data"]["format"] == "raft"
 
     def test_recipe_search_finds_raft(self):
-        from soup_cli.recipes.catalog import search_recipes
+        from ai_forge_cli.recipes.catalog import search_recipes
 
         results = search_recipes(query="raft")
         assert any(r.task == "sft" and "raft" in r.yaml_str for r in results)

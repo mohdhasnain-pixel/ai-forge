@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from soup_cli.utils.why import Finding, diagnose
+from ai_forge_cli.utils.why import Finding, diagnose
 
 
 def _row(step, loss, grad_norm=1.0):

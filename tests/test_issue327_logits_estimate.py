@@ -77,7 +77,7 @@ class TestTheConstantIsTheSumOfTwoMeasuredTerms:
     was not, and a wrong story is what made #327 look preference-specific."""
 
     def test_the_two_terms_sum_to_the_shipped_constant(self):
-        from soup_cli.utils.layer_stream import (
+        from ai_forge_cli.utils.layer_stream import (
             LOGITS_BYTES_PER_ELEMENT,
             LOGITS_LOSS_BYTES_PER_ELEMENT,
             LOGITS_RETENTION_BYTES_PER_ELEMENT,
@@ -93,7 +93,7 @@ class TestTheConstantIsTheSumOfTwoMeasuredTerms:
     def test_the_shipped_value_did_not_move(self):
         """Control: the split is a decomposition, not a re-fit. Every downstream
         prediction must be byte-identical to what v0.72.3 shipped."""
-        from soup_cli.utils.layer_stream import LOGITS_BYTES_PER_ELEMENT, estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import LOGITS_BYTES_PER_ELEMENT, estimate_logits_bytes
 
         assert LOGITS_BYTES_PER_ELEMENT == 14
         assert estimate_logits_bytes(vocab_size=151936, seq_len=512, batch_size=1) == (
@@ -127,7 +127,7 @@ class TestAdoptingTheH100SlopeWouldUnderPredict:
     def test_the_loss_arithmetic_alone_is_not_a_candidate_either(self):
         """12 is what the loss path measurably costs, and it is still not the
         right budget — which is the whole argument for keeping the retention."""
-        from soup_cli.utils.layer_stream import LOGITS_LOSS_BYTES_PER_ELEMENT
+        from ai_forge_cli.utils.layer_stream import LOGITS_LOSS_BYTES_PER_ELEMENT
 
         assert all(
             _predict_at(r, LOGITS_LOSS_BYTES_PER_ELEMENT) < r["peak"] for r in _GRID
@@ -140,21 +140,21 @@ class TestTheOverrideCanOnlyRaiseTheBudget:
     as a probe that could not see the retention, not as a cheaper stack."""
 
     def test_a_lower_reading_is_ignored(self):
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         kw = dict(vocab_size=1000, seq_len=8, batch_size=1)
         assert estimate_logits_bytes(bytes_per_element=12.311, **kw) == 8 * 1000 * 14
         assert estimate_logits_bytes(bytes_per_element=0.0, **kw) == 8 * 1000 * 14
 
     def test_a_higher_reading_is_adopted(self):
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         kw = dict(vocab_size=1000, seq_len=8, batch_size=1)
         assert estimate_logits_bytes(bytes_per_element=18.0, **kw) == 8 * 1000 * 18
 
     def test_a_fractional_reading_rounds_up_not_down(self):
         """Rounding down is an under-prediction, however small."""
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         got = estimate_logits_bytes(
             vocab_size=3, seq_len=1, batch_size=1, bytes_per_element=14.5
@@ -162,7 +162,7 @@ class TestTheOverrideCanOnlyRaiseTheBudget:
         assert got == 44  # ceil(3 * 14.5) == 44, not 43
 
     def test_a_non_finite_reading_is_refused(self):
-        from soup_cli.utils.layer_stream import estimate_logits_bytes
+        from ai_forge_cli.utils.layer_stream import estimate_logits_bytes
 
         with pytest.raises(ValueError, match="finite"):
             estimate_logits_bytes(
@@ -170,7 +170,7 @@ class TestTheOverrideCanOnlyRaiseTheBudget:
             )
 
     def test_peak_vram_threads_the_override_and_floors_it(self):
-        from soup_cli.utils.layer_stream import estimate_stream_peak_vram
+        from ai_forge_cli.utils.layer_stream import estimate_stream_peak_vram
 
         kw = dict(
             layer_bytes=1000, buffers=2, extras_bytes=0, adapter_params=0,
@@ -185,7 +185,7 @@ class TestTheOverrideCanOnlyRaiseTheBudget:
     def test_calibration_falls_back_to_the_constant_without_cuda(self, monkeypatch):
         """A pre-flight that dies because its own instrument failed is worse than
         one that falls back. Pinned by making the measurement return None."""
-        from soup_cli.utils import layer_stream
+        from ai_forge_cli.utils import layer_stream
 
         monkeypatch.setattr(
             layer_stream, "measure_logits_loss_bytes_per_element", lambda **kw: None
@@ -193,7 +193,7 @@ class TestTheOverrideCanOnlyRaiseTheBudget:
         assert layer_stream.calibrated_logits_bytes_per_element() == 14.0
 
     def test_calibration_adds_the_retention_to_whatever_it_measured(self, monkeypatch):
-        from soup_cli.utils import layer_stream
+        from ai_forge_cli.utils import layer_stream
 
         monkeypatch.setattr(
             layer_stream, "measure_logits_loss_bytes_per_element", lambda **kw: 16.0
@@ -201,7 +201,7 @@ class TestTheOverrideCanOnlyRaiseTheBudget:
         assert layer_stream.calibrated_logits_bytes_per_element() == 18.0
 
     def test_calibration_never_returns_below_the_shipped_constant(self, monkeypatch):
-        from soup_cli.utils import layer_stream
+        from ai_forge_cli.utils import layer_stream
 
         monkeypatch.setattr(
             layer_stream, "measure_logits_loss_bytes_per_element", lambda **kw: 4.0
@@ -220,7 +220,7 @@ class TestTheOverrideCanOnlyRaiseTheBudget:
     def test_the_probe_refuses_a_degenerate_request(self, kwargs):
         """A zero or non-increasing token pair divides by zero and would report a
         slope of infinity or NaN — a budget, not an exception."""
-        from soup_cli.utils.layer_stream import measure_logits_loss_bytes_per_element
+        from ai_forge_cli.utils.layer_stream import measure_logits_loss_bytes_per_element
 
         with pytest.raises(ValueError):
             measure_logits_loss_bytes_per_element(**kwargs)
@@ -235,7 +235,7 @@ class TestTheModuleStaysOnTheLightCliPath:
 
         out = subprocess.run(
             [sys.executable, "-c",
-             "import sys; import soup_cli.utils.layer_stream as m; "
+             "import sys; import ai_forge_cli.utils.layer_stream as m; "
              "print('torch' in sys.modules)"],
             capture_output=True, text=True, check=True,
         )
@@ -250,7 +250,7 @@ class TestTheStackIsRemeasuredWhereverTheSuiteRuns:
     loudly here instead of silently OOMing a user."""
 
     def test_the_measured_loss_path_does_not_exceed_the_shipped_budget(self):
-        from soup_cli.utils.layer_stream import (
+        from ai_forge_cli.utils.layer_stream import (
             LOGITS_BYTES_PER_ELEMENT,
             measure_logits_loss_bytes_per_element,
         )
@@ -266,7 +266,7 @@ class TestTheStackIsRemeasuredWhereverTheSuiteRuns:
         """Measured 12.000000, spread 0.00e+00, on torch 2.5.1 and 2.13.0 alike.
         A tolerance is allowed for allocator rounding at small probe sizes; the
         assertion that matters is the one above."""
-        from soup_cli.utils.layer_stream import measure_logits_loss_bytes_per_element
+        from ai_forge_cli.utils.layer_stream import measure_logits_loss_bytes_per_element
 
         measured = measure_logits_loss_bytes_per_element()
         assert 11.5 <= measured <= 12.5, measured
@@ -274,13 +274,13 @@ class TestTheStackIsRemeasuredWhereverTheSuiteRuns:
     def test_the_measurement_is_reproducible(self):
         """Three repeats. ``max_memory_allocated`` is deterministic for a fixed
         shape, so a spread here means the probe is measuring something else."""
-        from soup_cli.utils.layer_stream import measure_logits_loss_bytes_per_element
+        from ai_forge_cli.utils.layer_stream import measure_logits_loss_bytes_per_element
 
         runs = [measure_logits_loss_bytes_per_element() for _ in range(3)]
         assert max(runs) - min(runs) == 0.0, runs
 
     def test_calibration_agrees_with_the_shipped_constant_on_this_stack(self):
-        from soup_cli.utils.layer_stream import calibrated_logits_bytes_per_element
+        from ai_forge_cli.utils.layer_stream import calibrated_logits_bytes_per_element
 
         assert calibrated_logits_bytes_per_element() == 14.0
 
@@ -292,7 +292,7 @@ class TestTheStackIsRemeasuredWhereverTheSuiteRuns:
         import torch
         from transformers import AutoConfig, AutoModelForCausalLM
 
-        from soup_cli.utils.layer_stream import LOGITS_RETENTION_BYTES_PER_ELEMENT
+        from ai_forge_cli.utils.layer_stream import LOGITS_RETENTION_BYTES_PER_ELEMENT
 
         vocab, tokens = 32768, 512
         cfg = AutoConfig.for_model(

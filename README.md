@@ -26,13 +26,13 @@ AI Forge is an end-to-end LLM training platform that simplifies fine-tuning, pos
 
 ```bash
 # Core installation (lightweight)
-pip install soup-cli
+pip install ai-forge
 
 # With training support (recommended for fine-tuning)
-pip install "soup-cli[train]"
+pip install "ai-forge[train]"
 
 # Full stack (all optional features)
-pip install "soup-cli[all]"
+pip install "ai-forge[all]"
 ```
 
 ### Your First Training Job
@@ -103,7 +103,7 @@ ai-forge --help          # Full command list
 ```bash
 # Check system setup
 python -m pip install --upgrade pip
-pip install "soup-cli[train]"
+pip install "ai-forge[train]"
 ai-forge env check
 
 # Initialize project
@@ -204,7 +204,7 @@ python -m venv env
 source env/bin/activate  # On Windows: env\Scripts\activate
 
 # Install development dependencies
-pip install "soup-cli[dev]"
+pip install "ai-forge[dev]"
 
 # Run pre-commit hooks
 pre-commit install
@@ -235,7 +235,7 @@ pytest -m unit
 pytest -m integration
 
 # Run with coverage report
-pytest --cov=soup_cli --cov-report=html
+pytest --cov=ai_forge_cli --cov-report=html
 
 # Run specific test file
 pytest tests/test_training.py -v
@@ -339,7 +339,7 @@ ruff check src/ tests/
 mypy src/
 
 # Run tests
-pytest --cov=soup_cli
+pytest --cov=ai_forge_cli
 ```
 
 ## 📈 Performance & Benchmarks

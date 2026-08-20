@@ -14,7 +14,7 @@ import pytest
 
 class TestRLCheckpointPublicSurface:
     def test_module_imports(self):
-        from soup_cli.utils import rl_checkpoint
+        from ai_forge_cli.utils import rl_checkpoint
 
         assert hasattr(rl_checkpoint, "RLCheckpointConfig")
         assert hasattr(rl_checkpoint, "RLCheckpointState")
@@ -24,43 +24,43 @@ class TestRLCheckpointPublicSurface:
 
 class TestValidateSaveEverySteps:
     def test_happy(self):
-        from soup_cli.utils.rl_checkpoint import validate_save_every_steps
+        from ai_forge_cli.utils.rl_checkpoint import validate_save_every_steps
 
         assert validate_save_every_steps(100) == 100
         assert validate_save_every_steps(1) == 1
 
     def test_max_boundary(self):
-        from soup_cli.utils.rl_checkpoint import validate_save_every_steps
+        from ai_forge_cli.utils.rl_checkpoint import validate_save_every_steps
 
         # 10M steps is plenty.
         assert validate_save_every_steps(10_000_000) == 10_000_000
 
     def test_zero_rejected(self):
-        from soup_cli.utils.rl_checkpoint import validate_save_every_steps
+        from ai_forge_cli.utils.rl_checkpoint import validate_save_every_steps
 
         with pytest.raises(ValueError, match=">= 1"):
             validate_save_every_steps(0)
 
     def test_negative_rejected(self):
-        from soup_cli.utils.rl_checkpoint import validate_save_every_steps
+        from ai_forge_cli.utils.rl_checkpoint import validate_save_every_steps
 
         with pytest.raises(ValueError, match=">= 1"):
             validate_save_every_steps(-10)
 
     def test_above_cap_rejected(self):
-        from soup_cli.utils.rl_checkpoint import validate_save_every_steps
+        from ai_forge_cli.utils.rl_checkpoint import validate_save_every_steps
 
         with pytest.raises(ValueError, match="10000000"):
             validate_save_every_steps(10_000_001)
 
     def test_bool_rejected(self):
-        from soup_cli.utils.rl_checkpoint import validate_save_every_steps
+        from ai_forge_cli.utils.rl_checkpoint import validate_save_every_steps
 
         with pytest.raises(ValueError, match="bool"):
             validate_save_every_steps(True)
 
     def test_non_int_rejected(self):
-        from soup_cli.utils.rl_checkpoint import validate_save_every_steps
+        from ai_forge_cli.utils.rl_checkpoint import validate_save_every_steps
 
         with pytest.raises(ValueError, match="int"):
             validate_save_every_steps(100.5)
@@ -68,7 +68,7 @@ class TestValidateSaveEverySteps:
 
 class TestRLCheckpointConfig:
     def test_defaults(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointConfig
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointConfig
 
         cfg = RLCheckpointConfig(save_every_steps=100)
         assert cfg.save_every_steps == 100
@@ -78,14 +78,14 @@ class TestRLCheckpointConfig:
         assert cfg.keep_last == 3
 
     def test_frozen(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointConfig
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointConfig
 
         cfg = RLCheckpointConfig(save_every_steps=100)
         with pytest.raises(FrozenInstanceError):
             cfg.save_every_steps = 50  # type: ignore[misc]
 
     def test_keep_last_bounds(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointConfig
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointConfig
 
         cfg = RLCheckpointConfig(save_every_steps=100, keep_last=10)
         assert cfg.keep_last == 10
@@ -97,19 +97,19 @@ class TestRLCheckpointConfig:
             RLCheckpointConfig(save_every_steps=100, keep_last=101)
 
     def test_keep_last_bool_rejected(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointConfig
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointConfig
 
         with pytest.raises(ValueError, match="bool"):
             RLCheckpointConfig(save_every_steps=100, keep_last=True)
 
     def test_invalid_save_every_propagates(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointConfig
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointConfig
 
         with pytest.raises(ValueError):
             RLCheckpointConfig(save_every_steps=0)
 
     def test_bool_flags_must_be_bool(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointConfig
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointConfig
 
         with pytest.raises(TypeError, match="bool"):
             RLCheckpointConfig(
@@ -125,7 +125,7 @@ class TestRLCheckpointState:
     """
 
     def test_basic(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointState
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointState
 
         st = RLCheckpointState(
             step=500,
@@ -140,7 +140,7 @@ class TestRLCheckpointState:
         assert st.task == "grpo"
 
     def test_frozen(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointState
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointState
 
         st = RLCheckpointState(
             step=500,
@@ -155,7 +155,7 @@ class TestRLCheckpointState:
             st.step = 0  # type: ignore[misc]
 
     def test_invalid_step_rejected(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointState
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointState
 
         with pytest.raises(ValueError, match="step"):
             RLCheckpointState(
@@ -169,7 +169,7 @@ class TestRLCheckpointState:
             )
 
     def test_invalid_task_rejected(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointState
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointState
 
         with pytest.raises(ValueError, match="task"):
             RLCheckpointState(
@@ -183,7 +183,7 @@ class TestRLCheckpointState:
             )
 
     def test_bool_step_rejected(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointState
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointState
 
         with pytest.raises(ValueError, match="bool"):
             RLCheckpointState(
@@ -197,7 +197,7 @@ class TestRLCheckpointState:
             )
 
     def test_to_dict(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointState
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointState
 
         st = RLCheckpointState(
             step=500,
@@ -216,7 +216,7 @@ class TestRLCheckpointState:
         assert d["has_ref_model"] is True
 
     def test_null_byte_dir_rejected(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointState
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointState
 
         with pytest.raises(ValueError, match="null byte"):
             RLCheckpointState(
@@ -230,7 +230,7 @@ class TestRLCheckpointState:
             )
 
     def test_bool_has_optimizer_rejected(self):
-        from soup_cli.utils.rl_checkpoint import RLCheckpointState
+        from ai_forge_cli.utils.rl_checkpoint import RLCheckpointState
 
         with pytest.raises(TypeError, match="has_optimizer"):
             RLCheckpointState(
@@ -248,13 +248,13 @@ class TestBuildRLCheckpointCallback:
     """Live in v0.71.11 #238 — returns a callback; requires output_dir."""
 
     def test_non_config_rejected(self):
-        from soup_cli.utils.rl_checkpoint import build_rl_checkpoint_callback
+        from ai_forge_cli.utils.rl_checkpoint import build_rl_checkpoint_callback
 
         with pytest.raises(TypeError, match="RLCheckpointConfig"):
             build_rl_checkpoint_callback({"save_every_steps": 100})  # type: ignore[arg-type]
 
     def test_live_returns_callback(self):
-        from soup_cli.utils.rl_checkpoint import (
+        from ai_forge_cli.utils.rl_checkpoint import (
             RLCheckpointCallback,
             RLCheckpointConfig,
             build_rl_checkpoint_callback,
@@ -265,7 +265,7 @@ class TestBuildRLCheckpointCallback:
         assert isinstance(cb, RLCheckpointCallback)
 
     def test_requires_output_dir(self):
-        from soup_cli.utils.rl_checkpoint import (
+        from ai_forge_cli.utils.rl_checkpoint import (
             RLCheckpointConfig,
             build_rl_checkpoint_callback,
         )
@@ -281,14 +281,14 @@ class TestBuildRLCheckpointCallback:
 
 class TestSchemaTrainingConfig:
     def test_defaults(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig()
         assert tcfg.rl_checkpoint_save_every_steps is None
         assert tcfg.rl_checkpoint_keep_last == 3
 
     def test_set_save_every(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tcfg = TrainingConfig(rl_checkpoint_save_every_steps=500)
         assert tcfg.rl_checkpoint_save_every_steps == 500
@@ -296,7 +296,7 @@ class TestSchemaTrainingConfig:
     def test_zero_rejected(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(rl_checkpoint_save_every_steps=0)
@@ -304,7 +304,7 @@ class TestSchemaTrainingConfig:
     def test_keep_last_bounds(self):
         from pydantic import ValidationError
 
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         with pytest.raises(ValidationError):
             TrainingConfig(rl_checkpoint_keep_last=0)
@@ -329,19 +329,19 @@ training:
 """
 
     def test_grpo_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(self._yaml("grpo"))
         assert cfg.training.rl_checkpoint_save_every_steps == 500
 
     def test_ppo_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         cfg = load_config_from_string(self._yaml("ppo"))
         assert cfg.training.rl_checkpoint_save_every_steps == 500
 
     def test_sft_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError, match="rl_checkpoint"):
             load_config_from_string(self._yaml("sft"))
@@ -353,7 +353,7 @@ class TestSourceWiring:
 
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "utils"
             / "rl_checkpoint.py"
         )

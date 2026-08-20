@@ -26,7 +26,7 @@ import pytest
 
 class TestRunLRSweep:
     def test_empty_schedule_rejected(self):
-        from soup_cli.utils.lr_finder import run_lr_sweep
+        from ai_forge_cli.utils.lr_finder import run_lr_sweep
 
         with pytest.raises(ValueError, match="schedule must be non-empty"):
             run_lr_sweep(
@@ -35,7 +35,7 @@ class TestRunLRSweep:
             )
 
     def test_loop_records_loss_per_step(self):
-        from soup_cli.utils.lr_finder import run_lr_sweep
+        from ai_forge_cli.utils.lr_finder import run_lr_sweep
 
         # Fake model returning a tensor-like loss
         def _fake_loss_value(value):
@@ -82,7 +82,7 @@ class TestRunLRSweep:
         assert losses == loss_values
 
     def test_diverged_loss_breaks_loop(self):
-        from soup_cli.utils.lr_finder import run_lr_sweep
+        from ai_forge_cli.utils.lr_finder import run_lr_sweep
 
         loss_values = [3.0, float("inf"), 1.0]
 
@@ -140,7 +140,7 @@ class TestResolveMixedPrecision:
         because a resolver hardcoded either way would satisfy only one."""
         import torch
 
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         wrapper = SFTTrainerWrapper.__new__(SFTTrainerWrapper)
         wrapper.device = "cuda"
@@ -168,7 +168,7 @@ class TestResolveMixedPrecision:
         assert wrapper._resolve_mixed_precision(tcfg, "any") == (False, True)
 
     def test_auto_flag_off_cpu(self):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         wrapper = SFTTrainerWrapper.__new__(SFTTrainerWrapper)
         wrapper.device = "cpu"
@@ -177,7 +177,7 @@ class TestResolveMixedPrecision:
         assert (bf16, fp16) == (False, False)
 
     def test_auto_flag_cpu_returns_no(self):
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         wrapper = SFTTrainerWrapper.__new__(SFTTrainerWrapper)
         wrapper.device = "cpu"
@@ -188,7 +188,7 @@ class TestResolveMixedPrecision:
         """Ampere (cc 8.6) + non-quirk model → bf16."""
         import torch
 
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         wrapper = SFTTrainerWrapper.__new__(SFTTrainerWrapper)
         wrapper.device = "cuda"
@@ -204,7 +204,7 @@ class TestResolveMixedPrecision:
     def test_auto_flag_picks_fp16_for_qwen2_on_ampere(self, monkeypatch):
         import torch
 
-        from soup_cli.trainer.sft import SFTTrainerWrapper
+        from ai_forge_cli.trainer.sft import SFTTrainerWrapper
 
         wrapper = SFTTrainerWrapper.__new__(SFTTrainerWrapper)
         wrapper.device = "cuda"
@@ -226,7 +226,7 @@ class TestResolveMixedPrecision:
 
 
 def _make_callback(tmp_path, **kwargs):
-    from soup_cli.monitoring.callback import SoupTrainerCallback
+    from ai_forge_cli.monitoring.callback import SoupTrainerCallback
 
     display = MagicMock()
     return SoupTrainerCallback(

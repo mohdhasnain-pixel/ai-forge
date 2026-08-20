@@ -16,7 +16,7 @@ from unittest.mock import patch as mock_patch
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import SoupConfig
+from ai_forge_cli.config.schema import SoupConfig
 
 # ─── Schema Tests ───────────────────────────────────────────────────────────
 
@@ -85,7 +85,7 @@ class TestPreferenceTaskField:
 
 class TestResolvePreferenceLoss:
     def test_resolve_preference_task_returns_loss(self):
-        from soup_cli.trainer.preference import resolve_preference_loss
+        from ai_forge_cli.trainer.preference import resolve_preference_loss
 
         cfg = SoupConfig(
             base="some-model",
@@ -106,7 +106,7 @@ class TestResolvePreferenceLoss:
         ],
     )
     def test_legacy_task_maps_to_loss(self, task, expected):
-        from soup_cli.trainer.preference import resolve_preference_loss
+        from ai_forge_cli.trainer.preference import resolve_preference_loss
 
         cfg = SoupConfig(
             base="some-model",
@@ -116,7 +116,7 @@ class TestResolvePreferenceLoss:
         assert resolve_preference_loss(cfg) == expected
 
     def test_resolve_non_preference_task_returns_none(self):
-        from soup_cli.trainer.preference import resolve_preference_loss
+        from ai_forge_cli.trainer.preference import resolve_preference_loss
 
         cfg = SoupConfig(
             base="some-model",
@@ -131,18 +131,18 @@ class TestResolvePreferenceLoss:
 
 class TestPreferenceTrainerWrapper:
     def test_import_exists(self):
-        from soup_cli.trainer.preference import PreferenceTrainerWrapper
+        from ai_forge_cli.trainer.preference import PreferenceTrainerWrapper
 
         assert PreferenceTrainerWrapper is not None
 
     @pytest.mark.parametrize(
         "loss,wrapper_path",
         [
-            ("dpo", "soup_cli.trainer.dpo.DPOTrainerWrapper"),
-            ("simpo", "soup_cli.trainer.simpo.SimPOTrainerWrapper"),
-            ("orpo", "soup_cli.trainer.orpo.ORPOTrainerWrapper"),
-            ("ipo", "soup_cli.trainer.ipo.IPOTrainerWrapper"),
-            ("bco", "soup_cli.trainer.bco.BCOTrainerWrapper"),
+            ("dpo", "ai_forge_cli.trainer.dpo.DPOTrainerWrapper"),
+            ("simpo", "ai_forge_cli.trainer.simpo.SimPOTrainerWrapper"),
+            ("orpo", "ai_forge_cli.trainer.orpo.ORPOTrainerWrapper"),
+            ("ipo", "ai_forge_cli.trainer.ipo.IPOTrainerWrapper"),
+            ("bco", "ai_forge_cli.trainer.bco.BCOTrainerWrapper"),
         ],
     )
     def test_dispatcher_routes_to_correct_wrapper(self, loss, wrapper_path):
@@ -151,7 +151,7 @@ class TestPreferenceTrainerWrapper:
         Asserts the inner cfg sent to the wrapper has task=loss and that
         preference_loss has been cleared (defends _make_inner_cfg's contract).
         """
-        from soup_cli.trainer.preference import PreferenceTrainerWrapper
+        from ai_forge_cli.trainer.preference import PreferenceTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -181,7 +181,7 @@ class TestPreferenceTrainerWrapper:
 
     def test_setup_does_not_mutate_caller_cfg(self):
         """_make_inner_cfg must return a copy; cfg.task unchanged after setup."""
-        from soup_cli.trainer.preference import PreferenceTrainerWrapper
+        from ai_forge_cli.trainer.preference import PreferenceTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -189,7 +189,7 @@ class TestPreferenceTrainerWrapper:
             data={"train": "./data.jsonl", "format": "dpo"},
             training={"preference_loss": "dpo"},
         )
-        with mock_patch("soup_cli.trainer.dpo.DPOTrainerWrapper") as mock_inner:
+        with mock_patch("ai_forge_cli.trainer.dpo.DPOTrainerWrapper") as mock_inner:
             mock_inner.return_value = MagicMock()
             wrapper = PreferenceTrainerWrapper(cfg, device="cpu")
             wrapper.setup({"train": [{"prompt": "p", "chosen": "c", "rejected": "r"}]})
@@ -198,7 +198,7 @@ class TestPreferenceTrainerWrapper:
         assert cfg.training.preference_loss == "dpo"
 
     def test_train_before_setup_raises(self):
-        from soup_cli.trainer.preference import PreferenceTrainerWrapper
+        from ai_forge_cli.trainer.preference import PreferenceTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -212,7 +212,7 @@ class TestPreferenceTrainerWrapper:
 
     def test_unknown_loss_raises_at_setup(self):
         """Defence-in-depth: schema gate prevents this, but if it slipped, raise."""
-        from soup_cli.trainer.preference import PreferenceTrainerWrapper
+        from ai_forge_cli.trainer.preference import PreferenceTrainerWrapper
 
         cfg = SoupConfig(
             base="some-model",
@@ -232,7 +232,7 @@ class TestPreferenceTrainerWrapper:
 
 class TestPreferenceTrainRouting:
     def test_sweep_routes_to_preference_wrapper(self):
-        from soup_cli.commands.sweep import _run_single
+        from ai_forge_cli.commands.sweep import _run_single
 
         cfg = SoupConfig(
             base="some-model",
@@ -249,19 +249,19 @@ class TestPreferenceTrainRouting:
         fake_gpu_info = {"memory_total": "0 MB", "memory_total_bytes": 0}
 
         with mock_patch(
-            "soup_cli.data.loader.load_dataset", return_value=fake_dataset,
+            "ai_forge_cli.data.loader.load_dataset", return_value=fake_dataset,
         ), mock_patch(
-            "soup_cli.utils.gpu.detect_device", return_value=("cpu", "CPU"),
+            "ai_forge_cli.utils.gpu.detect_device", return_value=("cpu", "CPU"),
         ), mock_patch(
-            "soup_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info,
+            "ai_forge_cli.utils.gpu.get_gpu_info", return_value=fake_gpu_info,
         ), mock_patch(
-            "soup_cli.experiment.tracker.ExperimentTracker",
+            "ai_forge_cli.experiment.tracker.ExperimentTracker",
         ) as mock_tracker_cls, mock_patch(
-            "soup_cli.monitoring.display.TrainingDisplay",
+            "ai_forge_cli.monitoring.display.TrainingDisplay",
         ), mock_patch(
-            "soup_cli.trainer.preference.PreferenceTrainerWrapper.setup",
+            "ai_forge_cli.trainer.preference.PreferenceTrainerWrapper.setup",
         ), mock_patch(
-            "soup_cli.trainer.preference.PreferenceTrainerWrapper.train",
+            "ai_forge_cli.trainer.preference.PreferenceTrainerWrapper.train",
             return_value=fake_result,
         ) as mock_train:
             mock_tracker = MagicMock()

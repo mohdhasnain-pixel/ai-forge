@@ -9,7 +9,7 @@ from __future__ import annotations
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.utils.capability_suite import (
+from ai_forge_cli.utils.capability_suite import (
     CAPABILITY_BENCHMARKS,
     PROFILES,
     CapabilityBenchmark,
@@ -221,20 +221,20 @@ class TestCapabilityBenchmark:
 
 class TestCapabilityCli:
     def test_help_listed(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         assert "capability" in result.output.lower()
 
     def test_capability_help(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, ["capability", "--help"])
         assert result.exit_code == 0
 
     def test_capability_unknown_suite(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, [
             "capability", "test_run", "--suite", "evil",
@@ -242,7 +242,7 @@ class TestCapabilityCli:
         assert result.exit_code != 0
 
     def test_capability_fast_smoke(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         out = tmp_path / "cap.json"
         runner = CliRunner()
@@ -259,7 +259,7 @@ class TestSourceWiring:
         from pathlib import Path
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "capability_suite.py"
+            / "src" / "ai_forge_cli" / "utils" / "capability_suite.py"
         )
         text = src.read_text(encoding="utf-8")
         forbidden_imports = (

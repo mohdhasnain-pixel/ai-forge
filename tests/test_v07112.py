@@ -18,7 +18,7 @@ import types
 
 import pytest
 
-from soup_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.loader import load_config_from_string
 
 
 def _yaml_rejects(yaml: str, keyword: str) -> None:
@@ -35,7 +35,7 @@ def _yaml_rejects(yaml: str, keyword: str) -> None:
 
 class TestDistillMode:
     def test_supported_modes_frozenset(self):
-        from soup_cli.utils.distill import SUPPORTED_DISTILL_MODES
+        from ai_forge_cli.utils.distill import SUPPORTED_DISTILL_MODES
 
         assert SUPPORTED_DISTILL_MODES == frozenset({"token", "sequence"})
         assert isinstance(SUPPORTED_DISTILL_MODES, frozenset)
@@ -45,19 +45,19 @@ class TestDistillMode:
         ("TOKEN", "token"), ("Sequence", "sequence"),
     ])
     def test_validate_happy(self, value, expected):
-        from soup_cli.utils.distill import validate_distill_mode
+        from ai_forge_cli.utils.distill import validate_distill_mode
 
         assert validate_distill_mode(value) == expected
 
     @pytest.mark.parametrize("bad", [True, 1, None, "", "tokens", "kl", "x" * 64, "to\x00ken"])
     def test_validate_rejects(self, bad):
-        from soup_cli.utils.distill import validate_distill_mode
+        from ai_forge_cli.utils.distill import validate_distill_mode
 
         with pytest.raises((TypeError, ValueError)):
             validate_distill_mode(bad)
 
     def test_extract_prompt_messages_strips_trailing_assistant(self):
-        from soup_cli.utils.distill import extract_prompt_messages
+        from ai_forge_cli.utils.distill import extract_prompt_messages
 
         msgs = [
             {"role": "user", "content": "Q"},
@@ -69,13 +69,13 @@ class TestDistillMode:
         assert len(msgs) == 2
 
     def test_extract_prompt_messages_no_trailing_assistant(self):
-        from soup_cli.utils.distill import extract_prompt_messages
+        from ai_forge_cli.utils.distill import extract_prompt_messages
 
         msgs = [{"role": "user", "content": "Q"}]
         assert extract_prompt_messages(msgs) == msgs
 
     def test_build_sequence_distill_rows(self):
-        from soup_cli.utils.distill import build_sequence_distill_rows
+        from ai_forge_cli.utils.distill import build_sequence_distill_rows
 
         class _FakeTok:
             eos_token = "</s>"
@@ -119,7 +119,7 @@ class TestDistillMode:
         assert msgs[-1]["content"] == "teacher-says-hello"
 
     def test_schema_default_token(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         assert TrainingConfig().distill_mode == "token"
 
@@ -144,7 +144,7 @@ class TestDistillMode:
         # without loading a model.
         import inspect
 
-        from soup_cli.trainer import distill as distill_trainer
+        from ai_forge_cli.trainer import distill as distill_trainer
 
         src = inspect.getsource(distill_trainer)
         assert 'distill_mode", "token") == "sequence"' in src
@@ -158,7 +158,7 @@ class TestDistillMode:
 
 class TestClassifierLora:
     def test_schema_default_false(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         assert TrainingConfig().classifier_lora is False
 
@@ -179,7 +179,7 @@ class TestClassifierLora:
     def test_wrapper_sets_lora_active_attr(self):
         import inspect
 
-        from soup_cli.trainer.classifier import ClassifierTrainerWrapper
+        from ai_forge_cli.trainer.classifier import ClassifierTrainerWrapper
 
         src = inspect.getsource(ClassifierTrainerWrapper)
         assert "_lora_active" in src
@@ -222,7 +222,7 @@ def _make_fake_llama(num_layers=2, hidden=8, paths=(("mlp", "down_proj"), ("self
 
 class TestBlockExpansionPerArch:
     def test_arch_table_keys(self):
-        from soup_cli.utils.block_expansion import _ARCH_RESIDUAL_PATHS
+        from ai_forge_cli.utils.block_expansion import _ARCH_RESIDUAL_PATHS
 
         for arch in (
             "LlamaForCausalLM", "MistralForCausalLM",
@@ -231,7 +231,7 @@ class TestBlockExpansionPerArch:
             assert arch in _ARCH_RESIDUAL_PATHS
 
     def test_arch_table_immutable(self):
-        from soup_cli.utils.block_expansion import _ARCH_RESIDUAL_PATHS
+        from ai_forge_cli.utils.block_expansion import _ARCH_RESIDUAL_PATHS
 
         with pytest.raises(TypeError):
             _ARCH_RESIDUAL_PATHS["NewArch"] = ()  # type: ignore[index]
@@ -239,7 +239,7 @@ class TestBlockExpansionPerArch:
     def test_expand_appends_and_zero_inits(self):
         import torch
 
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         model = _make_fake_llama(num_layers=2, hidden=8)
         # poison the residual projections so we can prove zero-init
@@ -257,7 +257,7 @@ class TestBlockExpansionPerArch:
         assert torch.count_nonzero(new_blk.self_attn.o_proj.weight) == 0
 
     def test_zero_returns_no_change(self):
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         model = _make_fake_llama(num_layers=2)
         # no-op path returns the (unchanged) layer count, not 0.
@@ -265,7 +265,7 @@ class TestBlockExpansionPerArch:
         assert len(model.model.layers) == 2
 
     def test_unknown_arch_warns(self, recwarn):
-        from soup_cli.utils.block_expansion import expand_model_blocks
+        from ai_forge_cli.utils.block_expansion import expand_model_blocks
 
         # Falcon-shaped projections but reported as an unknown class name.
         model = _make_fake_llama(
@@ -287,7 +287,7 @@ class TestLongLoRAShift:
     def test_shift_heads_for_s2_preserves_shape(self):
         import torch
 
-        from soup_cli.utils.longlora import shift_heads_for_s2
+        from ai_forge_cli.utils.longlora import shift_heads_for_s2
 
         t = torch.randn(1, 4, 6, 8)  # [B, H, T, D]
         out = shift_heads_for_s2(t, group_size=4)
@@ -296,7 +296,7 @@ class TestLongLoRAShift:
     def test_shift_proj_block_shifts_second_half_heads(self):
         import torch
 
-        from soup_cli.utils.longlora import _shift_proj_block
+        from ai_forge_cli.utils.longlora import _shift_proj_block
 
         # out: [B, T, n_heads*head_dim]
         b, t, n_heads, head_dim = 1, 6, 4, 3
@@ -310,7 +310,7 @@ class TestLongLoRAShift:
         assert not torch.equal(shifted, out)
 
     def test_separate_families(self):
-        from soup_cli.utils.longlora import _FUSED_QKV_FAMILIES, _SEPARATE_QKV_FAMILIES
+        from ai_forge_cli.utils.longlora import _FUSED_QKV_FAMILIES, _SEPARATE_QKV_FAMILIES
 
         assert "Llama" in _SEPARATE_QKV_FAMILIES
         assert "Mistral" in _SEPARATE_QKV_FAMILIES
@@ -348,7 +348,7 @@ class TestLongLoRAShift:
     def test_override_patches_qk_and_restores(self):
         import torch
 
-        from soup_cli.utils.longlora import LongLoRAForwardOverride
+        from ai_forge_cli.utils.longlora import LongLoRAForwardOverride
 
         model, attn = self._fake_llama_with_attention()
         with LongLoRAForwardOverride(model, group_size=4):
@@ -362,7 +362,7 @@ class TestLongLoRAShift:
         assert not getattr(attn.q_proj.forward, "_soup_longlora_patched", False)
 
     def test_override_idempotent(self):
-        from soup_cli.utils.longlora import LongLoRAForwardOverride
+        from ai_forge_cli.utils.longlora import LongLoRAForwardOverride
 
         model, attn = self._fake_llama_with_attention()
         with LongLoRAForwardOverride(model, group_size=4):
@@ -378,27 +378,27 @@ class TestLongLoRAShift:
 
 class TestMixtureOfDepths:
     def test_validate_capacity_factor_happy(self):
-        from soup_cli.utils.mod import validate_capacity_factor
+        from ai_forge_cli.utils.mod import validate_capacity_factor
 
         assert validate_capacity_factor(0.125) == pytest.approx(0.125)
         assert validate_capacity_factor(1.0) == pytest.approx(1.0)
 
     @pytest.mark.parametrize("bad", [True, "x", None, 0.0, -0.1, 1.5, float("nan"), float("inf")])
     def test_validate_capacity_factor_rejects(self, bad):
-        from soup_cli.utils.mod import validate_capacity_factor
+        from ai_forge_cli.utils.mod import validate_capacity_factor
 
         with pytest.raises((TypeError, ValueError)):
             validate_capacity_factor(bad)
 
     def test_mod_capacity_floor_and_clamp(self):
-        from soup_cli.utils.mod import mod_capacity
+        from ai_forge_cli.utils.mod import mod_capacity
 
         assert mod_capacity(100, 0.125) == 12
         assert mod_capacity(4, 0.1) == 1  # floor clamps up to 1
         assert mod_capacity(10, 1.0) == 10
 
     def test_mod_capacity_rejects_bool_seq_len(self):
-        from soup_cli.utils.mod import mod_capacity
+        from ai_forge_cli.utils.mod import mod_capacity
 
         with pytest.raises(TypeError):
             mod_capacity(True, 0.5)
@@ -411,18 +411,18 @@ class TestMixtureOfDepths:
         ("", False),
     ])
     def test_is_mod_supported_arch(self, name, ok):
-        from soup_cli.utils.mod import is_mod_supported_arch
+        from ai_forge_cli.utils.mod import is_mod_supported_arch
 
         assert is_mod_supported_arch(name) is ok
 
     def test_is_mod_supported_arch_nonstring(self):
-        from soup_cli.utils.mod import is_mod_supported_arch
+        from ai_forge_cli.utils.mod import is_mod_supported_arch
 
         assert is_mod_supported_arch(None) is False
         assert is_mod_supported_arch(123) is False
 
     def test_apply_mod_patch_adds_routers(self):
-        from soup_cli.utils.mod import apply_mod_patch
+        from ai_forge_cli.utils.mod import apply_mod_patch
 
         model = _make_fake_llama(num_layers=3, hidden=8)
         patched = apply_mod_patch(model, capacity_factor=0.5)
@@ -433,21 +433,21 @@ class TestMixtureOfDepths:
             assert layer.forward.__name__ == "mod_forward"
 
     def test_apply_mod_patch_idempotent(self):
-        from soup_cli.utils.mod import apply_mod_patch
+        from ai_forge_cli.utils.mod import apply_mod_patch
 
         model = _make_fake_llama(num_layers=2, hidden=8)
         assert apply_mod_patch(model, capacity_factor=0.5) == 2
         assert apply_mod_patch(model, capacity_factor=0.5) == 0  # already patched
 
     def test_apply_mod_if_configured_off(self):
-        from soup_cli.utils.mod import apply_mod_if_configured
+        from ai_forge_cli.utils.mod import apply_mod_if_configured
 
         tcfg = types.SimpleNamespace(use_mod=False, mod_capacity_factor=0.125)
         model = _make_fake_llama()
         assert apply_mod_if_configured(model, tcfg, "meta-llama/Llama-3.2-1B", None) == 0
 
     def test_apply_mod_if_configured_unsupported_warns(self, recwarn):
-        from soup_cli.utils.mod import apply_mod_if_configured
+        from ai_forge_cli.utils.mod import apply_mod_if_configured
 
         tcfg = types.SimpleNamespace(use_mod=True, mod_capacity_factor=0.125)
         model = _make_fake_llama()
@@ -455,14 +455,14 @@ class TestMixtureOfDepths:
         assert any("allowlist" in str(w.message).lower() for w in recwarn.list)
 
     def test_apply_mod_if_configured_supported(self):
-        from soup_cli.utils.mod import apply_mod_if_configured
+        from ai_forge_cli.utils.mod import apply_mod_if_configured
 
         tcfg = types.SimpleNamespace(use_mod=True, mod_capacity_factor=0.25)
         model = _make_fake_llama(num_layers=2, hidden=8)
         assert apply_mod_if_configured(model, tcfg, "meta-llama/Llama-3.2-1B", None) == 2
 
     def test_schema_use_mod_default_false(self):
-        from soup_cli.config.schema import TrainingConfig
+        from ai_forge_cli.config.schema import TrainingConfig
 
         tc = TrainingConfig()
         assert tc.use_mod is False
@@ -490,7 +490,7 @@ class TestMixtureOfDepths:
 
 
 def _make_bank(dim=8, users=("alice", "bob")):
-    from soup_cli.utils.vector_bank import BankEntry, VectorBank
+    from ai_forge_cli.utils.vector_bank import BankEntry, VectorBank
 
     return VectorBank(
         name="b",
@@ -508,7 +508,7 @@ class TestVectorBankServing:
     def test_reconstruct_projection_deterministic(self):
         import torch
 
-        from soup_cli.utils.vector_bank import reconstruct_projection
+        from ai_forge_cli.utils.vector_bank import reconstruct_projection
 
         p1 = reconstruct_projection(42, 8)
         p2 = reconstruct_projection(42, 8)
@@ -516,7 +516,7 @@ class TestVectorBankServing:
         assert p1.shape == (8, 8)
 
     def test_apply_bank_to_serve_returns_loaded(self):
-        from soup_cli.utils.vector_bank import LoadedVectorBank, apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import LoadedVectorBank, apply_bank_to_serve
 
         loaded = apply_bank_to_serve(_make_bank())
         assert isinstance(loaded, LoadedVectorBank)
@@ -524,7 +524,7 @@ class TestVectorBankServing:
         assert not loaded.has_user("zoe")
 
     def test_set_active_user_contract(self):
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         loaded = apply_bank_to_serve(_make_bank())
         assert loaded.set_active_user("alice") is True
@@ -534,7 +534,7 @@ class TestVectorBankServing:
     def test_delta_for_user_math(self):
         import torch
 
-        from soup_cli.utils.vector_bank import apply_bank_to_serve, reconstruct_projection
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve, reconstruct_projection
 
         loaded = apply_bank_to_serve(_make_bank(dim=8))
         x = torch.ones(1, 3, 8)
@@ -544,7 +544,7 @@ class TestVectorBankServing:
         assert torch.allclose(d, expected, atol=1e-5)
 
     def test_delta_for_user_unknown_raises(self):
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         loaded = apply_bank_to_serve(_make_bank())
         import torch
@@ -556,7 +556,7 @@ class TestVectorBankServing:
         import torch
         from torch import nn
 
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         # fake Llama-shaped model with a residual-producing layer
         class _Layer(nn.Module):
@@ -588,7 +588,7 @@ class TestVectorBankServing:
         import torch  # noqa: F401
         from torch import nn
 
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         inner = nn.Module()
         inner.layers = nn.ModuleList([nn.Identity()])
@@ -602,7 +602,7 @@ class TestVectorBankServing:
     def test_install_serve_hook_bad_strength(self, bad):
         from torch import nn
 
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         inner = nn.Module()
         inner.layers = nn.ModuleList([nn.Identity()])
@@ -617,7 +617,7 @@ class TestVectorBankServing:
         # review fix — bank strength has a ±100 sanity cap (mirrors steering).
         from torch import nn
 
-        from soup_cli.utils.vector_bank import apply_bank_to_serve
+        from ai_forge_cli.utils.vector_bank import apply_bank_to_serve
 
         inner = nn.Module()
         inner.layers = nn.ModuleList([nn.Identity()])
@@ -628,7 +628,7 @@ class TestVectorBankServing:
             loaded.install_serve_hook(model, strength=bad)
 
     def test_load_bank_oversize_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.vector_bank import load_bank
+        from ai_forge_cli.utils.vector_bank import load_bank
 
         monkeypatch.chdir(tmp_path)
         big = tmp_path / "big.json"
@@ -638,7 +638,7 @@ class TestVectorBankServing:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="symlink needs elevation on Windows")
     def test_load_bank_symlink_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.utils.vector_bank import load_bank
+        from ai_forge_cli.utils.vector_bank import load_bank
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "real.json"
@@ -651,7 +651,7 @@ class TestVectorBankServing:
     def test_serve_flags_and_header(self):
         import inspect
 
-        from soup_cli.commands import serve
+        from ai_forge_cli.commands import serve
 
         src = inspect.getsource(serve)
         assert "--bank" in src
@@ -669,7 +669,7 @@ class TestMoleGatingKernel:
     def test_build_gating_kernel_softmax(self):
         import torch
 
-        from soup_cli.utils.mole_routing import MoleGatingConfig, build_gating_kernel
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig, build_gating_kernel
 
         cfg = MoleGatingConfig(num_task_adapters=3, hidden_dim=8, temperature=1.0, top_k=3)
         kernel = build_gating_kernel(cfg)
@@ -681,7 +681,7 @@ class TestMoleGatingKernel:
     def test_build_gating_kernel_topk_sparse(self):
         import torch
 
-        from soup_cli.utils.mole_routing import MoleGatingConfig, build_gating_kernel
+        from ai_forge_cli.utils.mole_routing import MoleGatingConfig, build_gating_kernel
 
         cfg = MoleGatingConfig(num_task_adapters=4, hidden_dim=8, temperature=1.0, top_k=2)
         kernel = build_gating_kernel(cfg)
@@ -690,7 +690,7 @@ class TestMoleGatingKernel:
         assert (nonzero <= 2).all()
 
     def test_build_gating_kernel_non_config(self):
-        from soup_cli.utils.mole_routing import build_gating_kernel
+        from ai_forge_cli.utils.mole_routing import build_gating_kernel
 
         with pytest.raises(TypeError):
             build_gating_kernel({"num_task_adapters": 2})
@@ -698,7 +698,7 @@ class TestMoleGatingKernel:
 
 class TestMoleTaskAdapters:
     def test_happy(self):
-        from soup_cli.utils.mole_routing import validate_mole_task_adapters
+        from ai_forge_cli.utils.mole_routing import validate_mole_task_adapters
 
         out = validate_mole_task_adapters(["./a", "./b", "./c"])
         assert out == ["./a", "./b", "./c"]
@@ -714,13 +714,13 @@ class TestMoleTaskAdapters:
         ["./a", "x" * 5000],     # oversize
     ])
     def test_rejects(self, bad):
-        from soup_cli.utils.mole_routing import validate_mole_task_adapters
+        from ai_forge_cli.utils.mole_routing import validate_mole_task_adapters
 
         with pytest.raises((TypeError, ValueError)):
             validate_mole_task_adapters(bad)
 
     def test_64_cap(self):
-        from soup_cli.utils.mole_routing import validate_mole_task_adapters
+        from ai_forge_cli.utils.mole_routing import validate_mole_task_adapters
 
         with pytest.raises(ValueError, match="cap"):
             validate_mole_task_adapters([f"./a{i}" for i in range(65)])
@@ -775,7 +775,7 @@ class TestMoleSchema:
 
 class TestMoleTrainer:
     def test_row_to_text(self):
-        from soup_cli.trainer.mole_routing import _row_to_text
+        from ai_forge_cli.trainer.mole_routing import _row_to_text
 
         assert _row_to_text({"text": "hi"}) == "hi"
         assert _row_to_text(
@@ -786,7 +786,7 @@ class TestMoleTrainer:
         assert _row_to_text("not-a-dict") == ""
 
     def test_prepare_dataset(self):
-        from soup_cli.trainer.mole_routing import _prepare_mole_dataset
+        from ai_forge_cli.trainer.mole_routing import _prepare_mole_dataset
 
         class _Tok:
             def __call__(self, text, add_special_tokens=True):
@@ -798,7 +798,7 @@ class TestMoleTrainer:
         assert rows[0]["labels"] == [1, 2, 3]
 
     def test_make_trainer_class_factory(self):
-        from soup_cli.trainer.mole_routing import make_mole_trainer_class
+        from ai_forge_cli.trainer.mole_routing import make_mole_trainer_class
 
         class _Base:
             pass
@@ -810,8 +810,8 @@ class TestMoleTrainer:
         assert make_mole_trainer_class(_Base) is cls
 
     def test_train_before_setup_raises(self):
-        from soup_cli.config.schema import SoupConfig
-        from soup_cli.trainer.mole_routing import MoleRoutingTrainerWrapper
+        from ai_forge_cli.config.schema import SoupConfig
+        from ai_forge_cli.trainer.mole_routing import MoleRoutingTrainerWrapper
 
         cfg = load_config_from_string(
             "base: m\ntask: moe_lora_routing\ndata: {train: d.jsonl}\n"
@@ -830,28 +830,28 @@ class TestMoleTrainer:
 
 class TestPatchInvariants:
     def test_version_bumped(self):
-        import soup_cli
+        import ai_forge_cli
 
-        parts = tuple(int(x) for x in soup_cli.__version__.split(".")[:3])
-        assert parts >= (0, 71, 12), soup_cli.__version__
+        parts = tuple(int(x) for x in ai_forge_cli.__version__.split(".")[:3])
+        assert parts >= (0, 71, 12), ai_forge_cli.__version__
 
     def test_train_routes_mole(self):
         import inspect
 
-        from soup_cli.commands import train
+        from ai_forge_cli.commands import train
 
         src = inspect.getsource(train)
         assert "moe_lora_routing" in src
         assert "MoleRoutingTrainerWrapper" in src
 
     @pytest.mark.parametrize("module", [
-        "soup_cli.utils.mole_routing",
-        "soup_cli.utils.mod",
+        "ai_forge_cli.utils.mole_routing",
+        "ai_forge_cli.utils.mod",
     ])
     def test_no_top_level_torch_import(self, module):
         src_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
-            "src", "soup_cli", "utils", module.rsplit(".", 1)[-1] + ".py",
+            "src", "ai_forge_cli", "utils", module.rsplit(".", 1)[-1] + ".py",
         )
         with open(src_path, encoding="utf-8") as fh:
             text = fh.read()

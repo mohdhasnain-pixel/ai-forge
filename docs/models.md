@@ -73,15 +73,15 @@ Rows are `{"audio": <path>, "text": <transcript>}` with `data.format: asr`. See
 
 ### Quoting the extra
 
-**Use double quotes.** `pip install "soup-cli[train]"` is the only spelling that works in every
+**Use double quotes.** `pip install "ai-forge[train]"` is the only spelling that works in every
 shell — `cmd.exe`, PowerShell, bash, and zsh. Every command in the table below uses it.
 
 Older tutorials and videos (including some of ours) show the single-quoted
-`pip install 'soup-cli[train]'`. That is bash / zsh / PowerShell syntax, and it fails on Windows
+`pip install 'ai-forge[train]'`. That is bash / zsh / PowerShell syntax, and it fails on Windows
 `cmd.exe`, which has no single-quote quoting and hands the quotes straight to pip:
 
 ```
-ERROR: Invalid requirement: "'soup-cli[train]'": Expected package name at the start of dependency specifier
+ERROR: Invalid requirement: "'ai-forge[train]'": Expected package name at the start of dependency specifier
 ```
 
 If you hit that, swap the `'` for `"` — pip is rejecting a literal quote character, nothing is
@@ -90,33 +90,33 @@ wrong with the package. (Dropping the quotes entirely works on Windows too, but 
 
 ### The extras table
 
-The core `pip install soup-cli` is a light install — the CLI, config system, and data tools, with
+The core `pip install ai-forge` is a light install — the CLI, config system, and data tools, with
 no PyTorch. Add `[train]` to fine-tune, or install other extras only when you need them:
 
 | Extra | Install | What it adds |
 |---|---|---|
-| `train` | `pip install "soup-cli[train]"` | Training stack: torch, transformers, peft, trl, datasets, bitsandbytes, accelerate |
-| `all` | `pip install "soup-cli[all]"` | `train` + `serve` + `ui` + `data` in one shot |
-| `fast` | `pip install "soup-cli[fast]"` | Unsloth backend (2-5x faster, lower VRAM) |
-| `vision` | `pip install "soup-cli[vision]"` | Vision / multimodal fine-tuning (Pillow) |
-| `audio` | `pip install "soup-cli[audio]"` | Audio / speech fine-tuning (librosa, soundfile) |
-| `mlx` | `pip install "soup-cli[mlx]"` | Standalone Apple Silicon SFT backend for local data; `[train]` is not required |
-| `qat` | `pip install "soup-cli[qat]"` | Quantization-Aware Training (torchao) |
-| `serve` | `pip install "soup-cli[serve]"` | Inference server (FastAPI + uvicorn) |
-| `serve-fast` | `pip install "soup-cli[serve-fast]"` | vLLM inference backend (2-4x throughput) |
-| `sglang` | `pip install "soup-cli[sglang]"` | SGLang inference backend |
-| `ui` | `pip install "soup-cli[ui]"` | Web UI + inference server |
-| `tui` | `pip install "soup-cli[tui]"` | Full-screen Textual dashboard (`soup tui`) |
-| `eval` | `pip install "soup-cli[eval]"` | Benchmark evaluation (lm-evaluation-harness) |
-| `data` | `pip install "soup-cli[data]"` | Deduplication (MinHash via datasketch) |
-| `data-pro` | `pip install "soup-cli[data-pro]"` | Language detection + PII (langdetect, presidio) |
-| `deepspeed` | `pip install "soup-cli[deepspeed]"` | Multi-GPU training (DeepSpeed ZeRO) |
-| `liger` | `pip install "soup-cli[liger]"` | Liger Kernel fused ops |
-| `ring-attn` | `pip install "soup-cli[ring-attn]"` | Ring FlashAttention (sequence parallelism) |
-| `onnx` / `tensorrt` | `pip install "soup-cli[onnx]"` | ONNX / TensorRT-LLM export |
-| `awq` / `gptq` | `pip install "soup-cli[awq]"` | AWQ / GPTQ quantized export |
-| `trackers` | `pip install "soup-cli[trackers]"` | MLflow / SwanLab / Trackio logging |
-| `remote` | `pip install "soup-cli[remote]"` | Remote datasets (s3 / gs / az / oci) |
-| `dev` | `pip install "soup-cli[dev]"` | Tests + lint + types (pytest, ruff, mypy, pre-commit) |
+| `train` | `pip install "ai-forge[train]"` | Training stack: torch, transformers, peft, trl, datasets, bitsandbytes, accelerate |
+| `all` | `pip install "ai-forge[all]"` | `train` + `serve` + `ui` + `data` in one shot |
+| `fast` | `pip install "ai-forge[fast]"` | Unsloth backend (2-5x faster, lower VRAM) |
+| `vision` | `pip install "ai-forge[vision]"` | Vision / multimodal fine-tuning (Pillow) |
+| `audio` | `pip install "ai-forge[audio]"` | Audio / speech fine-tuning (librosa, soundfile) |
+| `mlx` | `pip install "ai-forge[mlx]"` | Standalone Apple Silicon SFT backend for local data; `[train]` is not required |
+| `qat` | `pip install "ai-forge[qat]"` | Quantization-Aware Training (torchao) |
+| `serve` | `pip install "ai-forge[serve]"` | Inference server (FastAPI + uvicorn) |
+| `serve-fast` | `pip install "ai-forge[serve-fast]"` | vLLM inference backend (2-4x throughput) |
+| `sglang` | `pip install "ai-forge[sglang]"` | SGLang inference backend |
+| `ui` | `pip install "ai-forge[ui]"` | Web UI + inference server |
+| `tui` | `pip install "ai-forge[tui]"` | Full-screen Textual dashboard (`soup tui`) |
+| `eval` | `pip install "ai-forge[eval]"` | Benchmark evaluation (lm-evaluation-harness) |
+| `data` | `pip install "ai-forge[data]"` | Deduplication (MinHash via datasketch) |
+| `data-pro` | `pip install "ai-forge[data-pro]"` | Language detection + PII (langdetect, presidio) |
+| `deepspeed` | `pip install "ai-forge[deepspeed]"` | Multi-GPU training (DeepSpeed ZeRO) |
+| `liger` | `pip install "ai-forge[liger]"` | Liger Kernel fused ops |
+| `ring-attn` | `pip install "ai-forge[ring-attn]"` | Ring FlashAttention (sequence parallelism) |
+| `onnx` / `tensorrt` | `pip install "ai-forge[onnx]"` | ONNX / TensorRT-LLM export |
+| `awq` / `gptq` | `pip install "ai-forge[awq]"` | AWQ / GPTQ quantized export |
+| `trackers` | `pip install "ai-forge[trackers]"` | MLflow / SwanLab / Trackio logging |
+| `remote` | `pip install "ai-forge[remote]"` | Remote datasets (s3 / gs / az / oci) |
+| `dev` | `pip install "ai-forge[dev]"` | Tests + lint + types (pytest, ruff, mypy, pre-commit) |
 
 The complete, authoritative extras list is in [`pyproject.toml`](../pyproject.toml).

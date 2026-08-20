@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app as soup_app
-from soup_cli.utils.adapter_branch import (
+from ai_forge_cli.cli import app as soup_app
+from ai_forge_cli.utils.adapter_branch import (
     Branch,
     create_branch,
     delete_branch,
@@ -159,7 +159,7 @@ def test_branches_dir_crlf_env_rejected(monkeypatch, tmp_path):
     """
     import os as _os
 
-    from soup_cli.utils.adapter_branch import _branches_dir
+    from ai_forge_cli.utils.adapter_branch import _branches_dir
 
     original = _os.environ.get
 
@@ -304,7 +304,7 @@ def test_branches_dir_env_override_outside_falls_back(monkeypatch, tmp_path):
     $TMPDIR per the containment policy) so we can also assert that valid
     overrides ARE honoured — i.e. we test both directions of the policy here.
     """
-    from soup_cli.utils.adapter_branch import _branches_dir
+    from ai_forge_cli.utils.adapter_branch import _branches_dir
     in_bounds = tmp_path / "valid-override"
     monkeypatch.setenv("SOUP_BRANCHES_DIR", str(in_bounds))
     monkeypatch.chdir(tmp_path)
@@ -323,7 +323,7 @@ def test_branches_dir_null_byte_env_ignored(monkeypatch, tmp_path):
     """
     import os as _os
 
-    from soup_cli.utils.adapter_branch import _branches_dir
+    from ai_forge_cli.utils.adapter_branch import _branches_dir
 
     original = _os.environ.get
 

@@ -7,8 +7,8 @@ import math
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.utils.replay import (
+from ai_forge_cli.cli import app
+from ai_forge_cli.utils.replay import (
     MAX_PLOT_POINTS,
     ReplaySummary,
     downsample,
@@ -103,7 +103,7 @@ class TestCli:
 
     def test_replay_renders(self, tmp_path, monkeypatch):
         monkeypatch.setenv("SOUP_DB_PATH", str(tmp_path / "y.db"))
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         tracker = ExperimentTracker()
         run_id = tracker.start_run(

@@ -1,6 +1,6 @@
 """Tests for GPU utils."""
 
-from soup_cli.utils.gpu import estimate_batch_size, model_size_from_name
+from ai_forge_cli.utils.gpu import estimate_batch_size, model_size_from_name
 
 
 def test_model_size_detection():

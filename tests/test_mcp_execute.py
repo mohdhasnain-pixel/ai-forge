@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import soup_cli.mcp_server.registry as reg
-from soup_cli.mcp_server.execution import ExecutionError, ExecutionManager, digest_file
+import ai_forge_cli.mcp_server.registry as reg
+from ai_forge_cli.mcp_server.execution import ExecutionError, ExecutionManager, digest_file
 
 _MIN_CONFIG = "base: Qwen/Qwen2.5-0.5B\ntask: sft\ndata:\n  train: data.jsonl\n"
 
@@ -372,7 +372,7 @@ class TestConfigSnapshottingAndPlanning:
         assert os.path.realpath(plan.argv[cfg_arg_idx]) == os.path.realpath(expected_snapshot)
 
     def test_snapshot_run_id_matches_tracker_and_env(self, tmp_path, monkeypatch):
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         db_path = tmp_path / "exp.db"
         monkeypatch.setenv("SOUP_DB_PATH", str(db_path))
@@ -442,7 +442,7 @@ class TestSubprocessIsolationAndConcurrency:
         manager = ExecutionManager()
         token = manager.issue(
             kind="train",
-            argv=[sys.executable, "-m", "soup_cli.cli", "train"],
+            argv=[sys.executable, "-m", "ai_forge_cli.cli", "train"],
             display_command="soup train",
         )
 
@@ -459,7 +459,7 @@ class TestSubprocessIsolationAndConcurrency:
             call_kwargs = mock_popen.call_args.kwargs
             call_args = mock_popen.call_args.args[0]
 
-            assert call_args == [sys.executable, "-m", "soup_cli.cli", "train"]
+            assert call_args == [sys.executable, "-m", "ai_forge_cli.cli", "train"]
             assert call_kwargs["shell"] is False
             assert call_kwargs["stdin"] == subprocess.DEVNULL
             assert call_kwargs["cwd"] == str(tmp_path)
@@ -496,7 +496,7 @@ class TestSubprocessIsolationAndConcurrency:
             assert call_args == [
                 sys.executable,
                 "-m",
-                "soup_cli.cli",
+                "ai_forge_cli.cli",
                 "export",
                 "--model",
                 model_real,
@@ -585,7 +585,7 @@ class TestSubprocessIsolationAndConcurrency:
         t2 = manager.issue(kind="train", argv=["echo"], display_command="test2")
 
         with patch(
-            "soup_cli.experiment.tracker.ExperimentTracker.launch_run",
+            "ai_forge_cli.experiment.tracker.ExperimentTracker.launch_run",
             side_effect=RuntimeError("db failed"),
         ):
             with pytest.raises(ExecutionError) as exc:
@@ -605,7 +605,7 @@ class TestSubprocessIsolationAndConcurrency:
 
 class TestRunTrackingIntegration:
     def test_run_tracking_updates_on_launch_running_finish(self, tmp_path, monkeypatch):
-        from soup_cli.experiment.tracker import ExperimentTracker
+        from ai_forge_cli.experiment.tracker import ExperimentTracker
 
         db_path = tmp_path / "exp.db"
         monkeypatch.setenv("SOUP_DB_PATH", str(db_path))

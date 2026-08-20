@@ -25,11 +25,11 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.config.loader import load_config_from_string
-from soup_cli.config.schema import DataConfig
-from soup_cli.data.formats import format_to_messages
-from soup_cli.utils import data_pipeline as dp
+from ai_forge_cli.cli import app
+from ai_forge_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.schema import DataConfig
+from ai_forge_cli.data.formats import format_to_messages
+from ai_forge_cli.utils import data_pipeline as dp
 
 # ---------------------------------------------------------------------------
 # Part A — New formats
@@ -960,7 +960,7 @@ def test_module_lazy_imports():
     heavy = {"torch", "transformers", "datasets", "fsspec", "s3fs", "gcsfs"}
     # Force a re-import to be safe on test ordering.
     pre = set(sys.modules)
-    import soup_cli.utils.data_pipeline  # noqa: F401
+    import ai_forge_cli.utils.data_pipeline  # noqa: F401
     new = set(sys.modules) - pre
     leaked = new & heavy
     assert not leaked, f"data_pipeline pulled in heavy deps: {leaked}"

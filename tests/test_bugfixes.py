@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from soup_cli.config.schema import SoupConfig
+from ai_forge_cli.config.schema import SoupConfig
 
 # --- BUG-001: Windows UnicodeEncodeError (no Unicode arrows/dashes in output) ---
 
@@ -15,7 +15,7 @@ class TestNoUnicodeInOutput:
 
     def test_config_loader_error_uses_ascii_arrow(self):
         """Config validation errors should use -> not Unicode arrow."""
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         with pytest.raises(ValueError) as exc_info:
             load_config_from_string("base: x\ntask: invalid_task\n")
@@ -25,7 +25,7 @@ class TestNoUnicodeInOutput:
 
     def test_loss_format_uses_ascii(self):
         """Loss formatting in runs should use -> not Unicode arrow."""
-        from soup_cli.commands.runs import _fmt_loss
+        from ai_forge_cli.commands.runs import _fmt_loss
 
         run = {"initial_loss": 1.5, "final_loss": 0.5}
         result = _fmt_loss(run)
@@ -34,7 +34,7 @@ class TestNoUnicodeInOutput:
 
     def test_loss_format_missing_returns_ascii(self):
         """Missing loss should return ASCII dash, not em dash."""
-        from soup_cli.commands.runs import _fmt_loss
+        from ai_forge_cli.commands.runs import _fmt_loss
 
         result = _fmt_loss({})
         assert result == "-"
@@ -42,7 +42,7 @@ class TestNoUnicodeInOutput:
 
     def test_fmt_float_missing_returns_ascii(self):
         """Missing float should return ASCII dash."""
-        from soup_cli.commands.runs import _fmt_float
+        from ai_forge_cli.commands.runs import _fmt_float
 
         result = _fmt_float(None)
         assert result == "-"
@@ -50,7 +50,7 @@ class TestNoUnicodeInOutput:
 
     def test_fmt_duration_missing_returns_ascii(self):
         """Missing duration should return ASCII dash."""
-        from soup_cli.commands.runs import _fmt_duration
+        from ai_forge_cli.commands.runs import _fmt_duration
 
         result = _fmt_duration(None)
         assert result == "-"
@@ -58,7 +58,7 @@ class TestNoUnicodeInOutput:
 
     def test_formats_empty_dataset_error_ascii(self):
         """Empty dataset error should use ASCII dash."""
-        from soup_cli.data.formats import detect_format
+        from ai_forge_cli.data.formats import detect_format
 
         with pytest.raises(ValueError, match="Empty dataset"):
             detect_format([])
@@ -72,7 +72,7 @@ class TestPPOParamCompat:
 
     def test_ppo_config_uses_inspect(self):
         """PPO setup should use inspect to detect valid parameter names."""
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -100,7 +100,7 @@ class TestComputeDtype:
         """CPU should use float32, not bfloat16."""
         import torch
 
-        from soup_cli.utils.gpu import get_compute_dtype
+        from ai_forge_cli.utils.gpu import get_compute_dtype
 
         with patch("torch.cuda.is_available", return_value=False):
             dtype = get_compute_dtype()
@@ -110,7 +110,7 @@ class TestComputeDtype:
         """CUDA with bf16 support should use bfloat16."""
         import torch
 
-        from soup_cli.utils.gpu import get_compute_dtype
+        from ai_forge_cli.utils.gpu import get_compute_dtype
 
         with patch("torch.cuda.is_available", return_value=True), \
              patch("torch.cuda.is_bf16_supported", return_value=True):
@@ -121,7 +121,7 @@ class TestComputeDtype:
         """CUDA without bf16 support should fall back to float16."""
         import torch
 
-        from soup_cli.utils.gpu import get_compute_dtype
+        from ai_forge_cli.utils.gpu import get_compute_dtype
 
         with patch("torch.cuda.is_available", return_value=True), \
              patch("torch.cuda.is_bf16_supported", return_value=False):
@@ -139,7 +139,7 @@ class TestDiffModelLoading:
         """_load_model should pass dtype= (not the old torch_dtype=)."""
         import inspect
 
-        from soup_cli.commands.diff import _load_model
+        from ai_forge_cli.commands.diff import _load_model
 
         source = inspect.getsource(_load_model)
         assert "dtype=torch.float16" in source
@@ -169,8 +169,8 @@ class TestCPUQuantWarning:
         """gpu.py resolve_quantization should auto-disable quantization on CPU."""
         import inspect
 
-        from soup_cli.utils import gpu
-        from soup_cli.utils.gpu import resolve_quantization
+        from ai_forge_cli.utils import gpu
+        from ai_forge_cli.utils.gpu import resolve_quantization
 
         # Retargeted from commands/train.py to utils/gpu.py after extraction (#423)
         source = inspect.getsource(gpu)
@@ -200,7 +200,7 @@ class TestDisplayASCII:
         """Progress bar should use # and - instead of Unicode blocks."""
         import inspect
 
-        from soup_cli.monitoring.display import TrainingDisplay
+        from ai_forge_cli.monitoring.display import TrainingDisplay
 
         source = inspect.getsource(TrainingDisplay)
         assert '"#"' in source
@@ -219,7 +219,7 @@ class TestPlotextFallback:
         """data stats should catch UnicodeEncodeError from plotext."""
         import inspect
 
-        from soup_cli.commands import data
+        from ai_forge_cli.commands import data
 
         source = inspect.getsource(data)
         assert "UnicodeEncodeError" in source
@@ -233,7 +233,7 @@ class TestCPUErrorMessages:
 
     def test_tensor_size_error_mapped(self):
         """Tensor expansion error should have a friendly GRPO/PPO CPU message."""
-        from soup_cli.utils.errors import ERROR_MAP
+        from ai_forge_cli.utils.errors import ERROR_MAP
 
         for pattern, msg, _ in ERROR_MAP:
             if "expanded size" in pattern:
@@ -244,21 +244,21 @@ class TestCPUErrorMessages:
 
     def test_dtype_mismatch_error_mapped(self):
         """Dtype mismatch error should have a friendly message."""
-        from soup_cli.utils.errors import ERROR_MAP
+        from ai_forge_cli.utils.errors import ERROR_MAP
 
         patterns = [pattern for pattern, _, _ in ERROR_MAP]
         assert any("same dtype" in p for p in patterns)
 
     def test_bf16_error_mapped(self):
         """bf16 GPU error should have a friendly message."""
-        from soup_cli.utils.errors import ERROR_MAP
+        from ai_forge_cli.utils.errors import ERROR_MAP
 
         patterns = [pattern for pattern, _, _ in ERROR_MAP]
         assert any("bf16" in p for p in patterns)
 
     def test_torchvision_error_mapped(self):
         """torchvision nms error should have a friendly message."""
-        from soup_cli.utils.errors import ERROR_MAP
+        from ai_forge_cli.utils.errors import ERROR_MAP
 
         patterns = [pattern for pattern, _, _ in ERROR_MAP]
         assert any("nms" in p for p in patterns)
@@ -274,7 +274,7 @@ class TestDoctorTorchvisionCheck:
         """doctor.py should have torchvision compatibility check."""
         import inspect
 
-        from soup_cli.commands import doctor
+        from ai_forge_cli.commands import doctor
 
         source = inspect.getsource(doctor)
         assert "_check_torchvision_compat" in source
@@ -290,7 +290,7 @@ class TestPPOUseCPU:
         """PPO setup should check for use_cpu param and set it on CPU."""
         import inspect
 
-        from soup_cli.trainer import ppo
+        from ai_forge_cli.trainer import ppo
 
         source = inspect.getsource(ppo)
         assert "use_cpu" in source
@@ -298,7 +298,7 @@ class TestPPOUseCPU:
 
     def test_ppo_wrapper_stores_device(self):
         """PPOTrainerWrapper should store the device parameter."""
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -315,7 +315,7 @@ class TestPPOUseCPU:
         """PPO trainer should detect trl API: args= (>=0.28) vs config= (<0.28)."""
         import inspect
 
-        from soup_cli.trainer import ppo
+        from ai_forge_cli.trainer import ppo
 
         source = inspect.getsource(ppo)
         # Must handle both trl APIs
@@ -327,7 +327,7 @@ class TestPPOUseCPU:
         """PPO train() should detect built-in .train() vs manual loop."""
         import inspect
 
-        from soup_cli.trainer import ppo
+        from ai_forge_cli.trainer import ppo
 
         source = inspect.getsource(ppo)
         assert "_train_builtin" in source
@@ -344,7 +344,7 @@ class TestGRPOCPUWarning:
         """GRPO setup should warn about CPU limitations."""
         import inspect
 
-        from soup_cli.trainer import grpo
+        from ai_forge_cli.trainer import grpo
 
         source = inspect.getsource(grpo)
         assert "GRPO on CPU is experimental" in source
@@ -353,14 +353,14 @@ class TestGRPOCPUWarning:
         """GRPO setup should set use_cpu=True on CPU when supported."""
         import inspect
 
-        from soup_cli.trainer import grpo
+        from ai_forge_cli.trainer import grpo
 
         source = inspect.getsource(grpo)
         assert "use_cpu" in source
 
     def test_grpo_wrapper_stores_device(self):
         """GRPOTrainerWrapper should store the device parameter."""
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -380,7 +380,7 @@ class TestUseCPUErrorMessage:
 
     def test_use_cpu_error_mapped(self):
         """use_cpu error should have a friendly message."""
-        from soup_cli.utils.errors import ERROR_MAP
+        from ai_forge_cli.utils.errors import ERROR_MAP
 
         patterns = [pattern for pattern, _, _ in ERROR_MAP]
         assert any("use_cpu" in p for p in patterns)
@@ -396,7 +396,7 @@ class TestPPODatasetCompat:
         """PPO setup should check whether dataset/train_dataset is accepted."""
         import inspect
 
-        from soup_cli.trainer import ppo
+        from ai_forge_cli.trainer import ppo
 
         source = inspect.getsource(ppo)
         # Must check both train_dataset and dataset params
@@ -409,7 +409,7 @@ class TestPPODatasetCompat:
         """PPO _train_builtin should set dataset on trainer if not in init."""
         import inspect
 
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         source = inspect.getsource(PPOTrainerWrapper._train_builtin)
         assert "_dataset_in_constructor" in source
@@ -420,7 +420,7 @@ class TestPPODatasetCompat:
         from unittest.mock import MagicMock
         from unittest.mock import patch as mock_patch
 
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -445,11 +445,11 @@ class TestPPODatasetCompat:
             ]
         }
 
-        with mock_patch("soup_cli.trainer.ppo.PPOTrainerWrapper._setup_reward"), \
+        with mock_patch("ai_forge_cli.trainer.ppo.PPOTrainerWrapper._setup_reward"), \
              mock_patch(
-                 "soup_cli.trainer.ppo.PPOTrainerWrapper._setup_transformers"
+                 "ai_forge_cli.trainer.ppo.PPOTrainerWrapper._setup_transformers"
              ), mock_patch(
-                 "soup_cli.trainer.ppo._import_ppo_classes",
+                 "ai_forge_cli.trainer.ppo._import_ppo_classes",
                  return_value=(FakePPOTrainer, FakePPOConfig, False),
              ):
             wrapper.model = MagicMock()
@@ -473,7 +473,7 @@ class TestPPODatasetCompat:
         from unittest.mock import MagicMock
         from unittest.mock import patch as mock_patch
 
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -499,11 +499,11 @@ class TestPPODatasetCompat:
             ]
         }
 
-        with mock_patch("soup_cli.trainer.ppo.PPOTrainerWrapper._setup_reward"), \
+        with mock_patch("ai_forge_cli.trainer.ppo.PPOTrainerWrapper._setup_reward"), \
              mock_patch(
-                 "soup_cli.trainer.ppo.PPOTrainerWrapper._setup_transformers"
+                 "ai_forge_cli.trainer.ppo.PPOTrainerWrapper._setup_transformers"
              ), mock_patch(
-                 "soup_cli.trainer.ppo._import_ppo_classes",
+                 "ai_forge_cli.trainer.ppo._import_ppo_classes",
                  return_value=(FakePPOTrainer, FakePPOConfig, False),
              ):
             wrapper.model = MagicMock()
@@ -529,7 +529,7 @@ class TestPPOExperimentalImport:
 
     def test_import_ppo_classes_returns_tuple(self):
         """_import_ppo_classes should return (PPOTrainer, PPOConfig, bool)."""
-        from soup_cli.trainer.ppo import _import_ppo_classes
+        from ai_forge_cli.trainer.ppo import _import_ppo_classes
 
         result = _import_ppo_classes()
         assert isinstance(result, tuple)
@@ -541,7 +541,7 @@ class TestPPOExperimentalImport:
 
     def test_import_experimental_fallback(self):
         """When trl.experimental is unavailable, should fall back to trl."""
-        import soup_cli.trainer.ppo as ppo_mod
+        import ai_forge_cli.trainer.ppo as ppo_mod
 
         # Just verify the function works without error (it handles
         # ImportError from trl.experimental internally)
@@ -558,7 +558,7 @@ class TestPPOExperimentalSetup:
         from unittest.mock import MagicMock
         from unittest.mock import patch as mock_patch
 
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -583,18 +583,18 @@ class TestPPOExperimentalSetup:
         fake_reward_model = MagicMock()
         fake_value_model = MagicMock()
 
-        with mock_patch("soup_cli.trainer.ppo.PPOTrainerWrapper._setup_reward"), \
-             mock_patch("soup_cli.trainer.ppo.PPOTrainerWrapper._setup_transformers"), \
+        with mock_patch("ai_forge_cli.trainer.ppo.PPOTrainerWrapper._setup_reward"), \
+             mock_patch("ai_forge_cli.trainer.ppo.PPOTrainerWrapper._setup_transformers"), \
              mock_patch(
-                 "soup_cli.trainer.ppo._import_ppo_classes",
+                 "ai_forge_cli.trainer.ppo._import_ppo_classes",
                  return_value=(FakePPOTrainer, FakePPOConfig, True),
              ), \
              mock_patch(
-                 "soup_cli.trainer.ppo.PPOTrainerWrapper._get_or_create_reward_model",
+                 "ai_forge_cli.trainer.ppo.PPOTrainerWrapper._get_or_create_reward_model",
                  return_value=fake_reward_model,
              ), \
              mock_patch(
-                 "soup_cli.trainer.ppo.PPOTrainerWrapper._create_value_model",
+                 "ai_forge_cli.trainer.ppo.PPOTrainerWrapper._create_value_model",
                  return_value=fake_value_model,
              ):
             wrapper.model = MagicMock()
@@ -626,7 +626,7 @@ class TestPPOExperimentalSetup:
         from unittest.mock import MagicMock
         from unittest.mock import patch as mock_patch
 
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -647,10 +647,10 @@ class TestPPOExperimentalSetup:
             def __init__(self, **kwargs):
                 pass
 
-        with mock_patch("soup_cli.trainer.ppo.PPOTrainerWrapper._setup_reward"), \
-             mock_patch("soup_cli.trainer.ppo.PPOTrainerWrapper._setup_transformers"), \
+        with mock_patch("ai_forge_cli.trainer.ppo.PPOTrainerWrapper._setup_reward"), \
+             mock_patch("ai_forge_cli.trainer.ppo.PPOTrainerWrapper._setup_transformers"), \
              mock_patch(
-                 "soup_cli.trainer.ppo._import_ppo_classes",
+                 "ai_forge_cli.trainer.ppo._import_ppo_classes",
                  return_value=(FakePPOTrainer, FakePPOConfig, False),
              ):
             wrapper.model = MagicMock()
@@ -707,7 +707,7 @@ class TestGRPOCPUMinNewTokens:
         from unittest.mock import MagicMock
         from unittest.mock import patch as mock_patch
 
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -732,7 +732,7 @@ class TestGRPOCPUMinNewTokens:
             def __init__(self, **kwargs):
                 pass
 
-        with mock_patch("soup_cli.trainer.grpo.GRPOTrainerWrapper._setup_transformers"), \
+        with mock_patch("ai_forge_cli.trainer.grpo.GRPOTrainerWrapper._setup_transformers"), \
              mock_patch("trl.GRPOConfig", FakeGRPOConfig), \
              mock_patch("trl.GRPOTrainer", FakeGRPOTrainer):
             wrapper.model = MagicMock()
@@ -756,7 +756,7 @@ class TestGRPOCPUMinNewTokens:
         from unittest.mock import MagicMock
         from unittest.mock import patch as mock_patch
 
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -781,7 +781,7 @@ class TestGRPOCPUMinNewTokens:
             def __init__(self, **kwargs):
                 pass
 
-        with mock_patch("soup_cli.trainer.grpo.GRPOTrainerWrapper._setup_transformers"), \
+        with mock_patch("ai_forge_cli.trainer.grpo.GRPOTrainerWrapper._setup_transformers"), \
              mock_patch("trl.GRPOConfig", FakeGRPOConfig), \
              mock_patch("trl.GRPOTrainer", FakeGRPOTrainer):
             wrapper.model = MagicMock()
@@ -806,7 +806,7 @@ class TestPPOResumeCheckpoint:
         when the trainer's .train() method doesn't accept it."""
         from unittest.mock import MagicMock
 
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -844,7 +844,7 @@ class TestPPOResumeCheckpoint:
         """_train_builtin should pass resume_from_checkpoint when supported."""
         from unittest.mock import MagicMock
 
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -880,7 +880,7 @@ class TestPPOResumeCheckpoint:
         """_train_builtin should call train() directly when resume is None."""
         from unittest.mock import MagicMock
 
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -917,7 +917,7 @@ class TestPPOResumeCheckpoint:
         from unittest.mock import MagicMock
         from unittest.mock import patch as mock_patch
 
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
 
         cfg = SoupConfig(
             base="test-model",
@@ -936,18 +936,18 @@ class TestPPOResumeCheckpoint:
 
         dataset = {"train": [{"prompt": "Q?", "answer": "A"}]}
 
-        with mock_patch("soup_cli.trainer.ppo.PPOTrainerWrapper._setup_reward"), \
-             mock_patch("soup_cli.trainer.ppo.PPOTrainerWrapper._setup_transformers"), \
+        with mock_patch("ai_forge_cli.trainer.ppo.PPOTrainerWrapper._setup_reward"), \
+             mock_patch("ai_forge_cli.trainer.ppo.PPOTrainerWrapper._setup_transformers"), \
              mock_patch(
-                 "soup_cli.trainer.ppo._import_ppo_classes",
+                 "ai_forge_cli.trainer.ppo._import_ppo_classes",
                  return_value=(FakePPOTrainer, FakePPOConfig, True),
              ), \
              mock_patch(
-                 "soup_cli.trainer.ppo.PPOTrainerWrapper._get_or_create_reward_model",
+                 "ai_forge_cli.trainer.ppo.PPOTrainerWrapper._get_or_create_reward_model",
                  return_value=MagicMock(),
              ), \
              mock_patch(
-                 "soup_cli.trainer.ppo.PPOTrainerWrapper._create_value_model",
+                 "ai_forge_cli.trainer.ppo.PPOTrainerWrapper._create_value_model",
                  return_value=MagicMock(),
              ):
             wrapper.model = MagicMock()
@@ -989,14 +989,14 @@ class TestCPUDeviceMap:
 
     #: (module, dotted attribute) for every loader that picks a device map.
     LOADERS = [
-        ("soup_cli.trainer.grpo", "GRPOTrainerWrapper._setup_transformers"),
-        ("soup_cli.trainer.ppo", "PPOTrainerWrapper._setup_transformers"),
-        ("soup_cli.trainer.ppo", "PPOTrainerWrapper._get_or_create_reward_model"),
-        ("soup_cli.trainer.ppo", "PPOTrainerWrapper._create_value_model"),
-        ("soup_cli.trainer.ppo", "_load_reward_model"),
-        ("soup_cli.trainer.sft", "SFTTrainerWrapper._setup_transformers"),
-        ("soup_cli.trainer.dpo", "DPOTrainerWrapper._setup_transformers"),
-        ("soup_cli.trainer.reward_model", "RewardModelTrainerWrapper._setup_transformers"),
+        ("ai_forge_cli.trainer.grpo", "GRPOTrainerWrapper._setup_transformers"),
+        ("ai_forge_cli.trainer.ppo", "PPOTrainerWrapper._setup_transformers"),
+        ("ai_forge_cli.trainer.ppo", "PPOTrainerWrapper._get_or_create_reward_model"),
+        ("ai_forge_cli.trainer.ppo", "PPOTrainerWrapper._create_value_model"),
+        ("ai_forge_cli.trainer.ppo", "_load_reward_model"),
+        ("ai_forge_cli.trainer.sft", "SFTTrainerWrapper._setup_transformers"),
+        ("ai_forge_cli.trainer.dpo", "DPOTrainerWrapper._setup_transformers"),
+        ("ai_forge_cli.trainer.reward_model", "RewardModelTrainerWrapper._setup_transformers"),
     ]
 
     @staticmethod
@@ -1012,7 +1012,7 @@ class TestCPUDeviceMap:
     def test_the_helper_maps_cpu_to_cpu(self):
         """The behaviour BUG-010 is about, asserted directly rather than by
         grepping for a quoted string."""
-        from soup_cli.utils.gpu import resolve_device_map
+        from ai_forge_cli.utils.gpu import resolve_device_map
 
         assert resolve_device_map("cpu") == "cpu"
 
@@ -1045,7 +1045,7 @@ class TestGRPOChatTemplate:
         """GRPO setup should set chat_template if tokenizer doesn't have one."""
         import inspect
 
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
         source = inspect.getsource(GRPOTrainerWrapper.setup)
         assert "chat_template" in source
 
@@ -1053,7 +1053,7 @@ class TestGRPOChatTemplate:
         """GRPO setup should NOT overwrite an existing chat_template."""
         import inspect
 
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
         source = inspect.getsource(GRPOTrainerWrapper.setup)
         # Should check with getattr before setting
         assert "getattr" in source
@@ -1062,7 +1062,7 @@ class TestGRPOChatTemplate:
         """GRPO setup should ensure batch_size >= num_generations."""
         import inspect
 
-        from soup_cli.trainer.grpo import GRPOTrainerWrapper
+        from ai_forge_cli.trainer.grpo import GRPOTrainerWrapper
         source = inspect.getsource(GRPOTrainerWrapper.setup)
         assert "batch_size < num_gen" in source or "num_gen" in source
 
@@ -1077,7 +1077,7 @@ class TestPPOTokenization:
         """PPO setup should call .map() to tokenize the dataset."""
         import inspect
 
-        from soup_cli.trainer.ppo import PPOTrainerWrapper
+        from ai_forge_cli.trainer.ppo import PPOTrainerWrapper
         source = inspect.getsource(PPOTrainerWrapper.setup)
         assert "_tokenize_ppo" in source
         assert ".map(" in source
@@ -1086,7 +1086,7 @@ class TestPPOTokenization:
         """Tokenization should add input_ids and attention_mask columns."""
         from datasets import Dataset
 
-        from soup_cli.trainer.ppo import _prepare_ppo_dataset
+        from ai_forge_cli.trainer.ppo import _prepare_ppo_dataset
 
         data = [{"prompt": "What is 2+2?", "answer": "4"}]
         prepared = _prepare_ppo_dataset(data)
@@ -1109,7 +1109,7 @@ class TestValidateAutoDetect:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         data = [
@@ -1132,7 +1132,7 @@ class TestValidateAutoDetect:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         data = [{"text": "Hello world"}, {"text": "Another line"}]
@@ -1152,7 +1152,7 @@ class TestValidateAutoDetect:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         data = [
@@ -1176,7 +1176,7 @@ class TestValidateAutoDetect:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         data = [
@@ -1204,7 +1204,7 @@ class TestStatsHistogramWindows:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         data = [
@@ -1269,7 +1269,7 @@ class TestUIAuthDocs:
         """soup ui --help should mention auth token."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["ui", "--help"])
@@ -1284,7 +1284,7 @@ class TestUIAuthDocs:
 
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["ui", "--help"])

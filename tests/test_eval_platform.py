@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
-from soup_cli.eval.custom import (
+from ai_forge_cli.cli import app
+from ai_forge_cli.eval.custom import (
     MAX_EVAL_TASKS,
     MAX_REGEX_INPUT_LEN,
     MAX_REGEX_PATTERN_LEN,
@@ -22,7 +22,7 @@ from soup_cli.eval.custom import (
     score_semantic,
     score_task,
 )
-from soup_cli.eval.human import (
+from ai_forge_cli.eval.human import (
     ELO_DEFAULT,
     MAX_PROMPTS,
     HumanEvalResults,
@@ -33,7 +33,7 @@ from soup_cli.eval.human import (
     run_human_eval_session,
     save_results,
 )
-from soup_cli.eval.judge import (
+from ai_forge_cli.eval.judge import (
     DEFAULT_RUBRIC,
     JudgeEvaluator,
     JudgeResults,
@@ -44,7 +44,7 @@ from soup_cli.eval.judge import (
     load_rubric,
     validate_judge_api_base,
 )
-from soup_cli.eval.leaderboard import (
+from ai_forge_cli.eval.leaderboard import (
     Leaderboard,
     LeaderboardEntry,
     build_leaderboard_from_tracker,
@@ -316,7 +316,7 @@ class TestEvalResults:
 
 class TestRunEval:
     def test_run_eval_with_mock_generator(self):
-        from soup_cli.eval.custom import run_eval
+        from ai_forge_cli.eval.custom import run_eval
 
         tasks = [
             EvalTask(prompt="What is 2+2?", expected="4", scoring="exact"),
@@ -334,14 +334,14 @@ class TestRunEval:
         assert results.accuracy == 1.0
 
     def test_run_eval_empty_tasks(self):
-        from soup_cli.eval.custom import run_eval
+        from ai_forge_cli.eval.custom import run_eval
 
         results = run_eval("dummy", tasks=[], generate_fn=lambda p: "")
         assert results.total == 0
         assert results.accuracy == 0.0
 
     def test_run_eval_partial_match(self):
-        from soup_cli.eval.custom import run_eval
+        from ai_forge_cli.eval.custom import run_eval
 
         tasks = [
             EvalTask(prompt="q1", expected="yes", scoring="exact"),
@@ -888,7 +888,7 @@ class TestCompareRuns:
 
 class TestEvalConfig:
     def test_eval_config_default(self):
-        from soup_cli.config.schema import EvalConfig
+        from ai_forge_cli.config.schema import EvalConfig
         config = EvalConfig()
         assert config.auto_eval is False
         assert config.benchmarks is None
@@ -896,7 +896,7 @@ class TestEvalConfig:
         assert config.judge is None
 
     def test_eval_config_with_values(self):
-        from soup_cli.config.schema import EvalConfig
+        from ai_forge_cli.config.schema import EvalConfig
         config = EvalConfig(
             auto_eval=True,
             benchmarks=["mmlu", "gsm8k"],
@@ -907,7 +907,7 @@ class TestEvalConfig:
         assert config.benchmarks == ["mmlu", "gsm8k"]
 
     def test_soup_config_with_eval(self):
-        from soup_cli.config.schema import SoupConfig
+        from ai_forge_cli.config.schema import SoupConfig
         config = SoupConfig(
             base="test-model",
             data={"train": "data.jsonl"},
@@ -918,7 +918,7 @@ class TestEvalConfig:
         assert config.eval.benchmarks == ["mmlu"]
 
     def test_soup_config_without_eval(self):
-        from soup_cli.config.schema import SoupConfig
+        from ai_forge_cli.config.schema import SoupConfig
         config = SoupConfig(
             base="test-model",
             data={"train": "data.jsonl"},
@@ -933,14 +933,14 @@ class TestEvalConfig:
 
 class TestCallbackAutoEval:
     def test_auto_eval_not_called_without_config(self):
-        from soup_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
         display = MagicMock()
         callback = SoupTrainerCallback(display=display)
         callback._run_auto_eval()  # Should be a no-op
 
     def test_auto_eval_not_called_when_disabled(self):
-        from soup_cli.config.schema import EvalConfig
-        from soup_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.config.schema import EvalConfig
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
         display = MagicMock()
         eval_config = EvalConfig(auto_eval=False)
         callback = SoupTrainerCallback(
@@ -949,8 +949,8 @@ class TestCallbackAutoEval:
         callback._run_auto_eval()  # Should be a no-op
 
     def test_auto_eval_called_when_enabled(self):
-        from soup_cli.config.schema import EvalConfig
-        from soup_cli.monitoring.callback import SoupTrainerCallback
+        from ai_forge_cli.config.schema import EvalConfig
+        from ai_forge_cli.monitoring.callback import SoupTrainerCallback
         display = MagicMock()
         eval_config = EvalConfig(
             auto_eval=True, benchmarks=["mmlu"],
@@ -961,7 +961,7 @@ class TestCallbackAutoEval:
             output_dir="/tmp/model",
             run_id="test_run",
         )
-        with patch("soup_cli.commands.eval.benchmark") as mock_bench:
+        with patch("ai_forge_cli.commands.eval.benchmark") as mock_bench:
             callback._run_auto_eval()
             mock_bench.assert_called_once()
 

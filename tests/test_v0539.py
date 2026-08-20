@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-import soup_cli
-from soup_cli.cli import app
+import ai_forge_cli
+from ai_forge_cli.cli import app
 
 # CI's Rich pipeline emits ANSI escape codes that split keywords like
 # `--vocab-size` into multiple styled spans, breaking naive `in` checks.
@@ -33,15 +33,15 @@ def test_version_bump_to_0_53_9():
     # Forward-monotonic: v0.53.9 baseline + later releases (v0.53.10, ...)
     # keep this contract green. Numeric tuple compare defends against the
     # lexicographic "0.53.10" < "0.53.9" footgun.
-    parts = tuple(int(p) for p in soup_cli.__version__.split(".") if p.isdigit())
+    parts = tuple(int(p) for p in ai_forge_cli.__version__.split(".") if p.isdigit())
     assert parts >= (0, 53, 9)
 
 
 # ----------------------------------------------------- #94 SSE event buffer
 
 def test_train_event_buffer_push_and_drain():
-    from soup_cli.utils.sse_train_stream import TrainEvent
-    from soup_cli.utils.train_event_buffer import TrainEventBuffer
+    from ai_forge_cli.utils.sse_train_stream import TrainEvent
+    from ai_forge_cli.utils.train_event_buffer import TrainEventBuffer
 
     buffer = TrainEventBuffer()
     cursor = buffer.push(TrainEvent(type="metric", step=1, loss=0.5))
@@ -56,7 +56,7 @@ def test_train_event_buffer_push_and_drain():
 
 
 def test_train_event_buffer_rejects_non_event():
-    from soup_cli.utils.train_event_buffer import TrainEventBuffer
+    from ai_forge_cli.utils.train_event_buffer import TrainEventBuffer
 
     buffer = TrainEventBuffer()
     with pytest.raises(TypeError):
@@ -66,7 +66,7 @@ def test_train_event_buffer_rejects_non_event():
 
 
 def test_train_event_buffer_maxlen_validation():
-    from soup_cli.utils.train_event_buffer import TrainEventBuffer
+    from ai_forge_cli.utils.train_event_buffer import TrainEventBuffer
 
     with pytest.raises(TypeError):
         TrainEventBuffer(maxlen=True)
@@ -77,8 +77,8 @@ def test_train_event_buffer_maxlen_validation():
 
 
 def test_train_event_buffer_snapshot_limits():
-    from soup_cli.utils.sse_train_stream import TrainEvent
-    from soup_cli.utils.train_event_buffer import TrainEventBuffer
+    from ai_forge_cli.utils.sse_train_stream import TrainEvent
+    from ai_forge_cli.utils.train_event_buffer import TrainEventBuffer
 
     buffer = TrainEventBuffer()
     for step in range(5):
@@ -96,8 +96,8 @@ def test_train_event_buffer_snapshot_limits():
 
 
 def test_train_event_buffer_overflow_drops_oldest():
-    from soup_cli.utils.sse_train_stream import TrainEvent
-    from soup_cli.utils.train_event_buffer import TrainEventBuffer
+    from ai_forge_cli.utils.sse_train_stream import TrainEvent
+    from ai_forge_cli.utils.train_event_buffer import TrainEventBuffer
 
     buffer = TrainEventBuffer(maxlen=3)
     for step in range(5):
@@ -108,7 +108,7 @@ def test_train_event_buffer_overflow_drops_oldest():
 
 
 def test_push_train_event_silent_on_bad_input():
-    from soup_cli.utils.train_event_buffer import (
+    from ai_forge_cli.utils.train_event_buffer import (
         get_global_buffer,
         push_train_event,
         reset_global_buffer,
@@ -121,8 +121,8 @@ def test_push_train_event_silent_on_bad_input():
 
 
 def test_push_train_event_happy():
-    from soup_cli.utils.sse_train_stream import TrainEvent
-    from soup_cli.utils.train_event_buffer import (
+    from ai_forge_cli.utils.sse_train_stream import TrainEvent
+    from ai_forge_cli.utils.train_event_buffer import (
         get_global_buffer,
         push_train_event,
         reset_global_buffer,
@@ -142,9 +142,9 @@ def test_api_train_stream_emits_pending_events():
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
 
-    from soup_cli.ui.app import create_app
-    from soup_cli.utils.sse_train_stream import TrainEvent
-    from soup_cli.utils.train_event_buffer import (
+    from ai_forge_cli.ui.app import create_app
+    from ai_forge_cli.utils.sse_train_stream import TrainEvent
+    from ai_forge_cli.utils.train_event_buffer import (
         push_train_event,
         reset_global_buffer,
     )
@@ -168,7 +168,7 @@ def test_api_train_stream_emits_pending_events():
 # ------------------------------------------------- #100 tool-outputs API
 
 def test_global_tool_buffer_round_trip():
-    from soup_cli.utils.tool_outputs import (
+    from ai_forge_cli.utils.tool_outputs import (
         get_global_tool_buffer,
         reset_global_tool_buffer,
     )
@@ -191,8 +191,8 @@ def test_api_tool_outputs_endpoint():
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
 
-    from soup_cli.ui.app import create_app
-    from soup_cli.utils.tool_outputs import (
+    from ai_forge_cli.ui.app import create_app
+    from ai_forge_cli.utils.tool_outputs import (
         get_global_tool_buffer,
         reset_global_tool_buffer,
     )
@@ -230,7 +230,7 @@ def test_api_tool_outputs_rejects_out_of_bounds_limit():
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
 
-    from soup_cli.ui.app import create_app
+    from ai_forge_cli.ui.app import create_app
 
     client = TestClient(create_app())
     # limit must be 1..1000
@@ -266,13 +266,13 @@ def test_api_tool_outputs_rejects_out_of_bounds_limit():
     ],
 )
 def test_strip_reasoning_per_parser(parser, raw, expected):
-    from soup_cli.utils.reasoning_parser import strip_reasoning
+    from ai_forge_cli.utils.reasoning_parser import strip_reasoning
 
     assert strip_reasoning(raw, parser) == expected
 
 
 def test_strip_reasoning_no_op_paths():
-    from soup_cli.utils.reasoning_parser import strip_reasoning
+    from ai_forge_cli.utils.reasoning_parser import strip_reasoning
 
     # None parser short-circuits.
     assert strip_reasoning("<think>x</think>y", None) == "<think>x</think>y"
@@ -287,7 +287,7 @@ def test_strip_reasoning_no_op_paths():
 
 
 def test_strip_reasoning_oversize_passthrough():
-    from soup_cli.utils.reasoning_parser import strip_reasoning
+    from ai_forge_cli.utils.reasoning_parser import strip_reasoning
 
     big = "<think>x</think>" + ("a" * 1_100_000)
     out = strip_reasoning(big, "deepseek-r1")
@@ -295,7 +295,7 @@ def test_strip_reasoning_oversize_passthrough():
 
 
 def test_strip_reasoning_idempotent():
-    from soup_cli.utils.reasoning_parser import strip_reasoning
+    from ai_forge_cli.utils.reasoning_parser import strip_reasoning
 
     out = strip_reasoning("<think>a</think>final", "deepseek-r1")
     assert strip_reasoning(out, "deepseek-r1") == out
@@ -305,7 +305,7 @@ def test_serve_create_app_accepts_reasoning_parser_kwarg():
     """`_create_app` must accept the new `reasoning_parser=` kwarg."""
     import inspect
 
-    from soup_cli.commands.serve import _create_app
+    from ai_forge_cli.commands.serve import _create_app
 
     sig = inspect.signature(_create_app)
     assert "reasoning_parser" in sig.parameters
@@ -419,7 +419,7 @@ def test_tokenizer_train_happy_path(tmp_path, monkeypatch):
 # -------------------------------------------------- #28 backend auto-detect
 
 def test_detect_backend_fallback_transformers():
-    from soup_cli.utils.backend_detect import detect_backend
+    from ai_forge_cli.utils.backend_detect import detect_backend
 
     assert detect_backend("does-not-exist") == "transformers"
     assert detect_backend("") == "transformers"
@@ -427,7 +427,7 @@ def test_detect_backend_fallback_transformers():
 
 
 def test_detect_backend_env_hint(monkeypatch):
-    from soup_cli.utils.backend_detect import detect_backend
+    from ai_forge_cli.utils.backend_detect import detect_backend
 
     monkeypatch.setenv("SOUP_BENCH_BACKEND", "VLLM")
     assert detect_backend("anything") == "vllm"
@@ -442,7 +442,7 @@ def test_detect_backend_mlx_weights(tmp_path, monkeypatch):
     model_dir = tmp_path / "mlx_model"
     model_dir.mkdir()
     (model_dir / "weights.npz").write_bytes(b"\x00\x00")
-    from soup_cli.utils.backend_detect import detect_backend
+    from ai_forge_cli.utils.backend_detect import detect_backend
 
     assert detect_backend(str(model_dir)) == "mlx"
 
@@ -455,7 +455,7 @@ def test_detect_backend_transformers_config(tmp_path, monkeypatch):
         json.dumps({"model_type": "llama", "architectures": ["LlamaForCausalLM"]}),
         encoding="utf-8",
     )
-    from soup_cli.utils.backend_detect import detect_backend
+    from ai_forge_cli.utils.backend_detect import detect_backend
 
     assert detect_backend(str(model_dir)) == "transformers"
 
@@ -465,7 +465,7 @@ def test_detect_backend_config_malformed_falls_back(tmp_path, monkeypatch):
     model_dir = tmp_path / "junk"
     model_dir.mkdir()
     (model_dir / "config.json").write_text("not-json{", encoding="utf-8")
-    from soup_cli.utils.backend_detect import detect_backend
+    from ai_forge_cli.utils.backend_detect import detect_backend
 
     assert detect_backend(str(model_dir)) == "transformers"
 
@@ -541,8 +541,8 @@ def test_ui_rejects_malformed_auth_token():
 # ------------------------------------------------ #12 example workflow doc
 
 def test_train_event_buffer_snapshot_since_returns_only_new_events():
-    from soup_cli.utils.sse_train_stream import TrainEvent
-    from soup_cli.utils.train_event_buffer import TrainEventBuffer
+    from ai_forge_cli.utils.sse_train_stream import TrainEvent
+    from ai_forge_cli.utils.train_event_buffer import TrainEventBuffer
 
     buffer = TrainEventBuffer()
     buffer.push(TrainEvent(type="metric", step=0))
@@ -563,7 +563,7 @@ def test_train_event_buffer_snapshot_since_returns_only_new_events():
 
 
 def test_train_event_buffer_snapshot_since_rejects_non_int():
-    from soup_cli.utils.train_event_buffer import TrainEventBuffer
+    from ai_forge_cli.utils.train_event_buffer import TrainEventBuffer
 
     buffer = TrainEventBuffer()
     with pytest.raises(TypeError):
@@ -574,8 +574,8 @@ def test_train_event_buffer_snapshot_since_rejects_non_int():
 
 def test_train_event_buffer_concurrent_subscribers_isolated():
     """Multiple subscribers using snapshot_since each see every event."""
-    from soup_cli.utils.sse_train_stream import TrainEvent
-    from soup_cli.utils.train_event_buffer import TrainEventBuffer
+    from ai_forge_cli.utils.sse_train_stream import TrainEvent
+    from ai_forge_cli.utils.train_event_buffer import TrainEventBuffer
 
     buffer = TrainEventBuffer()
     for step in range(3):
@@ -610,8 +610,8 @@ def test_tokenizer_train_rejects_symlink_input(tmp_path, monkeypatch):
 
 
 def test_train_event_buffer_cursor_and_clear():
-    from soup_cli.utils.sse_train_stream import TrainEvent
-    from soup_cli.utils.train_event_buffer import TrainEventBuffer
+    from ai_forge_cli.utils.sse_train_stream import TrainEvent
+    from ai_forge_cli.utils.train_event_buffer import TrainEventBuffer
 
     buffer = TrainEventBuffer()
     assert buffer.cursor() == 0
@@ -625,8 +625,8 @@ def test_train_event_buffer_cursor_and_clear():
 
 def test_train_event_buffer_snapshot_since_rollover():
     """`maxlen=3` then push 5 events — `snapshot_since(0)` returns the 3 retained."""
-    from soup_cli.utils.sse_train_stream import TrainEvent
-    from soup_cli.utils.train_event_buffer import TrainEventBuffer
+    from ai_forge_cli.utils.sse_train_stream import TrainEvent
+    from ai_forge_cli.utils.train_event_buffer import TrainEventBuffer
 
     buffer = TrainEventBuffer(maxlen=3)
     for step in range(5):
@@ -644,7 +644,7 @@ def test_set_auth_token_concurrent_rotation_safe():
     """Concurrent set_auth_token + get_auth_token never observes a partial token."""
     import threading
 
-    from soup_cli.ui.app import get_auth_token, set_auth_token
+    from ai_forge_cli.ui.app import get_auth_token, set_auth_token
 
     valid_a = "A" * 32
     valid_b = "B" * 32
@@ -673,7 +673,7 @@ def test_set_auth_token_concurrent_rotation_safe():
 
 
 def test_set_auth_token_rejects_bool_and_non_str():
-    from soup_cli.ui.app import get_auth_token, set_auth_token
+    from ai_forge_cli.ui.app import get_auth_token, set_auth_token
 
     before = get_auth_token()
     with pytest.raises(TypeError):
@@ -685,14 +685,14 @@ def test_set_auth_token_rejects_bool_and_non_str():
 
 
 def test_strip_reasoning_swallows_null_byte_parser():
-    from soup_cli.utils.reasoning_parser import strip_reasoning
+    from ai_forge_cli.utils.reasoning_parser import strip_reasoning
 
     out = strip_reasoning("<think>x</think>final", "\x00")
     assert out == "<think>x</think>final"
 
 
 def test_strip_reasoning_crlf_residue():
-    from soup_cli.utils.reasoning_parser import strip_reasoning
+    from ai_forge_cli.utils.reasoning_parser import strip_reasoning
 
     out = strip_reasoning("<think>a</think>\r\n\r\nfinal", "deepseek-r1")
     # Both \r and \n stripped — content preserved.
@@ -701,7 +701,7 @@ def test_strip_reasoning_crlf_residue():
 
 def test_strip_reasoning_fast_path_skips_regex():
     """Inputs without the marker token bypass the regex entirely."""
-    from soup_cli.utils.reasoning_parser import strip_reasoning
+    from ai_forge_cli.utils.reasoning_parser import strip_reasoning
 
     # Long input WITHOUT <think marker — returns unchanged in O(n).
     big = "a" * 200_000
@@ -711,7 +711,7 @@ def test_strip_reasoning_fast_path_skips_regex():
 
 
 def test_strip_reasoning_multiple_blocks():
-    from soup_cli.utils.reasoning_parser import strip_reasoning
+    from ai_forge_cli.utils.reasoning_parser import strip_reasoning
 
     out = strip_reasoning(
         "<think>a</think>mid<think>b</think>final", "deepseek-r1"
@@ -730,7 +730,7 @@ def test_detect_backend_rejects_symlinked_mlx_weights(tmp_path, monkeypatch):
         os.symlink(real_weights, link)
     except (OSError, NotImplementedError, AttributeError):
         pytest.skip("symlinks not supported on this platform")
-    from soup_cli.utils.backend_detect import detect_backend
+    from ai_forge_cli.utils.backend_detect import detect_backend
 
     # Symlinked weights.npz must NOT trigger MLX dispatch.
     assert detect_backend(str(model_dir)) == "transformers"
@@ -744,7 +744,7 @@ def test_detect_backend_mlx_model_type_in_config(tmp_path, monkeypatch):
         json.dumps({"model_type": "mlx_lm_llama"}),
         encoding="utf-8",
     )
-    from soup_cli.utils.backend_detect import detect_backend
+    from ai_forge_cli.utils.backend_detect import detect_backend
 
     assert detect_backend(str(model_dir)) == "mlx"
 
@@ -754,7 +754,7 @@ def test_detect_backend_config_non_dict_root(tmp_path, monkeypatch):
     model_dir = tmp_path / "model"
     model_dir.mkdir()
     (model_dir / "config.json").write_text("[1, 2, 3]", encoding="utf-8")
-    from soup_cli.utils.backend_detect import detect_backend
+    from ai_forge_cli.utils.backend_detect import detect_backend
 
     assert detect_backend(str(model_dir)) == "transformers"
 
@@ -836,7 +836,7 @@ def test_bench_p50_p95_runs_with_help_only():
 
 
 def test_reset_global_tool_buffer_clears_state():
-    from soup_cli.utils.tool_outputs import (
+    from ai_forge_cli.utils.tool_outputs import (
         get_global_tool_buffer,
         reset_global_tool_buffer,
     )

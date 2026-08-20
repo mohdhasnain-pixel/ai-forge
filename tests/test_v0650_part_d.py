@@ -12,7 +12,7 @@ import pytest
 import yaml
 from typer.testing import CliRunner
 
-from soup_cli.utils.checklist_dsl import (
+from ai_forge_cli.utils.checklist_dsl import (
     CHECKLIST_KINDS,
     CheckListReport,
     CheckListSpec,
@@ -376,20 +376,20 @@ class TestReport:
 
 class TestChecklistCli:
     def test_help_listed(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         assert "checklist" in result.output.lower()
 
     def test_checklist_help(self):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         runner = CliRunner()
         result = runner.invoke(app, ["checklist", "--help"])
         assert result.exit_code == 0
 
     def test_checklist_runs(self, tmp_path, monkeypatch):
-        from soup_cli.commands.eval import app
+        from ai_forge_cli.commands.eval import app
         monkeypatch.chdir(tmp_path)
         p = tmp_path / "spec.yaml"
         p.write_text(yaml.safe_dump({
@@ -406,7 +406,7 @@ class TestSourceWiring:
         from pathlib import Path
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "checklist_dsl.py"
+            / "src" / "ai_forge_cli" / "utils" / "checklist_dsl.py"
         )
         text = src.read_text(encoding="utf-8")
         forbidden_imports = (

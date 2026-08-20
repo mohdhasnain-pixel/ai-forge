@@ -4,8 +4,8 @@ from io import StringIO
 
 from rich.console import Console
 
-from soup_cli.config.schema import SoupConfig
-from soup_cli.monitoring.display import TrainingDisplay
+from ai_forge_cli.config.schema import SoupConfig
+from ai_forge_cli.monitoring.display import TrainingDisplay
 
 
 def _render_to_str(panel) -> str:

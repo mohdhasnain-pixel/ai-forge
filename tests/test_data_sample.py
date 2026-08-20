@@ -5,7 +5,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -198,7 +198,7 @@ class TestSampleStrategies:
     """Test sampling strategy functions directly."""
 
     def test_random_sample(self):
-        from soup_cli.commands.data import _sample_random
+        from ai_forge_cli.commands.data import _sample_random
 
         data = [{"text": f"row {idx}"} for idx in range(100)]
         result = _sample_random(data, 10, seed=42)
@@ -208,7 +208,7 @@ class TestSampleStrategies:
             assert item in data
 
     def test_diverse_sample(self):
-        from soup_cli.commands.data import _sample_diverse
+        from ai_forge_cli.commands.data import _sample_diverse
 
         data = [
             {"text": "Python is a programming language" * (idx + 1)}
@@ -218,7 +218,7 @@ class TestSampleStrategies:
         assert len(result) == 10
 
     def test_hard_sample(self):
-        from soup_cli.commands.data import _sample_hard
+        from ai_forge_cli.commands.data import _sample_hard
 
         # Create data with varying lengths (proxy for difficulty)
         data = [

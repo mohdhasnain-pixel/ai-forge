@@ -12,8 +12,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from soup_cli.experiment.tracker import ExperimentTracker
-from soup_cli.mcp_server.execution import ExecutionError, ExecutionManager
+from ai_forge_cli.experiment.tracker import ExperimentTracker
+from ai_forge_cli.mcp_server.execution import ExecutionError, ExecutionManager
 
 _RUNNING = "running"
 _MCP_KIND = "train"

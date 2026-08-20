@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 
 def _make_safetensors_only(tmp_path: Path) -> Path:
@@ -69,7 +69,7 @@ def _make_with_corrupt_safetensors_header(tmp_path: Path) -> Path:
 
 class TestStrictSafetensors:
     def test_imports(self):
-        from soup_cli.utils.strict_safetensors import (
+        from ai_forge_cli.utils.strict_safetensors import (
             UNSAFE_EXTENSIONS,
             StrictSafetensorsReport,
             check_strict_safetensors,
@@ -83,7 +83,7 @@ class TestStrictSafetensors:
         assert dataclasses.is_dataclass(StrictSafetensorsReport)
 
     def test_unsafe_extensions_includes_bin_pt(self):
-        from soup_cli.utils.strict_safetensors import UNSAFE_EXTENSIONS
+        from ai_forge_cli.utils.strict_safetensors import UNSAFE_EXTENSIONS
 
         assert ".bin" in UNSAFE_EXTENSIONS
         assert ".pt" in UNSAFE_EXTENSIONS
@@ -96,7 +96,7 @@ class TestStrictSafetensors:
         Matches project policy for detection-style helpers (v0.30.0 Candidate /
         v0.41.0 lr_groups / v0.53.3 is_known_vlm_base).
         """
-        from soup_cli.utils.strict_safetensors import is_safetensors_magic
+        from ai_forge_cli.utils.strict_safetensors import is_safetensors_magic
 
         assert is_safetensors_magic("") is False
         assert is_safetensors_magic("path\x00null") is False
@@ -110,14 +110,14 @@ class TestStrictSafetensors:
         Regression guard against a re-widening to 1 GiB which would let an
         adversary trigger a ~999 MiB allocation via a crafted header_len.
         """
-        from soup_cli.utils.strict_safetensors import _MAX_SAFETENSORS_HEADER_BYTES
+        from ai_forge_cli.utils.strict_safetensors import _MAX_SAFETENSORS_HEADER_BYTES
 
         assert _MAX_SAFETENSORS_HEADER_BYTES == 100 * (1 << 20)
 
     def test_find_unsafe_clean(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_safetensors_only(tmp_path)
-        from soup_cli.utils.strict_safetensors import find_unsafe_weight_files
+        from ai_forge_cli.utils.strict_safetensors import find_unsafe_weight_files
 
         found = find_unsafe_weight_files(str(adapter))
         assert found == ()
@@ -125,7 +125,7 @@ class TestStrictSafetensors:
     def test_find_unsafe_flags_bin(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_with_pickle(tmp_path)
-        from soup_cli.utils.strict_safetensors import find_unsafe_weight_files
+        from ai_forge_cli.utils.strict_safetensors import find_unsafe_weight_files
 
         found = find_unsafe_weight_files(str(adapter))
         assert len(found) == 1
@@ -134,7 +134,7 @@ class TestStrictSafetensors:
     def test_check_strict_clean_passes(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_safetensors_only(tmp_path)
-        from soup_cli.utils.strict_safetensors import check_strict_safetensors
+        from ai_forge_cli.utils.strict_safetensors import check_strict_safetensors
 
         report = check_strict_safetensors(str(adapter), strict=True)
         assert report.ok is True
@@ -143,7 +143,7 @@ class TestStrictSafetensors:
     def test_check_strict_pickle_raises(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_with_pickle(tmp_path)
-        from soup_cli.utils.strict_safetensors import check_strict_safetensors
+        from ai_forge_cli.utils.strict_safetensors import check_strict_safetensors
 
         with pytest.raises(ValueError, match="(?i)pickle|.bin|unsafe"):
             check_strict_safetensors(str(adapter), strict=True)
@@ -151,7 +151,7 @@ class TestStrictSafetensors:
     def test_check_lenient_pickle_returns_report(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_with_pickle(tmp_path)
-        from soup_cli.utils.strict_safetensors import check_strict_safetensors
+        from ai_forge_cli.utils.strict_safetensors import check_strict_safetensors
 
         report = check_strict_safetensors(str(adapter), strict=False)
         assert report.ok is False
@@ -160,7 +160,7 @@ class TestStrictSafetensors:
     def test_find_unsafe_flags_pickle_renamed_safetensors(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_with_renamed_pickle(tmp_path)
-        from soup_cli.utils.strict_safetensors import find_unsafe_weight_files
+        from ai_forge_cli.utils.strict_safetensors import find_unsafe_weight_files
 
         found = find_unsafe_weight_files(str(adapter))
         assert len(found) == 1
@@ -169,7 +169,7 @@ class TestStrictSafetensors:
     def test_check_strict_zip_renamed_safetensors_raises(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_with_renamed_zip(tmp_path)
-        from soup_cli.utils.strict_safetensors import check_strict_safetensors
+        from ai_forge_cli.utils.strict_safetensors import check_strict_safetensors
 
         with pytest.raises(ValueError, match="(?i)safetensors|unsafe"):
             check_strict_safetensors(str(adapter), strict=True)
@@ -177,7 +177,7 @@ class TestStrictSafetensors:
     def test_check_lenient_corrupt_safetensors_returns_report(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_with_corrupt_safetensors_header(tmp_path)
-        from soup_cli.utils.strict_safetensors import check_strict_safetensors
+        from ai_forge_cli.utils.strict_safetensors import check_strict_safetensors
 
         report = check_strict_safetensors(str(adapter), strict=False)
         assert report.ok is False
@@ -185,14 +185,14 @@ class TestStrictSafetensors:
 
     def test_check_outside_cwd_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.strict_safetensors import check_strict_safetensors
+        from ai_forge_cli.utils.strict_safetensors import check_strict_safetensors
 
         with pytest.raises(ValueError):
             check_strict_safetensors(str(tmp_path.parent / "outside"))
 
     def test_check_missing_dir(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.strict_safetensors import check_strict_safetensors
+        from ai_forge_cli.utils.strict_safetensors import check_strict_safetensors
 
         with pytest.raises(FileNotFoundError):
             check_strict_safetensors(str(tmp_path / "nope"))
@@ -200,7 +200,7 @@ class TestStrictSafetensors:
     def test_report_frozen(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_safetensors_only(tmp_path)
-        from soup_cli.utils.strict_safetensors import check_strict_safetensors
+        from ai_forge_cli.utils.strict_safetensors import check_strict_safetensors
 
         report = check_strict_safetensors(str(adapter))
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -209,7 +209,7 @@ class TestStrictSafetensors:
     def test_strict_not_bool_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         adapter = _make_safetensors_only(tmp_path)
-        from soup_cli.utils.strict_safetensors import check_strict_safetensors
+        from ai_forge_cli.utils.strict_safetensors import check_strict_safetensors
 
         with pytest.raises(TypeError):
             check_strict_safetensors(str(adapter), strict="yes")  # type: ignore[arg-type]
@@ -223,7 +223,7 @@ class TestStrictSafetensors:
         external.write_bytes(b"x")
         os.symlink(str(external), str(adapter / "weights.bin"))
         (adapter / "adapter_config.json").write_text('{"r": 8}', encoding="utf-8")
-        from soup_cli.utils.strict_safetensors import find_unsafe_weight_files
+        from ai_forge_cli.utils.strict_safetensors import find_unsafe_weight_files
 
         # Even a symlinked weights.bin is reported as unsafe (we read by name).
         found = find_unsafe_weight_files(str(adapter))
@@ -275,7 +275,7 @@ class TestStrictSafetensorsCli:
 
 class TestSourceWiring:
     def test_module_imports(self):
-        from soup_cli.utils import strict_safetensors as m
+        from ai_forge_cli.utils import strict_safetensors as m
 
         assert hasattr(m, "check_strict_safetensors")
         assert hasattr(m, "find_unsafe_weight_files")

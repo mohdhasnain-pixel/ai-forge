@@ -30,7 +30,7 @@ from typer.testing import CliRunner
 
 class TestCitationFaithfulTaskGate:
     def test_citation_faithful_on_grpo_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """\
 base: meta-llama/Llama-3.1-8B-Instruct
@@ -53,7 +53,7 @@ output: ./output
             load_config_from_string(yaml_text)
 
     def test_citation_faithful_on_pretrain_accepted(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """\
 base: meta-llama/Llama-3.1-8B-Instruct
@@ -75,7 +75,7 @@ output: ./output
         assert cfg.training.citation_faithful is True
 
     def test_citation_faithful_on_dpo_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """\
 base: meta-llama/Llama-3.1-8B-Instruct
@@ -102,7 +102,7 @@ output: ./output
 
 class TestRaftFieldOversizeBoundary:
     def test_query_at_cap_accepted(self):
-        from soup_cli.data.formats import _MAX_RAFT_FIELD_LEN, _convert_raft
+        from ai_forge_cli.data.formats import _MAX_RAFT_FIELD_LEN, _convert_raft
 
         out = _convert_raft({
             "query": "x" * _MAX_RAFT_FIELD_LEN,
@@ -113,7 +113,7 @@ class TestRaftFieldOversizeBoundary:
         assert len(out["query"]) == _MAX_RAFT_FIELD_LEN
 
     def test_query_overcap_rejected(self):
-        from soup_cli.data.formats import _MAX_RAFT_FIELD_LEN, _convert_raft
+        from ai_forge_cli.data.formats import _MAX_RAFT_FIELD_LEN, _convert_raft
 
         with pytest.raises(ValueError, match="query"):
             _convert_raft({
@@ -124,7 +124,7 @@ class TestRaftFieldOversizeBoundary:
             })
 
     def test_golden_doc_overcap_rejected(self):
-        from soup_cli.data.formats import _MAX_RAFT_FIELD_LEN, _convert_raft
+        from ai_forge_cli.data.formats import _MAX_RAFT_FIELD_LEN, _convert_raft
 
         with pytest.raises(ValueError, match="golden_doc"):
             _convert_raft({
@@ -135,7 +135,7 @@ class TestRaftFieldOversizeBoundary:
             })
 
     def test_answer_overcap_rejected(self):
-        from soup_cli.data.formats import _MAX_RAFT_FIELD_LEN, _convert_raft
+        from ai_forge_cli.data.formats import _MAX_RAFT_FIELD_LEN, _convert_raft
 
         with pytest.raises(ValueError, match="answer"):
             _convert_raft({
@@ -146,7 +146,7 @@ class TestRaftFieldOversizeBoundary:
             })
 
     def test_distractor_overcap_rejected(self):
-        from soup_cli.data.formats import _MAX_RAFT_FIELD_LEN, _convert_raft
+        from ai_forge_cli.data.formats import _MAX_RAFT_FIELD_LEN, _convert_raft
 
         with pytest.raises(ValueError, match="distractor"):
             _convert_raft({
@@ -162,7 +162,7 @@ class TestRaftFieldOversizeBoundary:
 
 class TestRaftNullByteRejection:
     def test_null_byte_golden_doc_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises(ValueError, match="null"):
             _convert_raft({
@@ -173,7 +173,7 @@ class TestRaftNullByteRejection:
             })
 
     def test_null_byte_answer_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises(ValueError, match="null"):
             _convert_raft({
@@ -184,7 +184,7 @@ class TestRaftNullByteRejection:
             })
 
     def test_null_byte_distractor_rejected(self):
-        from soup_cli.data.formats import _convert_raft
+        from ai_forge_cli.data.formats import _convert_raft
 
         with pytest.raises(ValueError, match="null"):
             _convert_raft({
@@ -203,7 +203,7 @@ class TestSteerPlanOnlyMarker:
         # v0.71.10 #201 — live fitting shipped; --plan-only now just validates
         # inputs + renders the plan (no deferred-version marker) and exits 0
         # WITHOUT loading a model.
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         monkeypatch.chdir(tmp_path)
         pairs = tmp_path / "pairs.jsonl"
@@ -236,9 +236,9 @@ class TestEditMarkerRegressionGuard:
     # through apply_grace_edit (mocked so no model load happens).
     @pytest.mark.parametrize("method", ["rome", "memit", "alphaedit"])
     def test_legacy_methods_dispatch_to_kernel(self, method: str, monkeypatch):
-        import soup_cli.utils.edit_kernels as ek
-        import soup_cli.utils.live_eval as live_eval
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        import ai_forge_cli.utils.edit_kernels as ek
+        import ai_forge_cli.utils.live_eval as live_eval
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         plan = build_edit_plan(
             base="sshleifer/tiny-gpt2",
@@ -267,8 +267,8 @@ class TestEditMarkerRegressionGuard:
         assert result.norm_delta == 0.5
 
     def test_grace_dispatches_to_grace_edit(self, monkeypatch):
-        import soup_cli.utils.grace_codebook as gc
-        from soup_cli.utils.knowledge_edit import apply_edit, build_edit_plan
+        import ai_forge_cli.utils.grace_codebook as gc
+        from ai_forge_cli.utils.knowledge_edit import apply_edit, build_edit_plan
 
         plan = build_edit_plan(
             base="sshleifer/tiny-gpt2",
@@ -285,13 +285,13 @@ class TestEditMarkerRegressionGuard:
 
 class TestSteeringNameBoundary:
     def test_at_max_length_accepted(self):
-        from soup_cli.utils.steering import validate_steering_name
+        from ai_forge_cli.utils.steering import validate_steering_name
 
         name = "a" + "b" * 127  # exactly 128 chars
         assert validate_steering_name(name) == name
 
     def test_one_over_max_rejected(self):
-        from soup_cli.utils.steering import validate_steering_name
+        from ai_forge_cli.utils.steering import validate_steering_name
 
         with pytest.raises(ValueError):
             validate_steering_name("a" + "b" * 128)  # 129 chars
@@ -309,7 +309,7 @@ class TestSteerTrainBaseValidation:
         return CliRunner()
 
     def test_base_overcap_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         runner = self._make_runner(tmp_path, monkeypatch)
         result = runner.invoke(app, [
@@ -324,7 +324,7 @@ class TestSteerTrainBaseValidation:
         assert "base" in result.output.lower()
 
     def test_base_null_byte_rejected(self, tmp_path, monkeypatch):
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         runner = self._make_runner(tmp_path, monkeypatch)
         result = runner.invoke(app, [
@@ -339,7 +339,7 @@ class TestSteerTrainBaseValidation:
         assert "null" in result.output.lower() or "base" in result.output.lower()
 
     def test_base_at_max_length_accepted(self, tmp_path, monkeypatch):
-        from soup_cli.commands.steer import app
+        from ai_forge_cli.commands.steer import app
 
         runner = self._make_runner(tmp_path, monkeypatch)
         result = runner.invoke(app, [
@@ -360,36 +360,36 @@ class TestSteerTrainBaseValidation:
 
 class TestExtractCitationIds:
     def test_extracts_bracketed(self):
-        from soup_cli.utils.citation_faithful import extract_citation_ids
+        from ai_forge_cli.utils.citation_faithful import extract_citation_ids
 
         assert extract_citation_ids("See [doc-1] and [doc-2].") == (
             "doc-1", "doc-2",
         )
 
     def test_preserves_duplicates(self):
-        from soup_cli.utils.citation_faithful import extract_citation_ids
+        from ai_forge_cli.utils.citation_faithful import extract_citation_ids
 
         assert extract_citation_ids("[doc-1] [doc-1]") == ("doc-1", "doc-1")
 
     def test_empty_returns_empty_tuple(self):
-        from soup_cli.utils.citation_faithful import extract_citation_ids
+        from ai_forge_cli.utils.citation_faithful import extract_citation_ids
 
         assert extract_citation_ids("plain text without citations") == ()
 
     def test_non_string_raises(self):
-        from soup_cli.utils.citation_faithful import extract_citation_ids
+        from ai_forge_cli.utils.citation_faithful import extract_citation_ids
 
         with pytest.raises(TypeError):
             extract_citation_ids(42)
 
     def test_oversize_raises(self):
-        from soup_cli.utils.citation_faithful import extract_citation_ids
+        from ai_forge_cli.utils.citation_faithful import extract_citation_ids
 
         with pytest.raises(ValueError):
             extract_citation_ids("x" * 2_000_001)
 
     def test_regex_requires_leading_alnum(self):
-        from soup_cli.utils.citation_faithful import extract_citation_ids
+        from ai_forge_cli.utils.citation_faithful import extract_citation_ids
 
         # `_CITATION_RE` requires `[A-Za-z0-9]` as the first char inside the
         # brackets; a leading underscore/dash should NOT match.
@@ -402,25 +402,25 @@ class TestExtractCitationIds:
 
 class TestScoreCitationsExpectedIds:
     def test_non_string_in_expected_rejected(self):
-        from soup_cli.utils.citation_faithful import score_citations
+        from ai_forge_cli.utils.citation_faithful import score_citations
 
         with pytest.raises(TypeError):
             score_citations(predicted="[doc-1]", expected_ids=(42,))
 
     def test_bool_in_expected_rejected(self):
-        from soup_cli.utils.citation_faithful import score_citations
+        from ai_forge_cli.utils.citation_faithful import score_citations
 
         with pytest.raises(TypeError):
             score_citations(predicted="[doc-1]", expected_ids=(True,))
 
     def test_empty_string_in_expected_rejected(self):
-        from soup_cli.utils.citation_faithful import score_citations
+        from ai_forge_cli.utils.citation_faithful import score_citations
 
         with pytest.raises(ValueError, match="non-empty"):
             score_citations(predicted="[doc-1]", expected_ids=("",))
 
     def test_null_byte_in_expected_rejected(self):
-        from soup_cli.utils.citation_faithful import score_citations
+        from ai_forge_cli.utils.citation_faithful import score_citations
 
         with pytest.raises(ValueError, match="null"):
             score_citations(predicted="[doc-1]", expected_ids=("bad\x00id",))
@@ -431,7 +431,7 @@ class TestScoreCitationsExpectedIds:
 
 class TestCitationScoreFields:
     def test_predicted_count_and_expected_count_set(self):
-        from soup_cli.utils.citation_faithful import score_citations
+        from ai_forge_cli.utils.citation_faithful import score_citations
 
         score = score_citations(
             predicted="[doc-1] [doc-2]",
@@ -441,7 +441,7 @@ class TestCitationScoreFields:
         assert score.expected_count == 1
 
     def test_predicted_count_includes_duplicates(self):
-        from soup_cli.utils.citation_faithful import score_citations
+        from ai_forge_cli.utils.citation_faithful import score_citations
 
         score = score_citations(
             predicted="[doc-1] [doc-1] [doc-1]",
@@ -455,7 +455,7 @@ class TestCitationScoreFields:
 
 class TestGraceCodebookPartialConfig:
     def test_flag_alone_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """\
 base: meta-llama/Llama-3.1-8B-Instruct
@@ -476,7 +476,7 @@ output: ./output
             load_config_from_string(yaml_text)
 
     def test_flag_with_dim_missing_rejected(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_text = """\
 base: meta-llama/Llama-3.1-8B-Instruct
@@ -498,14 +498,14 @@ output: ./output
             load_config_from_string(yaml_text)
 
     def test_grace_in_default_edit_layer(self):
-        from soup_cli.utils.knowledge_edit import _DEFAULT_EDIT_LAYER  # type: ignore
+        from ai_forge_cli.utils.knowledge_edit import _DEFAULT_EDIT_LAYER  # type: ignore
 
         assert "grace" in _DEFAULT_EDIT_LAYER
         assert isinstance(_DEFAULT_EDIT_LAYER["grace"], int)
         assert _DEFAULT_EDIT_LAYER["grace"] >= 0
 
     def test_grace_in_edit_metadata_mapping(self):
-        from soup_cli.utils.knowledge_edit import _EDIT_METHOD_METADATA  # type: ignore
+        from ai_forge_cli.utils.knowledge_edit import _EDIT_METHOD_METADATA  # type: ignore
 
         assert "grace" in _EDIT_METHOD_METADATA
 
@@ -515,31 +515,31 @@ output: ./output
 
 class TestValidateRaDitCompatDirect:
     def test_null_byte_task_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_compat
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_compat
 
         with pytest.raises(ValueError, match="null"):
             validate_ra_dit_compat(stage="retriever", task="sft\x00")
 
     def test_null_byte_stage_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_compat
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_compat
 
         with pytest.raises(ValueError, match="null"):
             validate_ra_dit_compat(stage="retriever\x00", task="embedding")
 
     def test_bool_task_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_compat
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_compat
 
         with pytest.raises(TypeError):
             validate_ra_dit_compat(stage="retriever", task=True)
 
     def test_bool_stage_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_compat
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_compat
 
         with pytest.raises(TypeError):
             validate_ra_dit_compat(stage=True, task="embedding")
 
     def test_empty_task_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_compat
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_compat
 
         with pytest.raises(ValueError, match="non-empty"):
             validate_ra_dit_compat(stage="retriever", task="")
@@ -550,7 +550,7 @@ class TestValidateRaDitCompatDirect:
 
 class TestGraceMaxBoundary:
     def test_max_codebook_size_accepted(self):
-        from soup_cli.utils.grace_codebook import (
+        from ai_forge_cli.utils.grace_codebook import (
             MAX_CODEBOOK_SIZE,
             validate_grace_codebook_size,
         )
@@ -558,7 +558,7 @@ class TestGraceMaxBoundary:
         assert validate_grace_codebook_size(MAX_CODEBOOK_SIZE) == MAX_CODEBOOK_SIZE
 
     def test_max_codebook_dim_accepted(self):
-        from soup_cli.utils.grace_codebook import (
+        from ai_forge_cli.utils.grace_codebook import (
             MAX_CODEBOOK_DIM,
             validate_grace_codebook_dim,
         )
@@ -571,13 +571,13 @@ class TestGraceMaxBoundary:
 
 class TestRaDitRetrieverBoundary:
     def test_at_max_accepted(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_retriever_model
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_retriever_model
 
         v = "x" * 512
         assert validate_ra_dit_retriever_model(v) == v
 
     def test_one_over_max_rejected(self):
-        from soup_cli.utils.ra_dit import validate_ra_dit_retriever_model
+        from ai_forge_cli.utils.ra_dit import validate_ra_dit_retriever_model
 
         with pytest.raises(ValueError):
             validate_ra_dit_retriever_model("x" * 513)
@@ -588,13 +588,13 @@ class TestRaDitRetrieverBoundary:
 
 class TestSourceWiring:
     def test_list_steers_uses_context_manager(self):
-        src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "commands" / "steer.py"
+        src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "commands" / "steer.py"
         text = src.read_text(encoding="utf-8")
         assert "with RegistryStore() as store:" in text
 
     def test_steer_uses_shared_path_helper(self):
         """Review M1 fix: `_validate_pairs_path` delegates to the shared helper."""
-        src = Path(__file__).resolve().parent.parent / "src" / "soup_cli" / "commands" / "steer.py"
+        src = Path(__file__).resolve().parent.parent / "src" / "ai_forge_cli" / "commands" / "steer.py"
         text = src.read_text(encoding="utf-8")
         assert "enforce_under_cwd_and_no_symlink" in text
 
@@ -604,11 +604,11 @@ class TestSourceWiring:
         Widened from exact-match in v0.63.0 (matches v0.56.0 / v0.51.0
         floor-check pattern so future releases don't regress this guard).
         """
-        import soup_cli
+        import ai_forge_cli
 
-        parts = soup_cli.__version__.split(".")
+        parts = ai_forge_cli.__version__.split(".")
         major, minor = int(parts[0]), int(parts[1])
-        assert (major, minor) >= (0, 62), soup_cli.__version__
+        assert (major, minor) >= (0, 62), ai_forge_cli.__version__
 
     def test_pyproject_version_is_at_least_v0620(self):
         """Floor-check the pyproject version against v0.62.0."""

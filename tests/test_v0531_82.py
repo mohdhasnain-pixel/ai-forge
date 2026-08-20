@@ -16,124 +16,124 @@ import pytest
 
 class TestDetectPrequantizedFormat:
     def test_none_for_clean_name(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         assert detect_prequantized_format("meta-llama/Llama-3.1-8B") is None
 
     def test_gptq_name_match(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         assert (
             detect_prequantized_format("TheBloke/Llama-2-7B-Chat-GPTQ") == "gptq"
         )
 
     def test_gptq_lowercase(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         assert detect_prequantized_format("some-org/llama-7b-gptq") == "gptq"
 
     def test_awq_name_match(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         assert detect_prequantized_format("TheBloke/Mistral-7B-AWQ") == "awq"
 
     def test_hqq_name_match(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         result = detect_prequantized_format("mobiuslabsgmbh/Llama-3.1-8B-HQQ-4bit")
         assert result == "hqq:4bit"
 
     def test_hqq_explicit_bits(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         assert (
             detect_prequantized_format("some-org/model-HQQ-2bit") == "hqq:2bit"
         )
 
     def test_aqlm_name_match(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         assert detect_prequantized_format("ISTA-DASLab/Llama-3-8B-AQLM") == "aqlm"
 
     def test_eetq_name_match(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         assert detect_prequantized_format("some-org/model-EETQ") == "eetq"
 
     def test_fp8_name_match(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         assert (
             detect_prequantized_format("neuralmagic/Meta-Llama-3-8B-FP8") == "fp8"
         )
 
     def test_config_quantization_method(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         cfg = {"quantization_config": {"quant_method": "gptq", "bits": 4}}
         assert detect_prequantized_format("clean/name", cfg) == "gptq"
 
     def test_config_overrides_clean_name(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         cfg = {"quantization_config": {"quant_method": "awq"}}
         assert detect_prequantized_format("meta/clean-llama", cfg) == "awq"
 
     def test_config_hqq_with_bits(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         cfg = {"quantization_config": {"quant_method": "hqq", "bits": 2}}
         assert detect_prequantized_format("clean/name", cfg) == "hqq:2bit"
 
     def test_config_unknown_method(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         cfg = {"quantization_config": {"quant_method": "weirdq"}}
         assert detect_prequantized_format("clean/name", cfg) is None
 
     def test_config_non_dict_quantization_config(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         cfg = {"quantization_config": "gptq"}  # malformed
         assert detect_prequantized_format("clean/name", cfg) is None
 
     def test_config_non_dict_root(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         assert detect_prequantized_format("clean/name", "not-a-dict") is None
 
     def test_empty_name_raises(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         with pytest.raises(ValueError):
             detect_prequantized_format("")
 
     def test_null_byte_name_raises(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         with pytest.raises(ValueError):
             detect_prequantized_format("evil\x00name")
 
     def test_non_string_name_raises(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         with pytest.raises(TypeError):
             detect_prequantized_format(123)
 
     def test_bool_name_raises(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         with pytest.raises(TypeError):
             detect_prequantized_format(True)
 
     def test_word_boundary_no_substring(self):
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         # 'agptqa' should NOT match — word boundary
         assert detect_prequantized_format("some-org/agptqa-model") is None
 
     def test_config_probe_path(self, tmp_path, monkeypatch):
-        from soup_cli.autopilot.decisions import detect_prequantized_format_from_path
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format_from_path
 
         monkeypatch.chdir(tmp_path)
         config_dir = tmp_path / "model"
@@ -146,13 +146,13 @@ class TestDetectPrequantizedFormat:
         assert detect_prequantized_format_from_path("./model") == "gptq"
 
     def test_config_probe_path_missing(self, tmp_path, monkeypatch):
-        from soup_cli.autopilot.decisions import detect_prequantized_format_from_path
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format_from_path
 
         monkeypatch.chdir(tmp_path)
         assert detect_prequantized_format_from_path("./nope") is None
 
     def test_config_probe_malformed_json(self, tmp_path, monkeypatch):
-        from soup_cli.autopilot.decisions import detect_prequantized_format_from_path
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format_from_path
 
         monkeypatch.chdir(tmp_path)
         config_dir = tmp_path / "model"
@@ -166,7 +166,7 @@ class TestDetectPrequantizedFormat:
         self, tmp_path, monkeypatch,
     ):
         """Security review H2 — out-of-cwd model_dir silently falls through."""
-        from soup_cli.autopilot.decisions import detect_prequantized_format_from_path
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format_from_path
 
         monkeypatch.chdir(tmp_path)
         outside = tmp_path.parent / "outside_probe"
@@ -184,7 +184,7 @@ class TestDetectPrequantizedFormat:
 
 class TestDecideQuantizationPrequantized:
     def test_prequantized_hint_returned(self):
-        from soup_cli.autopilot.decisions import decide_quantization
+        from ai_forge_cli.autopilot.decisions import decide_quantization
 
         # Even with plenty VRAM, prequantized hint takes precedence
         result = decide_quantization(
@@ -193,7 +193,7 @@ class TestDecideQuantizationPrequantized:
         assert result == "gptq"
 
     def test_prequantized_awq(self):
-        from soup_cli.autopilot.decisions import decide_quantization
+        from ai_forge_cli.autopilot.decisions import decide_quantization
 
         assert (
             decide_quantization(
@@ -203,7 +203,7 @@ class TestDecideQuantizationPrequantized:
         )
 
     def test_prequantized_hqq(self):
-        from soup_cli.autopilot.decisions import decide_quantization
+        from ai_forge_cli.autopilot.decisions import decide_quantization
 
         assert (
             decide_quantization(
@@ -213,7 +213,7 @@ class TestDecideQuantizationPrequantized:
         )
 
     def test_no_prequantized_falls_through_to_vram_logic(self):
-        from soup_cli.autopilot.decisions import decide_quantization
+        from ai_forge_cli.autopilot.decisions import decide_quantization
 
         # Same as legacy behaviour when prequantized=None
         assert (
@@ -222,7 +222,7 @@ class TestDecideQuantizationPrequantized:
         )
 
     def test_invalid_prequantized_raises(self):
-        from soup_cli.autopilot.decisions import decide_quantization
+        from ai_forge_cli.autopilot.decisions import decide_quantization
 
         with pytest.raises(ValueError):
             decide_quantization(
@@ -230,7 +230,7 @@ class TestDecideQuantizationPrequantized:
             )
 
     def test_prequantized_bool_rejected(self):
-        from soup_cli.autopilot.decisions import decide_quantization
+        from ai_forge_cli.autopilot.decisions import decide_quantization
 
         with pytest.raises(TypeError):
             decide_quantization(
@@ -238,7 +238,7 @@ class TestDecideQuantizationPrequantized:
             )
 
     def test_prequantized_null_byte_rejected(self):
-        from soup_cli.autopilot.decisions import decide_quantization
+        from ai_forge_cli.autopilot.decisions import decide_quantization
 
         with pytest.raises(ValueError):
             decide_quantization(
@@ -246,7 +246,7 @@ class TestDecideQuantizationPrequantized:
             )
 
     def test_prequantized_none_legacy(self):
-        from soup_cli.autopilot.decisions import decide_quantization
+        from ai_forge_cli.autopilot.decisions import decide_quantization
 
         # Explicit None == no hint == legacy behaviour
         assert (
@@ -258,28 +258,28 @@ class TestDecideQuantizationPrequantized:
 
     def test_mxfp4_name_match(self):
         """L2: mxfp4 word-boundary regex coverage."""
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         assert detect_prequantized_format("some-org/model-MXFP4") == "mxfp4"
         assert detect_prequantized_format("some-org/notmxfp4good") is None
 
     def test_bnb_4bit_alias_via_config(self):
         """L5: config quant_method=bitsandbytes_4bit aliases to '4bit'."""
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         cfg = {"quantization_config": {"quant_method": "bitsandbytes_4bit"}}
         assert detect_prequantized_format("clean/name", cfg) == "4bit"
 
     def test_bnb_8bit_alias_via_config(self):
         """L5: config quant_method=bnb_8bit aliases to '8bit'."""
-        from soup_cli.autopilot.decisions import detect_prequantized_format
+        from ai_forge_cli.autopilot.decisions import detect_prequantized_format
 
         cfg = {"quantization_config": {"quant_method": "bnb_8bit"}}
         assert detect_prequantized_format("clean/name", cfg) == "8bit"
 
     def test_decide_quantization_accepts_4bit_alias(self):
         """L5: ``prequantized='4bit'`` short-circuits VRAM heuristic."""
-        from soup_cli.autopilot.decisions import decide_quantization
+        from ai_forge_cli.autopilot.decisions import decide_quantization
 
         # Even with plenty of VRAM, '4bit' wins
         assert (

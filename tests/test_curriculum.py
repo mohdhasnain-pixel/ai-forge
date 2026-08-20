@@ -1,6 +1,6 @@
 """Tests for curriculum learning — config, sorting, bucket creation."""
 
-from soup_cli.config.schema import SoupConfig, TrainingConfig
+from ai_forge_cli.config.schema import SoupConfig, TrainingConfig
 
 # ─── Config Tests ─────────────────────────────────────────────────────────
 
@@ -65,7 +65,7 @@ class TestCurriculumYamlConfig:
     """Test curriculum via YAML config loading."""
 
     def test_load_config_with_curriculum(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: test-model
@@ -82,7 +82,7 @@ training:
         assert cfg.training.curriculum_buckets == 6
 
     def test_load_config_without_curriculum(self):
-        from soup_cli.config.loader import load_config_from_string
+        from ai_forge_cli.config.loader import load_config_from_string
 
         yaml_str = """
 base: test-model
@@ -101,7 +101,7 @@ class TestCurriculumSorting:
 
     def test_sort_by_length(self):
         """Sort by length should order short → long."""
-        from soup_cli.utils.curriculum import sort_by_length
+        from ai_forge_cli.utils.curriculum import sort_by_length
 
         data = [
             {"text": "a" * 100},
@@ -114,7 +114,7 @@ class TestCurriculumSorting:
 
     def test_sort_by_length_messages_format(self):
         """Sort by length should work with messages format."""
-        from soup_cli.utils.curriculum import sort_by_length
+        from ai_forge_cli.utils.curriculum import sort_by_length
 
         data = [
             {"messages": [{"role": "user", "content": "a" * 100}]},
@@ -127,20 +127,20 @@ class TestCurriculumSorting:
 
     def test_sort_by_length_empty_list(self):
         """Sort by length should handle empty list."""
-        from soup_cli.utils.curriculum import sort_by_length
+        from ai_forge_cli.utils.curriculum import sort_by_length
 
         assert sort_by_length([]) == []
 
     def test_sort_by_length_single_item(self):
         """Sort by length should handle single item."""
-        from soup_cli.utils.curriculum import sort_by_length
+        from ai_forge_cli.utils.curriculum import sort_by_length
 
         data = [{"text": "hello"}]
         assert sort_by_length(data) == data
 
     def test_sort_by_length_fallback_json(self):
         """Sort by length should fall back to JSON stringify for unknown formats."""
-        from soup_cli.utils.curriculum import sort_by_length
+        from ai_forge_cli.utils.curriculum import sort_by_length
 
         data = [
             {"custom": "a" * 100, "extra": "b" * 50},
@@ -220,7 +220,7 @@ class TestCurriculumBuckets:
 
     def test_create_buckets(self):
         """create_buckets should split sorted data into N roughly equal parts."""
-        from soup_cli.utils.curriculum import create_buckets
+        from ai_forge_cli.utils.curriculum import create_buckets
 
         data = list(range(100))
         buckets = create_buckets(data, num_buckets=4)
@@ -231,7 +231,7 @@ class TestCurriculumBuckets:
 
     def test_create_buckets_uneven(self):
         """Buckets should handle non-evenly-divisible data."""
-        from soup_cli.utils.curriculum import create_buckets
+        from ai_forge_cli.utils.curriculum import create_buckets
 
         data = list(range(10))
         buckets = create_buckets(data, num_buckets=3)
@@ -241,7 +241,7 @@ class TestCurriculumBuckets:
 
     def test_create_buckets_single(self):
         """Single bucket should contain all data."""
-        from soup_cli.utils.curriculum import create_buckets
+        from ai_forge_cli.utils.curriculum import create_buckets
 
         data = list(range(20))
         buckets = create_buckets(data, num_buckets=1)
@@ -250,7 +250,7 @@ class TestCurriculumBuckets:
 
     def test_create_buckets_more_than_data(self):
         """More buckets than data should still work."""
-        from soup_cli.utils.curriculum import create_buckets
+        from ai_forge_cli.utils.curriculum import create_buckets
 
         data = list(range(3))
         buckets = create_buckets(data, num_buckets=5)
@@ -266,13 +266,13 @@ class TestCurriculumSweep:
     """Test curriculum in sweep configurations."""
 
     def test_curriculum_in_sweep_params(self):
-        from soup_cli.commands.sweep import _parse_sweep_params
+        from ai_forge_cli.commands.sweep import _parse_sweep_params
 
         params = _parse_sweep_params(["training.curriculum=true,false"])
         assert "training.curriculum" in params
 
     def test_curriculum_buckets_in_sweep_params(self):
-        from soup_cli.commands.sweep import _parse_sweep_params
+        from ai_forge_cli.commands.sweep import _parse_sweep_params
 
         params = _parse_sweep_params(["training.curriculum_buckets=2,4,8"])
         assert "training.curriculum_buckets" in params

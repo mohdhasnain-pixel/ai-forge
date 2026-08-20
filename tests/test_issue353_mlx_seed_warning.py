@@ -23,7 +23,7 @@ import pytest
 
 
 def _mlx_cfg(**training):
-    from soup_cli.config.loader import load_config_from_string
+    from ai_forge_cli.config.loader import load_config_from_string
 
     body = {"epochs": 1, "lr": 2e-4, "batch_size": 1}
     body.update(training)
@@ -42,7 +42,7 @@ def _warnings_for(monkeypatch, **training):
     """Run the wrapper's own unsupported-feature check and return what it printed."""
     from rich.console import Console
 
-    from soup_cli.trainer import mlx_sft
+    from ai_forge_cli.trainer import mlx_sft
 
     buffer = StringIO()
     monkeypatch.setattr(mlx_sft, "console", Console(file=buffer, width=200))
@@ -96,7 +96,7 @@ def test_the_mlx_wrappers_still_do_not_read_the_seed(monkeypatch):
     commit instead of leaving a run lying about itself."""
     import inspect
 
-    from soup_cli.trainer import mlx_dpo, mlx_grpo, mlx_sft
+    from ai_forge_cli.trainer import mlx_dpo, mlx_grpo, mlx_sft
 
     for module in (mlx_sft, mlx_dpo, mlx_grpo):
         source = inspect.getsource(module)

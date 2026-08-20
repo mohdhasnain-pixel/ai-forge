@@ -1,6 +1,6 @@
 """v0.67.0 Part E — ``soup.lock`` shared run lockfile.
 
-Tests for ``soup_cli/utils/soup_lock.py``:
+Tests for ``ai_forge_cli/utils/soup_lock.py``:
 
 - Frozen ``SoupLock`` dataclass (model SHA + dataset hash + env hash)
 - ``compute_lock_closure`` deterministic + content-sensitive
@@ -20,7 +20,7 @@ import pytest
 
 class TestPublicSurface:
     def test_module_importable(self) -> None:
-        from soup_cli.utils import soup_lock
+        from ai_forge_cli.utils import soup_lock
 
         assert hasattr(soup_lock, "SoupLock")
         assert hasattr(soup_lock, "LockDrift")
@@ -32,7 +32,7 @@ class TestPublicSurface:
 
 class TestComputeLockClosure:
     def test_deterministic(self) -> None:
-        from soup_cli.utils.soup_lock import compute_lock_closure
+        from ai_forge_cli.utils.soup_lock import compute_lock_closure
 
         a = compute_lock_closure(
             base_model_sha="a" * 64,
@@ -47,7 +47,7 @@ class TestComputeLockClosure:
         assert a == b
 
     def test_content_sensitive(self) -> None:
-        from soup_cli.utils.soup_lock import compute_lock_closure
+        from ai_forge_cli.utils.soup_lock import compute_lock_closure
 
         a = compute_lock_closure(
             base_model_sha="a" * 64,
@@ -62,7 +62,7 @@ class TestComputeLockClosure:
         assert a != b
 
     def test_invalid_sha_rejected(self) -> None:
-        from soup_cli.utils.soup_lock import compute_lock_closure
+        from ai_forge_cli.utils.soup_lock import compute_lock_closure
 
         with pytest.raises(ValueError):
             compute_lock_closure(
@@ -72,7 +72,7 @@ class TestComputeLockClosure:
             )
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.soup_lock import compute_lock_closure
+        from ai_forge_cli.utils.soup_lock import compute_lock_closure
 
         with pytest.raises(TypeError):
             compute_lock_closure(
@@ -84,7 +84,7 @@ class TestComputeLockClosure:
 
 class TestSoupLock:
     def test_construct(self) -> None:
-        from soup_cli.utils.soup_lock import SoupLock
+        from ai_forge_cli.utils.soup_lock import SoupLock
 
         lock = SoupLock(
             soup_version="0.67.0",
@@ -98,7 +98,7 @@ class TestSoupLock:
         assert lock.soup_version == "0.67.0"
 
     def test_frozen(self) -> None:
-        from soup_cli.utils.soup_lock import SoupLock
+        from ai_forge_cli.utils.soup_lock import SoupLock
 
         lock = SoupLock(
             soup_version="0.67.0",
@@ -113,7 +113,7 @@ class TestSoupLock:
             lock.soup_version = "9.99"  # type: ignore[misc]
 
     def test_sha_validation(self) -> None:
-        from soup_cli.utils.soup_lock import SoupLock
+        from ai_forge_cli.utils.soup_lock import SoupLock
 
         with pytest.raises(ValueError):
             SoupLock(
@@ -127,7 +127,7 @@ class TestSoupLock:
             )
 
     def test_empty_base_model_rejected(self) -> None:
-        from soup_cli.utils.soup_lock import SoupLock
+        from ai_forge_cli.utils.soup_lock import SoupLock
 
         with pytest.raises(ValueError):
             SoupLock(
@@ -143,7 +143,7 @@ class TestSoupLock:
 
 class TestWriteReadLock:
     def test_roundtrip(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.soup_lock import (
+        from ai_forge_cli.utils.soup_lock import (
             SoupLock,
             read_lock,
             write_lock,
@@ -165,7 +165,7 @@ class TestWriteReadLock:
         assert loaded == lock
 
     def test_outside_cwd_rejected(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.soup_lock import SoupLock, write_lock
+        from ai_forge_cli.utils.soup_lock import SoupLock, write_lock
 
         cwd = tmp_path / "work"
         cwd.mkdir()
@@ -183,7 +183,7 @@ class TestWriteReadLock:
             write_lock(lock, str(tmp_path / "outside.lock"))
 
     def test_read_missing(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.soup_lock import read_lock
+        from ai_forge_cli.utils.soup_lock import read_lock
 
         monkeypatch.chdir(tmp_path)
         with pytest.raises(FileNotFoundError):
@@ -191,7 +191,7 @@ class TestWriteReadLock:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX-only symlink test")
     def test_read_symlink_rejected(self, tmp_path, monkeypatch) -> None:
-        from soup_cli.utils.soup_lock import read_lock
+        from ai_forge_cli.utils.soup_lock import read_lock
 
         monkeypatch.chdir(tmp_path)
         real = tmp_path / "real.lock"
@@ -204,7 +204,7 @@ class TestWriteReadLock:
 
 class TestCheckLockDrift:
     def _make_lock(self, **overrides):
-        from soup_cli.utils.soup_lock import SoupLock
+        from ai_forge_cli.utils.soup_lock import SoupLock
 
         base = dict(
             soup_version="0.67.0",
@@ -219,7 +219,7 @@ class TestCheckLockDrift:
         return SoupLock(**base)
 
     def test_no_drift(self) -> None:
-        from soup_cli.utils.soup_lock import check_lock_drift
+        from ai_forge_cli.utils.soup_lock import check_lock_drift
 
         a = self._make_lock()
         b = self._make_lock()
@@ -228,7 +228,7 @@ class TestCheckLockDrift:
         assert drift.changes == ()
 
     def test_base_model_sha_drift(self) -> None:
-        from soup_cli.utils.soup_lock import check_lock_drift
+        from ai_forge_cli.utils.soup_lock import check_lock_drift
 
         a = self._make_lock()
         b = self._make_lock(base_model_sha="f" * 64)
@@ -237,7 +237,7 @@ class TestCheckLockDrift:
         assert any("base_model_sha" in c for c in drift.changes)
 
     def test_dataset_sha_drift(self) -> None:
-        from soup_cli.utils.soup_lock import check_lock_drift
+        from ai_forge_cli.utils.soup_lock import check_lock_drift
 
         a = self._make_lock()
         b = self._make_lock(dataset_sha="f" * 64)
@@ -246,7 +246,7 @@ class TestCheckLockDrift:
         assert any("dataset_sha" in c for c in drift.changes)
 
     def test_env_hash_drift(self) -> None:
-        from soup_cli.utils.soup_lock import check_lock_drift
+        from ai_forge_cli.utils.soup_lock import check_lock_drift
 
         a = self._make_lock()
         b = self._make_lock(env_hash="f" * 64)
@@ -255,7 +255,7 @@ class TestCheckLockDrift:
         assert any("env_hash" in c for c in drift.changes)
 
     def test_non_lock_rejected(self) -> None:
-        from soup_cli.utils.soup_lock import check_lock_drift
+        from ai_forge_cli.utils.soup_lock import check_lock_drift
 
         a = self._make_lock()
         with pytest.raises(TypeError):
@@ -266,7 +266,7 @@ class TestCliSmoke:
     def test_lock_help(self) -> None:
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
+        from ai_forge_cli.commands.lock import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["--help"])
@@ -275,7 +275,7 @@ class TestCliSmoke:
     def test_lock_write_command(self, tmp_path, monkeypatch) -> None:
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
+        from ai_forge_cli.commands.lock import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -299,8 +299,8 @@ class TestCliSmoke:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
-        from soup_cli.utils.env_lock import compute_env_hash, snapshot_env, write_lock
+        from ai_forge_cli.commands.lock import app
+        from ai_forge_cli.utils.env_lock import compute_env_hash, snapshot_env, write_lock
 
         monkeypatch.chdir(tmp_path)
         # Stand up a soup-env.lock the way `soup env lock` would.
@@ -327,7 +327,7 @@ class TestCliSmoke:
     def test_lock_write_missing_env_lock_errors(self, tmp_path, monkeypatch) -> None:
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
+        from ai_forge_cli.commands.lock import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -349,8 +349,8 @@ class TestCliSmoke:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
-        from soup_cli.utils.env_lock import compute_env_hash, snapshot_env, write_lock
+        from ai_forge_cli.commands.lock import app
+        from ai_forge_cli.utils.env_lock import compute_env_hash, snapshot_env, write_lock
 
         monkeypatch.chdir(tmp_path)
         env = snapshot_env()
@@ -379,8 +379,8 @@ class TestCliSmoke:
 
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
-        from soup_cli.utils.env_lock import snapshot_env, write_lock
+        from ai_forge_cli.commands.lock import app
+        from ai_forge_cli.utils.env_lock import snapshot_env, write_lock
 
         monkeypatch.chdir(tmp_path)
         write_lock(snapshot_env(), "soup-env.lock")
@@ -401,7 +401,7 @@ class TestCliSmoke:
         assert written["env_hash"] == "c" * 64
 
     def _write_lock(self, runner, tmp_path) -> None:
-        from soup_cli.commands.lock import app
+        from ai_forge_cli.commands.lock import app
 
         result = runner.invoke(
             app,
@@ -419,7 +419,7 @@ class TestCliSmoke:
     def test_lock_show_command(self, tmp_path, monkeypatch) -> None:
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
+        from ai_forge_cli.commands.lock import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -431,7 +431,7 @@ class TestCliSmoke:
     def test_lock_show_missing_file(self, tmp_path, monkeypatch) -> None:
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
+        from ai_forge_cli.commands.lock import app
 
         monkeypatch.chdir(tmp_path)
         result = CliRunner().invoke(app, ["show", "nonexistent.lock"])
@@ -440,7 +440,7 @@ class TestCliSmoke:
     def test_lock_check_no_drift(self, tmp_path, monkeypatch) -> None:
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
+        from ai_forge_cli.commands.lock import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -461,7 +461,7 @@ class TestCliSmoke:
     def test_lock_check_drift_exits_3(self, tmp_path, monkeypatch) -> None:
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
+        from ai_forge_cli.commands.lock import app
 
         monkeypatch.chdir(tmp_path)
         runner = CliRunner()
@@ -483,7 +483,7 @@ class TestCliSmoke:
     def test_lock_check_missing_file(self, tmp_path, monkeypatch) -> None:
         from typer.testing import CliRunner
 
-        from soup_cli.commands.lock import app
+        from ai_forge_cli.commands.lock import app
 
         monkeypatch.chdir(tmp_path)
         result = CliRunner().invoke(
@@ -504,7 +504,7 @@ class TestSourceWiring:
         from pathlib import Path
 
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "utils" / "soup_lock.py").read_text(
+        src = (root / "src" / "ai_forge_cli" / "utils" / "soup_lock.py").read_text(
             encoding="utf-8"
         )
         head_lines = [
@@ -520,7 +520,7 @@ class TestSourceWiring:
         from pathlib import Path
 
         root = Path(__file__).resolve().parent.parent
-        src = (root / "src" / "soup_cli" / "utils" / "soup_lock.py").read_text(
+        src = (root / "src" / "ai_forge_cli" / "utils" / "soup_lock.py").read_text(
             encoding="utf-8"
         )
         assert "atomic_write_text" in src

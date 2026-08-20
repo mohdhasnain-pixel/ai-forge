@@ -172,10 +172,10 @@ output: {output_dir}
 
 def test_sft_smoke(sft_config_yaml: Path):
     """Full SFT training pipeline smoke test with tiny-gpt2."""
-    from soup_cli.config.loader import load_config
-    from soup_cli.data.loader import load_dataset
-    from soup_cli.trainer.sft import SFTTrainerWrapper
-    from soup_cli.utils.gpu import detect_device
+    from ai_forge_cli.config.loader import load_config
+    from ai_forge_cli.data.loader import load_dataset
+    from ai_forge_cli.trainer.sft import SFTTrainerWrapper
+    from ai_forge_cli.utils.gpu import detect_device
 
     # 1. Load config
     cfg = load_config(sft_config_yaml)
@@ -215,7 +215,7 @@ def test_mlx_sft_smoke(mlx_sft_config_yaml: Path):
 
     from typer.testing import CliRunner
 
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = CliRunner().invoke(
         app,
@@ -231,10 +231,10 @@ def test_mlx_sft_smoke(mlx_sft_config_yaml: Path):
 
 def test_dpo_smoke(dpo_config_yaml: Path):
     """Full DPO training pipeline smoke test with tiny-gpt2."""
-    from soup_cli.config.loader import load_config
-    from soup_cli.data.loader import load_dataset
-    from soup_cli.trainer.dpo import DPOTrainerWrapper
-    from soup_cli.utils.gpu import detect_device
+    from ai_forge_cli.config.loader import load_config
+    from ai_forge_cli.data.loader import load_dataset
+    from ai_forge_cli.trainer.dpo import DPOTrainerWrapper
+    from ai_forge_cli.utils.gpu import detect_device
 
     # 1. Load config
     cfg = load_config(dpo_config_yaml)

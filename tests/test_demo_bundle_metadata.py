@@ -22,9 +22,9 @@ from pathlib import Path
 
 import pytest
 
-from soup_cli.config.schema import DataConfig
-from soup_cli.data.formats import detect_format
-from soup_cli.utils.demo_bundles import (
+from ai_forge_cli.config.schema import DataConfig
+from ai_forge_cli.data.formats import detect_format
+from ai_forge_cli.utils.demo_bundles import (
     DEMO_BUNDLE_NAMES,
     _bundle_source_path,
     get_bundle,

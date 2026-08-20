@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 
 def _make_model_dir(tmp_path: Path, name: str = "model") -> Path:
@@ -40,7 +40,7 @@ def _make_dataset_dir(tmp_path: Path, name: str = "dataset") -> Path:
 
 class TestPlan:
     def test_imports(self):
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             BundleManifest,
             build_airgap_bundle,
@@ -54,7 +54,7 @@ class TestPlan:
     def test_plan_frozen(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         model = _make_model_dir(tmp_path)
-        from soup_cli.utils.airgap_bundle import AirgapBundlePlan
+        from ai_forge_cli.utils.airgap_bundle import AirgapBundlePlan
 
         plan = AirgapBundlePlan(
             output=str(tmp_path / "out.tar"),
@@ -70,7 +70,7 @@ class TestPlan:
     def test_plan_bundle_cap_must_be_positive(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         model = _make_model_dir(tmp_path)
-        from soup_cli.utils.airgap_bundle import AirgapBundlePlan
+        from ai_forge_cli.utils.airgap_bundle import AirgapBundlePlan
 
         with pytest.raises(ValueError):
             AirgapBundlePlan(
@@ -85,7 +85,7 @@ class TestPlan:
     def test_plan_rejects_bool_cap(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         model = _make_model_dir(tmp_path)
-        from soup_cli.utils.airgap_bundle import AirgapBundlePlan
+        from ai_forge_cli.utils.airgap_bundle import AirgapBundlePlan
 
         with pytest.raises(ValueError):
             AirgapBundlePlan(
@@ -102,7 +102,7 @@ class TestBuild:
     def test_build_minimal_bundle(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         model = _make_model_dir(tmp_path)
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
         )
@@ -127,7 +127,7 @@ class TestBuild:
         monkeypatch.chdir(tmp_path)
         model = _make_model_dir(tmp_path)
         dataset = _make_dataset_dir(tmp_path)
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
         )
@@ -148,7 +148,7 @@ class TestBuild:
     def test_build_refuses_oversize(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         model = _make_model_dir(tmp_path)
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
         )
@@ -167,7 +167,7 @@ class TestBuild:
     def test_build_output_outside_cwd_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         model = _make_model_dir(tmp_path)
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
         )
@@ -185,7 +185,7 @@ class TestBuild:
 
     def test_build_model_outside_cwd_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
         )
@@ -205,7 +205,7 @@ class TestInspect:
     def test_inspect_round_trip(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         model = _make_model_dir(tmp_path)
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
             inspect_airgap_bundle,
@@ -227,14 +227,14 @@ class TestInspect:
 
     def test_inspect_outside_cwd_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.airgap_bundle import inspect_airgap_bundle
+        from ai_forge_cli.utils.airgap_bundle import inspect_airgap_bundle
 
         with pytest.raises(ValueError):
             inspect_airgap_bundle(str(tmp_path.parent / "outside.tar"))
 
     def test_inspect_missing_file(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        from soup_cli.utils.airgap_bundle import inspect_airgap_bundle
+        from ai_forge_cli.utils.airgap_bundle import inspect_airgap_bundle
 
         with pytest.raises(FileNotFoundError):
             inspect_airgap_bundle(str(tmp_path / "nope.tar"))
@@ -243,7 +243,7 @@ class TestInspect:
         monkeypatch.chdir(tmp_path)
         bad = tmp_path / "not-a-tar.tar"
         bad.write_text("not actually a tarball", encoding="utf-8")
-        from soup_cli.utils.airgap_bundle import inspect_airgap_bundle
+        from ai_forge_cli.utils.airgap_bundle import inspect_airgap_bundle
 
         with pytest.raises((tarfile.ReadError, ValueError)):
             inspect_airgap_bundle(str(bad))
@@ -305,7 +305,7 @@ class TestSecurityReviewFixes:
         # the regression-proof bit.
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "airgap_bundle.py"
+            / "src" / "ai_forge_cli" / "utils" / "airgap_bundle.py"
         )
         text = src.read_text(encoding="utf-8")
         assert "tarfile.data_filter" in text
@@ -319,7 +319,7 @@ class TestSecurityReviewFixes:
         target.write_bytes(b"")
         link = tmp_path / "bundle.tar"
         os.symlink(str(target), str(link))
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
         )
@@ -340,7 +340,7 @@ class TestSecurityReviewFixes:
         model = _make_model_dir(tmp_path)
         da = _make_dataset_dir(tmp_path, name="da")
         db = _make_dataset_dir(tmp_path, name="db")
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
         )
@@ -378,7 +378,7 @@ class TestSecurityReviewFixes:
             info = _tarfile.TarInfo(name="manifest.json")
             info.size = len(payload)
             tar.addfile(info, _io.BytesIO(payload))
-        from soup_cli.utils.airgap_bundle import inspect_airgap_bundle
+        from ai_forge_cli.utils.airgap_bundle import inspect_airgap_bundle
 
         with pytest.raises(ValueError, match="(?i)exceeds"):
             inspect_airgap_bundle(str(bad))
@@ -386,7 +386,7 @@ class TestSecurityReviewFixes:
 
 class TestSourceWiring:
     def test_module_imports(self):
-        from soup_cli.utils import airgap_bundle as m
+        from ai_forge_cli.utils import airgap_bundle as m
 
         assert hasattr(m, "build_airgap_bundle")
         assert hasattr(m, "inspect_airgap_bundle")
@@ -395,7 +395,7 @@ class TestSourceWiring:
     def test_manifest_has_soup_version(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         model = _make_model_dir(tmp_path)
-        from soup_cli.utils.airgap_bundle import (
+        from ai_forge_cli.utils.airgap_bundle import (
             AirgapBundlePlan,
             build_airgap_bundle,
         )

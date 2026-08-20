@@ -28,7 +28,7 @@ class TestGRPOVariantKernels:
         return logp_new, logp_old, advantages
 
     def test_standard_returns_none(self):
-        from soup_cli.utils.grpo_variants import apply_variant_loss
+        from ai_forge_cli.utils.grpo_variants import apply_variant_loss
 
         logp_new, logp_old, adv = self._toy_inputs()
         assert apply_variant_loss(
@@ -37,7 +37,7 @@ class TestGRPOVariantKernels:
 
     @pytest.mark.parametrize("variant", ["gspo", "dapo", "dr_grpo", "bnpo", "rft"])
     def test_variant_returns_finite_scalar(self, variant):
-        from soup_cli.utils.grpo_variants import apply_variant_loss
+        from ai_forge_cli.utils.grpo_variants import apply_variant_loss
 
         logp_new, logp_old, adv = self._toy_inputs()
         out = apply_variant_loss(
@@ -48,7 +48,7 @@ class TestGRPOVariantKernels:
         assert math.isfinite(float(out))
 
     def test_two_sided_requires_delta(self):
-        from soup_cli.utils.grpo_variants import apply_variant_loss
+        from ai_forge_cli.utils.grpo_variants import apply_variant_loss
 
         logp_new, logp_old, adv = self._toy_inputs()
         with pytest.raises(ValueError, match="grpo_delta"):
@@ -57,7 +57,7 @@ class TestGRPOVariantKernels:
             )
 
     def test_two_sided_with_delta(self):
-        from soup_cli.utils.grpo_variants import apply_variant_loss
+        from ai_forge_cli.utils.grpo_variants import apply_variant_loss
 
         logp_new, logp_old, adv = self._toy_inputs()
         out = apply_variant_loss(
@@ -70,7 +70,7 @@ class TestGRPOVariantKernels:
         assert math.isfinite(float(out))
 
     def test_completion_mask_zeros_padding(self):
-        from soup_cli.utils.grpo_variants import apply_variant_loss
+        from ai_forge_cli.utils.grpo_variants import apply_variant_loss
 
         logp_new, logp_old, adv = self._toy_inputs()
         mask = torch.tensor([[1.0, 1.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]])
@@ -84,7 +84,7 @@ class TestGRPOVariantKernels:
         assert math.isfinite(float(out))
 
     def test_bool_beta_rejected(self):
-        from soup_cli.utils.grpo_variants import apply_variant_loss
+        from ai_forge_cli.utils.grpo_variants import apply_variant_loss
 
         logp_new, logp_old, adv = self._toy_inputs()
         with pytest.raises(TypeError, match="bool"):
@@ -97,7 +97,7 @@ class TestGRPOVariantKernels:
             )
 
     def test_unknown_variant_rejected(self):
-        from soup_cli.utils.grpo_variants import apply_variant_loss
+        from ai_forge_cli.utils.grpo_variants import apply_variant_loss
 
         logp_new, logp_old, adv = self._toy_inputs()
         with pytest.raises(ValueError, match="grpo_variant"):
@@ -106,12 +106,12 @@ class TestGRPOVariantKernels:
             )
 
     def test_no_more_deferred_live(self):
-        from soup_cli.utils.grpo_variants import _DEFERRED_LIVE
+        from ai_forge_cli.utils.grpo_variants import _DEFERRED_LIVE
 
         assert _DEFERRED_LIVE == frozenset()
 
     def test_variant_metadata_live_wired(self):
-        from soup_cli.utils.grpo_variants import _VARIANT_METADATA
+        from ai_forge_cli.utils.grpo_variants import _VARIANT_METADATA
 
         for name, spec in _VARIANT_METADATA.items():
             assert spec.live_wired is True, f"{name} not flipped to live"
@@ -124,7 +124,7 @@ class TestGRPOVariantKernels:
 
 class TestLongLoRAShift:
     def test_shift_heads_for_s2_basic(self):
-        from soup_cli.utils.longlora import shift_heads_for_s2
+        from ai_forge_cli.utils.longlora import shift_heads_for_s2
 
         # [B=1, H=4, T=8, D=2]
         t = torch.arange(64, dtype=torch.float32).reshape(1, 4, 8, 2)
@@ -136,35 +136,35 @@ class TestLongLoRAShift:
         assert not torch.equal(shifted[:, 2:, :, :], t[:, 2:, :, :])
 
     def test_shift_rejects_bool_group_size(self):
-        from soup_cli.utils.longlora import shift_heads_for_s2
+        from ai_forge_cli.utils.longlora import shift_heads_for_s2
 
         t = torch.zeros(1, 4, 8, 2)
         with pytest.raises(TypeError, match="bool"):
             shift_heads_for_s2(t, group_size=True)
 
     def test_shift_rejects_small_group_size(self):
-        from soup_cli.utils.longlora import shift_heads_for_s2
+        from ai_forge_cli.utils.longlora import shift_heads_for_s2
 
         t = torch.zeros(1, 4, 8, 2)
         with pytest.raises(ValueError, match=">= 2"):
             shift_heads_for_s2(t, group_size=1)
 
     def test_shift_rejects_non_4d(self):
-        from soup_cli.utils.longlora import shift_heads_for_s2
+        from ai_forge_cli.utils.longlora import shift_heads_for_s2
 
         t = torch.zeros(1, 4, 8)
         with pytest.raises(ValueError, match="4-D"):
             shift_heads_for_s2(t, group_size=4)
 
     def test_shift_single_head_no_change(self):
-        from soup_cli.utils.longlora import shift_heads_for_s2
+        from ai_forge_cli.utils.longlora import shift_heads_for_s2
 
         t = torch.arange(16, dtype=torch.float32).reshape(1, 1, 8, 2)
         out = shift_heads_for_s2(t, group_size=4)
         assert torch.equal(out, t)
 
     def test_apply_longlora_forward_override_returns_context(self):
-        from soup_cli.utils.longlora import (
+        from ai_forge_cli.utils.longlora import (
             LongLoRAForwardOverride,
             apply_longlora_forward_override,
         )
@@ -183,7 +183,7 @@ class TestLongLoRAShift:
     def test_override_restore_on_exit(self):
         # v0.71.12 #158 — the shift now patches q_proj / k_proj (NOT the
         # attention output). The attention forward itself is untouched.
-        from soup_cli.utils.longlora import apply_longlora_forward_override
+        from ai_forge_cli.utils.longlora import apply_longlora_forward_override
 
         class _Proj:
             def forward(self, x):
@@ -226,7 +226,7 @@ class TestLongLoRAShift:
 
 class TestPRMKernel:
     def test_compute_prm_loss_perfect_match(self):
-        from soup_cli.utils.prm import compute_prm_loss
+        from ai_forge_cli.utils.prm import compute_prm_loss
 
         preds = torch.tensor([1.0, 2.0, 3.0])
         labels = torch.tensor([1.0, 2.0, 3.0])
@@ -234,7 +234,7 @@ class TestPRMKernel:
         assert float(out) == pytest.approx(0.0)
 
     def test_compute_prm_loss_mse(self):
-        from soup_cli.utils.prm import compute_prm_loss
+        from ai_forge_cli.utils.prm import compute_prm_loss
 
         preds = torch.tensor([1.0, 2.0])
         labels = torch.tensor([0.0, 0.0])
@@ -242,7 +242,7 @@ class TestPRMKernel:
         assert float(out) == pytest.approx((1.0 + 4.0) / 2)
 
     def test_compute_prm_loss_mask(self):
-        from soup_cli.utils.prm import compute_prm_loss
+        from ai_forge_cli.utils.prm import compute_prm_loss
 
         preds = torch.tensor([1.0, 2.0, 100.0])
         labels = torch.tensor([0.0, 0.0, 0.0])
@@ -252,7 +252,7 @@ class TestPRMKernel:
         assert float(out) == pytest.approx((1.0 + 4.0) / 2)
 
     def test_compute_prm_loss_shape_mismatch(self):
-        from soup_cli.utils.prm import compute_prm_loss
+        from ai_forge_cli.utils.prm import compute_prm_loss
 
         preds = torch.tensor([1.0, 2.0])
         labels = torch.tensor([1.0, 2.0, 3.0])
@@ -263,8 +263,8 @@ class TestPRMKernel:
         # The factory no longer raises NotImplementedError — it returns a
         # configured wrapper. The actual trust_remote_code probe inside
         # the wrapper will read None for a stub base, so we use a string.
-        from soup_cli.trainer.prm import PRMTrainerWrapper
-        from soup_cli.utils.prm import build_prm_trainer
+        from ai_forge_cli.trainer.prm import PRMTrainerWrapper
+        from ai_forge_cli.utils.prm import build_prm_trainer
 
         class _Cfg:
             base = "hf-internal-testing/tiny-random-gpt2"
@@ -274,7 +274,7 @@ class TestPRMKernel:
         assert isinstance(wrapper, PRMTrainerWrapper)
 
     def test_build_prm_trainer_rejects_unknown_kwarg(self):
-        from soup_cli.utils.prm import build_prm_trainer
+        from ai_forge_cli.utils.prm import build_prm_trainer
 
         class _Cfg:
             base = "test"
@@ -290,7 +290,7 @@ class TestPRMKernel:
 
 class TestGRPOStabilityCallback:
     def test_update_ema(self):
-        from soup_cli.monitoring.grpo_stability_callback import update_ema
+        from ai_forge_cli.monitoring.grpo_stability_callback import update_ema
 
         ref = {"w": torch.zeros(2)}
         pol = {"w": torch.ones(2)}
@@ -298,13 +298,13 @@ class TestGRPOStabilityCallback:
         assert torch.equal(out["w"], torch.full((2,), 0.5))
 
     def test_update_ema_bool_rejected(self):
-        from soup_cli.monitoring.grpo_stability_callback import update_ema
+        from ai_forge_cli.monitoring.grpo_stability_callback import update_ema
 
         with pytest.raises(TypeError, match="bool"):
             update_ema({}, {}, alpha=True)
 
     def test_update_ema_alpha_bounds(self):
-        from soup_cli.monitoring.grpo_stability_callback import update_ema
+        from ai_forge_cli.monitoring.grpo_stability_callback import update_ema
 
         with pytest.raises(ValueError, match="\\(0, 1\\]"):
             update_ema({}, {}, alpha=0.0)
@@ -312,14 +312,14 @@ class TestGRPOStabilityCallback:
             update_ema({}, {}, alpha=1.5)
 
     def test_check_tis_threshold(self):
-        from soup_cli.monitoring.grpo_stability_callback import check_tis_threshold
+        from ai_forge_cli.monitoring.grpo_stability_callback import check_tis_threshold
 
         log_ratio = torch.tensor([0.1, 0.2, 0.5])
         assert check_tis_threshold(log_ratio, 0.3) is True
         assert check_tis_threshold(log_ratio, 1.0) is False
 
     def test_filter_zero_advantage(self):
-        from soup_cli.monitoring.grpo_stability_callback import filter_zero_advantage
+        from ai_forge_cli.monitoring.grpo_stability_callback import filter_zero_advantage
 
         adv = torch.tensor([0.0, 1.0, -1.0, 1e-10])
         mask = filter_zero_advantage(adv)
@@ -329,7 +329,7 @@ class TestGRPOStabilityCallback:
         assert bool(mask[3]) is False
 
     def test_callback_construct_with_all_fields(self):
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         cb = GRPOStabilityCallback(
             ref_model_ema_alpha=0.99,
@@ -346,7 +346,7 @@ class TestGRPOStabilityCallback:
         assert cb.tis_alerts() == 0
 
     def test_callback_replay_buffer(self):
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         cb = GRPOStabilityCallback(replay_buffer_size=2)
         cb.push_rollout("a")
@@ -355,7 +355,7 @@ class TestGRPOStabilityCallback:
         assert cb.replay_size() == 2  # bounded
 
     def test_callback_tis_alert(self):
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         cb = GRPOStabilityCallback(tis_threshold=0.3)
         cb.record_tis_alert(torch.tensor([0.1, 0.2]))  # below threshold
@@ -364,7 +364,7 @@ class TestGRPOStabilityCallback:
         assert cb.tis_alerts() == 1
 
     def test_callback_bool_rejected_on_numeric_fields(self):
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         with pytest.raises(TypeError, match="bool"):
             GRPOStabilityCallback(ref_model_ema_alpha=True)
@@ -374,7 +374,7 @@ class TestGRPOStabilityCallback:
 
 class TestAttachGRPOStabilityCallback:
     def test_no_field_set_returns_false(self):
-        from soup_cli.utils.peft_wiring import attach_grpo_stability_callback
+        from ai_forge_cli.utils.peft_wiring import attach_grpo_stability_callback
 
         class _TCfg:
             ref_model_ema_alpha = None
@@ -393,7 +393,7 @@ class TestAttachGRPOStabilityCallback:
         assert attach_grpo_stability_callback(_Trainer(), _TCfg()) is False
 
     def test_attaches_when_set(self):
-        from soup_cli.utils.peft_wiring import attach_grpo_stability_callback
+        from ai_forge_cli.utils.peft_wiring import attach_grpo_stability_callback
 
         class _TCfg:
             ref_model_ema_alpha = 0.99
@@ -422,7 +422,7 @@ class TestAttachGRPOStabilityCallback:
 
 class TestWeightedCombineHook:
     def test_attaches_to_trainer_with_compute_loss(self):
-        from soup_cli.utils.preference_combine import (
+        from ai_forge_cli.utils.preference_combine import (
             attach_weighted_preference_combine,
         )
 
@@ -441,7 +441,7 @@ class TestWeightedCombineHook:
         ) is True
 
     def test_returns_false_without_compute_loss(self):
-        from soup_cli.utils.preference_combine import (
+        from ai_forge_cli.utils.preference_combine import (
             attach_weighted_preference_combine,
         )
 
@@ -453,7 +453,7 @@ class TestWeightedCombineHook:
         ) is False
 
     def test_rejects_bco_mixed_with_paired(self):
-        from soup_cli.utils.preference_combine import (
+        from ai_forge_cli.utils.preference_combine import (
             attach_weighted_preference_combine,
         )
 
@@ -467,7 +467,7 @@ class TestWeightedCombineHook:
             )
 
     def test_blended_loss_scales_with_weight(self):
-        from soup_cli.utils.preference_combine import (
+        from ai_forge_cli.utils.preference_combine import (
             attach_weighted_preference_combine,
         )
 
@@ -490,9 +490,9 @@ class TestWeightedCombineHook:
 
 
 def test_version_bump():
-    import soup_cli
+    import ai_forge_cli
 
-    major, minor, patch = (int(x) for x in soup_cli.__version__.split("."))
+    major, minor, patch = (int(x) for x in ai_forge_cli.__version__.split("."))
     assert (major, minor, patch) >= (0, 53, 11)
 
 
@@ -503,7 +503,7 @@ def test_version_bump():
 
 class TestGRPOTrainerVariantFactory:
     def test_factory_returns_subclass(self):
-        from soup_cli.trainer.grpo import make_grpo_trainer_variant
+        from ai_forge_cli.trainer.grpo import make_grpo_trainer_variant
 
         class _FakeGRPOTrainer:
             def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
@@ -514,7 +514,7 @@ class TestGRPOTrainerVariantFactory:
         assert variant_cls._soup_grpo_variant == "gspo"
 
     def test_factory_cached_by_variant(self):
-        from soup_cli.trainer.grpo import make_grpo_trainer_variant
+        from ai_forge_cli.trainer.grpo import make_grpo_trainer_variant
 
         class _FakeGRPOTrainer:
             def compute_loss(self, *a, **k):
@@ -525,7 +525,7 @@ class TestGRPOTrainerVariantFactory:
         assert a is b
 
     def test_variant_compute_loss_routes_through_kernel(self):
-        from soup_cli.trainer.grpo import make_grpo_trainer_variant
+        from ai_forge_cli.trainer.grpo import make_grpo_trainer_variant
 
         class _FakeGRPOTrainer:
             def __init__(self):
@@ -547,7 +547,7 @@ class TestGRPOTrainerVariantFactory:
 
     def test_variant_falls_back_on_missing_inputs(self):
         """When TRL renames inputs, fall back to original loss (defence-in-depth)."""
-        from soup_cli.trainer.grpo import make_grpo_trainer_variant
+        from ai_forge_cli.trainer.grpo import make_grpo_trainer_variant
 
         class _FakeGRPOTrainer:
             def __init__(self):
@@ -570,7 +570,7 @@ class TestGRPOTrainerVariantFactory:
 
 class TestPRMTrainerSubclass:
     def test_factory_returns_subclass(self):
-        from soup_cli.trainer.prm import make_prm_trainer_class
+        from ai_forge_cli.trainer.prm import make_prm_trainer_class
 
         class _FakeTrainer:
             pass
@@ -580,7 +580,7 @@ class TestPRMTrainerSubclass:
         assert hasattr(prm_cls, "compute_loss")
 
     def test_prepare_dataset_skips_mismatched(self):
-        from soup_cli.trainer.prm import _prepare_prm_dataset
+        from ai_forge_cli.trainer.prm import _prepare_prm_dataset
 
         class _Tok:
             def __call__(self, text, add_special_tokens=False):
@@ -597,7 +597,7 @@ class TestPRMTrainerSubclass:
         assert prepared[0]["labels"] == [0.5]
 
     def test_prepare_dataset_truncates_long(self):
-        from soup_cli.trainer.prm import _prepare_prm_dataset
+        from ai_forge_cli.trainer.prm import _prepare_prm_dataset
 
         class _Tok:
             def __call__(self, text, add_special_tokens=False):
@@ -617,7 +617,7 @@ class TestPRMTrainerSubclass:
 
 class TestTrueWeightedCombine:
     def test_uses_combine_when_logps_available(self):
-        from soup_cli.utils.preference_combine import (
+        from ai_forge_cli.utils.preference_combine import (
             attach_weighted_preference_combine,
         )
 
@@ -646,7 +646,7 @@ class TestTrueWeightedCombine:
         assert math.isfinite(float(out))
 
     def test_falls_back_when_logps_missing(self):
-        from soup_cli.utils.preference_combine import (
+        from ai_forge_cli.utils.preference_combine import (
             attach_weighted_preference_combine,
         )
 
@@ -674,7 +674,7 @@ class TestStabilityCallbackEMA:
         # place (no full state_dict / load_state_dict round-trip).
         import torch.nn as nn
 
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         cb = GRPOStabilityCallback(ref_model_ema_alpha=0.5)
         ref = nn.Linear(2, 2)
@@ -694,7 +694,7 @@ class TestStabilityCallbackEMA:
         assert torch.allclose(ref.weight, torch.full_like(ref.weight, 0.5))
 
     def test_on_step_end_logs_counters(self):
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         cb = GRPOStabilityCallback(replay_buffer_size=4, tis_threshold=1.0)
         cb.push_rollout("a")
@@ -711,7 +711,7 @@ class TestStabilityCallbackEMA:
         assert last["replay_size"] == 1
 
     def test_on_train_begin_captures_models(self):
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         cb = GRPOStabilityCallback(ref_model_ema_alpha=0.99)
         policy = object()
@@ -744,40 +744,40 @@ class TestReviewFixCoverage:
         "off_policy_mask_threshold",
     ])
     def test_callback_bool_rejected_all_numeric_fields(self, field):
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         with pytest.raises(TypeError, match="bool"):
             GRPOStabilityCallback(**{field: True})
 
     @pytest.mark.parametrize("value", [0.0, 100.5])
     def test_callback_tis_threshold_bounds(self, value):
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         with pytest.raises(ValueError, match="tis_threshold"):
             GRPOStabilityCallback(tis_threshold=value)
 
     @pytest.mark.parametrize("value", [-0.1, 1.1])
     def test_callback_off_policy_bounds(self, value):
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         with pytest.raises(ValueError, match="off_policy_mask_threshold"):
             GRPOStabilityCallback(off_policy_mask_threshold=value)
 
     @pytest.mark.parametrize("value", [0, 1_000_001])
     def test_callback_replay_buffer_size_bounds(self, value):
-        from soup_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
+        from ai_forge_cli.monitoring.grpo_stability_callback import GRPOStabilityCallback
 
         with pytest.raises(ValueError, match="replay_buffer_size"):
             GRPOStabilityCallback(replay_buffer_size=value)
 
     def test_check_tis_threshold_bool_rejected(self):
-        from soup_cli.monitoring.grpo_stability_callback import check_tis_threshold
+        from ai_forge_cli.monitoring.grpo_stability_callback import check_tis_threshold
 
         with pytest.raises(TypeError, match="bool"):
             check_tis_threshold(torch.tensor([1.0]), True)
 
     def test_update_ema_nan_rejected(self):
-        from soup_cli.monitoring.grpo_stability_callback import update_ema
+        from ai_forge_cli.monitoring.grpo_stability_callback import update_ema
 
         with pytest.raises(ValueError, match="finite"):
             update_ema({}, {}, alpha=float("nan"))
@@ -785,7 +785,7 @@ class TestReviewFixCoverage:
     # --- HIGH: variant compute_loss return_outputs=True path ---
 
     def test_variant_compute_loss_return_outputs_true(self):
-        from soup_cli.trainer.grpo import make_grpo_trainer_variant
+        from ai_forge_cli.trainer.grpo import make_grpo_trainer_variant
 
         class _FakeGRPOTrainer:
             def __init__(self):
@@ -817,7 +817,7 @@ class TestReviewFixCoverage:
     def test_grpo_trainer_wires_stability_callback_source_grep(self):
         import inspect
 
-        import soup_cli.trainer.grpo as grpo_mod
+        import ai_forge_cli.trainer.grpo as grpo_mod
 
         body = inspect.getsource(grpo_mod)
         assert "attach_grpo_stability_callback" in body, (
@@ -827,7 +827,7 @@ class TestReviewFixCoverage:
     def test_preference_wires_weighted_combine_source_grep(self):
         import inspect
 
-        import soup_cli.trainer.preference as pref_mod
+        import ai_forge_cli.trainer.preference as pref_mod
 
         body = inspect.getsource(pref_mod)
         assert "attach_weighted_preference_combine" in body, (
@@ -837,7 +837,7 @@ class TestReviewFixCoverage:
     # --- MEDIUM: idempotent attach + restore-on-exception ---
 
     def test_attach_weighted_preference_not_double_wrapped(self):
-        from soup_cli.utils.preference_combine import (
+        from ai_forge_cli.utils.preference_combine import (
             attach_weighted_preference_combine,
         )
 
@@ -853,7 +853,7 @@ class TestReviewFixCoverage:
         assert trainer.compute_loss is first_wrapper
 
     def test_longlora_idempotent_install(self):
-        from soup_cli.utils.longlora import apply_longlora_forward_override
+        from ai_forge_cli.utils.longlora import apply_longlora_forward_override
 
         class _Proj:
             def forward(self, x):
@@ -887,7 +887,7 @@ class TestReviewFixCoverage:
         assert not getattr(model.attn.q_proj.forward, "_soup_longlora_patched", False)
 
     def test_longlora_restores_on_exception(self):
-        from soup_cli.utils.longlora import apply_longlora_forward_override
+        from ai_forge_cli.utils.longlora import apply_longlora_forward_override
 
         class _Proj:
             def forward(self, x):
@@ -922,7 +922,7 @@ class TestReviewFixCoverage:
     # --- MEDIUM: factory cache isolation between base classes ---
 
     def test_variant_factory_isolates_by_base_class(self):
-        from soup_cli.trainer.grpo import make_grpo_trainer_variant
+        from ai_forge_cli.trainer.grpo import make_grpo_trainer_variant
 
         class _BaseA:
             def compute_loss(self, *a, **k):
@@ -938,7 +938,7 @@ class TestReviewFixCoverage:
 
     def test_variant_factory_normalises_case(self):
         """v0.53.11 review fix (security MEDIUM) — case-insensitive cache."""
-        from soup_cli.trainer.grpo import make_grpo_trainer_variant
+        from ai_forge_cli.trainer.grpo import make_grpo_trainer_variant
 
         class _Base:
             def compute_loss(self, *a, **k):
@@ -951,7 +951,7 @@ class TestReviewFixCoverage:
     # --- LOW: empty completions in PRM dataset prep ---
 
     def test_prepare_prm_empty_completions(self):
-        from soup_cli.trainer.prm import _prepare_prm_dataset
+        from ai_forge_cli.trainer.prm import _prepare_prm_dataset
 
         class _Tok:
             def __call__(self, text, add_special_tokens=False):

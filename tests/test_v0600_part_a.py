@@ -19,14 +19,14 @@ import numpy as np
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 # ---------- Spectral kernels ----------
 
 
 class TestSpectralKernels:
     def test_imports(self):
-        from soup_cli.utils.adapter_scan import (
+        from ai_forge_cli.utils.adapter_scan import (
             ScanFinding,
             ScanReport,
             compute_spectral_features,
@@ -38,7 +38,7 @@ class TestSpectralKernels:
         assert dataclasses.is_dataclass(ScanReport)
 
     def test_compute_spectral_features_uniform_matrix_no_dominance(self):
-        from soup_cli.utils.adapter_scan import compute_spectral_features
+        from ai_forge_cli.utils.adapter_scan import compute_spectral_features
 
         rng = np.random.default_rng(seed=0)
         # Roughly isotropic matrix — top SV ratio should be small.
@@ -49,7 +49,7 @@ class TestSpectralKernels:
         assert 0.0 <= feats["effective_rank"] <= 32.0
 
     def test_compute_spectral_features_rank1_dominance(self):
-        from soup_cli.utils.adapter_scan import compute_spectral_features
+        from ai_forge_cli.utils.adapter_scan import compute_spectral_features
 
         # Pure rank-1 matrix — top SV captures all energy.
         u = np.ones((32, 1))
@@ -61,13 +61,13 @@ class TestSpectralKernels:
         assert feats["effective_rank"] < 1.5
 
     def test_compute_spectral_features_rejects_non_2d(self):
-        from soup_cli.utils.adapter_scan import compute_spectral_features
+        from ai_forge_cli.utils.adapter_scan import compute_spectral_features
 
         with pytest.raises(TypeError):
             compute_spectral_features("not-a-matrix")
 
     def test_compute_spectral_features_empty_returns_zeros(self):
-        from soup_cli.utils.adapter_scan import compute_spectral_features
+        from ai_forge_cli.utils.adapter_scan import compute_spectral_features
 
         m = np.zeros((4, 4))
         feats = compute_spectral_features(m)
@@ -80,7 +80,7 @@ class TestSpectralKernels:
 
 class TestScanAdapterWeights:
     def test_clean_weights_pass(self):
-        from soup_cli.utils.adapter_scan import scan_adapter_weights
+        from ai_forge_cli.utils.adapter_scan import scan_adapter_weights
 
         rng = np.random.default_rng(seed=42)
         weights = {
@@ -97,7 +97,7 @@ class TestScanAdapterWeights:
         assert all(f.severity != "FAIL" for f in report.findings)
 
     def test_rank1_perturbation_flagged(self):
-        from soup_cli.utils.adapter_scan import scan_adapter_weights
+        from ai_forge_cli.utils.adapter_scan import scan_adapter_weights
 
         rng = np.random.default_rng(seed=0)
         # Start clean, then inject a high-magnitude rank-1 outer product on one layer.
@@ -115,7 +115,7 @@ class TestScanAdapterWeights:
         assert report.overall in ("WARN", "FAIL")
 
     def test_nan_in_weights_flagged_as_fail(self):
-        from soup_cli.utils.adapter_scan import scan_adapter_weights
+        from ai_forge_cli.utils.adapter_scan import scan_adapter_weights
 
         m = np.zeros((4, 4))
         m[0, 0] = float("nan")
@@ -125,7 +125,7 @@ class TestScanAdapterWeights:
         assert any(f.kind == "nan_inf" for f in report.findings)
 
     def test_inf_in_weights_flagged_as_fail(self):
-        from soup_cli.utils.adapter_scan import scan_adapter_weights
+        from ai_forge_cli.utils.adapter_scan import scan_adapter_weights
 
         m = np.zeros((4, 4))
         m[0, 0] = float("inf")
@@ -134,7 +134,7 @@ class TestScanAdapterWeights:
         assert report.overall == "FAIL"
 
     def test_scan_report_frozen(self):
-        from soup_cli.utils.adapter_scan import scan_adapter_weights
+        from ai_forge_cli.utils.adapter_scan import scan_adapter_weights
 
         weights = {"a.weight": np.zeros((2, 2))}
         report = scan_adapter_weights(weights, adapter_name="x")
@@ -142,7 +142,7 @@ class TestScanAdapterWeights:
             report.overall = "evil"  # type: ignore[misc]
 
     def test_scan_finding_frozen(self):
-        from soup_cli.utils.adapter_scan import ScanFinding
+        from ai_forge_cli.utils.adapter_scan import ScanFinding
 
         finding = ScanFinding(
             layer="L", kind="rank1_dominance", severity="WARN",
@@ -152,25 +152,25 @@ class TestScanAdapterWeights:
             finding.severity = "FAIL"  # type: ignore[misc]
 
     def test_rejects_non_mapping(self):
-        from soup_cli.utils.adapter_scan import scan_adapter_weights
+        from ai_forge_cli.utils.adapter_scan import scan_adapter_weights
 
         with pytest.raises(TypeError):
             scan_adapter_weights("not-a-dict", adapter_name="x")
 
     def test_rejects_null_byte_name(self):
-        from soup_cli.utils.adapter_scan import scan_adapter_weights
+        from ai_forge_cli.utils.adapter_scan import scan_adapter_weights
 
         with pytest.raises(ValueError):
             scan_adapter_weights({}, adapter_name="bad\x00name")
 
     def test_empty_weights_returns_ok(self):
-        from soup_cli.utils.adapter_scan import scan_adapter_weights
+        from ai_forge_cli.utils.adapter_scan import scan_adapter_weights
 
         report = scan_adapter_weights({}, adapter_name="empty")
         assert report.overall == "OK"
 
     def test_kind_in_allowlist(self):
-        from soup_cli.utils.adapter_scan import _VALID_KINDS
+        from ai_forge_cli.utils.adapter_scan import _VALID_KINDS
 
         assert "rank1_dominance" in _VALID_KINDS
         assert "frobenius_outlier" in _VALID_KINDS
@@ -178,7 +178,7 @@ class TestScanAdapterWeights:
         assert "energy_concentration" in _VALID_KINDS
 
     def test_severity_in_allowlist(self):
-        from soup_cli.utils.adapter_scan import ScanFinding
+        from ai_forge_cli.utils.adapter_scan import ScanFinding
 
         with pytest.raises(ValueError):
             ScanFinding(
@@ -187,7 +187,7 @@ class TestScanAdapterWeights:
             )
 
     def test_unknown_kind_rejected(self):
-        from soup_cli.utils.adapter_scan import ScanFinding
+        from ai_forge_cli.utils.adapter_scan import ScanFinding
 
         with pytest.raises(ValueError):
             ScanFinding(
@@ -197,7 +197,7 @@ class TestScanAdapterWeights:
 
     def test_scan_finding_rejects_bool_value(self):
         """bool-as-int rejection on numeric fields (project policy)."""
-        from soup_cli.utils.adapter_scan import ScanFinding
+        from ai_forge_cli.utils.adapter_scan import ScanFinding
 
         with pytest.raises(ValueError):
             ScanFinding(
@@ -211,7 +211,7 @@ class TestScanAdapterWeights:
             )
 
     def test_scan_finding_rejects_non_finite_value(self):
-        from soup_cli.utils.adapter_scan import ScanFinding
+        from ai_forge_cli.utils.adapter_scan import ScanFinding
 
         with pytest.raises(ValueError):
             ScanFinding(
@@ -251,7 +251,7 @@ class TestScanAdapterFromDisk:
             "lora_A.weight": rng.standard_normal((16, 64)).astype("float32") * 0.01,
         }
         adapter = _make_safetensors_adapter(tmp_path, weights)
-        from soup_cli.utils.adapter_scan import scan_adapter
+        from ai_forge_cli.utils.adapter_scan import scan_adapter
 
         report = scan_adapter(str(adapter))
         assert report.overall in ("OK", "WARN")
@@ -259,7 +259,7 @@ class TestScanAdapterFromDisk:
     def test_scan_adapter_outside_cwd_rejected(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         outside = tmp_path.parent / "elsewhere_adapter"
-        from soup_cli.utils.adapter_scan import scan_adapter
+        from ai_forge_cli.utils.adapter_scan import scan_adapter
 
         with pytest.raises(ValueError):
             scan_adapter(str(outside))
@@ -268,7 +268,7 @@ class TestScanAdapterFromDisk:
         monkeypatch.chdir(tmp_path)
         empty = tmp_path / "empty_adapter"
         empty.mkdir()
-        from soup_cli.utils.adapter_scan import scan_adapter
+        from ai_forge_cli.utils.adapter_scan import scan_adapter
 
         with pytest.raises((FileNotFoundError, RuntimeError)):
             scan_adapter(str(empty))
@@ -281,7 +281,7 @@ class TestScanAdapterFromDisk:
         (real / "adapter_model.safetensors").write_bytes(b"x")
         link = tmp_path / "linked"
         os.symlink(str(real), str(link))
-        from soup_cli.utils.adapter_scan import scan_adapter
+        from ai_forge_cli.utils.adapter_scan import scan_adapter
 
         with pytest.raises(ValueError):
             scan_adapter(str(link))
@@ -322,7 +322,7 @@ class TestScanCli:
 
 class TestSourceWiring:
     def test_module_imports_clean(self):
-        import soup_cli.utils.adapter_scan as m
+        import ai_forge_cli.utils.adapter_scan as m
 
         assert hasattr(m, "scan_adapter")
         assert hasattr(m, "scan_adapter_weights")
@@ -332,7 +332,7 @@ class TestSourceWiring:
     def test_no_top_level_torch(self):
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "adapter_scan.py"
+            / "src" / "ai_forge_cli" / "utils" / "adapter_scan.py"
         )
         text = src.read_text(encoding="utf-8")
         # numpy is fine; torch must be lazy

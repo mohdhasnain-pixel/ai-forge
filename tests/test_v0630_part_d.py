@@ -12,7 +12,7 @@ runner = CliRunner()
 
 
 def test_module_imports():
-    from soup_cli.utils import ab_test
+    from ai_forge_cli.utils import ab_test
 
     assert hasattr(ab_test, "MsprtConfig")
     assert hasattr(ab_test, "MsprtVerdict")
@@ -28,20 +28,20 @@ def test_module_imports():
 
 @pytest.mark.parametrize("m", ["latency", "judge_score", "retry_rate"])
 def test_validate_metric_name_happy(m):
-    from soup_cli.utils.ab_test import validate_metric_name
+    from ai_forge_cli.utils.ab_test import validate_metric_name
 
     assert validate_metric_name(m) == m
 
 
 def test_validate_metric_name_case_insensitive():
-    from soup_cli.utils.ab_test import validate_metric_name
+    from ai_forge_cli.utils.ab_test import validate_metric_name
 
     assert validate_metric_name("LATENCY") == "latency"
 
 
 @pytest.mark.parametrize("bad", [None, 1, True, "", "x" * 33, "ban\x00ana", "unknown"])
 def test_validate_metric_name_rejects(bad):
-    from soup_cli.utils.ab_test import validate_metric_name
+    from ai_forge_cli.utils.ab_test import validate_metric_name
 
     with pytest.raises((TypeError, ValueError)):
         validate_metric_name(bad)
@@ -53,7 +53,7 @@ def test_validate_metric_name_rejects(bad):
 
 
 def test_msprt_config_defaults():
-    from soup_cli.utils.ab_test import MsprtConfig
+    from ai_forge_cli.utils.ab_test import MsprtConfig
 
     cfg = MsprtConfig(metric="latency")
     assert cfg.alpha == 0.05
@@ -62,7 +62,7 @@ def test_msprt_config_defaults():
 
 
 def test_msprt_config_frozen():
-    from soup_cli.utils.ab_test import MsprtConfig
+    from ai_forge_cli.utils.ab_test import MsprtConfig
 
     cfg = MsprtConfig(metric="judge_score")
     with pytest.raises(dataclasses.FrozenInstanceError):
@@ -83,7 +83,7 @@ def test_msprt_config_frozen():
     ("effect_size", float("nan")),
 ])
 def test_msprt_config_rejects(field, bad):
-    from soup_cli.utils.ab_test import MsprtConfig
+    from ai_forge_cli.utils.ab_test import MsprtConfig
 
     kwargs = {"metric": "latency", field: bad}
     with pytest.raises((TypeError, ValueError)):
@@ -96,7 +96,7 @@ def test_msprt_config_rejects(field, bad):
 
 
 def test_msprt_step_returns_verdict():
-    from soup_cli.utils.ab_test import MsprtConfig, msprt_step
+    from ai_forge_cli.utils.ab_test import MsprtConfig, msprt_step
 
     cfg = MsprtConfig(metric="latency")
     verdict = msprt_step(cfg, control=[1.0, 1.1, 0.9], treatment=[2.0, 2.1, 1.9])
@@ -113,7 +113,7 @@ def test_msprt_step_rejects_h0_on_huge_effect():
     (proper SPRT behaviour: with no observed noise the test cannot bound
     Type-I error honestly).
     """
-    from soup_cli.utils.ab_test import MsprtConfig, msprt_step
+    from ai_forge_cli.utils.ab_test import MsprtConfig, msprt_step
 
     cfg = MsprtConfig(metric="latency", effect_size=0.1)
     control = [1.0 + 0.01 * (i % 5) for i in range(50)]  # ~uniform spread
@@ -123,7 +123,7 @@ def test_msprt_step_rejects_h0_on_huge_effect():
 
 
 def test_msprt_step_continues_with_tiny_samples():
-    from soup_cli.utils.ab_test import MsprtConfig, msprt_step
+    from ai_forge_cli.utils.ab_test import MsprtConfig, msprt_step
 
     cfg = MsprtConfig(metric="latency")
     verdict = msprt_step(cfg, control=[1.0], treatment=[1.01])
@@ -131,7 +131,7 @@ def test_msprt_step_continues_with_tiny_samples():
 
 
 def test_msprt_step_empty_continues():
-    from soup_cli.utils.ab_test import MsprtConfig, msprt_step
+    from ai_forge_cli.utils.ab_test import MsprtConfig, msprt_step
 
     cfg = MsprtConfig(metric="latency")
     verdict = msprt_step(cfg, control=[], treatment=[])
@@ -139,7 +139,7 @@ def test_msprt_step_empty_continues():
 
 
 def test_msprt_step_rejects_non_list():
-    from soup_cli.utils.ab_test import MsprtConfig, msprt_step
+    from ai_forge_cli.utils.ab_test import MsprtConfig, msprt_step
 
     cfg = MsprtConfig(metric="latency")
     with pytest.raises(TypeError):
@@ -147,7 +147,7 @@ def test_msprt_step_rejects_non_list():
 
 
 def test_msprt_step_rejects_non_finite_value():
-    from soup_cli.utils.ab_test import MsprtConfig, msprt_step
+    from ai_forge_cli.utils.ab_test import MsprtConfig, msprt_step
 
     cfg = MsprtConfig(metric="latency")
     with pytest.raises(ValueError):
@@ -157,7 +157,7 @@ def test_msprt_step_rejects_non_finite_value():
 
 
 def test_msprt_step_rejects_bool_value():
-    from soup_cli.utils.ab_test import MsprtConfig, msprt_step
+    from ai_forge_cli.utils.ab_test import MsprtConfig, msprt_step
 
     cfg = MsprtConfig(metric="latency")
     with pytest.raises(TypeError):
@@ -166,7 +166,7 @@ def test_msprt_step_rejects_bool_value():
 
 def test_msprt_step_caps_samples():
     """Internal cap prevents OOM on tampered data."""
-    from soup_cli.utils.ab_test import MsprtConfig, msprt_step
+    from ai_forge_cli.utils.ab_test import MsprtConfig, msprt_step
 
     cfg = MsprtConfig(metric="latency")
     # 1M samples each side - should not blow up
@@ -181,7 +181,7 @@ def test_msprt_step_caps_samples():
 
 
 def test_msprt_verdict_frozen():
-    from soup_cli.utils.ab_test import MsprtVerdict
+    from ai_forge_cli.utils.ab_test import MsprtVerdict
 
     v = MsprtVerdict(
         decision="continue",
@@ -196,7 +196,7 @@ def test_msprt_verdict_frozen():
 
 
 def test_msprt_verdict_validates_decision():
-    from soup_cli.utils.ab_test import MsprtVerdict
+    from ai_forge_cli.utils.ab_test import MsprtVerdict
 
     with pytest.raises(ValueError):
         MsprtVerdict(
@@ -215,7 +215,7 @@ def test_msprt_verdict_validates_decision():
 
 
 def test_run_msprt_happy(tmp_path, monkeypatch):
-    from soup_cli.utils.ab_test import MsprtConfig, run_msprt
+    from ai_forge_cli.utils.ab_test import MsprtConfig, run_msprt
 
     monkeypatch.chdir(tmp_path)
     inp = tmp_path / "ab.jsonl"
@@ -234,7 +234,7 @@ def test_run_msprt_happy(tmp_path, monkeypatch):
 
 
 def test_run_msprt_rejects_outside_cwd(tmp_path, monkeypatch):
-    from soup_cli.utils.ab_test import MsprtConfig, run_msprt
+    from ai_forge_cli.utils.ab_test import MsprtConfig, run_msprt
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "stray.jsonl"
@@ -249,7 +249,7 @@ def test_run_msprt_rejects_outside_cwd(tmp_path, monkeypatch):
 
 
 def test_run_msprt_missing_input(tmp_path, monkeypatch):
-    from soup_cli.utils.ab_test import MsprtConfig, run_msprt
+    from ai_forge_cli.utils.ab_test import MsprtConfig, run_msprt
 
     monkeypatch.chdir(tmp_path)
     cfg = MsprtConfig(metric="latency")
@@ -258,7 +258,7 @@ def test_run_msprt_missing_input(tmp_path, monkeypatch):
 
 
 def test_run_msprt_rejects_null_byte():
-    from soup_cli.utils.ab_test import MsprtConfig, run_msprt
+    from ai_forge_cli.utils.ab_test import MsprtConfig, run_msprt
 
     cfg = MsprtConfig(metric="latency")
     with pytest.raises(ValueError):
@@ -271,7 +271,7 @@ def test_run_msprt_rejects_null_byte():
 
 
 def test_cli_ab_help():
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     result = runner.invoke(app, ["ab", "--help"])
     assert result.exit_code == 0, (result.output, repr(result.exception))
@@ -279,7 +279,7 @@ def test_cli_ab_help():
 
 
 def test_cli_ab_happy(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     inp = tmp_path / "ab.jsonl"
@@ -302,7 +302,7 @@ def test_cli_ab_happy(tmp_path, monkeypatch):
 
 
 def test_cli_ab_unknown_metric(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     inp = tmp_path / "ab.jsonl"
@@ -315,7 +315,7 @@ def test_cli_ab_unknown_metric(tmp_path, monkeypatch):
 
 
 def test_cli_ab_outside_cwd_rejected(tmp_path, monkeypatch):
-    from soup_cli.cli import app
+    from ai_forge_cli.cli import app
 
     monkeypatch.chdir(tmp_path)
     outside = tmp_path.parent / "stray_ab.jsonl"

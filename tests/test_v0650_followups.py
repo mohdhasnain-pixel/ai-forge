@@ -23,24 +23,24 @@ import pytest
 import yaml
 from typer.testing import CliRunner
 
-from soup_cli.commands.eval import app
-from soup_cli.eval.calibrate import (
+from ai_forge_cli.commands.eval import app
+from ai_forge_cli.eval.calibrate import (
     PairwiseJudgement,
     conformal_threshold,
     fit_position_bias,
 )
-from soup_cli.utils.behavior_battery import (
+from ai_forge_cli.utils.behavior_battery import (
     _agreement_rate,
     classify_behavior_score,
     compute_behavior_diff,
 )
-from soup_cli.utils.checklist_dsl import (
+from ai_forge_cli.utils.checklist_dsl import (
     CheckListSpec,
     CheckListTest,
     parse_checklist_spec,
     run_checklist_spec,
 )
-from soup_cli.utils.irt import (
+from ai_forge_cli.utils.irt import (
     ItemDifficulty,
     pick_irt_subset,
 )
@@ -331,7 +331,7 @@ class TestSourceWiring:
         from pathlib import Path
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "behavior_battery.py"
+            / "src" / "ai_forge_cli" / "utils" / "behavior_battery.py"
         )
         text = src.read_text(encoding="utf-8")
         # H1 fix — must use as_file + Traversable / op, not os.path.join.
@@ -343,7 +343,7 @@ class TestSourceWiring:
         from pathlib import Path
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "checklist_dsl.py"
+            / "src" / "ai_forge_cli" / "utils" / "checklist_dsl.py"
         )
         text = src.read_text(encoding="utf-8")
         # H2 fix — must use the shared helper.
@@ -353,7 +353,7 @@ class TestSourceWiring:
         from pathlib import Path
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "irt.py"
+            / "src" / "ai_forge_cli" / "utils" / "irt.py"
         )
         text = src.read_text(encoding="utf-8")
         # H3 fix — must use the shared helper.
@@ -366,7 +366,7 @@ class TestSourceWiring:
         from pathlib import Path
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "commands" / "_eval_v0650.py"
+            / "src" / "ai_forge_cli" / "commands" / "_eval_v0650.py"
         )
         text = src.read_text(encoding="utf-8")
         # L6 dedup — _write_json_output + _read_evidence_json helpers.
@@ -384,7 +384,7 @@ class TestONofollowWiring:
         from pathlib import Path
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "checklist_dsl.py"
+            / "src" / "ai_forge_cli" / "utils" / "checklist_dsl.py"
         )
         text = src.read_text(encoding="utf-8")
         # H-NEW-1 fix: must use O_NOFOLLOW + fstat (no more double-lstat).
@@ -395,7 +395,7 @@ class TestONofollowWiring:
         from pathlib import Path
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "utils" / "irt.py"
+            / "src" / "ai_forge_cli" / "utils" / "irt.py"
         )
         text = src.read_text(encoding="utf-8")
         assert "O_NOFOLLOW" in text
@@ -405,7 +405,7 @@ class TestONofollowWiring:
         from pathlib import Path
         src = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli" / "commands" / "_eval_v0650.py"
+            / "src" / "ai_forge_cli" / "commands" / "_eval_v0650.py"
         )
         text = src.read_text(encoding="utf-8")
         # H-NEW-2 fix.
@@ -420,7 +420,7 @@ class TestIrtRowsCap:
     def test_malformed_rows_count_toward_cap(self, tmp_path, monkeypatch):
         # Lots of malformed lines (>1M) — must still exit via the cap,
         # NOT stream to completion (review M-NEW-2 fix).
-        from soup_cli.utils.irt import _MAX_ROWS, load_response_rows
+        from ai_forge_cli.utils.irt import _MAX_ROWS, load_response_rows
 
         monkeypatch.chdir(tmp_path)
         p = tmp_path / "huge.jsonl"
@@ -438,7 +438,7 @@ class TestIrtRowsCap:
 
 class TestInvEmptyStringRejected:
     def test_inv_all_whitespace_responses_rejected(self):
-        from soup_cli.utils.checklist_dsl import _inv_pass
+        from ai_forge_cli.utils.checklist_dsl import _inv_pass
 
         # All responses are whitespace → normalise to {""} (len=1) — the
         # OLD code returned True (silent INV pass). Now must return False.
@@ -452,7 +452,7 @@ class TestLoadResponseRowsWarnsOnSkip:
     def test_warning_emitted_on_malformed(self, tmp_path, monkeypatch, caplog):
         import logging
 
-        from soup_cli.utils.irt import load_response_rows
+        from ai_forge_cli.utils.irt import load_response_rows
 
         monkeypatch.chdir(tmp_path)
         p = tmp_path / "responses.jsonl"
@@ -461,7 +461,7 @@ class TestLoadResponseRowsWarnsOnSkip:
             'not json\n'
             '{"item_id": "q2", "correct": false}\n'
         )
-        with caplog.at_level(logging.WARNING, logger="soup_cli.utils.irt"):
+        with caplog.at_level(logging.WARNING, logger="ai_forge_cli.utils.irt"):
             rows = load_response_rows(str(p))
         assert len(rows) == 2
         assert any("skipped" in rec.message.lower() for rec in caplog.records)
@@ -469,7 +469,7 @@ class TestLoadResponseRowsWarnsOnSkip:
     def test_no_warning_when_clean(self, tmp_path, monkeypatch, caplog):
         import logging
 
-        from soup_cli.utils.irt import load_response_rows
+        from ai_forge_cli.utils.irt import load_response_rows
 
         monkeypatch.chdir(tmp_path)
         p = tmp_path / "responses.jsonl"
@@ -477,7 +477,7 @@ class TestLoadResponseRowsWarnsOnSkip:
             '{"item_id": "q1", "correct": true}\n'
             '{"item_id": "q2", "correct": false}\n'
         )
-        with caplog.at_level(logging.WARNING, logger="soup_cli.utils.irt"):
+        with caplog.at_level(logging.WARNING, logger="ai_forge_cli.utils.irt"):
             rows = load_response_rows(str(p))
         assert len(rows) == 2
         # No skip messages.

@@ -7,7 +7,7 @@ import math
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.loader import load_config_from_string
+from ai_forge_cli.config.loader import load_config_from_string
 
 _BASE_DATA_LINE = "data:\n  train: ./train.jsonl\n"
 
@@ -114,7 +114,7 @@ training:
 
 class TestYarnMath:
     def test_yarn_find_correction_dim(self):
-        from soup_cli.utils.long_context import yarn_find_correction_dim
+        from ai_forge_cli.utils.long_context import yarn_find_correction_dim
 
         # Wavelength of a given num_rotations is invertible to dim:
         d = yarn_find_correction_dim(
@@ -124,7 +124,7 @@ class TestYarnMath:
         assert 0 <= d <= 64
 
     def test_yarn_find_correction_range_ordered(self):
-        from soup_cli.utils.long_context import yarn_find_correction_range
+        from ai_forge_cli.utils.long_context import yarn_find_correction_range
 
         low, high = yarn_find_correction_range(
             beta_fast=32, beta_slow=1, dim=64, base=10000.0, max_position_embeddings=4096
@@ -137,7 +137,7 @@ class TestYarnMath:
 
     def test_yarn_find_correction_range_clamped(self):
         """Range must be clamped to [0, dim/2]; high>=low+1 guarantees no div0."""
-        from soup_cli.utils.long_context import yarn_find_correction_range
+        from ai_forge_cli.utils.long_context import yarn_find_correction_range
 
         low, high = yarn_find_correction_range(
             beta_fast=10_000, beta_slow=10_000, dim=64, base=10000.0, max_position_embeddings=64
@@ -146,7 +146,7 @@ class TestYarnMath:
 
     @pytest.mark.parametrize("bad", [0.0, -1.0, float("nan"), float("inf")])
     def test_yarn_find_correction_dim_bad_input(self, bad):
-        from soup_cli.utils.long_context import yarn_find_correction_dim
+        from ai_forge_cli.utils.long_context import yarn_find_correction_dim
 
         with pytest.raises(ValueError):
             yarn_find_correction_dim(
@@ -154,7 +154,7 @@ class TestYarnMath:
             )
 
     def test_yarn_linear_ramp_mask_shape_and_bounds(self):
-        from soup_cli.utils.long_context import yarn_linear_ramp_mask
+        from ai_forge_cli.utils.long_context import yarn_linear_ramp_mask
 
         mask = yarn_linear_ramp_mask(low=4, high=8, dim=16)
         assert len(mask) == 16
@@ -163,13 +163,13 @@ class TestYarnMath:
 
     def test_yarn_linear_ramp_mask_degenerate_low_eq_high(self):
         """Avoid div-by-zero: low == high must be auto-disambiguated."""
-        from soup_cli.utils.long_context import yarn_linear_ramp_mask
+        from ai_forge_cli.utils.long_context import yarn_linear_ramp_mask
 
         mask = yarn_linear_ramp_mask(low=4, high=4, dim=16)
         assert len(mask) == 16
 
     def test_yarn_get_attn_scale(self):
-        from soup_cli.utils.long_context import yarn_get_mscale
+        from ai_forge_cli.utils.long_context import yarn_get_mscale
 
         # mscale = 0.1 * ln(factor) + 1.0
         assert yarn_get_mscale(1.0) == pytest.approx(1.0)
@@ -177,12 +177,12 @@ class TestYarnMath:
         assert v == pytest.approx(0.1 * math.log(4.0) + 1.0)
 
     def test_yarn_get_mscale_factor_below_one_returns_one(self):
-        from soup_cli.utils.long_context import yarn_get_mscale
+        from ai_forge_cli.utils.long_context import yarn_get_mscale
 
         assert yarn_get_mscale(0.5) == 1.0
 
     def test_get_rope_scaling_config_yarn_with_overrides(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         cfg = get_rope_scaling_config(
             scaling_type="yarn",
@@ -208,13 +208,13 @@ class TestYarnMath:
 
 class TestDynamicNTK:
     def test_dynamic_basic_factor(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         cfg = get_rope_scaling_config("dynamic", target_length=32768, original_length=8192)
         assert cfg == {"type": "dynamic", "factor": 4.0}
 
     def test_dynamic_no_scaling_when_target_le_original(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         cfg = get_rope_scaling_config("dynamic", target_length=4096, original_length=8192)
         assert cfg == {}
@@ -289,7 +289,7 @@ training:
 
 class TestLongLoraHelpers:
     def test_is_llama_model_word_boundary(self):
-        from soup_cli.utils.longlora import is_llama_model
+        from ai_forge_cli.utils.longlora import is_llama_model
 
         # Word-boundary regex: rejects substrings, accepts variants.
         assert is_llama_model("meta-llama/Llama-3.1-8B") is True
@@ -302,19 +302,19 @@ class TestLongLoraHelpers:
         assert is_llama_model("") is False
 
     def test_is_llama_model_rejects_null_byte(self):
-        from soup_cli.utils.longlora import is_llama_model
+        from ai_forge_cli.utils.longlora import is_llama_model
 
         with pytest.raises(ValueError):
             is_llama_model("meta-llama/\x00Llama-3")
 
     def test_is_llama_model_rejects_non_string(self):
-        from soup_cli.utils.longlora import is_llama_model
+        from ai_forge_cli.utils.longlora import is_llama_model
 
         with pytest.raises(TypeError):
             is_llama_model(None)
 
     def test_validate_longlora_compat_happy(self):
-        from soup_cli.utils.longlora import validate_longlora_compat
+        from ai_forge_cli.utils.longlora import validate_longlora_compat
 
         # No raise.
         validate_longlora_compat(
@@ -367,14 +367,14 @@ class TestLongLoraHelpers:
         ],
     )
     def test_validate_longlora_compat_rejects(self, kwargs, match):
-        from soup_cli.utils.longlora import validate_longlora_compat
+        from ai_forge_cli.utils.longlora import validate_longlora_compat
 
         with pytest.raises(ValueError, match=match):
             validate_longlora_compat(**kwargs)
 
     def test_apply_longlora_forward_override_now_live(self):
         """v0.53.11 #119 lifted the stub — returns a LongLoRAForwardOverride context."""
-        from soup_cli.utils.longlora import (
+        from ai_forge_cli.utils.longlora import (
             LongLoRAForwardOverride,
             apply_longlora_forward_override,
         )
@@ -404,7 +404,7 @@ training:
         assert cfg.training.rope_scaling_type == "llama3"
 
     def test_llama3_constants_present(self):
-        from soup_cli.utils.long_context import (
+        from ai_forge_cli.utils.long_context import (
             LLAMA3_DEFAULT_HIGH_FREQ_FACTOR,
             LLAMA3_DEFAULT_LOW_FREQ_FACTOR,
             LLAMA3_DEFAULT_OLD_CONTEXT_LEN,
@@ -417,7 +417,7 @@ training:
         assert LLAMA3_DEFAULT_OLD_CONTEXT_LEN == 8192
 
     def test_llama3_get_rope_scaling_config(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         cfg = get_rope_scaling_config(
             scaling_type="llama3",
@@ -434,7 +434,7 @@ training:
 class TestLlama3InvFreqScale:
     def test_low_freq_passthrough(self):
         """Wavelength >> high_freq_threshold => scaled by 1/factor."""
-        from soup_cli.utils.long_context import scale_inv_freq_llama3
+        from ai_forge_cli.utils.long_context import scale_inv_freq_llama3
 
         # A very low freq (long wavelength) should be divided by scale_factor.
         inv_freq = 1e-6  # huge wavelength
@@ -449,7 +449,7 @@ class TestLlama3InvFreqScale:
 
     def test_high_freq_passthrough(self):
         """Wavelength << low_freq_threshold => unchanged."""
-        from soup_cli.utils.long_context import scale_inv_freq_llama3
+        from ai_forge_cli.utils.long_context import scale_inv_freq_llama3
 
         # Very high freq (short wavelength) — no scaling.
         inv_freq = 1.0  # tiny wavelength
@@ -464,7 +464,7 @@ class TestLlama3InvFreqScale:
 
     def test_smooth_transition_zone(self):
         """Mid-band frequencies are smooth-interpolated between the two regions."""
-        from soup_cli.utils.long_context import scale_inv_freq_llama3
+        from ai_forge_cli.utils.long_context import scale_inv_freq_llama3
 
         # Pick a wavelength in the transition band: 2π·(8192/2) ≈ ~25_700; an inv_freq
         # such that 2π/inv_freq lands between low and high thresholds.
@@ -493,7 +493,7 @@ class TestLlama3InvFreqScale:
         ],
     )
     def test_scale_inv_freq_llama3_rejects_bool_on_every_param(self, param, value):
-        from soup_cli.utils.long_context import scale_inv_freq_llama3
+        from ai_forge_cli.utils.long_context import scale_inv_freq_llama3
 
         kwargs = dict(
             inv_freq=1e-4,
@@ -510,7 +510,7 @@ class TestLlama3InvFreqScale:
         """Review-fix: when llama3_old_context_len is omitted, the emitted
         ``original_max_position_embeddings`` must mirror the caller's
         ``original_length`` — not silently snap to the 8192 default."""
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         cfg = get_rope_scaling_config(
             scaling_type="llama3",
@@ -528,7 +528,7 @@ class TestLlama3InvFreqScale:
         assert cfg["original_max_position_embeddings"] == 8192
 
     def test_scale_inv_freq_llama3_rejects_bad_inputs(self):
-        from soup_cli.utils.long_context import scale_inv_freq_llama3
+        from ai_forge_cli.utils.long_context import scale_inv_freq_llama3
 
         with pytest.raises(ValueError):
             scale_inv_freq_llama3(
@@ -557,7 +557,7 @@ class TestLlama3InvFreqScale:
 
     def test_auto_detect_llama3_from_config(self):
         """Auto-detect rope_scaling.type='llama3' inside an HF-style config dict."""
-        from soup_cli.utils.long_context import detect_llama3_rope_in_config
+        from ai_forge_cli.utils.long_context import detect_llama3_rope_in_config
 
         cfg = {"rope_scaling": {"type": "llama3", "factor": 8.0}}
         assert detect_llama3_rope_in_config(cfg) is True
@@ -572,7 +572,7 @@ class TestLlama3InvFreqScale:
         assert detect_llama3_rope_in_config({"rope_scaling": None}) is False
 
     def test_detect_llama3_rejects_non_dict(self):
-        from soup_cli.utils.long_context import detect_llama3_rope_in_config
+        from ai_forge_cli.utils.long_context import detect_llama3_rope_in_config
 
         with pytest.raises(TypeError):
             detect_llama3_rope_in_config("not a dict")  # type: ignore[arg-type]
@@ -589,31 +589,31 @@ class TestGetRopeScalingConfigInputValidation:
     caller cannot emit a corrupt ``{"factor": NaN}`` HF config."""
 
     def test_rejects_bool_target_length(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         with pytest.raises(ValueError, match="bool"):
             get_rope_scaling_config("linear", target_length=True, original_length=8192)
 
     def test_rejects_bool_original_length(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         with pytest.raises(ValueError, match="bool"):
             get_rope_scaling_config("linear", target_length=32768, original_length=True)
 
     def test_rejects_nan_target_length(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         with pytest.raises(ValueError, match="finite"):
             get_rope_scaling_config("linear", target_length=float("nan"), original_length=8192)
 
     def test_rejects_zero_original_length(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         with pytest.raises(ValueError, match="positive"):
             get_rope_scaling_config("linear", target_length=32768, original_length=0)
 
     def test_rejects_nan_yarn_factor(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         with pytest.raises(ValueError):
             get_rope_scaling_config(
@@ -628,7 +628,7 @@ class TestCoverageGapFixes:
     """tdd-review follow-ups — close coverage gaps surfaced by the agent."""
 
     def test_yarn_find_correction_dim_rejects_bad_dim_base(self):
-        from soup_cli.utils.long_context import yarn_find_correction_dim
+        from ai_forge_cli.utils.long_context import yarn_find_correction_dim
 
         with pytest.raises(ValueError):
             yarn_find_correction_dim(
@@ -648,7 +648,7 @@ class TestCoverageGapFixes:
             )
 
     def test_yarn_linear_ramp_mask_rejects_bad_inputs(self):
-        from soup_cli.utils.long_context import yarn_linear_ramp_mask
+        from ai_forge_cli.utils.long_context import yarn_linear_ramp_mask
 
         with pytest.raises(ValueError):
             yarn_linear_ramp_mask(low=4, high=8, dim=0)
@@ -660,7 +660,7 @@ class TestCoverageGapFixes:
             yarn_linear_ramp_mask(low=-1, high=8, dim=16)
 
     def test_yarn_get_mscale_rejects_non_finite(self):
-        from soup_cli.utils.long_context import yarn_get_mscale
+        from ai_forge_cli.utils.long_context import yarn_get_mscale
 
         with pytest.raises(ValueError):
             yarn_get_mscale(float("nan"))
@@ -670,27 +670,27 @@ class TestCoverageGapFixes:
             yarn_get_mscale(True)
 
     def test_linear_config(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         cfg = get_rope_scaling_config("linear", target_length=32768, original_length=8192)
         assert cfg == {"type": "linear", "factor": 4.0}
 
     def test_longrope_config(self):
-        from soup_cli.utils.long_context import get_rope_scaling_config
+        from ai_forge_cli.utils.long_context import get_rope_scaling_config
 
         cfg = get_rope_scaling_config("longrope", target_length=131072, original_length=8192)
         assert cfg["type"] == "longrope"
         assert cfg["original_max_position_embeddings"] == 8192
 
     def test_is_llama_model_oversize_returns_false(self):
-        from soup_cli.utils.longlora import is_llama_model
+        from ai_forge_cli.utils.longlora import is_llama_model
 
         big_name = "meta-llama/Llama-3" + "x" * 1024
         # > 512-char cap returns False (not raise) per the size-guard branch.
         assert is_llama_model(big_name) is False
 
     def test_validate_longlora_compat_rejects_unsloth(self):
-        from soup_cli.utils.longlora import validate_longlora_compat
+        from ai_forge_cli.utils.longlora import validate_longlora_compat
 
         with pytest.raises(ValueError, match="transformers"):
             validate_longlora_compat(
@@ -701,7 +701,7 @@ class TestCoverageGapFixes:
             )
 
     def test_scale_inv_freq_llama3_rejects_zero_old_context_len(self):
-        from soup_cli.utils.long_context import scale_inv_freq_llama3
+        from ai_forge_cli.utils.long_context import scale_inv_freq_llama3
 
         with pytest.raises(ValueError, match="old_context_len"):
             scale_inv_freq_llama3(

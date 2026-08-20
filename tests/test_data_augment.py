@@ -5,7 +5,7 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from soup_cli.cli import app
+from ai_forge_cli.cli import app
 
 runner = CliRunner()
 
@@ -27,7 +27,7 @@ class FakeProvider:
 
 class TestAugmentStrategies:
     def test_rephrase_basic(self):
-        from soup_cli.data.augment import augment_rephrase
+        from ai_forge_cli.data.augment import augment_rephrase
 
         examples = [
             {"instruction": "What is Python?", "output": "Python is a language."},
@@ -42,7 +42,7 @@ class TestAugmentStrategies:
             assert "instruction" in row or "output" in row
 
     def test_translate_produces_langs(self):
-        from soup_cli.data.augment import augment_translate
+        from ai_forge_cli.data.augment import augment_translate
 
         examples = [
             {"instruction": "Hello", "output": "Hi"},
@@ -56,7 +56,7 @@ class TestAugmentStrategies:
         assert len(augmented) == 2
 
     def test_style_produces_styles(self):
-        from soup_cli.data.augment import augment_style
+        from ai_forge_cli.data.augment import augment_style
 
         examples = [
             {
@@ -74,7 +74,7 @@ class TestAugmentStrategies:
 
     def test_count_cap_enforced(self):
         """count > 10 is rejected at strategy level (not just CLI)."""
-        from soup_cli.data.augment import augment_rephrase
+        from ai_forge_cli.data.augment import augment_rephrase
 
         examples = [{"instruction": "x", "output": "y"}]
         provider = FakeProvider()
@@ -82,7 +82,7 @@ class TestAugmentStrategies:
             augment_rephrase(examples, provider=provider, count=11)
 
     def test_empty_examples_returns_empty(self):
-        from soup_cli.data.augment import (
+        from ai_forge_cli.data.augment import (
             augment_rephrase,
             augment_style,
             augment_translate,
@@ -95,20 +95,20 @@ class TestAugmentStrategies:
         assert provider.calls == 0
 
     def test_translate_empty_languages_rejected(self):
-        from soup_cli.data.augment import augment_translate
+        from ai_forge_cli.data.augment import augment_translate
 
         with pytest.raises(ValueError):
             augment_translate([{"x": "y"}], provider=FakeProvider(), languages=[])
 
     def test_style_empty_styles_rejected(self):
-        from soup_cli.data.augment import augment_style
+        from ai_forge_cli.data.augment import augment_style
 
         with pytest.raises(ValueError):
             augment_style([{"x": "y"}], provider=FakeProvider(), styles=[])
 
     def test_provider_exception_propagates(self):
         """When provider raises, augment propagates the error (fail-loud)."""
-        from soup_cli.data.augment import augment_rephrase
+        from ai_forge_cli.data.augment import augment_rephrase
 
         class FailingProvider:
             def generate(self, prompt: str, max_tokens: int = 512) -> str:

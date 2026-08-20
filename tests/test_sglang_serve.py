@@ -24,13 +24,13 @@ class TestSGLangDetection:
         """check_sglang_available should return True when sglang is importable."""
         mock_sglang = MagicMock()
         with mock_patch.dict("sys.modules", {"sglang": mock_sglang}):
-            from soup_cli.utils.sglang import check_sglang_available
+            from ai_forge_cli.utils.sglang import check_sglang_available
 
             assert check_sglang_available() is True
 
     def test_check_sglang_available_when_not_installed(self):
         """check_sglang_available should return False when sglang import fails."""
-        from soup_cli.utils.sglang import check_sglang_available
+        from ai_forge_cli.utils.sglang import check_sglang_available
 
         # Just verify the function exists and is callable
         assert callable(check_sglang_available)
@@ -40,14 +40,14 @@ class TestSGLangDetection:
         mock_sglang = MagicMock()
         mock_sglang.__version__ = "0.3.0"
         with mock_patch.dict("sys.modules", {"sglang": mock_sglang}):
-            from soup_cli.utils.sglang import get_sglang_version
+            from ai_forge_cli.utils.sglang import get_sglang_version
 
             version = get_sglang_version()
             assert version == "0.3.0"
 
     def test_get_sglang_version_when_not_installed(self):
         """get_sglang_version should return 'not installed' when unavailable."""
-        from soup_cli.utils.sglang import get_sglang_version
+        from ai_forge_cli.utils.sglang import get_sglang_version
 
         # If sglang is not actually installed, should return "not installed"
         try:
@@ -69,7 +69,7 @@ class TestSGLangRuntimeCreation:
         mock_sgl.Runtime.return_value = mock_runtime
 
         with mock_patch.dict("sys.modules", {"sglang": mock_sgl}):
-            from soup_cli.utils.sglang import create_sglang_runtime
+            from ai_forge_cli.utils.sglang import create_sglang_runtime
 
             runtime, model_name = create_sglang_runtime(
                 model_path="/path/to/model",
@@ -88,7 +88,7 @@ class TestSGLangRuntimeCreation:
         mock_sgl.Runtime.return_value = mock_runtime
 
         with mock_patch.dict("sys.modules", {"sglang": mock_sgl}):
-            from soup_cli.utils.sglang import create_sglang_runtime
+            from ai_forge_cli.utils.sglang import create_sglang_runtime
 
             runtime, model_name = create_sglang_runtime(
                 model_path="/path/to/adapter",
@@ -107,7 +107,7 @@ class TestSGLangRuntimeCreation:
         mock_sgl.Runtime.return_value = MagicMock()
 
         with mock_patch.dict("sys.modules", {"sglang": mock_sgl}):
-            from soup_cli.utils.sglang import create_sglang_runtime
+            from ai_forge_cli.utils.sglang import create_sglang_runtime
 
             create_sglang_runtime(
                 model_path="/model",
@@ -132,7 +132,7 @@ class TestSGLangApp:
         """create_sglang_app should return a FastAPI application."""
         mock_runtime = MagicMock()
 
-        from soup_cli.utils.sglang import create_sglang_app
+        from ai_forge_cli.utils.sglang import create_sglang_app
 
         app = create_sglang_app(
             runtime=mock_runtime,
@@ -146,7 +146,7 @@ class TestSGLangApp:
         """SGLang app should have /health endpoint."""
         mock_runtime = MagicMock()
 
-        from soup_cli.utils.sglang import create_sglang_app
+        from ai_forge_cli.utils.sglang import create_sglang_app
 
         app = create_sglang_app(
             runtime=mock_runtime,
@@ -161,7 +161,7 @@ class TestSGLangApp:
         """SGLang app should have /v1/models endpoint."""
         mock_runtime = MagicMock()
 
-        from soup_cli.utils.sglang import create_sglang_app
+        from ai_forge_cli.utils.sglang import create_sglang_app
 
         app = create_sglang_app(
             runtime=mock_runtime,
@@ -176,7 +176,7 @@ class TestSGLangApp:
         """SGLang app should have /v1/chat/completions endpoint."""
         mock_runtime = MagicMock()
 
-        from soup_cli.utils.sglang import create_sglang_app
+        from ai_forge_cli.utils.sglang import create_sglang_app
 
         app = create_sglang_app(
             runtime=mock_runtime,
@@ -198,7 +198,7 @@ class TestServeSGLangCommand:
         """soup serve --help should mention sglang backend."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["serve", "--help"])
@@ -208,7 +208,7 @@ class TestServeSGLangCommand:
         """serve --backend sglang should show install hint when sglang missing."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         # Create a dummy model path
         model_dir = tmp_path / "model"
@@ -216,7 +216,7 @@ class TestServeSGLangCommand:
 
         runner = CliRunner()
         with mock_patch(
-            "soup_cli.utils.sglang.check_sglang_available", return_value=False
+            "ai_forge_cli.utils.sglang.check_sglang_available", return_value=False
         ):
             result = runner.invoke(app, [
                 "serve",
@@ -230,7 +230,7 @@ class TestServeSGLangCommand:
         """serve --backend invalid should show error listing valid backends."""
         from typer.testing import CliRunner
 
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         model_dir = tmp_path / "model"
         model_dir.mkdir()
@@ -253,14 +253,14 @@ class TestDoctorSGLang:
 
     def test_doctor_includes_sglang(self):
         """DEPS list should include sglang."""
-        from soup_cli.commands.doctor import DEPS
+        from ai_forge_cli.commands.doctor import DEPS
 
         pkg_names = [dep[1] for dep in DEPS]
         assert "sglang" in pkg_names
 
     def test_doctor_includes_librosa(self):
         """DEPS list should include librosa."""
-        from soup_cli.commands.doctor import DEPS
+        from ai_forge_cli.commands.doctor import DEPS
 
         pkg_names = [dep[1] for dep in DEPS]
         assert "librosa" in pkg_names
@@ -277,7 +277,7 @@ class TestSGLangSSRF:
         mock_sgl = MagicMock()
 
         with mock_patch.dict("sys.modules", {"sglang": mock_sgl}):
-            from soup_cli.utils.sglang import create_sglang_runtime
+            from ai_forge_cli.utils.sglang import create_sglang_runtime
 
             with pytest.raises(ValueError, match="not a URL"):
                 create_sglang_runtime(
@@ -289,7 +289,7 @@ class TestSGLangSSRF:
         mock_sgl = MagicMock()
 
         with mock_patch.dict("sys.modules", {"sglang": mock_sgl}):
-            from soup_cli.utils.sglang import create_sglang_runtime
+            from ai_forge_cli.utils.sglang import create_sglang_runtime
 
             with pytest.raises(ValueError, match="not a URL"):
                 create_sglang_runtime(
@@ -304,7 +304,7 @@ class TestSGLangSSRF:
         mock_sgl.Runtime.return_value = MagicMock()
 
         with mock_patch.dict("sys.modules", {"sglang": mock_sgl}):
-            from soup_cli.utils.sglang import create_sglang_runtime
+            from ai_forge_cli.utils.sglang import create_sglang_runtime
 
             runtime, name = create_sglang_runtime(
                 model_path="meta-llama/Llama-3.1-8B",

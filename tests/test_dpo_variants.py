@@ -17,7 +17,7 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic import ValidationError
 
-from soup_cli.config.schema import SoupConfig
+from ai_forge_cli.config.schema import SoupConfig
 
 # ─── Schema bounds ──────────────────────────────────────────────────────────
 
@@ -144,7 +144,7 @@ class TestDPOVariantsConfig:
 
 class TestBetaSchedule:
     def test_linear_endpoints(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         assert compute_beta_at_step(
             beta_start=0.1, beta_end=0.01, step=0, total_steps=100, schedule="linear",
@@ -154,7 +154,7 @@ class TestBetaSchedule:
         ) == pytest.approx(0.01)
 
     def test_linear_midpoint(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         # Schema requires beta_end > 0; mid of (0.1, 0.02) = 0.06.
         mid = compute_beta_at_step(
@@ -163,7 +163,7 @@ class TestBetaSchedule:
         assert mid == pytest.approx(0.06)
 
     def test_cosine_endpoints(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         assert compute_beta_at_step(
             beta_start=0.1, beta_end=0.01, step=0, total_steps=100, schedule="cosine",
@@ -173,7 +173,7 @@ class TestBetaSchedule:
         ) == pytest.approx(0.01)
 
     def test_cosine_midpoint(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         # Cosine: at midpoint we expect (start+end)/2.
         mid = compute_beta_at_step(
@@ -182,7 +182,7 @@ class TestBetaSchedule:
         assert mid == pytest.approx(0.11, abs=1e-6)
 
     def test_exponential_endpoints(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         assert compute_beta_at_step(
             beta_start=0.1, beta_end=0.01, step=0, total_steps=100,
@@ -196,21 +196,21 @@ class TestBetaSchedule:
 
     def test_clamps_at_total_steps(self):
         """Step beyond total_steps clamps to beta_end (not extrapolation)."""
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         assert compute_beta_at_step(
             beta_start=0.1, beta_end=0.01, step=200, total_steps=100, schedule="linear",
         ) == pytest.approx(0.01)
 
     def test_negative_step_clamps_to_start(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         assert compute_beta_at_step(
             beta_start=0.1, beta_end=0.01, step=-5, total_steps=100, schedule="linear",
         ) == pytest.approx(0.1)
 
     def test_invalid_schedule_raises(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         with pytest.raises(ValueError, match="schedule"):
             compute_beta_at_step(
@@ -219,14 +219,14 @@ class TestBetaSchedule:
             )
 
     def test_zero_total_steps_returns_end(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         assert compute_beta_at_step(
             beta_start=0.1, beta_end=0.01, step=0, total_steps=0, schedule="linear",
         ) == pytest.approx(0.01)
 
     def test_negative_total_steps_rejected(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         with pytest.raises(ValueError, match="total_steps"):
             compute_beta_at_step(
@@ -235,7 +235,7 @@ class TestBetaSchedule:
             )
 
     def test_non_finite_betas_rejected(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         for bad in (float("nan"), float("inf"), -1.0):
             with pytest.raises(ValueError, match="finite|> 0"):
@@ -245,7 +245,7 @@ class TestBetaSchedule:
                 )
 
     def test_step_bool_rejected(self):
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         with pytest.raises(ValueError, match="step"):
             compute_beta_at_step(
@@ -259,7 +259,7 @@ class TestBetaSchedule:
 
 class TestBetaScheduleCallback:
     def test_on_step_begin_writes_beta_on_trainer(self):
-        from soup_cli.utils.dpo_variants import BetaScheduleCallback
+        from ai_forge_cli.utils.dpo_variants import BetaScheduleCallback
 
         cb = BetaScheduleCallback(
             beta_start=0.1, beta_end=0.01, total_steps=100, schedule="linear",
@@ -275,7 +275,7 @@ class TestBetaScheduleCallback:
 
     def test_callback_no_trainer_attached_is_noop(self):
         """Without a trainer, callback updates nothing."""
-        from soup_cli.utils.dpo_variants import BetaScheduleCallback
+        from ai_forge_cli.utils.dpo_variants import BetaScheduleCallback
 
         cb = BetaScheduleCallback(
             beta_start=0.1, beta_end=0.01, total_steps=100, schedule="linear",
@@ -290,7 +290,7 @@ class TestBetaScheduleCallback:
 
 class TestRefModelRegenCallback:
     def test_fires_on_target_epoch(self):
-        from soup_cli.utils.dpo_variants import RefModelRegenCallback
+        from ai_forge_cli.utils.dpo_variants import RefModelRegenCallback
 
         cb = RefModelRegenCallback(every_n_epochs=2)
         trainer = MagicMock()
@@ -300,7 +300,7 @@ class TestRefModelRegenCallback:
         assert cb.regen_count == 1
 
     def test_does_not_fire_off_target(self):
-        from soup_cli.utils.dpo_variants import RefModelRegenCallback
+        from ai_forge_cli.utils.dpo_variants import RefModelRegenCallback
 
         cb = RefModelRegenCallback(every_n_epochs=2)
         trainer = MagicMock()
@@ -311,7 +311,7 @@ class TestRefModelRegenCallback:
 
     def test_skip_at_epoch_zero(self):
         """Regen at epoch 0 would copy untrained student → undesirable."""
-        from soup_cli.utils.dpo_variants import RefModelRegenCallback
+        from ai_forge_cli.utils.dpo_variants import RefModelRegenCallback
 
         cb = RefModelRegenCallback(every_n_epochs=1)
         trainer = MagicMock()
@@ -321,21 +321,21 @@ class TestRefModelRegenCallback:
         assert cb.regen_count == 0
 
     def test_invalid_period_int_below_one_rejected(self):
-        from soup_cli.utils.dpo_variants import RefModelRegenCallback
+        from ai_forge_cli.utils.dpo_variants import RefModelRegenCallback
 
         for bad in (0, -1):
             with pytest.raises(ValueError, match="every_n_epochs"):
                 RefModelRegenCallback(every_n_epochs=bad)
 
     def test_invalid_period_non_int_rejected(self):
-        from soup_cli.utils.dpo_variants import RefModelRegenCallback
+        from ai_forge_cli.utils.dpo_variants import RefModelRegenCallback
 
         for bad in (0.5, "2", True):
             with pytest.raises(TypeError, match="every_n_epochs"):
                 RefModelRegenCallback(every_n_epochs=bad)
 
     def test_no_trainer_attached_is_noop(self):
-        from soup_cli.utils.dpo_variants import RefModelRegenCallback
+        from ai_forge_cli.utils.dpo_variants import RefModelRegenCallback
 
         cb = RefModelRegenCallback(every_n_epochs=2)
         state = MagicMock(epoch=2.0)
@@ -348,7 +348,7 @@ class TestRefModelRegenCallback:
 
 class TestBuildDPOVariantCallbacks:
     def test_returns_empty_list_when_no_variants(self):
-        from soup_cli.utils.dpo_variants import build_dpo_variant_callbacks
+        from ai_forge_cli.utils.dpo_variants import build_dpo_variant_callbacks
 
         cbs = build_dpo_variant_callbacks(
             beta_start=0.1, beta_end=None, schedule=None,
@@ -357,7 +357,7 @@ class TestBuildDPOVariantCallbacks:
         assert cbs == []
 
     def test_returns_beta_only(self):
-        from soup_cli.utils.dpo_variants import (
+        from ai_forge_cli.utils.dpo_variants import (
             BetaScheduleCallback,
             build_dpo_variant_callbacks,
         )
@@ -370,7 +370,7 @@ class TestBuildDPOVariantCallbacks:
         assert isinstance(cbs[0], BetaScheduleCallback)
 
     def test_returns_regen_only(self):
-        from soup_cli.utils.dpo_variants import (
+        from ai_forge_cli.utils.dpo_variants import (
             RefModelRegenCallback,
             build_dpo_variant_callbacks,
         )
@@ -383,7 +383,7 @@ class TestBuildDPOVariantCallbacks:
         assert isinstance(cbs[0], RefModelRegenCallback)
 
     def test_returns_both_callbacks(self):
-        from soup_cli.utils.dpo_variants import (
+        from ai_forge_cli.utils.dpo_variants import (
             BetaScheduleCallback,
             RefModelRegenCallback,
             build_dpo_variant_callbacks,
@@ -400,7 +400,7 @@ class TestBuildDPOVariantCallbacks:
 
 class TestBetaScheduleLazyTotalSteps:
     def test_on_train_begin_resolves_total_steps_from_state(self):
-        from soup_cli.utils.dpo_variants import BetaScheduleCallback
+        from ai_forge_cli.utils.dpo_variants import BetaScheduleCallback
 
         cb = BetaScheduleCallback(
             beta_start=0.1, beta_end=0.01, total_steps=0, schedule="linear",
@@ -413,7 +413,7 @@ class TestBetaScheduleLazyTotalSteps:
 
     def test_on_step_begin_skips_when_total_steps_unresolvable(self):
         """No max_steps available → don't fall through to compute_beta_at_step."""
-        from soup_cli.utils.dpo_variants import BetaScheduleCallback
+        from ai_forge_cli.utils.dpo_variants import BetaScheduleCallback
 
         cb = BetaScheduleCallback(
             beta_start=0.1, beta_end=0.01, total_steps=0, schedule="linear",
@@ -428,7 +428,7 @@ class TestBetaScheduleLazyTotalSteps:
 
     def test_math_module_used_in_cosine(self):
         """Sanity: math module imported at top is exercised by cosine schedule."""
-        from soup_cli.utils.dpo_variants import compute_beta_at_step
+        from ai_forge_cli.utils.dpo_variants import compute_beta_at_step
 
         # Cosine at progress=0 should equal beta_start exactly (cos(0)=1).
         result = compute_beta_at_step(

@@ -17,7 +17,7 @@ from typer.testing import CliRunner
 
 class TestPublicSurface:
     def test_module_importable(self) -> None:
-        from soup_cli.utils import compile_tools
+        from ai_forge_cli.utils import compile_tools
 
         assert hasattr(compile_tools, "SUPPORTED_TOOL_OPTIMIZERS")
         assert hasattr(compile_tools, "validate_tool_optimizer")
@@ -29,14 +29,14 @@ class TestPublicSurface:
 
 class TestAllowlist:
     def test_frozenset(self) -> None:
-        from soup_cli.utils.compile_tools import SUPPORTED_TOOL_OPTIMIZERS
+        from ai_forge_cli.utils.compile_tools import SUPPORTED_TOOL_OPTIMIZERS
 
         assert isinstance(SUPPORTED_TOOL_OPTIMIZERS, frozenset)
         assert "textgrad" in SUPPORTED_TOOL_OPTIMIZERS
         assert "gepa" in SUPPORTED_TOOL_OPTIMIZERS
 
     def test_immutable(self) -> None:
-        from soup_cli.utils.compile_tools import SUPPORTED_TOOL_OPTIMIZERS
+        from ai_forge_cli.utils.compile_tools import SUPPORTED_TOOL_OPTIMIZERS
 
         with pytest.raises(AttributeError):
             SUPPORTED_TOOL_OPTIMIZERS.add("x")  # type: ignore[attr-defined]
@@ -44,29 +44,29 @@ class TestAllowlist:
 
 class TestValidateOptimizer:
     def test_happy(self) -> None:
-        from soup_cli.utils.compile_tools import validate_tool_optimizer
+        from ai_forge_cli.utils.compile_tools import validate_tool_optimizer
 
         assert validate_tool_optimizer("textgrad") == "textgrad"
 
     def test_case_insensitive(self) -> None:
-        from soup_cli.utils.compile_tools import validate_tool_optimizer
+        from ai_forge_cli.utils.compile_tools import validate_tool_optimizer
 
         assert validate_tool_optimizer("GEPA") == "gepa"
 
     def test_bool_rejected(self) -> None:
-        from soup_cli.utils.compile_tools import validate_tool_optimizer
+        from ai_forge_cli.utils.compile_tools import validate_tool_optimizer
 
         with pytest.raises(TypeError):
             validate_tool_optimizer(True)  # type: ignore[arg-type]
 
     def test_unknown_rejected(self) -> None:
-        from soup_cli.utils.compile_tools import validate_tool_optimizer
+        from ai_forge_cli.utils.compile_tools import validate_tool_optimizer
 
         with pytest.raises(ValueError, match="unknown"):
             validate_tool_optimizer("evil")
 
     def test_null_byte_rejected(self) -> None:
-        from soup_cli.utils.compile_tools import validate_tool_optimizer
+        from ai_forge_cli.utils.compile_tools import validate_tool_optimizer
 
         with pytest.raises(ValueError):
             validate_tool_optimizer("textgrad\x00")
@@ -76,7 +76,7 @@ class TestValidateSpecPath:
     def test_json_happy(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.compile_tools import validate_spec_path
+        from ai_forge_cli.utils.compile_tools import validate_spec_path
 
         monkeypatch.chdir(tmp_path)
         spec = tmp_path / "spec.json"
@@ -86,7 +86,7 @@ class TestValidateSpecPath:
     def test_yaml_happy(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.compile_tools import validate_spec_path
+        from ai_forge_cli.utils.compile_tools import validate_spec_path
 
         monkeypatch.chdir(tmp_path)
         spec = tmp_path / "spec.yaml"
@@ -96,7 +96,7 @@ class TestValidateSpecPath:
     def test_invalid_extension_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.compile_tools import validate_spec_path
+        from ai_forge_cli.utils.compile_tools import validate_spec_path
 
         monkeypatch.chdir(tmp_path)
         spec = tmp_path / "spec.txt"
@@ -107,7 +107,7 @@ class TestValidateSpecPath:
     def test_outside_cwd_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.compile_tools import validate_spec_path
+        from ai_forge_cli.utils.compile_tools import validate_spec_path
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -124,7 +124,7 @@ class TestToolCompilePlan:
     def test_frozen(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.compile_tools import ToolCompilePlan
+        from ai_forge_cli.utils.compile_tools import ToolCompilePlan
 
         monkeypatch.chdir(tmp_path)
         spec = tmp_path / "spec.json"
@@ -144,7 +144,7 @@ class TestToolCompilePlan:
     def test_invalid_optimizer(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.utils.compile_tools import ToolCompilePlan
+        from ai_forge_cli.utils.compile_tools import ToolCompilePlan
 
         monkeypatch.chdir(tmp_path)
         spec = tmp_path / "spec.json"
@@ -175,7 +175,7 @@ class TestRunToolCompileDeferred:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # v0.71.13 #227: live runner; textgrad absent -> friendly ImportError.
-        from soup_cli.utils.compile_tools import (
+        from ai_forge_cli.utils.compile_tools import (
             build_tool_compile_plan,
             run_tool_compile,
         )
@@ -191,11 +191,11 @@ class TestRunToolCompileDeferred:
             optimizer="textgrad",
             output_path="tools.json",
         )
-        with pytest.raises(ImportError, match=r"soup-cli\[compile\]"):
+        with pytest.raises(ImportError, match=r"ai-forge\[compile\]"):
             run_tool_compile(plan)
 
     def test_non_plan_rejected(self) -> None:
-        from soup_cli.utils.compile_tools import run_tool_compile
+        from ai_forge_cli.utils.compile_tools import run_tool_compile
 
         with pytest.raises(TypeError):
             run_tool_compile("not-a-plan")  # type: ignore[arg-type]
@@ -203,7 +203,7 @@ class TestRunToolCompileDeferred:
 
 class TestCli:
     def test_help(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["compile-tools", "--help"])
@@ -212,7 +212,7 @@ class TestCli:
     def test_plan_only(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         spec = tmp_path / "spec.json"
@@ -236,7 +236,7 @@ class TestCli:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # v0.71.13 #227: live runner; textgrad absent -> friendly exit 2.
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         monkeypatch.chdir(tmp_path)
         spec = tmp_path / "spec.json"
@@ -255,7 +255,7 @@ class TestSourceWiring:
     def test_no_top_level_heavy_imports(self) -> None:
         path = (
             Path(__file__).resolve().parent.parent
-            / "src" / "soup_cli"
+            / "src" / "ai_forge_cli"
             / "utils"
             / "compile_tools.py"
         )
@@ -269,7 +269,7 @@ class TestSourceWiring:
             assert token not in text
 
     def test_cli_registered(self) -> None:
-        from soup_cli.cli import app
+        from ai_forge_cli.cli import app
 
         names = [c.name for c in app.registered_commands]
         assert "compile-tools" in names
