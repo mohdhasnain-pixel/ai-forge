@@ -25,14 +25,22 @@ AI Forge is an end-to-end LLM training platform that simplifies fine-tuning, pos
 ### Installation
 
 ```bash
-# Core installation (lightweight)
-pip install ai-forge
+# Clone the repository
+git clone https://github.com/mohdhasnain-pixel/ai-forge.git
+cd ai-forge
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install in development mode
+pip install -e .
 
 # With training support (recommended for fine-tuning)
-pip install "ai-forge[train]"
+pip install -e ".[train]"
 
 # Full stack (all optional features)
-pip install "ai-forge[all]"
+pip install -e ".[all]"
 ```
 
 ### Your First Training Job
@@ -73,6 +81,8 @@ ai-forge serve --model ./outputs/model
 
 ## 🛠️ Common Commands
 
+After installation, use these commands:
+
 ```bash
 # Data operations
 ai-forge data format      # Convert data to training format
@@ -93,7 +103,7 @@ ai-forge serve --help    # See all serving options
 
 # Utilities
 ai-forge env check       # Check environment and dependencies
-ai-forge version         # Show version info
+ai-forge --version       # Show version info
 ai-forge --help          # Full command list
 ```
 

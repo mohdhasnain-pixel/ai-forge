@@ -50,23 +50,7 @@ rocm-smi
 
 ## Installation
 
-### Option 1: PyPI (Recommended for Users)
-
-```bash
-# Basic installation (CLI only)
-pip install ai-forge
-
-# With training support
-pip install "ai-forge[train]"
-
-# Full installation (all features)
-pip install "ai-forge[all]"
-
-# With specific extras
-pip install "ai-forge[train,serve,data,eval]"
-```
-
-### Option 2: From Source (For Development)
+### Installation from GitHub
 
 ```bash
 # Clone the repository
@@ -77,14 +61,20 @@ cd ai-forge
 python -m venv env
 source env/bin/activate  # Windows: env\Scripts\activate
 
-# Install in development mode
-pip install -e ".[dev]"
+# Basic installation (CLI only)
+pip install -e .
 
-# Install pre-commit hooks
-pre-commit install
+# With training support (recommended)
+pip install -e ".[train]"
+
+# Full installation (all features)
+pip install -e ".[all]"
+
+# With specific extras
+pip install -e ".[train,serve,data,eval]"
 ```
 
-### Option 3: Using Conda
+### Using Conda
 
 ```bash
 # Create conda environment
@@ -93,8 +83,10 @@ conda create -n ai-forge python=3.10
 # Activate environment
 conda activate ai-forge
 
-# Install from PyPI
-pip install "ai-forge[train]"
+# Clone and install
+git clone https://github.com/mohdhasnain-pixel/ai-forge.git
+cd ai-forge
+pip install -e ".[train]"
 ```
 
 ## Verification
@@ -126,6 +118,9 @@ ai-forge init --task sft --model gpt2
 
 # Run a quick training test (adjust batch size and epochs for your hardware)
 ai-forge train --epochs 1 --batch-size 1 --data test_data.jsonl --model gpt2
+
+# Check outputs
+ls -la outputs/
 ```
 
 ## Docker Setup
@@ -211,7 +206,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ```bash
 # Install MLX backend support
-pip install "ai-forge[all]"  # Includes MLX support
+pip install -e ".[all]"  # Includes MLX support
 
 # Initialize with MLX backend
 ai-forge init --task sft --backend mlx --model <mlx-model>
@@ -252,7 +247,7 @@ env\Scripts\activate
 
 # Install dependencies
 pip install --upgrade pip
-pip install "ai-forge[train]"
+pip install -e ".[train]"
 
 # Deactivate when done
 deactivate
@@ -384,7 +379,7 @@ pip cache purge
 # Reinstall in clean environment
 python -m venv env_clean
 source env_clean/bin/activate
-pip install "ai-forge[train]"
+pip install -e ".[train]"
 
 # If still failing, check Python version and compatibility
 python --version
@@ -396,7 +391,9 @@ pip list | grep torch
 ```bash
 # If you see permission denied:
 # Option 1: Use sudo (not recommended)
-sudo pip install ai-forge
+sudo git clone https://github.com/mohdhasnain-pixel/ai-forge.git
+cd ai-forge
+pip install -e .
 
 # Option 2: Install to user directory (recommended)
 pip install --user ai-forge
@@ -404,7 +401,9 @@ pip install --user ai-forge
 # Option 3: Use virtual environment (best)
 python -m venv env
 source env/bin/activate
-pip install ai-forge
+git clone https://github.com/mohdhasnain-pixel/ai-forge.git
+cd ai-forge
+pip install -e .
 ```
 
 ## Next Steps

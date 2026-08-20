@@ -22,12 +22,16 @@ git config user.email "your.email@example.com"
 ### 1.3 Install AI Forge
 
 ```bash
+# Clone repository
+git clone https://github.com/mohdhasnain-pixel/ai-forge.git
+cd ai-forge
+
 # Create virtual environment
 python -m venv venv
 source venv/bin/activate
 
 # Install AI Forge with training support
-pip install "ai-forge[train]"
+pip install -e ".[train]"
 
 # Verify installation
 ai-forge --version
